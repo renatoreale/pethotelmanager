@@ -19,7 +19,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Settings, Clock, Euro, Plus, Pencil, Trash2, Save } from "lucide-react";
+import { Settings, Clock, Euro, CreditCard, Plus, Pencil, Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -28,6 +28,10 @@ import {
   usePriceLists, useUpsertPriceList, useDeletePriceList,
   type TariffType,
 } from "@/hooks/usePensioneConfig";
+import {
+  useAllPaymentMethods, useCreatePaymentMethod,
+  useTogglePaymentMethod, useDeletePaymentMethod,
+} from "@/hooks/usePayments";
 
 const DAYS = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
 
@@ -49,7 +53,7 @@ export default function Pensione() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Configurazione Pensione</h1>
-        <p className="text-muted-foreground text-sm mt-1">Casette, slot appuntamenti e listino prezzi</p>
+        <p className="text-muted-foreground text-sm mt-1">Casette, slot appuntamenti, listino prezzi e modalità di pagamento</p>
       </div>
 
       <Tabs defaultValue="casette" className="space-y-4">
@@ -57,11 +61,13 @@ export default function Pensione() {
           <TabsTrigger value="casette" className="gap-2"><Settings className="h-4 w-4" /> Casette</TabsTrigger>
           <TabsTrigger value="slot" className="gap-2"><Clock className="h-4 w-4" /> Slot Appuntamenti</TabsTrigger>
           <TabsTrigger value="listino" className="gap-2"><Euro className="h-4 w-4" /> Listino Prezzi</TabsTrigger>
+          <TabsTrigger value="pagamenti" className="gap-2"><CreditCard className="h-4 w-4" /> Modalità Pagamento</TabsTrigger>
         </TabsList>
 
         <TabsContent value="casette"><CasetteTab /></TabsContent>
         <TabsContent value="slot"><SlotTab /></TabsContent>
         <TabsContent value="listino"><ListinoTab /></TabsContent>
+        <TabsContent value="pagamenti"><PaymentMethodsTab /></TabsContent>
       </Tabs>
     </div>
   );
@@ -692,6 +698,147 @@ function ListinoTab() {
             <AlertDialogTitle>Eliminare la tariffa?</AlertDialogTitle>
             <AlertDialogDescription>
               {deleting && `Stai per eliminare "${deleting.name}". Questa azione non può essere annullata.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Elimina</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
+// ── MODALITÀ PAGAMENTO TAB ──
+function PaymentMethodsTab() {
+  const { data: methods, isLoading } = useAllPaymentMethods();
+  const createMethod = useCreatePaymentMethod();
+  const toggleMethod = useTogglePaymentMethod();
+  const deleteMethod = useDeletePaymentMethod();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [deleting, setDeleting] = useState<any>(null);
+
+  const handleCreate = async () => {
+    if (!newName.trim()) return;
+    try {
+      await createMethod.mutateAsync({
+        name: newName.trim(),
+        sort_order: (methods?.length ?? 0) + 1,
+      });
+      toast.success("Modalità di pagamento creata");
+      setNewName("");
+      setDialogOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || "Errore");
+    }
+  };
+
+  const handleToggle = async (id: string, currentActive: boolean) => {
+    try {
+      await toggleMethod.mutateAsync({ id, is_active: !currentActive });
+      toast.success(!currentActive ? "Attivata" : "Disattivata");
+    } catch (err: any) {
+      toast.error(err.message || "Errore");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleting) return;
+    try {
+      await deleteMethod.mutateAsync(deleting.id);
+      toast.success("Modalità eliminata");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nell'eliminazione");
+    }
+    setDeleting(null);
+  };
+
+  return (
+    <>
+      <Card>
+        <CardHeader className="flex-row items-center justify-between">
+          <div>
+            <CardTitle>Modalità di Pagamento</CardTitle>
+            <CardDescription>Configura i metodi di pagamento accettati (es. Contanti, Bonifico, Carta)</CardDescription>
+          </div>
+          <Button onClick={() => { setNewName(""); setDialogOpen(true); }}>
+            <Plus className="mr-2 h-4 w-4" /> Nuova Modalità
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
+          ) : !methods?.length ? (
+            <div className="py-12 text-center text-muted-foreground">Nessuna modalità configurata. Aggiungine almeno una per poter registrare i pagamenti.</div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Stato</TableHead>
+                    <TableHead className="w-[120px]">Azioni</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {methods.map((m: any) => (
+                    <TableRow key={m.id}>
+                      <TableCell className="font-medium">{m.name}</TableCell>
+                      <TableCell>
+                        <Badge variant={m.is_active ? "default" : "secondary"}>
+                          {m.is_active ? "Attiva" : "Inattiva"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => handleToggle(m.id, m.is_active)}>
+                            <Switch checked={m.is_active} className="pointer-events-none" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => setDeleting(m)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nuova Modalità di Pagamento</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome</Label>
+              <Input
+                placeholder="Es. Contanti, Bonifico, Carta di credito..."
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Annulla</Button>
+            <Button onClick={handleCreate} disabled={createMethod.isPending || !newName.trim()}>Salva</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deleting} onOpenChange={() => setDeleting(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminare la modalità?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleting && `Stai per eliminare "${deleting.name}". Se è usata in pagamenti esistenti, potrebbe causare problemi.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
