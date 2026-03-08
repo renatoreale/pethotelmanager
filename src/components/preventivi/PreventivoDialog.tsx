@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, CalendarIcon, X, User, Cat, Home, Calendar as CalIcon, Sparkles, Percent, FileText, UserPlus } from "lucide-react";
+import { Plus, CalendarIcon, X, User, Cat, Home, Calendar as CalIcon, Sparkles, Percent, FileText, UserPlus, Search, Mail, Phone } from "lucide-react";
 import { ClientDialog } from "@/components/clients/ClientDialog";
 import { toast } from "sonner";
 import { format, differenceInDays, parseISO, startOfDay } from "date-fns";
@@ -25,7 +25,158 @@ import { useClients } from "@/hooks/useClients";
 import { usePriceLists } from "@/hooks/usePensioneConfig";
 import { useClientCats } from "@/hooks/usePreventivi";
 
-// ── Types ──
+// ── Client Autocomplete (inline) ──
+function HighlightMatch({ text, query }: { text: string; query: string }) {
+  if (!query.trim()) return <>{text}</>;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <span className="font-semibold text-foreground">{text.slice(idx, idx + query.length)}</span>
+      {text.slice(idx + query.length)}
+    </>
+  );
+}
+
+function ClientAutocomplete({ clients, value, searchValue, onSearchChange, onSelect }: {
+  clients: any[];
+  value: string;
+  searchValue: string;
+  onSearchChange: (v: string) => void;
+  onSelect: (clientId: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [focusIndex, setFocusIndex] = useState(-1);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const selectedClient = useMemo(() => clients.find((c: any) => c.id === value), [clients, value]);
+
+  const displayValue = useMemo(() => {
+    if (searchValue) return searchValue;
+    if (selectedClient) return `${selectedClient.first_name} ${selectedClient.last_name}`;
+    return "";
+  }, [searchValue, selectedClient]);
+
+  const suggestions = useMemo(() => {
+    if (!searchValue.trim() || searchValue.trim().length < 2) return [];
+    const q = searchValue.toLowerCase();
+    return clients.filter((c: any) =>
+      `${c.first_name} ${c.last_name}`.toLowerCase().includes(q) ||
+      (c.email ?? "").toLowerCase().includes(q) ||
+      (c.phone ?? "").toLowerCase().includes(q)
+    ).slice(0, 8);
+  }, [clients, searchValue]);
+
+  useEffect(() => {
+    setOpen(suggestions.length > 0 && searchValue.trim().length >= 2);
+    setFocusIndex(-1);
+  }, [suggestions, searchValue]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        // Reset search to selected client name if user didn't pick
+        if (searchValue && !value) onSearchChange("");
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [searchValue, value]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!open) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setFocusIndex((i) => Math.min(i + 1, suggestions.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setFocusIndex((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter" && focusIndex >= 0) {
+      e.preventDefault();
+      const c = suggestions[focusIndex];
+      onSelect(c.id);
+      onSearchChange("");
+      setOpen(false);
+    } else if (e.key === "Escape") {
+      setOpen(false);
+    }
+  };
+
+  const selectClient = (c: any) => {
+    onSelect(c.id);
+    onSearchChange("");
+    setOpen(false);
+  };
+
+  return (
+    <div ref={wrapperRef} className="relative flex-1">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <Input
+        ref={inputRef}
+        placeholder="Cerca cliente per nome, email o telefono..."
+        value={displayValue}
+        onChange={(e) => {
+          onSearchChange(e.target.value);
+          if (value && e.target.value !== `${selectedClient?.first_name} ${selectedClient?.last_name}`) {
+            // Clear selection when user starts typing something different
+          }
+        }}
+        onFocus={() => {
+          if (value && !searchValue) {
+            onSearchChange(`${selectedClient?.first_name ?? ""} ${selectedClient?.last_name ?? ""}`.trim());
+          }
+          if (suggestions.length > 0 && searchValue.trim().length >= 2) setOpen(true);
+        }}
+        onKeyDown={handleKeyDown}
+        className="pl-10"
+      />
+      {open && (
+        <div className="absolute z-50 top-full mt-1 w-full rounded-md border bg-popover shadow-md overflow-hidden max-h-[240px] overflow-y-auto">
+          {suggestions.map((c: any, i: number) => {
+            const name = `${c.first_name} ${c.last_name}`;
+            return (
+              <button
+                key={c.id}
+                className={cn(
+                  "flex flex-col gap-0.5 w-full px-3 py-2 text-sm text-left hover:bg-accent transition-colors",
+                  i === focusIndex && "bg-accent"
+                )}
+                onMouseDown={(e) => { e.preventDefault(); selectClient(c); }}
+                onMouseEnter={() => setFocusIndex(i)}
+              >
+                <div className="flex items-center gap-2">
+                  <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <span className="font-medium truncate">
+                    <HighlightMatch text={name} query={searchValue} />
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 pl-5 text-xs text-muted-foreground flex-wrap">
+                  {c.phone && (
+                    <span className="flex items-center gap-1">
+                      <Phone className="h-3 w-3 shrink-0" />
+                      <HighlightMatch text={c.phone} query={searchValue} />
+                    </span>
+                  )}
+                  {c.email && (
+                    <span className="flex items-center gap-1">
+                      <Mail className="h-3 w-3 shrink-0" />
+                      <HighlightMatch text={c.email} query={searchValue} />
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 interface SeasonPeriod {
   id: string;
   fromDate: string; // yyyy-MM-dd
@@ -533,24 +684,19 @@ export function PreventivoDialog({
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Cliente *</Label>
-                <div className="flex gap-2">
-                  <Input placeholder="Cerca cliente per nome o email..." value={clientSearch}
-                    onChange={(e) => setClientSearch(e.target.value)} className="flex-1" />
+                <div className="flex gap-2 items-start">
+                  <ClientAutocomplete
+                    clients={clients ?? []}
+                    value={clientId}
+                    searchValue={clientSearch}
+                    onSearchChange={setClientSearch}
+                    onSelect={(id) => { setClientId(id); setSelectedCats([]); }}
+                  />
                   <Button type="button" variant="outline" size="sm" onClick={() => setNewClientDialogOpen(true)}
-                    className="shrink-0 gap-1">
+                    className="shrink-0 gap-1 mt-0">
                     <UserPlus className="h-4 w-4" /> Nuovo
                   </Button>
                 </div>
-                <Select value={clientId} onValueChange={(v) => { setClientId(v); setSelectedCats([]); }}>
-                  <SelectTrigger><SelectValue placeholder="Seleziona cliente" /></SelectTrigger>
-                  <SelectContent>
-                    {filteredClients.map((c: any) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.first_name} {c.last_name} {c.email ? `(${c.email})` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
 
               {clientId && (
