@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -17,7 +16,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { CalendarIcon, CheckCircle2, XCircle, Clock, LogIn, LogOut, Trash2, Pencil, Search } from "lucide-react";
+import { CalendarIcon, CheckCircle2, XCircle, Clock, LogIn, LogOut, Trash2, Pencil } from "lucide-react";
+import { AutocompleteSearch, type SearchableItem } from "@/components/AutocompleteSearch";
 import { format, addDays, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addWeeks, subWeeks, addMonths, subMonths, parseISO, getDay } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -91,6 +91,29 @@ export default function Appuntamenti() {
   const confirmAppointment = useConfirmAppointment();
   const deleteAppointment = useDeleteAppointment();
   const updateAppointment = useUpdateAppointment();
+
+  // Build searchable items for autocomplete
+  const searchableItems = useMemo<SearchableItem[]>(() => {
+    if (!appointments) return [];
+    const items: SearchableItem[] = [];
+    const seen = new Set<string>();
+    for (const a of appointments) {
+      const client = a.booking?.client;
+      if (client) {
+        const name = `${client.first_name} ${client.last_name}`;
+        if (!seen.has(`c:${name}`)) { seen.add(`c:${name}`); items.push({ label: name, value: name, type: "cliente" }); }
+        if (client.email && !seen.has(`e:${client.email}`)) { seen.add(`e:${client.email}`); items.push({ label: client.email, value: client.email, type: "email" }); }
+        if (client.phone && !seen.has(`p:${client.phone}`)) { seen.add(`p:${client.phone}`); items.push({ label: client.phone, value: client.phone, type: "telefono" }); }
+      }
+      for (const bc of a.booking?.booking_cats ?? []) {
+        const catName = bc.cat?.name;
+        if (catName && !seen.has(`g:${catName}`)) { seen.add(`g:${catName}`); items.push({ label: catName, value: catName, type: "gatto" }); }
+      }
+      const bn = a.booking?.booking_number;
+      if (bn && !seen.has(`b:${bn}`)) { seen.add(`b:${bn}`); items.push({ label: bn, value: bn, type: "prenotazione" }); }
+    }
+    return items;
+  }, [appointments]);
 
   // Filter by search
   const filteredAppointments = useMemo(() => {
@@ -387,16 +410,14 @@ export default function Appuntamenti() {
         </div>
       )}
 
-      {/* Search bar */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Cerca per n° prenotazione, cliente, gatto, email, telefono..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10"
-        />
-      </div>
+      {/* Search bar with autocomplete */}
+      <AutocompleteSearch
+        items={searchableItems}
+        value={search}
+        onChange={setSearch}
+        placeholder="Cerca per n° prenotazione, cliente, gatto, email, telefono..."
+        className="max-w-sm"
+      />
 
       {/* Summary badges */}
       <div className="flex gap-3 flex-wrap">
