@@ -98,7 +98,7 @@ export default function Pagamenti() {
   const deletePayment = useDeletePayment();
 
   const [expandedClients, setExpandedClients] = useState<Set<string>>(new Set());
-  const [expandedBookings, setExpandedBookings] = useState<Set<string>>(new Set());
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [search, setSearch] = useState("");
 
   const [txDialogOpen, setTxDialogOpen] = useState(false);
@@ -142,12 +142,8 @@ export default function Pagamenti() {
     });
   };
 
-  const toggleBooking = (id: string) => {
-    setExpandedBookings(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+  const openBookingTransactions = (booking: any) => {
+    setSelectedBooking(booking);
   };
 
   const openNewTx = (bookingId: string) => {
@@ -308,26 +304,26 @@ export default function Pagamenti() {
                 {clientExpanded && (
                   <div className="border-t">
                     {group.bookings.map((b: any) => {
-                      const bookingExpanded = expandedBookings.has(b.id);
                       const bTotal = Number(b.total_amount ?? 0);
                       const bPayments = b.payments ?? [];
                       const { net: bNet } = calcTotals(bPayments);
-                      const bRemaining = bTotal - bNet;
                       const catNames = (b.booking_cats ?? []).map((bc: any) => bc.cat?.name).filter(Boolean).join(", ");
                       const paidPercent = bTotal > 0 ? Math.min(100, (bNet / bTotal) * 100) : 0;
 
                       return (
                         <div key={b.id} className="border-b last:border-b-0">
-                          {/* Booking row */}
                           <button
                             className="w-full flex items-center gap-3 px-4 py-3 pl-8 text-left hover:bg-muted/20 transition-colors"
-                            onClick={() => toggleBooking(b.id)}
+                            onClick={() => openBookingTransactions(b)}
                           >
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-medium text-sm">{b.booking_number}</span>
                                 <Badge variant="outline" className="text-[10px] h-5">
                                   {STATUS_LABELS[b.status] ?? b.status}
+                                </Badge>
+                                <Badge variant="secondary" className="text-[10px] h-5">
+                                  {bPayments.length} pag.
                                 </Badge>
                               </div>
                               <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
@@ -357,87 +353,8 @@ export default function Pagamenti() {
                                 </span>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-7 w-7"
-                                onClick={e => { e.stopPropagation(); openNewTx(b.id); }}
-                                title="Nuova transazione"
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                              {bookingExpanded
-                                ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                : <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                              }
-                            </div>
+                            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                           </button>
-
-                          {/* Transactions */}
-                          {bookingExpanded && (
-                            <div className="bg-secondary/40 border-t">
-                              {/* Booking totals strip */}
-                              <div className="flex items-center justify-between px-4 py-2 pl-12 border-b border-border/50">
-                                <div className="flex items-center gap-3">
-                                  <MoneyBadge value={bTotal} variant="total" />
-                                  <MoneyBadge value={bNet} variant="paid" />
-                                  <MoneyBadge value={bRemaining} variant="remaining" />
-                                </div>
-                                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openNewTx(b.id)}>
-                                  <Plus className="h-3 w-3 mr-1" /> Transazione
-                                </Button>
-                              </div>
-
-                              {bPayments.length === 0 ? (
-                                <div className="py-6 text-center text-sm text-muted-foreground">
-                                  <CreditCard className="h-5 w-5 mx-auto mb-2 opacity-40" />
-                                  Nessuna transazione registrata
-                                </div>
-                              ) : (
-                                <div className="divide-y divide-border/50">
-                                  {[...bPayments]
-                                    .sort((a: any, b: any) => a.payment_date.localeCompare(b.payment_date))
-                                    .map((tx: any) => {
-                                      const isRimborso = tx.payment_type === "rimborso";
-                                      return (
-                                        <div key={tx.id} className="flex items-center gap-3 px-4 py-2.5 pl-12 hover:bg-muted/30 transition-colors group">
-                                          {/* Date */}
-                                          <div className="text-xs text-muted-foreground w-24 shrink-0">
-                                            {format(parseISO(tx.payment_date), "dd MMM yyyy", { locale: it })}
-                                          </div>
-                                          {/* Type badge */}
-                                          <Badge
-                                            variant={isRimborso ? "destructive" : tx.payment_type === "caparra" ? "default" : "secondary"}
-                                            className="text-[10px] h-5 shrink-0"
-                                          >
-                                            {TYPE_LABELS[tx.payment_type] ?? tx.payment_type}
-                                          </Badge>
-                                          {/* Method */}
-                                          <div className="text-xs text-muted-foreground flex-1 truncate">
-                                            {tx.payment_method?.name ?? tx.method ?? "—"}
-                                            {tx.notes && <span className="ml-2 italic opacity-60">— {tx.notes}</span>}
-                                          </div>
-                                          {/* Amount */}
-                                          <div className={`font-mono text-sm font-semibold shrink-0 ${isRimborso ? "text-destructive" : ""}`}>
-                                            {isRimborso ? "-" : "+"}€ {Number(tx.amount).toFixed(2)}
-                                          </div>
-                                          {/* Actions */}
-                                          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => openEditTx(b.id, tx)}>
-                                              <Pencil className="h-3 w-3" />
-                                            </Button>
-                                            <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => setDeleteId(tx.id)}>
-                                              <Trash2 className="h-3 w-3" />
-                                            </Button>
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                </div>
-                              )}
-                            </div>
-                          )}
                         </div>
                       );
                     })}
@@ -449,7 +366,85 @@ export default function Pagamenti() {
         </div>
       )}
 
-      {/* Transaction Dialog */}
+      {/* Transactions List Modal */}
+      <Dialog open={!!selectedBooking} onOpenChange={open => !open && setSelectedBooking(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Transazioni — {selectedBooking?.booking_number}
+            </DialogTitle>
+          </DialogHeader>
+
+          {(() => {
+            if (!selectedBooking) return null;
+            const bPayments = selectedBooking.payments ?? [];
+            const bTotal = Number(selectedBooking.total_amount ?? 0);
+            const { net: bNet } = calcTotals(bPayments);
+            const bRemaining = bTotal - bNet;
+
+            return (
+              <>
+                <div className="grid grid-cols-3 gap-3">
+                  <MoneyBadge value={bTotal} variant="total" />
+                  <MoneyBadge value={bNet} variant="paid" />
+                  <MoneyBadge value={bRemaining} variant="remaining" />
+                </div>
+
+                {bPayments.length === 0 ? (
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    <CreditCard className="h-6 w-6 mx-auto mb-2 opacity-40" />
+                    Nessuna transazione registrata
+                  </div>
+                ) : (
+                  <div className="rounded-md border divide-y max-h-[300px] overflow-auto">
+                    {[...bPayments]
+                      .sort((a: any, b: any) => a.payment_date.localeCompare(b.payment_date))
+                      .map((tx: any) => {
+                        const isRimborso = tx.payment_type === "rimborso";
+                        return (
+                          <div key={tx.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/30 transition-colors group">
+                            <div className="text-xs text-muted-foreground w-24 shrink-0">
+                              {format(parseISO(tx.payment_date), "dd MMM yyyy", { locale: it })}
+                            </div>
+                            <Badge
+                              variant={isRimborso ? "destructive" : tx.payment_type === "caparra" ? "default" : "secondary"}
+                              className="text-[10px] h-5 shrink-0"
+                            >
+                              {TYPE_LABELS[tx.payment_type] ?? tx.payment_type}
+                            </Badge>
+                            <div className="text-xs text-muted-foreground flex-1 truncate">
+                              {tx.payment_method?.name ?? tx.method ?? "—"}
+                              {tx.notes && <span className="ml-2 italic opacity-60">— {tx.notes}</span>}
+                            </div>
+                            <div className={`font-mono text-sm font-semibold shrink-0 ${isRimborso ? "text-destructive" : ""}`}>
+                              {isRimborso ? "-" : "+"}€ {Number(tx.amount).toFixed(2)}
+                            </div>
+                            <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => openEditTx(selectedBooking.id, tx)}>
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                              <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => setDeleteId(tx.id)}>
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <Button size="sm" onClick={() => { openNewTx(selectedBooking.id); }}>
+                    <Plus className="h-4 w-4 mr-1" /> Nuova Transazione
+                  </Button>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={txDialogOpen} onOpenChange={setTxDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
