@@ -1,13 +1,17 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Cat, CalendarCheck, LogIn, LogOut, CreditCard, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Cat, CalendarCheck, LogIn, LogOut, CreditCard, AlertTriangle, CalendarIcon } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useBookings } from "@/hooks/useBookings";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import { useAllPayments } from "@/hooks/usePayments";
-import { format, parseISO, startOfMonth, endOfMonth, isToday } from "date-fns";
+import { format, parseISO, startOfMonth, endOfMonth, isToday as isTodayFn } from "date-fns";
 import { it } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 const STATUS_LABELS: Record<string, string> = {
   preventivo: "Preventivo",
@@ -44,36 +48,40 @@ export default function Index() {
   const { data: tenantConfig } = useTenantConfig();
   const { data: allPayments } = useAllPayments();
 
-  const today = format(new Date(), "yyyy-MM-dd");
-  const monthStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
-  const monthEnd = format(endOfMonth(new Date()), "yyyy-MM-dd");
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
+  const isSelectedToday = isTodayFn(selectedDate);
+  const monthStart = format(startOfMonth(selectedDate), "yyyy-MM-dd");
+  const monthEnd = format(endOfMonth(selectedDate), "yyyy-MM-dd");
 
   const stats = useMemo(() => {
     if (!bookings) return null;
 
-    // Cats currently in structure (status in_corso)
-    const inCorsoBookings = bookings.filter(b => b.status === "in_corso");
-    const catsInStructure = inCorsoBookings.reduce((sum, b) => sum + (b.booking_cats?.length ?? 0), 0);
+    // Cats in structure on selected date (in_corso bookings overlapping that date)
+    const inCorsoOverlapping = bookings.filter(b => b.status === "in_corso" && b.check_in_date <= selectedDateStr && b.check_out_date >= selectedDateStr);
+    const catsInStructure = inCorsoOverlapping.reduce((sum, b) => sum + (b.booking_cats?.length ?? 0), 0);
 
-    // Occupancy by cage type: include all accepted bookings overlapping today
+    // Occupancy by cage type: include all accepted bookings overlapping selected date
     const occupancyStatuses = ["confermata", "appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato", "check_in", "in_corso"];
     const occupyingBookings = bookings.filter(b =>
-      occupancyStatuses.includes(b.status) && b.check_in_date <= today && b.check_out_date >= today
+      occupancyStatuses.includes(b.status) && b.check_in_date <= selectedDateStr && b.check_out_date >= selectedDateStr
     );
     const singoleOccupied = occupyingBookings.filter(b => b.cage_pool_type === "singola").reduce((s, b) => s + b.units_occupied, 0);
     const doppieOccupied = occupyingBookings.filter(b => b.cage_pool_type === "doppia").reduce((s, b) => s + b.units_occupied, 0);
 
-    // Active bookings (confermata, appuntamento*, in_corso)
+    // Active bookings overlapping selected date
     const activeStatuses = ["confermata", "appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato", "check_in", "in_corso"];
-    const activeBookings = bookings.filter(b => activeStatuses.includes(b.status));
+    const activeBookings = bookings.filter(b => activeStatuses.includes(b.status) && b.check_in_date <= selectedDateStr && b.check_out_date >= selectedDateStr);
 
-    // Check-ins today
-    const checkInsToday = bookings.filter(b => b.check_in_date === today && ["check_in", "in_corso"].includes(b.status));
+    // Check-ins on selected date
+    const checkInsToday = bookings.filter(b => b.check_in_date === selectedDateStr && !["preventivo", "cancellata", "rimborsata", "scaduto"].includes(b.status));
 
-    // Check-outs today
-    const checkOutsToday = bookings.filter(b => b.check_out_date === today && ["in_corso", "check_out"].includes(b.status));
+    // Check-outs on selected date
+    const checkOutsToday = bookings.filter(b => b.check_out_date === selectedDateStr && !["preventivo", "cancellata", "rimborsata", "scaduto"].includes(b.status));
 
-    // Monthly revenue
+    // Monthly revenue (month of selected date)
     const monthPayments = (allPayments ?? []).filter(p => {
       const pDate = p.payment_date?.slice(0, 10);
       return pDate >= monthStart && pDate <= monthEnd && p.payment_type !== "rimborso";
@@ -84,17 +92,18 @@ export default function Index() {
     });
     const monthRevenue = monthPayments.reduce((s, p) => s + Number(p.amount), 0) - monthRefunds.reduce((s, p) => s + Number(p.amount), 0);
 
-    // Recent bookings (last 5 updated)
-    const recentBookings = [...bookings]
-      .filter(b => !["cancellata", "rimborsata"].includes(b.status))
-      .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
-      .slice(0, 5);
+    // Bookings with activity on the selected date
+    const dayBookings = bookings.filter(b =>
+      !["cancellata", "rimborsata"].includes(b.status) &&
+      (b.check_in_date === selectedDateStr || b.check_out_date === selectedDateStr ||
+       (b.check_in_date <= selectedDateStr && b.check_out_date >= selectedDateStr))
+    ).slice(0, 5);
 
-    // Expiring preventivi (preventivo with check_in_date <= today + 3 days)
-    const soonDate = new Date();
+    // Expiring preventivi (preventivo with check_in_date <= selected date + 3 days)
+    const soonDate = new Date(selectedDate);
     soonDate.setDate(soonDate.getDate() + 3);
     const soonStr = format(soonDate, "yyyy-MM-dd");
-    const expiringPreventivi = bookings.filter(b => b.status === "preventivo" && b.check_in_date <= soonStr);
+    const expiringPreventivi = bookings.filter(b => b.status === "preventivo" && b.check_in_date >= selectedDateStr && b.check_in_date <= soonStr);
 
     return {
       catsInStructure,
@@ -104,10 +113,10 @@ export default function Index() {
       checkInsToday: checkInsToday.length,
       checkOutsToday: checkOutsToday.length,
       monthRevenue,
-      recentBookings,
+      dayBookings,
       expiringPreventivi: expiringPreventivi.length,
     };
-  }, [bookings, allPayments, today, monthStart, monthEnd]);
+  }, [bookings, allPayments, selectedDateStr, monthStart, monthEnd]);
 
   const numSingole = tenantConfig?.num_singole ?? 0;
   const numDoppie = tenantConfig?.num_doppie ?? 0;
@@ -127,7 +136,7 @@ export default function Index() {
   const s = stats ?? {
     catsInStructure: 0, singoleOccupied: 0, doppieOccupied: 0,
     activeBookings: 0, checkInsToday: 0, checkOutsToday: 0,
-    monthRevenue: 0, recentBookings: [], expiringPreventivi: 0,
+    monthRevenue: 0, dayBookings: [], expiringPreventivi: 0,
   };
 
   const kpis = [
@@ -148,9 +157,9 @@ export default function Index() {
       bg: "bg-accent/10",
     },
     {
-      title: "Check-in oggi",
+      title: isSelectedToday ? "Check-in oggi" : "Check-in",
       value: String(s.checkInsToday),
-      subtitle: `${s.checkOutsToday} check-out oggi`,
+      subtitle: `${s.checkOutsToday} check-out`,
       icon: LogIn,
       color: "text-success",
       bg: "bg-success/10",
@@ -158,7 +167,7 @@ export default function Index() {
     {
       title: "Incasso mese",
       value: `€ ${s.monthRevenue.toFixed(0)}`,
-      subtitle: format(new Date(), "MMMM yyyy", { locale: it }),
+      subtitle: format(selectedDate, "MMMM yyyy", { locale: it }),
       icon: CreditCard,
       color: "text-warning",
       bg: "bg-warning/10",
@@ -170,11 +179,37 @@ export default function Index() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Panoramica operativa — {tenantConfig?.name ?? "Pensione"}
-        </p>
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {isSelectedToday ? "Panoramica operativa" : `Dati del ${format(selectedDate, "dd MMMM yyyy", { locale: it })}`} — {tenantConfig?.name ?? "Pensione"}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {!isSelectedToday && (
+            <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date())}>
+              Oggi
+            </Button>
+          )}
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <CalendarIcon className="h-4 w-4" />
+                {format(selectedDate, "dd MMM yyyy", { locale: it })}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(d) => { if (d) { setSelectedDate(d); setCalendarOpen(false); } }}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       {/* KPI Cards */}
@@ -223,14 +258,16 @@ export default function Index() {
       {/* Recent Bookings */}
       <Card className="border-none shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Prenotazioni recenti</CardTitle>
+          <CardTitle className="text-base">
+            {isSelectedToday ? "Prenotazioni del giorno" : `Prenotazioni — ${format(selectedDate, "dd MMM yyyy", { locale: it })}`}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {s.recentBookings.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Nessuna prenotazione</p>
+          {s.dayBookings.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Nessuna prenotazione per questa data</p>
           ) : (
             <div className="space-y-3">
-              {s.recentBookings.map((b: any) => {
+              {s.dayBookings.map((b: any) => {
                 const clientName = b.client ? `${b.client.first_name} ${b.client.last_name}` : "—";
                 const catNames = (b.booking_cats ?? []).map((bc: any) => bc.cat?.name).filter(Boolean).join(", ") || "—";
                 return (
