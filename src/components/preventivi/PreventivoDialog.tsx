@@ -113,10 +113,35 @@ export function PreventivoDialog({
     appointments: { id: string; appointment_type: string; scheduled_at: string }[];
   } | null>(null);
   const queryClient = useQueryClient();
+  const [occupancyModalOpen, setOccupancyModalOpen] = useState(false);
   // ── Pricing state ──
   const [seasonPeriods, setSeasonPeriods] = useState<SeasonPeriod[]>([]);
   const [extraServices, setExtraServices] = useState<ExtraServiceLine[]>([]);
   const [discounts, setDiscounts] = useState<DiscountLine[]>([]);
+
+  // ── Availability check data ──
+  const { data: allBookings } = useBookings();
+  const { data: tenantConfig } = useTenantConfig();
+  const occupancyDays = tenantConfig?.occupancy_rule_days ?? 3;
+  const totalSingole = tenantConfig?.num_singole ?? 0;
+  const totalDoppie = tenantConfig?.num_doppie ?? 0;
+
+  const { bookingOccupancy } = useOccupancyData(
+    allBookings ?? [],
+    occupancyDays,
+    editing?.id,
+  );
+
+  const availabilityResult = useMemo(() => {
+    if (!checkInDate || cageUnits.length === 0) return null;
+    const checkInStr = format(checkInDate, "yyyy-MM-dd");
+    return checkAvailability(bookingOccupancy, checkInStr, occupancyDays, cageUnits, totalSingole, totalDoppie);
+  }, [checkInDate, cageUnits, bookingOccupancy, occupancyDays, totalSingole, totalDoppie]);
+
+  const hasConflicts = availabilityResult && !availabilityResult.available;
+
+  const occupancyRangeStart = useMemo(() => checkInDate ? subDays(checkInDate, 5) : new Date(), [checkInDate]);
+  const occupancyRangeEnd = useMemo(() => checkInDate ? addDays(checkInDate, occupancyDays + 5) : new Date(), [checkInDate, occupancyDays]);
 
   const { data: clientCats } = useClientCats(clientId || undefined);
   const today = startOfDay(new Date());
