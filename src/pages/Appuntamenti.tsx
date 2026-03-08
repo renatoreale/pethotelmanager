@@ -101,11 +101,8 @@ export default function Appuntamenti() {
   // Filter by search
   const filteredAppointments = useMemo(() => {
     if (!appointments) return [];
-    let result = appointments;
-    // Filter by booking status
-    if (statusFilter !== "tutti") {
-      result = result.filter((a) => a.booking?.status === statusFilter);
-    }
+    // Exclude closed/cancelled/refunded bookings
+    let result = appointments.filter((a) => !["chiusa", "cancellata", "rimborsata"].includes(a.booking?.status ?? ""));
     if (!search.trim()) return result;
     const q = search.toLowerCase();
     return result.filter((a) => {
@@ -117,7 +114,7 @@ export default function Appuntamenti() {
       const phone = (client?.phone ?? "").toLowerCase();
       return clientName.includes(q) || catNames.includes(q) || bookingNum.includes(q) || email.includes(q) || phone.includes(q);
     });
-  }, [appointments, search, statusFilter]);
+  }, [appointments, search]);
 
   const checkInAppts = useMemo(() => filteredAppointments.filter(a => a.appointment_type === "check_in"), [filteredAppointments]);
   const checkOutAppts = useMemo(() => filteredAppointments.filter(a => a.appointment_type === "check_out"), [filteredAppointments]);
