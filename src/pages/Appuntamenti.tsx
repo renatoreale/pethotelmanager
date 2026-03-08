@@ -89,7 +89,25 @@ export default function Appuntamenti() {
 
   const confirmAppointment = useConfirmAppointment();
   const deleteAppointment = useDeleteAppointment();
-  
+
+  // Fetch confirmed bookings (no appointments yet)
+  const { data: allBookings } = useBookings();
+  const confirmedBookings = useMemo(() => {
+    if (!allBookings) return [];
+    let result = allBookings.filter((b: any) => b.status === "confermata");
+    if (search.trim().length >= 2) {
+      const q = search.toLowerCase();
+      result = result.filter((b: any) => {
+        const clientName = `${b.client?.first_name ?? ""} ${b.client?.last_name ?? ""}`.toLowerCase();
+        const catNames = (b.booking_cats ?? []).map((bc: any) => bc.cat?.name ?? "").join(" ").toLowerCase();
+        const bookingNum = (b.booking_number ?? "").toLowerCase();
+        const email = (b.client?.email ?? "").toLowerCase();
+        const phone = (b.client?.phone ?? "").toLowerCase();
+        return clientName.includes(q) || catNames.includes(q) || bookingNum.includes(q) || email.includes(q) || phone.includes(q);
+      });
+    }
+    return result;
+  }, [allBookings, search]);
 
   // Filter by search
   const filteredAppointments = useMemo(() => {
