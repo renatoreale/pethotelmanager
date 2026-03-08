@@ -180,17 +180,16 @@ export function OccupancyGrid({
             </tr>
           </thead>
           <tbody>
-            {visibleBookings.length === 0 ? (
+            {visibleRows.length === 0 ? (
               <tr><td colSpan={days.length + 1} className="text-center py-6 text-muted-foreground">Nessuna prenotazione</td></tr>
-            ) : visibleBookings.map((bo) => {
+            ) : visibleRows.map(({ bo, catName, rowKey }) => {
               const b = bo.booking;
-              const catNames = b.booking_cats?.map(bc => bc.cat?.name).filter(Boolean).join(", ") || "—";
               const clientName = b.client ? `${b.client.first_name} ${b.client.last_name}` : "—";
               const poolLabel = b.cage_pool_type === "singola" ? "S" : "D";
               return (
-                <tr key={b.id} className="border-b hover:bg-muted/20 transition-colors">
+                <tr key={rowKey} className="border-b hover:bg-muted/20 transition-colors">
                   <td className="sticky left-0 z-10 bg-card/95 backdrop-blur px-2 py-1 border-r">
-                    <div className="font-medium text-foreground truncate max-w-[160px] text-[11px]">{catNames}</div>
+                    <div className="font-medium text-foreground truncate max-w-[160px] text-[11px]">{catName}</div>
                     <div className="text-muted-foreground truncate max-w-[160px] text-[10px]">
                       {clientName} · <span className={cn("font-semibold", b.cage_pool_type === "singola" ? "text-primary" : "text-accent")}>{poolLabel}</span> · #{b.booking_number}
                     </div>
