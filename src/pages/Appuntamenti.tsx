@@ -41,6 +41,7 @@ export default function Appuntamenti() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [deleting, setDeleting] = useState<AppointmentWithDetails | null>(null);
+  const [editing, setEditing] = useState<AppointmentWithDetails | null>(null);
 
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const { data: appointments, isLoading } = useAppointmentsByDate(dateStr);
