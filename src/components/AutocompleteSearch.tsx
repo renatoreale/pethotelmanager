@@ -1,16 +1,10 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, User, Cat, Mail, Phone, Hash } from "lucide-react";
+import { Search, User, Cat, Mail, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-
-export interface SearchableItem {
-  label: string;
-  value: string;
-  type: "cliente" | "gatto" | "email" | "telefono" | "prenotazione";
-}
 
 const ACTIVE_STATUSES = [
   "confermata",
@@ -21,6 +15,15 @@ const ACTIVE_STATUSES = [
   "in_corso",
   "check_out",
 ];
+
+interface GroupedSuggestion {
+  clientName: string;
+  email: string | null;
+  phone: string | null;
+  catNames: string[];
+  /** The value we put in the search box when selected */
+  searchValue: string;
+}
 
 function useActiveBookingSuggestions() {
   const { profile } = useAuth();
@@ -52,22 +55,6 @@ interface AutocompleteSearchProps {
   className?: string;
 }
 
-const TYPE_ICONS = {
-  cliente: User,
-  gatto: Cat,
-  email: Mail,
-  telefono: Phone,
-  prenotazione: Hash,
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  cliente: "Cliente",
-  gatto: "Gatto",
-  email: "Email",
-  telefono: "Telefono",
-  prenotazione: "Prenotazione",
-};
-
 export function AutocompleteSearch({ value, onChange, placeholder, className }: AutocompleteSearchProps) {
   const [open, setOpen] = useState(false);
   const [focusIndex, setFocusIndex] = useState(-1);
@@ -76,42 +63,47 @@ export function AutocompleteSearch({ value, onChange, placeholder, className }: 
 
   const { data: bookings } = useActiveBookingSuggestions();
 
-  const items = useMemo<SearchableItem[]>(() => {
+  // Group by client
+  const grouped = useMemo<GroupedSuggestion[]>(() => {
     if (!bookings) return [];
-    const result: SearchableItem[] = [];
-    const seen = new Set<string>();
+    const map = new Map<string, GroupedSuggestion>();
     for (const b of bookings) {
       const client = b.client as any;
-      if (client) {
+      if (!client) continue;
+      const clientId = client.id as string;
+      if (!map.has(clientId)) {
         const name = `${client.first_name} ${client.last_name}`;
-        if (!seen.has(`c:${name}`)) { seen.add(`c:${name}`); result.push({ label: name, value: name, type: "cliente" }); }
-        if (client.email && !seen.has(`e:${client.email}`)) { seen.add(`e:${client.email}`); result.push({ label: client.email, value: client.email, type: "email" }); }
-        if (client.phone && !seen.has(`p:${client.phone}`)) { seen.add(`p:${client.phone}`); result.push({ label: client.phone, value: client.phone, type: "telefono" }); }
+        map.set(clientId, {
+          clientName: name,
+          email: client.email ?? null,
+          phone: client.phone ?? null,
+          catNames: [],
+          searchValue: name,
+        });
       }
+      const entry = map.get(clientId)!;
       for (const bc of (b.booking_cats ?? []) as any[]) {
         const catName = bc.cat?.name;
-        if (catName && !seen.has(`g:${catName}`)) { seen.add(`g:${catName}`); result.push({ label: catName, value: catName, type: "gatto" }); }
-      }
-      if (b.booking_number && !seen.has(`b:${b.booking_number}`)) {
-        seen.add(`b:${b.booking_number}`);
-        result.push({ label: b.booking_number, value: b.booking_number, type: "prenotazione" });
+        if (catName && !entry.catNames.includes(catName)) {
+          entry.catNames.push(catName);
+        }
       }
     }
-    return result;
+    return Array.from(map.values());
   }, [bookings]);
 
   const suggestions = useMemo(() => {
     if (!value.trim() || value.trim().length < 2) return [];
     const q = value.toLowerCase();
-    const seen = new Set<string>();
-    return items.filter((item) => {
-      const key = `${item.type}:${item.value}`;
-      if (seen.has(key)) return false;
-      if (!item.value.toLowerCase().includes(q)) return false;
-      seen.add(key);
-      return true;
+    return grouped.filter((g) => {
+      return (
+        g.clientName.toLowerCase().includes(q) ||
+        g.catNames.some((c) => c.toLowerCase().includes(q)) ||
+        (g.email && g.email.toLowerCase().includes(q)) ||
+        (g.phone && g.phone.toLowerCase().includes(q))
+      );
     }).slice(0, 8);
-  }, [items, value]);
+  }, [grouped, value]);
 
   useEffect(() => {
     setOpen(suggestions.length > 0 && value.trim().length >= 2);
@@ -138,15 +130,15 @@ export function AutocompleteSearch({ value, onChange, placeholder, className }: 
       setFocusIndex((i) => Math.max(i - 1, 0));
     } else if (e.key === "Enter" && focusIndex >= 0) {
       e.preventDefault();
-      onChange(suggestions[focusIndex].value);
+      onChange(suggestions[focusIndex].clientName);
       setOpen(false);
     } else if (e.key === "Escape") {
       setOpen(false);
     }
   };
 
-  const selectSuggestion = (item: SearchableItem) => {
-    onChange(item.value);
+  const selectSuggestion = (item: GroupedSuggestion) => {
+    onChange(item.clientName);
     setOpen(false);
     inputRef.current?.focus();
   };
@@ -165,26 +157,49 @@ export function AutocompleteSearch({ value, onChange, placeholder, className }: 
       />
       {open && (
         <div className="absolute z-50 top-full mt-1 w-full rounded-md border bg-popover shadow-md overflow-hidden">
-          {suggestions.map((item, i) => {
-            const Icon = TYPE_ICONS[item.type];
-            return (
-              <button
-                key={`${item.type}:${item.value}:${i}`}
-                className={cn(
-                  "flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-accent transition-colors",
-                  i === focusIndex && "bg-accent"
-                )}
-                onMouseDown={(e) => { e.preventDefault(); selectSuggestion(item); }}
-                onMouseEnter={() => setFocusIndex(i)}
-              >
-                <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="truncate flex-1">
-                  <HighlightMatch text={item.label} query={value} />
+          {suggestions.map((item, i) => (
+            <button
+              key={i}
+              className={cn(
+                "flex flex-col gap-0.5 w-full px-3 py-2 text-sm text-left hover:bg-accent transition-colors",
+                i === focusIndex && "bg-accent"
+              )}
+              onMouseDown={(e) => { e.preventDefault(); selectSuggestion(item); }}
+              onMouseEnter={() => setFocusIndex(i)}
+            >
+              <div className="flex items-center gap-2">
+                <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <span className="font-medium truncate">
+                  <HighlightMatch text={item.clientName} query={value} />
                 </span>
-                <span className="text-xs text-muted-foreground shrink-0">{TYPE_LABELS[item.type]}</span>
-              </button>
-            );
-          })}
+              </div>
+              <div className="flex items-center gap-3 pl-5 text-xs text-muted-foreground flex-wrap">
+                {item.catNames.length > 0 && (
+                  <span className="flex items-center gap-1">
+                    <Cat className="h-3 w-3 shrink-0" />
+                    {item.catNames.map((name, ci) => (
+                      <span key={ci}>
+                        <HighlightMatch text={name} query={value} />
+                        {ci < item.catNames.length - 1 && ", "}
+                      </span>
+                    ))}
+                  </span>
+                )}
+                {item.phone && (
+                  <span className="flex items-center gap-1">
+                    <Phone className="h-3 w-3 shrink-0" />
+                    <HighlightMatch text={item.phone} query={value} />
+                  </span>
+                )}
+                {item.email && (
+                  <span className="flex items-center gap-1">
+                    <Mail className="h-3 w-3 shrink-0" />
+                    <HighlightMatch text={item.email} query={value} />
+                  </span>
+                )}
+              </div>
+            </button>
+          ))}
         </div>
       )}
     </div>
