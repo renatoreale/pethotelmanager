@@ -16,13 +16,15 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, CalendarDays, MoreHorizontal } from "lucide-react";
+import { Search, CalendarDays, MoreHorizontal, Pencil } from "lucide-react";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
+import { PreventivoDialog } from "@/components/preventivi/PreventivoDialog";
 import { toast } from "sonner";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import { useBookings, useTransitionBooking, getTransitions } from "@/hooks/useBookings";
+import { useUpdatePreventivo } from "@/hooks/usePreventivi";
 
 const STATUS_OPTIONS = [
   { value: "tutti", label: "Tutti gli stati" },
