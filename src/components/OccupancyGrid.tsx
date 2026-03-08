@@ -100,7 +100,7 @@ export function checkAvailability(
 
 export function OccupancyGrid({
   bookings, occupancyDays, totalSingole, totalDoppie,
-  rangeStart, rangeEnd, excludeBookingId, compact,
+  rangeStart, rangeEnd, excludeBookingId, compact, highlightDate,
 }: Props) {
   const today = new Date();
 
