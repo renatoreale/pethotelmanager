@@ -131,11 +131,13 @@ export default function CheckOut() {
       }
     }
 
-    // If fewer days: keep original total. If more days: add extra cost.
-    const newTotal = newDays <= originalDays ? originalTotal : Math.round((originalTotal + extraCost) * 100) / 100;
+    const effectiveExtraCost = manualExtraCost !== null ? Math.max(0, parseFloat(manualExtraCost) || 0) : extraCost;
 
-    return { newCoStr, originalDays, newDays, newTotal, dateChanged, originalTotal, extraDays, extraCost, extraTariffName };
-  }, [confirmBooking, actualCheckOutDate, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs]);
+    // If fewer days: keep original total. If more days: add extra cost.
+    const newTotal = newDays <= originalDays ? originalTotal : Math.round((originalTotal + effectiveExtraCost) * 100) / 100;
+
+    return { newCoStr, originalDays, newDays, newTotal, dateChanged, originalTotal, extraDays, extraCost, extraTariffName, effectiveExtraCost };
+  }, [confirmBooking, actualCheckOutDate, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs, manualExtraCost]);
 
   const checkOutBookings = useMemo(() => {
     if (!bookings) return [];

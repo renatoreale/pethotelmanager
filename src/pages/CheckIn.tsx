@@ -132,11 +132,13 @@ export default function CheckIn() {
       }
     }
 
-    // If fewer days: keep original total. If more days: add extra cost.
-    const newTotal = newDays <= originalDays ? originalTotal : Math.round((originalTotal + extraCost) * 100) / 100;
+    const effectiveExtraCost = manualExtraCost !== null ? Math.max(0, parseFloat(manualExtraCost) || 0) : extraCost;
 
-    return { newCiStr, originalDays, newDays, newTotal, dateChanged, originalTotal, extraDays, extraCost, extraTariffName };
-  }, [confirmBooking, actualCheckInDate, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs]);
+    // If fewer days: keep original total. If more days: add extra cost.
+    const newTotal = newDays <= originalDays ? originalTotal : Math.round((originalTotal + effectiveExtraCost) * 100) / 100;
+
+    return { newCiStr, originalDays, newDays, newTotal, dateChanged, originalTotal, extraDays, extraCost, extraTariffName, effectiveExtraCost };
+  }, [confirmBooking, actualCheckInDate, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs, manualExtraCost]);
 
   const checkInBookings = useMemo(() => {
     if (!bookings) return [];
