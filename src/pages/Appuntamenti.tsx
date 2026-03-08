@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -16,7 +17,7 @@ import {
 import {
   Tabs, TabsContent, TabsList, TabsTrigger,
 } from "@/components/ui/tabs";
-import { CalendarIcon, CheckCircle2, XCircle, Clock, LogIn, LogOut, Trash2, Pencil } from "lucide-react";
+import { CalendarIcon, CheckCircle2, XCircle, Clock, LogIn, LogOut, Trash2, Pencil, Search } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -36,12 +37,15 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { getDay, parseISO } from "date-fns";
+import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 
 export default function Appuntamenti() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [deleting, setDeleting] = useState<AppointmentWithDetails | null>(null);
   const [editing, setEditing] = useState<AppointmentWithDetails | null>(null);
+  const [search, setSearch] = useState("");
+  const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
 
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const { data: appointments, isLoading } = useAppointmentsByDate(dateStr);
@@ -49,13 +53,29 @@ export default function Appuntamenti() {
   const deleteAppointment = useDeleteAppointment();
   const updateAppointment = useUpdateAppointment();
 
+  // Filter appointments by search
+  const filteredAppointments = useMemo(() => {
+    if (!appointments) return [];
+    if (!search.trim()) return appointments;
+    const q = search.toLowerCase();
+    return appointments.filter((a) => {
+      const client = a.booking?.client;
+      const clientName = `${client?.first_name ?? ""} ${client?.last_name ?? ""}`.toLowerCase();
+      const catNames = a.booking?.booking_cats?.map(bc => bc.cat?.name ?? "").join(" ").toLowerCase() ?? "";
+      const bookingNum = a.booking?.booking_number?.toLowerCase() ?? "";
+      const email = (client?.email ?? "").toLowerCase();
+      const phone = (client?.phone ?? "").toLowerCase();
+      return clientName.includes(q) || catNames.includes(q) || bookingNum.includes(q) || email.includes(q) || phone.includes(q);
+    });
+  }, [appointments, search]);
+
   const checkInAppts = useMemo(() =>
-    (appointments ?? []).filter(a => a.appointment_type === "check_in"),
-    [appointments]
+    filteredAppointments.filter(a => a.appointment_type === "check_in"),
+    [filteredAppointments]
   );
   const checkOutAppts = useMemo(() =>
-    (appointments ?? []).filter(a => a.appointment_type === "check_out"),
-    [appointments]
+    filteredAppointments.filter(a => a.appointment_type === "check_out"),
+    [filteredAppointments]
   );
 
   const handleConfirmToggle = async (appt: AppointmentWithDetails) => {
@@ -212,6 +232,17 @@ export default function Appuntamenti() {
         </div>
       </div>
 
+      {/* Search bar */}
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Cerca per n° prenotazione, cliente, gatto, email, telefono..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
       {/* Summary badges */}
       <div className="flex gap-3 flex-wrap">
         <Badge variant="outline" className="gap-1 text-sm py-1 px-3">
@@ -224,7 +255,7 @@ export default function Appuntamenti() {
         </Badge>
         <Badge variant="outline" className="gap-1 text-sm py-1 px-3">
           <CheckCircle2 className="h-3.5 w-3.5" />
-          {(appointments ?? []).filter(a => a.confirmed).length} Confermati
+          {filteredAppointments.filter(a => a.confirmed).length} Confermati
         </Badge>
       </div>
 
@@ -302,6 +333,12 @@ export default function Appuntamenti() {
           }}
         />
       )}
+
+      <AppointmentScheduleDialog
+        open={!!schedulingBooking}
+        onOpenChange={(open) => { if (!open) setSchedulingBooking(null); }}
+        booking={schedulingBooking}
+      />
     </div>
   );
 }

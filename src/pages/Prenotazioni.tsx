@@ -16,13 +16,15 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, CalendarDays, MoreHorizontal } from "lucide-react";
+import { Search, CalendarDays, MoreHorizontal, Pencil } from "lucide-react";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
+import { PreventivoDialog } from "@/components/preventivi/PreventivoDialog";
 import { toast } from "sonner";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import { useBookings, useTransitionBooking, getTransitions } from "@/hooks/useBookings";
+import { useUpdatePreventivo } from "@/hooks/usePreventivi";
 
 const STATUS_OPTIONS = [
   { value: "tutti", label: "Tutti gli stati" },
@@ -72,9 +74,11 @@ export default function Prenotazioni() {
   const [search, setSearch] = useState("");
   const [transitioning, setTransitioning] = useState<{ id: string; bookingNumber: string; newStatus: string; label: string } | null>(null);
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
+  const [editingBooking, setEditingBooking] = useState<any>(null);
 
   const { data: bookings, isLoading } = useBookings(statusFilter);
   const transitionBooking = useTransitionBooking();
+  const updatePreventivo = useUpdatePreventivo();
   const { data: tenantConfig } = useTenantConfig();
 
   const stayCalcType = (tenantConfig as any)?.stay_calc_type ?? "notti";
@@ -198,36 +202,41 @@ export default function Prenotazioni() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          {transitions.length > 0 && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                {transitions.map((t) => (
-                                  <DropdownMenuItem
-                                    key={t.next}
-                                    onClick={() => {
-                                      if (t.next === "appuntamento_fissato" || t.next === "appuntamento_in_fissato" || t.next === "appuntamento_out_fissato" || t.next === "appuntamento_in_out_fissato") {
-                                        setSchedulingBooking(b);
-                                      } else {
-                                        setTransitioning({
-                                          id: b.id,
-                                          bookingNumber: b.booking_number,
-                                          newStatus: t.next,
-                                          label: t.label,
-                                        });
-                                      }
-                                    }}
-                                  >
-                                    {t.label}
-                                  </DropdownMenuItem>
-                                ))}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => setEditingBooking(b)} title="Modifica">
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            {transitions.length > 0 && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  {transitions.map((t) => (
+                                    <DropdownMenuItem
+                                      key={t.next}
+                                      onClick={() => {
+                                        if (t.next === "appuntamento_fissato" || t.next === "appuntamento_in_fissato" || t.next === "appuntamento_out_fissato" || t.next === "appuntamento_in_out_fissato") {
+                                          setSchedulingBooking(b);
+                                        } else {
+                                          setTransitioning({
+                                            id: b.id,
+                                            bookingNumber: b.booking_number,
+                                            newStatus: t.next,
+                                            label: t.label,
+                                          });
+                                        }
+                                      }}
+                                    >
+                                      {t.label}
+                                    </DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -263,6 +272,17 @@ export default function Prenotazioni() {
         open={!!schedulingBooking}
         onOpenChange={(open) => { if (!open) setSchedulingBooking(null); }}
         booking={schedulingBooking}
+      />
+
+      <PreventivoDialog
+        open={!!editingBooking}
+        onOpenChange={(open) => { if (!open) setEditingBooking(null); }}
+        editing={editingBooking}
+        onCreate={{ mutateAsync: async () => {} }}
+        onUpdate={updatePreventivo}
+        stayCalcType={stayCalcType}
+        countCheckinDay={countCheckinDay}
+        countCheckoutDay={countCheckoutDay}
       />
     </div>
   );

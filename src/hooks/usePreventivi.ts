@@ -158,7 +158,10 @@ export function useUpdatePreventivo() {
 
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["preventivi"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["preventivi"] });
+      qc.invalidateQueries({ queryKey: ["bookings"] });
+    },
   });
 }
 
