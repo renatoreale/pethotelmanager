@@ -39,6 +39,7 @@ interface CatDetails {
 }
 
 export default function CheckIn() {
+  const queryClient = useQueryClient();
   const { profile } = useAuth();
   const { data: bookings, isLoading } = useBookings();
   const { data: paymentMethods } = usePaymentMethods();
