@@ -19,17 +19,20 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Plus, CalendarIcon, X, User, Cat, Home, Calendar as CalIcon, Sparkles, Percent, FileText, UserPlus } from "lucide-react";
+import { Plus, CalendarIcon, X, User, Cat, Home, Calendar as CalIcon, Sparkles, Percent, FileText, UserPlus, AlertTriangle } from "lucide-react";
 import { ClientDialog } from "@/components/clients/ClientDialog";
 import { toast } from "sonner";
-import { format, differenceInDays, parseISO, startOfDay } from "date-fns";
+import { format, differenceInDays, parseISO, startOfDay, addDays, subDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useClients } from "@/hooks/useClients";
-import { usePriceLists } from "@/hooks/usePensioneConfig";
+import { usePriceLists, useTenantConfig } from "@/hooks/usePensioneConfig";
 import { useClientCats } from "@/hooks/usePreventivi";
+import { useBookings } from "@/hooks/useBookings";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { OccupancyGrid, useOccupancyData, checkAvailability } from "@/components/OccupancyGrid";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // ── Types ──
 interface SeasonPeriod {
@@ -110,10 +113,35 @@ export function PreventivoDialog({
     appointments: { id: string; appointment_type: string; scheduled_at: string }[];
   } | null>(null);
   const queryClient = useQueryClient();
+  const [occupancyModalOpen, setOccupancyModalOpen] = useState(false);
   // ── Pricing state ──
   const [seasonPeriods, setSeasonPeriods] = useState<SeasonPeriod[]>([]);
   const [extraServices, setExtraServices] = useState<ExtraServiceLine[]>([]);
   const [discounts, setDiscounts] = useState<DiscountLine[]>([]);
+
+  // ── Availability check data ──
+  const { data: allBookings } = useBookings();
+  const { data: tenantConfig } = useTenantConfig();
+  const occupancyDays = tenantConfig?.occupancy_rule_days ?? 3;
+  const totalSingole = tenantConfig?.num_singole ?? 0;
+  const totalDoppie = tenantConfig?.num_doppie ?? 0;
+
+  const { bookingOccupancy } = useOccupancyData(
+    allBookings ?? [],
+    occupancyDays,
+    editing?.id,
+  );
+
+  const availabilityResult = useMemo(() => {
+    if (!checkInDate || cageUnits.length === 0) return null;
+    const checkInStr = format(checkInDate, "yyyy-MM-dd");
+    return checkAvailability(bookingOccupancy, checkInStr, occupancyDays, cageUnits, totalSingole, totalDoppie);
+  }, [checkInDate, cageUnits, bookingOccupancy, occupancyDays, totalSingole, totalDoppie]);
+
+  const hasConflicts = availabilityResult && !availabilityResult.available;
+
+  const occupancyRangeStart = useMemo(() => checkInDate ? subDays(checkInDate, 5) : new Date(), [checkInDate]);
+  const occupancyRangeEnd = useMemo(() => checkInDate ? addDays(checkInDate, occupancyDays + 5) : new Date(), [checkInDate, occupancyDays]);
 
   const { data: clientCats } = useClientCats(clientId || undefined);
   const today = startOfDay(new Date());
@@ -797,6 +825,21 @@ export function PreventivoDialog({
                     Durata: <strong>{duration} {duration === 1 ? (stayLabel === "notti" ? "notte" : "giorno") : stayLabel}</strong>
                   </p>
                 )}
+                {hasConflicts && (
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription className="flex items-center justify-between">
+                      <span>
+                        ⚠️ Disponibilità insufficiente nei giorni: {availabilityResult!.conflicts.map(c =>
+                          `${format(parseISO(c.date), "dd/MM")} (${c.type}: ${c.occupied}/${c.total})`
+                        ).join(", ")}
+                      </span>
+                      <Button variant="outline" size="sm" className="ml-2 shrink-0" onClick={() => setOccupancyModalOpen(true)}>
+                        Vedi occupazione
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
 
               <Separator />
@@ -1086,6 +1129,48 @@ export function PreventivoDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    {/* Occupancy modal */}
+    <Dialog open={occupancyModalOpen} onOpenChange={setOccupancyModalOpen}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+            Occupazione casette
+          </DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground mb-2">
+          Periodo: {checkInDate ? format(occupancyRangeStart, "dd MMM yyyy", { locale: it }) : "—"} → {checkInDate ? format(occupancyRangeEnd, "dd MMM yyyy", { locale: it }) : "—"}
+          {" "}· Regola occupazione: {occupancyDays} giorni dal check-in
+        </p>
+        <div className="flex items-center gap-4 text-xs text-muted-foreground mb-2">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-sm bg-primary/70" />
+            <span>Occupa capacità</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-sm bg-primary/20" />
+            <span>Soggiorno</span>
+          </div>
+          <span>Singole: {totalSingole} · Doppie: {totalDoppie}</span>
+        </div>
+        {allBookings && (
+          <OccupancyGrid
+            bookings={allBookings}
+            occupancyDays={occupancyDays}
+            totalSingole={totalSingole}
+            totalDoppie={totalDoppie}
+            rangeStart={occupancyRangeStart}
+            rangeEnd={occupancyRangeEnd}
+            excludeBookingId={editing?.id}
+            compact
+          />
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOccupancyModalOpen(false)}>Chiudi</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </>
   );
 }
