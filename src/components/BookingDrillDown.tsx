@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { usePriceLists } from "@/hooks/usePensioneConfig";
 import { Separator } from "@/components/ui/separator";
 import { Calendar, CreditCard, Receipt, Tag, ChevronDown } from "lucide-react";
 import { useBookingPayments } from "@/hooks/usePayments";
