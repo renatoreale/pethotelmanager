@@ -252,7 +252,7 @@ export default function Appuntamenti() {
       );
     }
 
-    if (isRange) {
+    if (isRange || hasSearch) {
       const grouped = groupByDate(filteredAppointments);
       return (
         <div className="space-y-6">
