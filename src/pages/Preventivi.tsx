@@ -18,7 +18,7 @@ import { it } from "date-fns/locale";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import {
   usePreventivi, useCreatePreventivo, useUpdatePreventivo,
-  useDeletePreventivo, useConfirmPreventivo,
+  useDeletePreventivo,
 } from "@/hooks/usePreventivi";
 import { PreventivoDialog } from "@/components/preventivi/PreventivoDialog";
 
