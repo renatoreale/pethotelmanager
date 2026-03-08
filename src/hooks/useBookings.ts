@@ -76,6 +76,10 @@ export function useBookings(statusFilter?: string) {
 // Valid transitions map
 const TRANSITIONS: Record<string, { next: string; label: string }[]> = {
   confermata: [
+    { next: "appuntamento_fissato", label: "Fissa Appuntamenti" },
+    { next: "cancellata", label: "Cancella" },
+  ],
+  appuntamento_fissato: [
     { next: "check_in", label: "Avvia Check-in" },
     { next: "cancellata", label: "Cancella" },
   ],
