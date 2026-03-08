@@ -172,7 +172,7 @@ export function OccupancyGrid({
                 return (
                   <th key={dateStr} className={cn(
                     "px-1 py-1.5 text-center font-medium min-w-[32px] border-r",
-                    isHighlight && "bg-destructive/20 ring-2 ring-inset ring-destructive/50",
+                    isHighlight && "bg-destructive/20",
                     isToday && !isHighlight && "bg-primary/10",
                     isWeekend && !isToday && !isHighlight && "bg-muted/30"
                   )}>
@@ -204,16 +204,15 @@ export function OccupancyGrid({
                     const isStay = dateStr >= bo.stayStart && dateStr <= bo.stayEnd;
                     const isHighlight = highlightDate === dateStr;
                     return (
-                      <td key={dateStr} className={cn("px-0 py-0 text-center border-r", compact ? "h-6" : "h-7", isHighlight && !isOccupied && !isStay && "bg-destructive/5")}>
+                      <td key={dateStr} className={cn("px-0 py-0 text-center border-r", compact ? "h-6" : "h-7", isHighlight && "bg-destructive/10")}>
                         {isOccupied ? (
                           <div className={cn("w-full h-full flex items-center justify-center",
-                            b.cage_pool_type === "singola" ? "bg-primary/70" : "bg-accent/70",
-                            isHighlight && "ring-2 ring-inset ring-destructive/60"
+                            b.cage_pool_type === "singola" ? "bg-primary/70" : "bg-accent/70"
                           )}>
                             <span className="text-[9px] font-bold text-primary-foreground">{poolLabel}</span>
                           </div>
                         ) : isStay ? (
-                          <div className={cn("w-full h-full", b.cage_pool_type === "singola" ? "bg-primary/15" : "bg-accent/15", isHighlight && "ring-2 ring-inset ring-destructive/60")} />
+                          <div className={cn("w-full h-full", b.cage_pool_type === "singola" ? "bg-primary/15" : "bg-accent/15")} />
                         ) : null}
                       </td>
                     );
@@ -234,7 +233,7 @@ export function OccupancyGrid({
                   <td key={dateStr} className={cn("text-center font-semibold border-r py-1 text-[10px]",
                     pct >= 1 && "bg-destructive/20 text-destructive",
                     pct > 0 && pct < 1 && "bg-warning/20 text-warning-foreground",
-                    isHighlight && "ring-2 ring-inset ring-destructive/50"
+                    isHighlight && pct < 1 && "bg-destructive/10"
                   )}>{occ}/{totalSingole}</td>
                 );
               })}
@@ -250,7 +249,7 @@ export function OccupancyGrid({
                   <td key={dateStr} className={cn("text-center font-semibold border-r py-1 text-[10px]",
                     pct >= 1 && "bg-destructive/20 text-destructive",
                     pct > 0 && pct < 1 && "bg-warning/20 text-warning-foreground",
-                    isHighlight && "ring-2 ring-inset ring-destructive/50"
+                    isHighlight && pct < 1 && "bg-destructive/10"
                   )}>{occ}/{totalDoppie}</td>
                 );
               })}
@@ -266,7 +265,7 @@ export function OccupancyGrid({
                 return (
                   <td key={dateStr} className={cn("text-center font-bold border-r py-1 text-[10px]",
                     total === 0 && "bg-destructive/20 text-destructive",
-                    isHighlight && "ring-2 ring-inset ring-destructive/50"
+                    isHighlight && total > 0 && "bg-destructive/10"
                   )}>{total}</td>
                 );
               })}
