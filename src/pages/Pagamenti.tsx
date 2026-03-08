@@ -465,11 +465,13 @@ export default function Pagamenti() {
                   </div>
                 )}
 
-                <div className="flex justify-end">
-                  <Button size="sm" onClick={() => { openNewTx(selectedBooking.id); }}>
-                    <Plus className="h-4 w-4 mr-1" /> Nuova Transazione
-                  </Button>
-                </div>
+                {!["check_in", "in_corso", "check_out", "chiusa", "cancellata", "rimborsata"].includes(selectedBooking.status) && (
+                  <div className="flex justify-end">
+                    <Button size="sm" onClick={() => { openNewTx(selectedBooking.id); }}>
+                      <Plus className="h-4 w-4 mr-1" /> Nuova Transazione
+                    </Button>
+                  </div>
+                )}
               </>
             );
           })()}
