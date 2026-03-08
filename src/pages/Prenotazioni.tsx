@@ -291,12 +291,13 @@ export default function Prenotazioni() {
                         </TableCell>
                       </TableRow>
                       {expandedRows.has(b.id) && (
-                        <TableRow key={`${b.id}-details`}>
+                        <TableRow>
                           <TableCell colSpan={10} className="p-0 bg-muted/20">
                             <BookingDrillDown booking={b} defaultOpen />
                           </TableCell>
                         </TableRow>
                       )}
+                      </Fragment>
                     );
                   })}
                 </TableBody>
