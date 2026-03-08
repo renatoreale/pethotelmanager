@@ -171,6 +171,7 @@ export default function Pagamenti() {
 
   const openBookingTransactions = (booking: any) => {
     setSelectedBooking(booking);
+    setEditingTotal(null);
   };
 
   const openNewTx = (bookingId: string) => {
