@@ -26,8 +26,9 @@ import { toast } from "sonner";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
-import { useBookings, useTransitionBooking, getTransitions } from "@/hooks/useBookings";
+import { useBookings, useTransitionBooking, useDeleteBooking, getTransitions } from "@/hooks/useBookings";
 import { useUpdatePreventivo } from "@/hooks/usePreventivi";
+import { useAuth } from "@/hooks/useAuth";
 
 const STATUS_OPTIONS = [
   { value: "tutti", label: "Tutti gli stati" },
