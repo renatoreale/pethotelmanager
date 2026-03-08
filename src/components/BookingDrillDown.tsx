@@ -39,6 +39,7 @@ export function BookingDrillDown({ booking, defaultOpen = false }: BookingDrillD
   const [open, setOpen] = useState(defaultOpen);
   const { data: payments, isLoading: paymentsLoading } = useBookingPayments(open ? booking.id : undefined);
   const { data: tenantConfig } = useTenantConfig();
+  const { data: priceLists } = usePriceLists();
 
   const stayCalcType = tenantConfig?.stay_calc_type ?? "notti";
   const countCheckinDay = tenantConfig?.count_checkin_day ?? true;
