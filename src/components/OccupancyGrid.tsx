@@ -23,6 +23,8 @@ interface Props {
   /** Booking ID to exclude from occupancy (e.g. current editing booking) */
   excludeBookingId?: string;
   compact?: boolean;
+  /** Date string (yyyy-MM-dd) to highlight as the check-in column */
+  highlightDate?: string;
 }
 
 const ACTIVE_STATUSES = [
@@ -98,7 +100,7 @@ export function checkAvailability(
 
 export function OccupancyGrid({
   bookings, occupancyDays, totalSingole, totalDoppie,
-  rangeStart, rangeEnd, excludeBookingId, compact,
+  rangeStart, rangeEnd, excludeBookingId, compact, highlightDate,
 }: Props) {
   const today = new Date();
 
@@ -166,14 +168,16 @@ export function OccupancyGrid({
                 const dateStr = format(day, "yyyy-MM-dd");
                 const isToday = dateStr === format(today, "yyyy-MM-dd");
                 const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+                const isHighlight = highlightDate === dateStr;
                 return (
                   <th key={dateStr} className={cn(
                     "px-1 py-1.5 text-center font-medium min-w-[32px] border-r",
-                    isToday && "bg-primary/10",
-                    isWeekend && !isToday && "bg-muted/30"
+                    isHighlight && "bg-destructive/20 ring-2 ring-inset ring-destructive/50",
+                    isToday && !isHighlight && "bg-primary/10",
+                    isWeekend && !isToday && !isHighlight && "bg-muted/30"
                   )}>
-                    <div className="text-[9px] text-muted-foreground">{format(day, "EEE", { locale: it })}</div>
-                    <div className={cn("text-[11px]", isToday && "font-bold text-primary")}>{format(day, "d")}</div>
+                    <div className={cn("text-[9px]", isHighlight ? "text-destructive font-bold" : "text-muted-foreground")}>{format(day, "EEE", { locale: it })}</div>
+                    <div className={cn("text-[11px]", isHighlight ? "font-bold text-destructive" : isToday ? "font-bold text-primary" : "")}>{format(day, "d")}</div>
                   </th>
                 );
               })}
@@ -198,16 +202,18 @@ export function OccupancyGrid({
                     const dateStr = format(day, "yyyy-MM-dd");
                     const isOccupied = bo.occupiedDates.has(dateStr);
                     const isStay = dateStr >= bo.stayStart && dateStr <= bo.stayEnd;
+                    const isHighlight = highlightDate === dateStr;
                     return (
-                      <td key={dateStr} className={cn("px-0 py-0 text-center border-r", compact ? "h-6" : "h-7")}>
+                      <td key={dateStr} className={cn("px-0 py-0 text-center border-r", compact ? "h-6" : "h-7", isHighlight && !isOccupied && !isStay && "bg-destructive/5")}>
                         {isOccupied ? (
                           <div className={cn("w-full h-full flex items-center justify-center",
-                            b.cage_pool_type === "singola" ? "bg-primary/70" : "bg-accent/70"
+                            b.cage_pool_type === "singola" ? "bg-primary/70" : "bg-accent/70",
+                            isHighlight && "ring-2 ring-inset ring-destructive/60"
                           )}>
                             <span className="text-[9px] font-bold text-primary-foreground">{poolLabel}</span>
                           </div>
                         ) : isStay ? (
-                          <div className={cn("w-full h-full", b.cage_pool_type === "singola" ? "bg-primary/15" : "bg-accent/15")} />
+                          <div className={cn("w-full h-full", b.cage_pool_type === "singola" ? "bg-primary/15" : "bg-accent/15", isHighlight && "ring-2 ring-inset ring-destructive/60")} />
                         ) : null}
                       </td>
                     );
@@ -223,10 +229,12 @@ export function OccupancyGrid({
                 const dateStr = format(day, "yyyy-MM-dd");
                 const occ = dailyTotals[dateStr]?.singole ?? 0;
                 const pct = totalSingole > 0 ? occ / totalSingole : 0;
+                const isHighlight = highlightDate === dateStr;
                 return (
                   <td key={dateStr} className={cn("text-center font-semibold border-r py-1 text-[10px]",
                     pct >= 1 && "bg-destructive/20 text-destructive",
-                    pct > 0 && pct < 1 && "bg-warning/20 text-warning-foreground"
+                    pct > 0 && pct < 1 && "bg-warning/20 text-warning-foreground",
+                    isHighlight && "ring-2 ring-inset ring-destructive/50"
                   )}>{occ}/{totalSingole}</td>
                 );
               })}
@@ -237,10 +245,12 @@ export function OccupancyGrid({
                 const dateStr = format(day, "yyyy-MM-dd");
                 const occ = dailyTotals[dateStr]?.doppie ?? 0;
                 const pct = totalDoppie > 0 ? occ / totalDoppie : 0;
+                const isHighlight = highlightDate === dateStr;
                 return (
                   <td key={dateStr} className={cn("text-center font-semibold border-r py-1 text-[10px]",
                     pct >= 1 && "bg-destructive/20 text-destructive",
-                    pct > 0 && pct < 1 && "bg-warning/20 text-warning-foreground"
+                    pct > 0 && pct < 1 && "bg-warning/20 text-warning-foreground",
+                    isHighlight && "ring-2 ring-inset ring-destructive/50"
                   )}>{occ}/{totalDoppie}</td>
                 );
               })}
@@ -252,9 +262,11 @@ export function OccupancyGrid({
                 const freeS = Math.max(0, totalSingole - (dailyTotals[dateStr]?.singole ?? 0));
                 const freeD = Math.max(0, totalDoppie - (dailyTotals[dateStr]?.doppie ?? 0));
                 const total = freeS + freeD;
+                const isHighlight = highlightDate === dateStr;
                 return (
                   <td key={dateStr} className={cn("text-center font-bold border-r py-1 text-[10px]",
-                    total === 0 && "bg-destructive/20 text-destructive"
+                    total === 0 && "bg-destructive/20 text-destructive",
+                    isHighlight && "ring-2 ring-inset ring-destructive/50"
                   )}>{total}</td>
                 );
               })}
