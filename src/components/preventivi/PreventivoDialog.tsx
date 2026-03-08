@@ -143,6 +143,20 @@ export function PreventivoDialog({
       setNotes(editing.notes ?? "");
       setTotalAmount(Number(editing.total_amount ?? 0));
       setDepositAmount(Number(editing.deposit_amount ?? 0));
+
+      // Restore breakdown from JSON
+      const bd = editing.price_breakdown;
+      if (bd) {
+        setSeasonPeriods(bd.seasonPeriods ?? []);
+        setExtraServices(bd.extraServices ?? []);
+        setDiscounts(bd.discounts ?? []);
+        if (bd.cageUnits) setCageUnits(bd.cageUnits);
+      } else {
+        setSeasonPeriods([]);
+        setExtraServices([]);
+        setDiscounts([]);
+      }
+      setDepositManuallySet(true); // keep saved deposit
     } else {
       setClientId("");
       setUnitsOccupied(1);
@@ -153,11 +167,11 @@ export function PreventivoDialog({
       setNotes("");
       setTotalAmount(0);
       setDepositAmount(0);
+      setSeasonPeriods([]);
+      setExtraServices([]);
+      setDiscounts([]);
+      setDepositManuallySet(false);
     }
-    setSeasonPeriods([]);
-    setExtraServices([]);
-    setDiscounts([]);
-    setDepositManuallySet(false);
     setClientSearch("");
   };
 
@@ -434,7 +448,20 @@ export function PreventivoDialog({
     if (!checkIn || !checkOut) { toast.error("Date check-in/out obbligatorie"); return; }
     if (selectedCats.length === 0) { toast.error("Seleziona almeno un gatto"); return; }
 
-    // Build breakdown notes
+    // Build price_breakdown JSON
+    const priceBreakdown = {
+      seasonPeriods,
+      extraServices,
+      discounts,
+      cageUnits,
+      seasonTotal,
+      extrasTotal,
+      discountTotal,
+      discountedStay,
+      grandTotal,
+    };
+
+    // Build breakdown notes for display
     const breakdownParts: string[] = [];
     if (unitsOccupied > 1) {
       const ns = cageUnits.filter(t => t === "singola").length;
@@ -471,6 +498,7 @@ export function PreventivoDialog({
           deposit_amount: depositAmount,
           notes: fullNotes || null,
           cat_ids: selectedCats,
+          price_breakdown: priceBreakdown,
         });
         toast.success("Preventivo aggiornato");
       } else {
@@ -484,6 +512,7 @@ export function PreventivoDialog({
           deposit_amount: depositAmount,
           notes: fullNotes || undefined,
           cat_ids: selectedCats,
+          price_breakdown: priceBreakdown,
         });
         toast.success("Preventivo creato");
       }

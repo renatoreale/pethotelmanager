@@ -18,6 +18,7 @@ export interface Preventivo {
   created_at: string;
   updated_at: string;
   created_by: string | null;
+  price_breakdown: any;
   client?: {
     id: string;
     first_name: string;
@@ -77,6 +78,7 @@ export function useCreatePreventivo() {
       deposit_amount?: number;
       notes?: string;
       cat_ids: string[];
+      price_breakdown?: any;
     }) => {
       if (!profile?.tenant_id) throw new Error("Tenant non configurato");
       const { cat_ids, ...booking } = input;
@@ -93,7 +95,7 @@ export function useCreatePreventivo() {
           units_occupied: booking.units_occupied ?? 1,
           total_amount: booking.total_amount ?? 0,
           deposit_amount: booking.deposit_amount ?? 0,
-        })
+        } as any)
         .select()
         .single();
       if (bookingError) throw bookingError;
@@ -129,12 +131,13 @@ export function useUpdatePreventivo() {
       deposit_amount?: number;
       notes?: string;
       cat_ids?: string[];
+      price_breakdown?: any;
     }) => {
       const { id, cat_ids, ...updates } = input;
 
       const { data, error } = await supabase
         .from("bookings")
-        .update(updates)
+        .update(updates as any)
         .eq("id", id)
         .select()
         .single();
