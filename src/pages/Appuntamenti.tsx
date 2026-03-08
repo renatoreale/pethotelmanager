@@ -17,7 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { CalendarIcon, CheckCircle2, XCircle, Clock, LogIn, LogOut, Trash2, Pencil } from "lucide-react";
-import { AutocompleteSearch, type SearchableItem } from "@/components/AutocompleteSearch";
+import { AutocompleteSearch } from "@/components/AutocompleteSearch";
 import { format, addDays, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addWeeks, subWeeks, addMonths, subMonths, parseISO, getDay } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
