@@ -127,3 +127,94 @@ export function useBookingAppointments(bookingId: string | undefined) {
     enabled: !!bookingId,
   });
 }
+
+export interface AppointmentWithDetails {
+  id: string;
+  booking_id: string;
+  appointment_type: "check_in" | "check_out";
+  scheduled_at: string;
+  duration_minutes: number;
+  confirmed: boolean;
+  notes: string | null;
+  tenant_id: string;
+  booking?: {
+    id: string;
+    booking_number: string;
+    status: string;
+    client?: {
+      id: string;
+      first_name: string;
+      last_name: string;
+      phone: string | null;
+    };
+    booking_cats?: {
+      id: string;
+      cat?: { id: string; name: string };
+    }[];
+  };
+}
+
+// Fetch all appointments for a given date with booking + client + cats
+export function useAppointmentsByDate(date: string | undefined) {
+  const { profile } = useAuth();
+  return useQuery({
+    queryKey: ["appointments-by-date", profile?.tenant_id, date],
+    queryFn: async () => {
+      if (!profile?.tenant_id || !date) return [];
+      const dayStart = `${date}T00:00:00`;
+      const dayEnd = `${date}T23:59:59`;
+      const { data, error } = await supabase
+        .from("appointments")
+        .select(`
+          *,
+          booking:bookings(
+            id, booking_number, status,
+            client:clients(id, first_name, last_name, phone),
+            booking_cats(id, cat:cats(id, name))
+          )
+        `)
+        .eq("tenant_id", profile.tenant_id)
+        .gte("scheduled_at", dayStart)
+        .lte("scheduled_at", dayEnd)
+        .order("scheduled_at");
+      if (error) throw error;
+      return data as unknown as AppointmentWithDetails[];
+    },
+    enabled: !!profile?.tenant_id && !!date,
+  });
+}
+
+export function useConfirmAppointment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, confirmed }: { id: string; confirmed: boolean }) => {
+      const { data, error } = await supabase
+        .from("appointments")
+        .update({ confirmed })
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["appointments-by-date"] });
+      qc.invalidateQueries({ queryKey: ["booking-appointments"] });
+    },
+  });
+}
+
+export function useDeleteAppointment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("appointments").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["appointments-by-date"] });
+      qc.invalidateQueries({ queryKey: ["appointment-counts"] });
+      qc.invalidateQueries({ queryKey: ["booking-appointments"] });
+    },
+  });
+}
