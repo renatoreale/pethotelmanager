@@ -203,9 +203,14 @@ export default function Prenotazioni() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => setEditingBooking(b)} title="Modifica">
+                            <Button variant="ghost" size="icon" onClick={() => setEditingBooking(b)} title="Modifica prenotazione">
                               <Pencil className="h-4 w-4" />
                             </Button>
+                            {["appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato"].includes(b.status) && (
+                              <Button variant="ghost" size="icon" onClick={() => setSchedulingBooking(b)} title="Modifica appuntamenti">
+                                <CalendarClock className="h-4 w-4" />
+                              </Button>
+                            )}
                             {transitions.length > 0 && (
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
