@@ -73,7 +73,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function Prenotazioni() {
-  const [statusFilter, setStatusFilter] = useState("tutti");
+  const [statusFilter, setStatusFilter] = useState("confermata");
   const [search, setSearch] = useState("");
   const [transitioning, setTransitioning] = useState<{ id: string; bookingNumber: string; newStatus: string; label: string } | null>(null);
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
