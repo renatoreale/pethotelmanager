@@ -14,7 +14,7 @@ import {
   useCreateAppointment,
   generateTimeSlots,
 } from "@/hooks/useAppointments";
-import { useConfirmPreventivo } from "@/hooks/usePreventivi";
+import { useTransitionBooking } from "@/hooks/useBookings";
 
 interface Props {
   open: boolean;
