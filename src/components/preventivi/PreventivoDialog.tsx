@@ -825,6 +825,21 @@ export function PreventivoDialog({
                     Durata: <strong>{duration} {duration === 1 ? (stayLabel === "notti" ? "notte" : "giorno") : stayLabel}</strong>
                   </p>
                 )}
+                {hasConflicts && (
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription className="flex items-center justify-between">
+                      <span>
+                        ⚠️ Disponibilità insufficiente nei giorni: {availabilityResult!.conflicts.map(c =>
+                          `${format(parseISO(c.date), "dd/MM")} (${c.type}: ${c.occupied}/${c.total})`
+                        ).join(", ")}
+                      </span>
+                      <Button variant="outline" size="sm" className="ml-2 shrink-0" onClick={() => setOccupancyModalOpen(true)}>
+                        Vedi occupazione
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
 
               <Separator />
