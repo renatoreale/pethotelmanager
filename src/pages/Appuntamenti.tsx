@@ -88,7 +88,7 @@ export default function Appuntamenti() {
 
   const confirmAppointment = useConfirmAppointment();
   const deleteAppointment = useDeleteAppointment();
-  const updateAppointment = useUpdateAppointment();
+  
 
   // Filter by search
   const filteredAppointments = useMemo(() => {
