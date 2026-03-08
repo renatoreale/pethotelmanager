@@ -252,6 +252,12 @@ export default function Prenotazioni() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AppointmentScheduleDialog
+        open={!!schedulingBooking}
+        onOpenChange={(open) => { if (!open) setSchedulingBooking(null); }}
+        booking={schedulingBooking}
+      />
     </div>
   );
 }
