@@ -17,6 +17,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Search, CalendarDays, MoreHorizontal } from "lucide-react";
+import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { toast } from "sonner";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
