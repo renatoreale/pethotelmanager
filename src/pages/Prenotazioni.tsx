@@ -262,47 +262,41 @@ export default function Prenotazioni() {
                             ) : (
                               <div className="h-8 w-8" />
                             )}
-                            {transitions.length > 0 ? (
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  {transitions.map((t) => (
-                                    <DropdownMenuItem
-                                      key={t.next}
-                                      onClick={() => {
-                                        if (t.next === "appuntamento_fissato" || t.next === "appuntamento_in_fissato" || t.next === "appuntamento_out_fissato" || t.next === "appuntamento_in_out_fissato") {
-                                          setSchedulingBooking(b);
-                                        } else {
-                                          setTransitioning({
-                                            id: b.id,
-                                            bookingNumber: b.booking_number,
-                                            newStatus: t.next,
-                                            label: t.label,
-                                          });
-                                        }
-                                      }}
-                                    >
-                                      {t.label}
-                                    </DropdownMenuItem>
-                                  ))}
-                                  {!["check_in", "in_corso", "check_out", "chiusa"].includes(b.status) && (
-                                    <DropdownMenuItem
-                                      className="text-destructive focus:text-destructive"
-                                      onClick={() => setDeleting({ id: b.id, bookingNumber: b.booking_number })}
-                                    >
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                      Elimina
-                                    </DropdownMenuItem>
-                                  )}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            ) : (
-                              <div className="h-8 w-8" />
-                            )}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {transitions.map((t) => (
+                                  <DropdownMenuItem
+                                    key={t.next}
+                                    onClick={() => {
+                                      if (t.next === "appuntamento_fissato" || t.next === "appuntamento_in_fissato" || t.next === "appuntamento_out_fissato" || t.next === "appuntamento_in_out_fissato") {
+                                        setSchedulingBooking(b);
+                                      } else {
+                                        setTransitioning({
+                                          id: b.id,
+                                          bookingNumber: b.booking_number,
+                                          newStatus: t.next,
+                                          label: t.label,
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    {t.label}
+                                  </DropdownMenuItem>
+                                ))}
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => setDeleting({ id: b.id, bookingNumber: b.booking_number })}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Elimina
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                         </TableCell>
                       </TableRow>
