@@ -208,7 +208,7 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annulla</Button>
           <Button onClick={handleConfirm} disabled={saving}>
-            {saving ? "Conferma in corso..." : "Conferma Prenotazione"}
+            {saving ? "Salvataggio..." : "Fissa Appuntamenti"}
           </Button>
         </DialogFooter>
       </DialogContent>
