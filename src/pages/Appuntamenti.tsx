@@ -389,7 +389,6 @@ export default function Appuntamenti() {
 
       {/* Search bar with autocomplete */}
       <AutocompleteSearch
-        items={searchableItems}
         value={search}
         onChange={setSearch}
         placeholder="Cerca per n° prenotazione, cliente, gatto, email, telefono..."
