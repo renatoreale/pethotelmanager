@@ -55,7 +55,9 @@ const STATUS_COLORS: Record<string, string> = {
 
 const STATUS_LABELS: Record<string, string> = {
   confermata: "Confermata",
-  appuntamento_fissato: "Appuntamento fissato",
+  appuntamento_in_fissato: "Appt. IN fissato",
+  appuntamento_out_fissato: "Appt. OUT fissato",
+  appuntamento_in_out_fissato: "Appt. IN-OUT fissati",
   check_in: "Check-in",
   in_corso: "In corso",
   check_out: "Check-out",
