@@ -1,15 +1,16 @@
 import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Search, CalendarIcon } from "lucide-react";
+import { Search, CalendarIcon, CheckCircle2, XCircle } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { OccupancyGrid } from "@/components/OccupancyGrid";
+import { OccupancyGrid, useOccupancyData } from "@/components/OccupancyGrid";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -103,6 +104,15 @@ export function AvailabilityCheckDialog() {
           </div>
         </div>
 
+        <AvailabilityAlert
+          bookings={allBookings ?? []}
+          occupancyDays={occupancyDays}
+          checkInDate={highlightDate}
+          cageType={cageType}
+          totalSingole={totalSingole}
+          totalDoppie={totalDoppie}
+        />
+
         <OccupancyGrid
           bookings={allBookings ?? []}
           occupancyDays={occupancyDays}
@@ -114,5 +124,61 @@ export function AvailabilityCheckDialog() {
         />
       </DialogContent>
     </Dialog>
+  );
+}
+
+function AvailabilityAlert({
+  bookings, occupancyDays, checkInDate, cageType, totalSingole, totalDoppie,
+}: {
+  bookings: Booking[];
+  occupancyDays: number;
+  checkInDate: string;
+  cageType: "singola" | "doppia";
+  totalSingole: number;
+  totalDoppie: number;
+}) {
+  const { bookingOccupancy } = useOccupancyData(bookings, occupancyDays);
+
+  const availability = useMemo(() => {
+    const checkIn = new Date(checkInDate);
+    const total = cageType === "singola" ? totalSingole : totalDoppie;
+    let maxOccupied = 0;
+
+    for (let i = 0; i < occupancyDays; i++) {
+      const dateStr = format(addDays(checkIn, i), "yyyy-MM-dd");
+      let occupied = 0;
+      for (const bo of bookingOccupancy) {
+        if (bo.occupiedDates.has(dateStr) && bo.booking.cage_pool_type === cageType) {
+          occupied += bo.booking.units_occupied;
+        }
+      }
+      maxOccupied = Math.max(maxOccupied, occupied);
+    }
+
+    const free = Math.max(0, total - maxOccupied);
+    return { free, total, maxOccupied };
+  }, [bookingOccupancy, checkInDate, cageType, totalSingole, totalDoppie, occupancyDays]);
+
+  const isAvailable = availability.free > 0;
+
+  return (
+    <Alert className={cn(
+      "mb-2",
+      isAvailable
+        ? "border-green-500/50 bg-green-50 dark:bg-green-950/30 text-green-800 dark:text-green-200"
+        : "border-destructive/50 bg-destructive/10 text-destructive"
+    )}>
+      {isAvailable ? (
+        <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+      ) : (
+        <XCircle className="h-4 w-4" />
+      )}
+      <AlertDescription className="ml-2 font-medium">
+        {isAvailable
+          ? `Disponibile! ${availability.free} casett${availability.free === 1 ? "a" : "e"} ${cageType === "singola" ? "singol" + (availability.free === 1 ? "a" : "e") : "doppi" + (availability.free === 1 ? "a" : "e")} liber${availability.free === 1 ? "a" : "e"} nel periodo di occupazione.`
+          : `Non disponibile. Tutte le ${availability.total} casette ${cageType === "singola" ? "singole" : "doppie"} sono occupate in almeno un giorno del periodo.`
+        }
+      </AlertDescription>
+    </Alert>
   );
 }
