@@ -900,6 +900,7 @@ export type Database = {
       booking_status:
         | "preventivo"
         | "confermata"
+        | "appuntamento_fissato"
         | "check_in"
         | "in_corso"
         | "check_out"
@@ -1048,6 +1049,7 @@ export const Constants = {
       booking_status: [
         "preventivo",
         "confermata",
+        "appuntamento_fissato",
         "check_in",
         "in_corso",
         "check_out",
