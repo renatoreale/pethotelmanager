@@ -33,12 +33,13 @@ export interface Preventivo {
   }[];
 }
 
-// Generate booking number: PRV-YYYYMMDD-XXXX
-function generateBookingNumber() {
-  const now = new Date();
-  const date = now.toISOString().slice(0, 10).replace(/-/g, "");
-  const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `PRV-${date}-${rand}`;
+// Get next booking number from DB function
+async function getNextBookingNumber(tenantId: string): Promise<string> {
+  const { data, error } = await supabase.rpc("next_booking_number", {
+    _tenant_id: tenantId,
+  });
+  if (error) throw error;
+  return data as string;
 }
 
 export function usePreventivi() {
