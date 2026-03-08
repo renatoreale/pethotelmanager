@@ -16,7 +16,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { CalendarIcon, CheckCircle2, XCircle, Clock, LogIn, LogOut, Trash2, Pencil } from "lucide-react";
+import { CalendarIcon, CheckCircle2, XCircle, Clock, LogIn, LogOut, Trash2, Pencil, CalendarPlus } from "lucide-react";
 import { AutocompleteSearch } from "@/components/AutocompleteSearch";
 import { format, addDays, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addWeeks, subWeeks, addMonths, subMonths, parseISO, getDay } from "date-fns";
 import { it } from "date-fns/locale";
@@ -30,6 +30,7 @@ import {
   useDeleteAppointment,
   type AppointmentWithDetails,
 } from "@/hooks/useAppointments";
+import { useBookings } from "@/hooks/useBookings";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { EditCheckoutDialog, type CheckoutBookingData } from "@/components/appointments/EditCheckoutDialog";
 
