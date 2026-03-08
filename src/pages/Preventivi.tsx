@@ -68,14 +68,18 @@ export default function Preventivi() {
   const openNew = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (p: any) => { setEditing(p); setDialogOpen(true); };
 
-  const handleConfirm = async () => {
+  const handleConfirm = async (depositData: {
+    amount: number;
+    payment_date: string;
+    payment_method_id: string;
+    notes?: string;
+  }) => {
     if (!confirming) return;
-    try {
-      await confirmPreventivo.mutateAsync(confirming.id);
-      toast.success("Preventivo confermato → Prenotazione");
-    } catch (err: any) {
-      toast.error(err.message || "Errore");
-    }
+    await confirmPreventivo.mutateAsync({
+      id: confirming.id,
+      deposit: depositData,
+    });
+    toast.success("Preventivo confermato → Prenotazione con caparra registrata");
     setConfirming(null);
   };
 
