@@ -23,6 +23,8 @@ interface Props {
   /** Booking ID to exclude from occupancy (e.g. current editing booking) */
   excludeBookingId?: string;
   compact?: boolean;
+  /** Date string (yyyy-MM-dd) to highlight as the check-in column */
+  highlightDate?: string;
 }
 
 const ACTIVE_STATUSES = [
