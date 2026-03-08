@@ -251,7 +251,7 @@ export default function Appuntamenti() {
         </TableCell>
         <TableCell className="text-sm text-muted-foreground max-w-[150px] truncate">{appt.notes || "—"}</TableCell>
         <TableCell>
-          {!isLocked ? (
+          {!isLocked && !(isInCorso && isIn) ? (
             <div className="flex gap-1">
               <Button variant="ghost" size="icon" onClick={() => {
                 if (appt.appointment_type === "check_out" && isInCorso) {
@@ -261,7 +261,7 @@ export default function Appuntamenti() {
                 }
               }}><Pencil className="h-4 w-4" /></Button>
               <Button variant="ghost" size="icon" onClick={() => setDeleting(appt)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-              {isInCorso && isIn && !hasCheckoutAppt && (
+              {isInCorso && !hasCheckoutAppt && (
                 <Button
                   variant="ghost"
                   size="sm"
