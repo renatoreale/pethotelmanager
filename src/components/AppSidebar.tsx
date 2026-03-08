@@ -13,9 +13,11 @@ import {
   Mail,
   Building2,
   ChevronDown,
+  Power,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 import {
   Sidebar,
@@ -105,6 +107,16 @@ function NavGroup({
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
+  const { profile, roles, signOut, user } = useAuth();
+
+  const initials = profile?.full_name
+    ? profile.full_name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : user?.email?.slice(0, 2).toUpperCase() ?? "??";
 
   return (
     <Sidebar collapsible="icon">
@@ -134,12 +146,31 @@ export function AppSidebar() {
         <NavGroup label="Amministrazione" items={adminNav} collapsed={collapsed} />
       </SidebarContent>
 
-      <SidebarFooter className="p-4">
-        {!collapsed && (
-          <div className="text-[10px] text-sidebar-foreground/40">
-            CatHotel Manager v0.1
+      <SidebarFooter className="p-3 border-t border-sidebar-border">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary/20 text-sidebar-primary text-xs font-semibold">
+            {initials}
           </div>
-        )}
+          {!collapsed && (
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-sidebar-foreground truncate">
+                {profile?.full_name ?? user?.email}
+              </p>
+              <p className="text-[10px] text-sidebar-foreground/50 capitalize">
+                {roles[0] ?? "utente"}
+              </p>
+            </div>
+          )}
+          {!collapsed && (
+            <button
+              onClick={signOut}
+              className="text-sidebar-foreground/40 hover:text-sidebar-foreground transition-colors"
+              title="Esci"
+            >
+              <Power className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

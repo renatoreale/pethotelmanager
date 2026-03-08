@@ -3,8 +3,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
 import Index from "./pages/Index";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Preventivi from "./pages/Preventivi";
 import Prenotazioni from "./pages/Prenotazioni";
 import Appuntamenti from "./pages/Appuntamenti";
@@ -27,24 +33,40 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Index />} />
-            <Route path="/preventivi" element={<Preventivi />} />
-            <Route path="/prenotazioni" element={<Prenotazioni />} />
-            <Route path="/appuntamenti" element={<Appuntamenti />} />
-            <Route path="/check-in" element={<CheckIn />} />
-            <Route path="/check-out" element={<CheckOut />} />
-            <Route path="/pagamenti" element={<Pagamenti />} />
-            <Route path="/clienti" element={<Clienti />} />
-            <Route path="/gatti" element={<Gatti />} />
-            <Route path="/planning" element={<Planning />} />
-            <Route path="/utenti" element={<Utenti />} />
-            <Route path="/template-email" element={<TemplateEmail />} />
-            <Route path="/pensione" element={<Pensione />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+
+            {/* Protected routes */}
+            <Route
+              element={
+                <ProtectedRoute>
+                  <AppLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/" element={<Index />} />
+              <Route path="/preventivi" element={<Preventivi />} />
+              <Route path="/prenotazioni" element={<Prenotazioni />} />
+              <Route path="/appuntamenti" element={<Appuntamenti />} />
+              <Route path="/check-in" element={<CheckIn />} />
+              <Route path="/check-out" element={<CheckOut />} />
+              <Route path="/pagamenti" element={<Pagamenti />} />
+              <Route path="/clienti" element={<Clienti />} />
+              <Route path="/gatti" element={<Gatti />} />
+              <Route path="/planning" element={<Planning />} />
+              <Route path="/utenti" element={<Utenti />} />
+              <Route path="/template-email" element={<TemplateEmail />} />
+              <Route path="/pensione" element={<Pensione />} />
+            </Route>
+
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
