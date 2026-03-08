@@ -168,7 +168,7 @@ export default function CheckIn() {
       // 2. Transition booking
       await transitionBooking.mutateAsync({ id: booking.id, newStatus: "in_corso" });
 
-      // 3. Insert cats into registry
+      // 3. Sync cats into registry (insert missing + refresh microchip/name)
       const clientName = booking.client
         ? `${booking.client.first_name} ${booking.client.last_name}`
         : "—";
@@ -184,7 +184,37 @@ export default function CheckIn() {
           check_in_date: booking.check_in_date,
         }));
 
-        await insertCatRegistry.mutateAsync(entries);
+        const catIds = catDetails.map(c => c.id);
+        const { data: existingRows } = await supabase
+          .from("cat_registry")
+          .select("cat_id")
+          .eq("booking_id", booking.id)
+          .in("cat_id", catIds);
+
+        const existingCatIds = new Set((existingRows ?? []).map(r => r.cat_id));
+        const missingEntries = entries.filter(e => !existingCatIds.has(e.cat_id));
+
+        if (missingEntries.length > 0) {
+          await insertCatRegistry.mutateAsync(missingEntries);
+        }
+
+        await Promise.all(
+          catDetails.map(async (cat) => {
+            const { error } = await supabase
+              .from("cat_registry")
+              .update({
+                microchip: cat.microchip || null,
+                cat_name: cat.name,
+                client_name: clientName,
+              })
+              .eq("booking_id", booking.id)
+              .eq("cat_id", cat.id);
+
+            if (error) throw error;
+          })
+        );
+
+        queryClient.invalidateQueries({ queryKey: ["cat-registry"] });
       }
 
       // 4. Create payment if enabled
