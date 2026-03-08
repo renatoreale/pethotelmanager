@@ -28,6 +28,10 @@ import {
   usePriceLists, useUpsertPriceList, useDeletePriceList,
   type TariffType,
 } from "@/hooks/usePensioneConfig";
+import {
+  useAllPaymentMethods, useCreatePaymentMethod,
+  useTogglePaymentMethod, useDeletePaymentMethod,
+} from "@/hooks/usePayments";
 
 const DAYS = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
 
