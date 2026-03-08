@@ -28,16 +28,8 @@ import {
   useAllAppointments,
   useConfirmAppointment,
   useDeleteAppointment,
-  useUpdateAppointment,
-  useSlotConfigsForDay,
-  useAppointmentCounts,
-  generateTimeSlots,
   type AppointmentWithDetails,
 } from "@/hooks/useAppointments";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { EditCheckoutDialog, type CheckoutBookingData } from "@/components/appointments/EditCheckoutDialog";
 
@@ -52,7 +44,7 @@ export default function Appuntamenti() {
   const [calendarFromOpen, setCalendarFromOpen] = useState(false);
   const [calendarToOpen, setCalendarToOpen] = useState(false);
   const [deleting, setDeleting] = useState<AppointmentWithDetails | null>(null);
-  const [editing, setEditing] = useState<AppointmentWithDetails | null>(null);
+  
   const [editingCheckout, setEditingCheckout] = useState<AppointmentWithDetails | null>(null);
   const [creatingCheckout, setCreatingCheckout] = useState<CheckoutBookingData | null>(null);
   const [search, setSearch] = useState("");
@@ -96,7 +88,7 @@ export default function Appuntamenti() {
 
   const confirmAppointment = useConfirmAppointment();
   const deleteAppointment = useDeleteAppointment();
-  const updateAppointment = useUpdateAppointment();
+  
 
   // Filter by search
   const filteredAppointments = useMemo(() => {
@@ -237,11 +229,7 @@ export default function Appuntamenti() {
           {!isLocked ? (
             <div className="flex gap-1">
               <Button variant="ghost" size="icon" onClick={() => {
-                if (appt.appointment_type === "check_out" && isInCorso) {
-                  setEditingCheckout(appt);
-                } else {
-                  setEditing(appt);
-                }
+                setEditingCheckout(appt);
               }}><Pencil className="h-4 w-4" /></Button>
               <Button variant="ghost" size="icon" onClick={() => setDeleting(appt)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
               {isInCorso && isIn && !hasCheckoutAppt && (
@@ -491,22 +479,6 @@ export default function Appuntamenti() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {editing && (
-        <EditAppointmentDialog
-          appointment={editing}
-          open={!!editing}
-          onOpenChange={(open) => { if (!open) setEditing(null); }}
-          onSave={async (newTime: string) => {
-            const date = editing.scheduled_at.slice(0, 10);
-            await updateAppointment.mutateAsync({
-              id: editing.id,
-              scheduled_at: `${date}T${newTime}:00`,
-            });
-            toast.success("Appuntamento aggiornato");
-            setEditing(null);
-          }}
-        />
-      )}
 
       <AppointmentScheduleDialog
         open={!!schedulingBooking}
@@ -555,109 +527,5 @@ function StatusBadge({ status }: { status: string }) {
     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colors[status] ?? "bg-muted text-muted-foreground"}`}>
       {labels[status] ?? status}
     </span>
-  );
-}
-
-// Edit appointment dialog
-function EditAppointmentDialog({
-  appointment,
-  open,
-  onOpenChange,
-  onSave,
-}: {
-  appointment: AppointmentWithDetails;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSave: (newTime: string) => Promise<void>;
-}) {
-  const currentTime = (() => {
-    const tIndex = appointment.scheduled_at.indexOf("T");
-    return tIndex >= 0 ? appointment.scheduled_at.slice(tIndex + 1, tIndex + 6) : "";
-  })();
-  const [selectedTime, setSelectedTime] = useState<string>(currentTime);
-  const [saving, setSaving] = useState(false);
-
-  const dateStr = appointment.scheduled_at.slice(0, 10);
-  const jsDay = getDay(parseISO(dateStr));
-  const dow = jsDay === 0 ? 6 : jsDay - 1;
-
-  const { data: slotConfigs } = useSlotConfigsForDay(appointment.appointment_type, dow);
-  const { data: counts } = useAppointmentCounts(dateStr, appointment.appointment_type);
-
-  const availableSlots = useMemo(() => {
-    if (!slotConfigs?.length) return [];
-    const slots: { time: string; available: number; maxAppts: number }[] = [];
-    for (const config of slotConfigs) {
-      const times = generateTimeSlots(config);
-      for (const time of times) {
-        let used = counts?.[time] ?? 0;
-        if (time === currentTime) used = Math.max(0, used - 1);
-        slots.push({ time, available: config.max_appointments - used, maxAppts: config.max_appointments });
-      }
-    }
-    return slots;
-  }, [slotConfigs, counts, currentTime]);
-
-  const handleSave = async () => {
-    if (!selectedTime || selectedTime === currentTime) {
-      onOpenChange(false);
-      return;
-    }
-    setSaving(true);
-    try {
-      await onSave(selectedTime);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Modifica Appuntamento</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-3 py-2">
-          <div className="text-sm space-y-1">
-            <p><span className="text-muted-foreground">Tipo:</span> {appointment.appointment_type === "check_in" ? "Check-in" : "Check-out"}</p>
-            <p><span className="text-muted-foreground">Data:</span> {format(parseISO(dateStr), "EEEE dd MMMM yyyy", { locale: it })}</p>
-            <p><span className="text-muted-foreground">Cliente:</span> {appointment.booking?.client?.first_name} {appointment.booking?.client?.last_name}</p>
-            <p><span className="text-muted-foreground">Orario attuale:</span> <span className="font-mono font-semibold">{currentTime}</span></p>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Seleziona nuovo orario</Label>
-            {!availableSlots.length ? (
-              <p className="text-sm text-muted-foreground">Nessuno slot configurato per questo giorno.</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {availableSlots.map((slot) => (
-                  <Button
-                    key={slot.time}
-                    variant={selectedTime === slot.time ? "default" : "outline"}
-                    size="sm"
-                    disabled={slot.available <= 0 && slot.time !== currentTime}
-                    onClick={() => setSelectedTime(slot.time)}
-                  >
-                    {slot.time}
-                    {slot.time === currentTime && (
-                      <Badge variant="secondary" className="ml-1 text-xs px-1 py-0">attuale</Badge>
-                    )}
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Annulla</Button>
-          <Button onClick={handleSave} disabled={saving || selectedTime === currentTime}>
-            {saving ? "Salvataggio..." : "Salva"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }
