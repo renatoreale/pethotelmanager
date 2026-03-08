@@ -410,16 +410,14 @@ export default function Appuntamenti() {
         </div>
       )}
 
-      {/* Search bar */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Cerca per n° prenotazione, cliente, gatto, email, telefono..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10"
-        />
-      </div>
+      {/* Search bar with autocomplete */}
+      <AutocompleteSearch
+        items={searchableItems}
+        value={search}
+        onChange={setSearch}
+        placeholder="Cerca per n° prenotazione, cliente, gatto, email, telefono..."
+        className="max-w-sm"
+      />
 
       {/* Summary badges */}
       <div className="flex gap-3 flex-wrap">
