@@ -137,7 +137,7 @@ export function useUpdatePreventivo() {
 
       const { data, error } = await supabase
         .from("bookings")
-        .update(updates)
+        .update(updates as any)
         .eq("id", id)
         .select()
         .single();
