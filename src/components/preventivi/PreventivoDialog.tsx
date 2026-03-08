@@ -703,9 +703,10 @@ export function PreventivoDialog({
                     <span className="text-sm text-muted-foreground whitespace-nowrap">{period.days} {stayLabel}</span>
                     <span className="text-sm font-medium whitespace-nowrap">€ {period.total.toFixed(2)}</span>
                   </div>
-                  {period.supplementCost > 0 && (
+                  {selectedCats.length > 0 && (
                     <p className="text-xs text-muted-foreground">
-                      incl. suppl. gatto extra ({Math.max(0, selectedCats.length - 1)}): € {period.supplementCost.toFixed(2)}
+                      {selectedCats.length} gatt{selectedCats.length === 1 ? "o" : "i"} × {period.days} {stayLabel}
+                      {period.supplementCost > 0 && ` (incl. suppl. gatto extra: € ${period.supplementCost.toFixed(2)})`}
                     </p>
                   )}
                 </div>
