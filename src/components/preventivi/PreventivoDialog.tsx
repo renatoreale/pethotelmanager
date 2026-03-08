@@ -640,7 +640,7 @@ export function PreventivoDialog({
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">Check-out *</Label>
-                    <Popover>
+                    <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
                       <PopoverTrigger asChild>
                         <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !checkOutDate && "text-muted-foreground")}>
                           <CalendarIcon className="mr-2 h-4 w-4" />
@@ -648,7 +648,7 @@ export function PreventivoDialog({
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={checkOutDate} onSelect={setCheckOutDate}
+                        <Calendar mode="single" selected={checkOutDate} onSelect={(d) => { setCheckOutDate(d); setCheckOutOpen(false); }}
                           disabled={(date) => { if (!checkInDate) return date < today; return date < checkInDate; }}
                           initialFocus className="p-3 pointer-events-auto" />
                       </PopoverContent>
