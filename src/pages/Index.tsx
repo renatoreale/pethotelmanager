@@ -258,7 +258,9 @@ export default function Index() {
       {/* Recent Bookings */}
       <Card className="border-none shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Prenotazioni recenti</CardTitle>
+          <CardTitle className="text-base">
+            {isSelectedToday ? "Prenotazioni del giorno" : `Prenotazioni — ${format(selectedDate, "dd MMM yyyy", { locale: it })}`}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {s.dayBookings.length === 0 ? (
