@@ -1,74 +1,181 @@
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Cat, CalendarCheck, LogIn, CreditCard, TrendingUp, AlertTriangle } from "lucide-react";
+import { Cat, CalendarCheck, LogIn, LogOut, CreditCard, AlertTriangle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { useBookings } from "@/hooks/useBookings";
+import { useTenantConfig } from "@/hooks/usePensioneConfig";
+import { useAllPayments } from "@/hooks/usePayments";
+import { format, parseISO, startOfMonth, endOfMonth, isToday } from "date-fns";
+import { it } from "date-fns/locale";
 
-const stats = [
-  {
-    title: "Gatti in struttura",
-    value: "12",
-    subtitle: "su 18 posti totali",
-    icon: Cat,
-    trend: "+2 oggi",
-    color: "text-primary",
-    bg: "bg-primary/10",
-  },
-  {
-    title: "Prenotazioni attive",
-    value: "8",
-    subtitle: "3 in arrivo questa settimana",
-    icon: CalendarCheck,
-    trend: "+15%",
-    color: "text-accent",
-    bg: "bg-accent/10",
-  },
-  {
-    title: "Check-in oggi",
-    value: "3",
-    subtitle: "Slot: 10:00, 11:00, 14:30",
-    icon: LogIn,
-    trend: "2 confermati",
-    color: "text-success",
-    bg: "bg-success/10",
-  },
-  {
-    title: "Incasso mese",
-    value: "€4.280",
-    subtitle: "Target: €6.000",
-    icon: CreditCard,
-    trend: "+22% vs mese scorso",
-    color: "text-warning",
-    bg: "bg-warning/10",
-  },
-];
+const STATUS_LABELS: Record<string, string> = {
+  preventivo: "Preventivo",
+  confermata: "Confermata",
+  appuntamento_in_fissato: "App. IN",
+  appuntamento_out_fissato: "App. OUT",
+  appuntamento_in_out_fissato: "App. IN-OUT",
+  check_in: "Check-in",
+  in_corso: "In corso",
+  check_out: "Check-out",
+  chiusa: "Chiusa",
+  cancellata: "Cancellata",
+  rimborsata: "Rimborsata",
+  scaduto: "Scaduto",
+};
 
-const recentBookings = [
-  { client: "Maria Rossi", cats: "Luna", status: "Check-in oggi", statusColor: "bg-success/15 text-success" },
-  { client: "Luca Bianchi", cats: "Micio, Felix", status: "Confermata", statusColor: "bg-primary/15 text-primary" },
-  { client: "Anna Verdi", cats: "Pallino", status: "In corso", statusColor: "bg-accent/15 text-accent" },
-  { client: "Marco Neri", cats: "Whiskers", status: "Preventivo", statusColor: "bg-warning/15 text-warning" },
-];
-
-const todayTasks = [
-  { task: "Pulizia casette zona A", assignee: "Sara", done: true },
-  { task: "Somministrazione farmaci — Luna", assignee: "Marco", done: false },
-  { task: "Foto aggiornamento — Micio, Felix", assignee: "Sara", done: false },
-  { task: "Pappa serale", assignee: "Tutti", done: false },
-];
+const STATUS_COLORS: Record<string, string> = {
+  preventivo: "bg-muted text-muted-foreground",
+  confermata: "bg-primary/15 text-primary",
+  appuntamento_in_fissato: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  appuntamento_out_fissato: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
+  appuntamento_in_out_fissato: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  check_in: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
+  in_corso: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  check_out: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  chiusa: "bg-muted text-muted-foreground",
+  cancellata: "bg-destructive/15 text-destructive",
+  rimborsata: "bg-destructive/15 text-destructive",
+  scaduto: "bg-warning/15 text-warning",
+};
 
 export default function Index() {
+  const { data: bookings, isLoading: loadingBookings } = useBookings();
+  const { data: tenantConfig } = useTenantConfig();
+  const { data: allPayments } = useAllPayments();
+
+  const today = format(new Date(), "yyyy-MM-dd");
+  const monthStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
+  const monthEnd = format(endOfMonth(new Date()), "yyyy-MM-dd");
+
+  const stats = useMemo(() => {
+    if (!bookings) return null;
+
+    // Cats currently in structure (status in_corso)
+    const inCorsoBookings = bookings.filter(b => b.status === "in_corso");
+    const catsInStructure = inCorsoBookings.reduce((sum, b) => sum + (b.booking_cats?.length ?? 0), 0);
+
+    // Occupancy by cage type
+    const singoleOccupied = inCorsoBookings.filter(b => b.cage_pool_type === "singola").reduce((s, b) => s + b.units_occupied, 0);
+    const doppieOccupied = inCorsoBookings.filter(b => b.cage_pool_type === "doppia").reduce((s, b) => s + b.units_occupied, 0);
+
+    // Active bookings (confermata, appuntamento*, in_corso)
+    const activeStatuses = ["confermata", "appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato", "check_in", "in_corso"];
+    const activeBookings = bookings.filter(b => activeStatuses.includes(b.status));
+
+    // Check-ins today
+    const checkInsToday = bookings.filter(b => b.check_in_date === today && ["check_in", "in_corso"].includes(b.status));
+
+    // Check-outs today
+    const checkOutsToday = bookings.filter(b => b.check_out_date === today && ["in_corso", "check_out"].includes(b.status));
+
+    // Monthly revenue
+    const monthPayments = (allPayments ?? []).filter(p => {
+      const pDate = p.payment_date?.slice(0, 10);
+      return pDate >= monthStart && pDate <= monthEnd && p.payment_type !== "rimborso";
+    });
+    const monthRefunds = (allPayments ?? []).filter(p => {
+      const pDate = p.payment_date?.slice(0, 10);
+      return pDate >= monthStart && pDate <= monthEnd && p.payment_type === "rimborso";
+    });
+    const monthRevenue = monthPayments.reduce((s, p) => s + Number(p.amount), 0) - monthRefunds.reduce((s, p) => s + Number(p.amount), 0);
+
+    // Recent bookings (last 5 updated)
+    const recentBookings = [...bookings]
+      .filter(b => !["cancellata", "rimborsata"].includes(b.status))
+      .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
+      .slice(0, 5);
+
+    // Expiring preventivi (preventivo with check_in_date <= today + 3 days)
+    const soonDate = new Date();
+    soonDate.setDate(soonDate.getDate() + 3);
+    const soonStr = format(soonDate, "yyyy-MM-dd");
+    const expiringPreventivi = bookings.filter(b => b.status === "preventivo" && b.check_in_date <= soonStr);
+
+    return {
+      catsInStructure,
+      singoleOccupied,
+      doppieOccupied,
+      activeBookings: activeBookings.length,
+      checkInsToday: checkInsToday.length,
+      checkOutsToday: checkOutsToday.length,
+      monthRevenue,
+      recentBookings,
+      expiringPreventivi: expiringPreventivi.length,
+    };
+  }, [bookings, allPayments, today, monthStart, monthEnd]);
+
+  const numSingole = tenantConfig?.num_singole ?? 0;
+  const numDoppie = tenantConfig?.num_doppie ?? 0;
+  const totalSlots = numSingole + numDoppie;
+
+  if (loadingBookings) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground text-sm mt-1">Caricamento...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const s = stats ?? {
+    catsInStructure: 0, singoleOccupied: 0, doppieOccupied: 0,
+    activeBookings: 0, checkInsToday: 0, checkOutsToday: 0,
+    monthRevenue: 0, recentBookings: [], expiringPreventivi: 0,
+  };
+
+  const kpis = [
+    {
+      title: "Gatti in struttura",
+      value: String(s.catsInStructure),
+      subtitle: `su ${totalSlots} posti totali`,
+      icon: Cat,
+      color: "text-primary",
+      bg: "bg-primary/10",
+    },
+    {
+      title: "Prenotazioni attive",
+      value: String(s.activeBookings),
+      subtitle: "confermate o in corso",
+      icon: CalendarCheck,
+      color: "text-accent",
+      bg: "bg-accent/10",
+    },
+    {
+      title: "Check-in oggi",
+      value: String(s.checkInsToday),
+      subtitle: `${s.checkOutsToday} check-out oggi`,
+      icon: LogIn,
+      color: "text-success",
+      bg: "bg-success/10",
+    },
+    {
+      title: "Incasso mese",
+      value: `€ ${s.monthRevenue.toFixed(0)}`,
+      subtitle: format(new Date(), "MMMM yyyy", { locale: it }),
+      icon: CreditCard,
+      color: "text-warning",
+      bg: "bg-warning/10",
+    },
+  ];
+
+  const singolePct = numSingole > 0 ? Math.round((s.singoleOccupied / numSingole) * 100) : 0;
+  const doppiePct = numDoppie > 0 ? Math.round((s.doppieOccupied / numDoppie) * 100) : 0;
+
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Panoramica operativa — Pensione Milano
+          Panoramica operativa — {tenantConfig?.name ?? "Pensione"}
         </p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
+        {kpis.map((stat) => (
           <Card key={stat.title} className="border-none shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -79,12 +186,8 @@ export default function Index() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-serif">{stat.value}</div>
+              <div className="text-2xl font-bold">{stat.value}</div>
               <p className="text-xs text-muted-foreground mt-1">{stat.subtitle}</p>
-              <div className="flex items-center gap-1 mt-2">
-                <TrendingUp className="h-3 w-3 text-success" />
-                <span className="text-xs text-success font-medium">{stat.trend}</span>
-              </div>
             </CardContent>
           </Card>
         ))}
@@ -99,86 +202,64 @@ export default function Index() {
           <div>
             <div className="flex justify-between text-sm mb-1.5">
               <span className="text-muted-foreground">Singole</span>
-              <span className="font-medium">8 / 12</span>
+              <span className="font-medium">{s.singoleOccupied} / {numSingole}</span>
             </div>
-            <Progress value={67} className="h-2" />
+            <Progress value={singolePct} className="h-2" />
           </div>
           <div>
             <div className="flex justify-between text-sm mb-1.5">
               <span className="text-muted-foreground">Doppie</span>
-              <span className="font-medium">4 / 6</span>
+              <span className="font-medium">{s.doppieOccupied} / {numDoppie}</span>
             </div>
-            <Progress value={67} className="h-2" />
+            <Progress value={doppiePct} className="h-2" />
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* Recent Bookings */}
-        <Card className="border-none shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Prenotazioni recenti</CardTitle>
-          </CardHeader>
-          <CardContent>
+      {/* Recent Bookings */}
+      <Card className="border-none shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base">Prenotazioni recenti</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {s.recentBookings.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Nessuna prenotazione</p>
+          ) : (
             <div className="space-y-3">
-              {recentBookings.map((b, i) => (
-                <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
-                  <div>
-                    <p className="text-sm font-medium">{b.client}</p>
-                    <p className="text-xs text-muted-foreground">{b.cats}</p>
+              {s.recentBookings.map((b: any) => {
+                const clientName = b.client ? `${b.client.first_name} ${b.client.last_name}` : "—";
+                const catNames = (b.booking_cats ?? []).map((bc: any) => bc.cat?.name).filter(Boolean).join(", ") || "—";
+                return (
+                  <div key={b.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                    <div>
+                      <p className="text-sm font-medium">{clientName}</p>
+                      <p className="text-xs text-muted-foreground">{catNames} · {b.booking_number}</p>
+                    </div>
+                    <Badge variant="outline" className={`text-xs ${STATUS_COLORS[b.status] ?? ""}`}>
+                      {STATUS_LABELS[b.status] ?? b.status}
+                    </Badge>
                   </div>
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${b.statusColor}`}>
-                    {b.status}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Today Tasks */}
-        <Card className="border-none shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Compiti di oggi</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {todayTasks.map((t, i) => (
-                <div key={i} className="flex items-center gap-3 py-2 border-b last:border-0">
-                  <div
-                    className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                      t.done
-                        ? "bg-success border-success text-success-foreground"
-                        : "border-muted-foreground/30"
-                    }`}
-                  >
-                    {t.done && <span className="text-[10px]">✓</span>}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm ${t.done ? "line-through text-muted-foreground" : "font-medium"}`}>
-                      {t.task}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{t.assignee}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Alerts */}
-      <Card className="border-none shadow-sm border-l-4 border-l-warning">
-        <CardContent className="flex items-center gap-3 py-4">
-          <AlertTriangle className="h-5 w-5 text-warning shrink-0" />
-          <div>
-            <p className="text-sm font-medium">Attenzione</p>
-            <p className="text-xs text-muted-foreground">
-              2 preventivi in scadenza oggi · 1 pagamento caparra in attesa
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {s.expiringPreventivi > 0 && (
+        <Card className="border-none shadow-sm border-l-4 border-l-warning">
+          <CardContent className="flex items-center gap-3 py-4">
+            <AlertTriangle className="h-5 w-5 text-warning shrink-0" />
+            <div>
+              <p className="text-sm font-medium">Attenzione</p>
+              <p className="text-xs text-muted-foreground">
+                {s.expiringPreventivi} preventiv{s.expiringPreventivi === 1 ? "o" : "i"} in scadenza nei prossimi 3 giorni
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
