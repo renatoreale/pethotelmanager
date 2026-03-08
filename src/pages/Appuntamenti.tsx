@@ -261,30 +261,6 @@ export default function Appuntamenti() {
                 }
               }}><Pencil className="h-4 w-4" /></Button>
               <Button variant="ghost" size="icon" onClick={() => setDeleting(appt)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-              {isInCorso && !hasCheckoutAppt && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-1 text-xs"
-                  onClick={() => {
-                    if (appt.booking) {
-                      setCreatingCheckout({
-                        id: appt.booking.id,
-                        booking_number: appt.booking.booking_number,
-                        status: appt.booking.status,
-                        check_in_date: appt.booking.check_in_date,
-                        check_out_date: appt.booking.check_out_date,
-                        total_amount: appt.booking.total_amount,
-                        client: appt.booking.client ? { first_name: appt.booking.client.first_name, last_name: appt.booking.client.last_name } : undefined,
-                        booking_cats: appt.booking.booking_cats,
-                      });
-                    }
-                  }}
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                  Fissa OUT
-                </Button>
-              )}
             </div>
           ) : (
             <div className="w-[68px] shrink-0" />
