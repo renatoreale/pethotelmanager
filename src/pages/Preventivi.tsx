@@ -67,7 +67,16 @@ export default function Preventivi() {
   const openNew = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (p: any) => { setEditing(p); setDialogOpen(true); };
 
-  // Confirm is now handled by AppointmentScheduleDialog
+  const handleConfirm = async () => {
+    if (!confirming) return;
+    try {
+      await confirmPreventivo.mutateAsync(confirming.id);
+      toast.success("Preventivo confermato → Prenotazione");
+    } catch (err: any) {
+      toast.error(err.message || "Errore");
+    }
+    setConfirming(null);
+  };
 
   const handleDelete = async () => {
     if (!deleting) return;
