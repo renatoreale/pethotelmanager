@@ -265,7 +265,7 @@ export default function Prenotazioni() {
                             ) : (
                               <div className="h-8 w-8" />
                             )}
-                            {transitions.length > 0 ? (
+                            {(transitions.length > 0 || isAdmin) ? (
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="icon">
@@ -292,6 +292,15 @@ export default function Prenotazioni() {
                                       {t.label}
                                     </DropdownMenuItem>
                                   ))}
+                                  {isAdmin && (
+                                    <DropdownMenuItem
+                                      className="text-destructive focus:text-destructive"
+                                      onClick={() => setDeletingBooking({ id: b.id, bookingNumber: b.booking_number })}
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Elimina prenotazione
+                                    </DropdownMenuItem>
+                                  )}
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             ) : (
