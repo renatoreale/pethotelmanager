@@ -550,7 +550,7 @@ export function PreventivoDialog({
               <div className="space-y-2">
                 <Label>Cliente *</Label>
                 <div className="flex gap-2">
-                  <div className="relative flex-1">
+                  <div ref={clientSearchRef} className="relative flex-1">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Cerca cliente per nome, email o telefono..."
