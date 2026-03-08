@@ -709,3 +709,144 @@ function ListinoTab() {
     </>
   );
 }
+
+// ── MODALITÀ PAGAMENTO TAB ──
+function PaymentMethodsTab() {
+  const { data: methods, isLoading } = useAllPaymentMethods();
+  const createMethod = useCreatePaymentMethod();
+  const toggleMethod = useTogglePaymentMethod();
+  const deleteMethod = useDeletePaymentMethod();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [deleting, setDeleting] = useState<any>(null);
+
+  const handleCreate = async () => {
+    if (!newName.trim()) return;
+    try {
+      await createMethod.mutateAsync({
+        name: newName.trim(),
+        sort_order: (methods?.length ?? 0) + 1,
+      });
+      toast.success("Modalità di pagamento creata");
+      setNewName("");
+      setDialogOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || "Errore");
+    }
+  };
+
+  const handleToggle = async (id: string, currentActive: boolean) => {
+    try {
+      await toggleMethod.mutateAsync({ id, is_active: !currentActive });
+      toast.success(!currentActive ? "Attivata" : "Disattivata");
+    } catch (err: any) {
+      toast.error(err.message || "Errore");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleting) return;
+    try {
+      await deleteMethod.mutateAsync(deleting.id);
+      toast.success("Modalità eliminata");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nell'eliminazione");
+    }
+    setDeleting(null);
+  };
+
+  return (
+    <>
+      <Card>
+        <CardHeader className="flex-row items-center justify-between">
+          <div>
+            <CardTitle>Modalità di Pagamento</CardTitle>
+            <CardDescription>Configura i metodi di pagamento accettati (es. Contanti, Bonifico, Carta)</CardDescription>
+          </div>
+          <Button onClick={() => { setNewName(""); setDialogOpen(true); }}>
+            <Plus className="mr-2 h-4 w-4" /> Nuova Modalità
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
+          ) : !methods?.length ? (
+            <div className="py-12 text-center text-muted-foreground">Nessuna modalità configurata. Aggiungine almeno una per poter registrare i pagamenti.</div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Stato</TableHead>
+                    <TableHead className="w-[120px]">Azioni</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {methods.map((m: any) => (
+                    <TableRow key={m.id}>
+                      <TableCell className="font-medium">{m.name}</TableCell>
+                      <TableCell>
+                        <Badge variant={m.is_active ? "default" : "secondary"}>
+                          {m.is_active ? "Attiva" : "Inattiva"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => handleToggle(m.id, m.is_active)}>
+                            <Switch checked={m.is_active} className="pointer-events-none" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => setDeleting(m)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nuova Modalità di Pagamento</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome</Label>
+              <Input
+                placeholder="Es. Contanti, Bonifico, Carta di credito..."
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Annulla</Button>
+            <Button onClick={handleCreate} disabled={createMethod.isPending || !newName.trim()}>Salva</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deleting} onOpenChange={() => setDeleting(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminare la modalità?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleting && `Stai per eliminare "${deleting.name}". Se è usata in pagamenti esistenti, potrebbe causare problemi.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Elimina</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
