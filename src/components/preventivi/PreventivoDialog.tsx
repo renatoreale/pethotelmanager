@@ -247,6 +247,7 @@ export function PreventivoDialog({
   open, onOpenChange, editing, onCreate, onUpdate,
   stayCalcType, countCheckinDay, countCheckoutDay,
 }: Props) {
+  const { profile } = useAuth();
   const { data: clients } = useClients();
   const { data: priceLists } = usePriceLists();
 
