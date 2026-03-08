@@ -16,7 +16,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { CalendarIcon, CheckCircle2, XCircle, Clock, LogIn, LogOut, Trash2, Pencil } from "lucide-react";
+import { CalendarIcon, CheckCircle2, XCircle, Clock, LogIn, LogOut, Trash2, Pencil, CalendarClock } from "lucide-react";
 import { AutocompleteSearch } from "@/components/AutocompleteSearch";
 import { format, addDays, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addWeeks, subWeeks, addMonths, subMonths, parseISO, getDay } from "date-fns";
 import { it } from "date-fns/locale";
@@ -40,6 +40,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { EditCheckoutDialog, type CheckoutBookingData } from "@/components/appointments/EditCheckoutDialog";
+import { useBookings } from "@/hooks/useBookings";
 
 type ViewMode = "giorno" | "settimana" | "mese" | "personalizzato";
 
@@ -98,6 +99,18 @@ export default function Appuntamenti() {
   const confirmAppointment = useConfirmAppointment();
   const deleteAppointment = useDeleteAppointment();
   const updateAppointment = useUpdateAppointment();
+
+  // Fetch confirmed bookings (no appointments yet)
+  const { data: confirmedBookings } = useBookings("confermata");
+  const filteredConfirmed = useMemo(() => {
+    if (!confirmedBookings) return [];
+    if (!search.trim()) return confirmedBookings;
+    const q = search.toLowerCase();
+    return confirmedBookings.filter((b) => {
+      const clientName = `${b.client?.first_name ?? ""} ${b.client?.last_name ?? ""}`.toLowerCase();
+      return clientName.includes(q) || b.booking_number.toLowerCase().includes(q);
+    });
+  }, [confirmedBookings, search]);
 
   // Filter by search
   const filteredAppointments = useMemo(() => {
@@ -493,6 +506,66 @@ export default function Appuntamenti() {
           {filteredAppointments.filter(a => a.confirmed).length} Confermati
         </Badge>
       </div>
+
+
+      {/* Confirmed bookings without appointments */}
+      {(statusFilter === "tutti" || statusFilter === "confermata") && filteredConfirmed.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <CalendarClock className="h-4 w-4 text-primary" />
+              Prenotazioni confermate — da fissare
+            </CardTitle>
+            <CardDescription>{filteredConfirmed.length} prenotazion{filteredConfirmed.length === 1 ? "e" : "i"} in attesa di appuntamento</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>N° Prenotazione</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Gatti</TableHead>
+                    <TableHead>Check-in</TableHead>
+                    <TableHead>Check-out</TableHead>
+                    <TableHead>Stato</TableHead>
+                    <TableHead className="w-[120px]">Azioni</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredConfirmed.map((b) => {
+                    const catNames = b.booking_cats?.map(bc => bc.cat?.name).filter(Boolean).join(", ") || "—";
+                    return (
+                      <TableRow key={b.id}>
+                        <TableCell className="font-mono text-sm">{b.booking_number}</TableCell>
+                        <TableCell className="font-medium">
+                          {b.client ? `${b.client.first_name} ${b.client.last_name}` : "—"}
+                          {b.client?.phone && <span className="block text-xs text-muted-foreground">{b.client.phone}</span>}
+                        </TableCell>
+                        <TableCell className="text-sm">{catNames}</TableCell>
+                        <TableCell className="text-sm">{format(parseISO(b.check_in_date), "dd MMM yyyy", { locale: it })}</TableCell>
+                        <TableCell className="text-sm">{format(parseISO(b.check_out_date), "dd MMM yyyy", { locale: it })}</TableCell>
+                        <TableCell><StatusBadge status={b.status} /></TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1 text-xs"
+                            onClick={() => setSchedulingBooking(b)}
+                          >
+                            <CalendarClock className="h-3.5 w-3.5" />
+                            Fissa Appuntamento
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {isLoading ? (
         <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
