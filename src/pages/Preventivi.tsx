@@ -11,7 +11,6 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, Search, CheckCircle2, FileText } from "lucide-react";
-import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { toast } from "sonner";
 import { format, differenceInDays, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
