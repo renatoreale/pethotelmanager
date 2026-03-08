@@ -56,7 +56,6 @@ export default function Appuntamenti() {
   const [editingCheckout, setEditingCheckout] = useState<AppointmentWithDetails | null>(null);
   const [creatingCheckout, setCreatingCheckout] = useState<CheckoutBookingData | null>(null);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("tutti");
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
 
   // Compute date range based on view mode
@@ -102,11 +101,8 @@ export default function Appuntamenti() {
   // Filter by search
   const filteredAppointments = useMemo(() => {
     if (!appointments) return [];
-    let result = appointments;
-    // Filter by booking status
-    if (statusFilter !== "tutti") {
-      result = result.filter((a) => a.booking?.status === statusFilter);
-    }
+    // Exclude closed/cancelled/refunded bookings
+    let result = appointments.filter((a) => !["chiusa", "cancellata", "rimborsata"].includes(a.booking?.status ?? ""));
     if (!search.trim()) return result;
     const q = search.toLowerCase();
     return result.filter((a) => {
@@ -118,7 +114,7 @@ export default function Appuntamenti() {
       const phone = (client?.phone ?? "").toLowerCase();
       return clientName.includes(q) || catNames.includes(q) || bookingNum.includes(q) || email.includes(q) || phone.includes(q);
     });
-  }, [appointments, search, statusFilter]);
+  }, [appointments, search]);
 
   const checkInAppts = useMemo(() => filteredAppointments.filter(a => a.appointment_type === "check_in"), [filteredAppointments]);
   const checkOutAppts = useMemo(() => filteredAppointments.filter(a => a.appointment_type === "check_out"), [filteredAppointments]);
@@ -453,30 +449,8 @@ export default function Appuntamenti() {
         className="max-w-sm"
       />
 
-      {/* Status filter buttons */}
-      <div className="flex flex-wrap gap-1.5">
-        {[
-          { value: "tutti", label: "Tutti" },
-          { value: "confermata", label: "Confermata" },
-          { value: "appuntamento_in_fissato", label: "Appt. IN" },
-          { value: "appuntamento_out_fissato", label: "Appt. OUT" },
-          { value: "appuntamento_in_out_fissato", label: "Appt. IN-OUT" },
-          { value: "check_in", label: "Check-in" },
-          { value: "in_corso", label: "In corso" },
-          { value: "check_out", label: "Check-out" },
-          { value: "chiusa", label: "Chiusa" },
-        ].map((o) => (
-          <Button
-            key={o.value}
-            size="sm"
-            variant={statusFilter === o.value ? "default" : "outline"}
-            className="h-7 text-xs px-2.5"
-            onClick={() => setStatusFilter(statusFilter === o.value && o.value !== "tutti" ? "tutti" : o.value)}
-          >
-            {o.label}
-          </Button>
-        ))}
-      </div>
+
+
 
       {/* Summary badges */}
       <div className="flex gap-3 flex-wrap">
