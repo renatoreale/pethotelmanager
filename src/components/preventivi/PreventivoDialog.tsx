@@ -509,6 +509,9 @@ export function PreventivoDialog({
 
     try {
       if (editing) {
+        const datesChanged =
+          checkIn !== editing.check_in_date || checkOut !== editing.check_out_date;
+
         await onUpdate.mutateAsync({
           id: editing.id,
           client_id: clientId,
@@ -522,6 +525,21 @@ export function PreventivoDialog({
           cat_ids: selectedCats,
           price_breakdown: priceBreakdown,
         });
+
+        // Check if dates changed and there are existing appointments
+        if (datesChanged && editing.appointments && editing.appointments.length > 0) {
+          setAppointmentSyncDialog({
+            bookingId: editing.id,
+            oldCheckIn: editing.check_in_date,
+            oldCheckOut: editing.check_out_date,
+            newCheckIn: checkIn,
+            newCheckOut: checkOut,
+            appointments: editing.appointments,
+          });
+          toast.success("Prenotazione aggiornata");
+          return; // Don't close dialog yet, wait for appointment sync choice
+        }
+
         toast.success("Preventivo aggiornato");
       } else {
         await onCreate.mutateAsync({
