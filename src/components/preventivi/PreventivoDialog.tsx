@@ -91,6 +91,7 @@ export function PreventivoDialog({
   const [depositAmount, setDepositAmount] = useState(0);
   const [depositManuallySet, setDepositManuallySet] = useState(false);
   const [clientSearch, setClientSearch] = useState("");
+  const [clientDropdownOpen, setClientDropdownOpen] = useState(false);
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
   const [newClientDialogOpen, setNewClientDialogOpen] = useState(false);
