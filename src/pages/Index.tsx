@@ -1,13 +1,17 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Cat, CalendarCheck, LogIn, LogOut, CreditCard, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Cat, CalendarCheck, LogIn, LogOut, CreditCard, AlertTriangle, CalendarIcon } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useBookings } from "@/hooks/useBookings";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import { useAllPayments } from "@/hooks/usePayments";
-import { format, parseISO, startOfMonth, endOfMonth, isToday } from "date-fns";
+import { format, parseISO, startOfMonth, endOfMonth, isToday as isTodayFn } from "date-fns";
 import { it } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 const STATUS_LABELS: Record<string, string> = {
   preventivo: "Preventivo",
