@@ -207,9 +207,54 @@ export function useConfirmAppointment() {
 export function useDeleteAppointment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, bookingId }: { id: string; bookingId: string }) => {
+      // Delete the appointment
       const { error } = await supabase.from("appointments").delete().eq("id", id);
       if (error) throw error;
+
+      // Check if any appointments remain for this booking
+      const { data: remaining } = await supabase
+        .from("appointments")
+        .select("id")
+        .eq("booking_id", bookingId);
+
+      // If no appointments left, revert booking to confermata
+      if (!remaining?.length) {
+        await supabase
+          .from("bookings")
+          .update({ status: "confermata" as any })
+          .eq("id", bookingId)
+          .eq("status", "appuntamento_fissato" as any);
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["appointments-by-date"] });
+      qc.invalidateQueries({ queryKey: ["appointment-counts"] });
+      qc.invalidateQueries({ queryKey: ["booking-appointments"] });
+      qc.invalidateQueries({ queryKey: ["bookings"] });
+      qc.invalidateQueries({ queryKey: ["preventivi"] });
+    },
+  });
+}
+
+export function useUpdateAppointment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      id: string;
+      scheduled_at?: string;
+      duration_minutes?: number;
+      notes?: string;
+    }) => {
+      const { id, ...updates } = input;
+      const { data, error } = await supabase
+        .from("appointments")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["appointments-by-date"] });
