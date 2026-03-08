@@ -165,7 +165,7 @@ export default function CheckIn() {
   const resetForm = () => {
     setAddPayment(false);
     setTxAmount("");
-    setTxType("saldo");
+    setTxType("caparra");
     setTxMethodId("");
     setTxNotes("");
     setCatDetails([]);
