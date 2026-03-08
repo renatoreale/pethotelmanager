@@ -223,10 +223,23 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
 
       // Update booking check_out_date and total if date changed
       if (dateChanged && recalculated) {
+        const existingBreakdown = (booking as any).price_breakdown ?? {};
         const bookingUpdates: any = {
           check_out_date: newDateStr,
           total_amount: recalculated.newTotal,
         };
+        if (recalculated.extraDays > 0) {
+          bookingUpdates.price_breakdown = {
+            ...existingBreakdown,
+            extra_days_info: {
+              extra_days: recalculated.extraDays,
+              num_cats: ((booking as any).booking_cats ?? []).length,
+              tariff_name: recalculated.extraTariffName,
+              extra_cost: recalculated.effectiveExtraCost,
+              reason: "check_out_posticipato",
+            },
+          };
+        }
         await supabase.from("bookings").update(bookingUpdates).eq("id", bookingId);
       }
 

@@ -249,6 +249,20 @@ export default function CheckIn() {
       if (recalculated.dateChanged) {
         bookingUpdates.check_in_date = recalculated.newCiStr;
         bookingUpdates.total_amount = recalculated.newTotal;
+        // Persist extra days info in price_breakdown
+        if (recalculated.extraDays > 0) {
+          const existingBreakdown = booking.price_breakdown ?? {};
+          bookingUpdates.price_breakdown = {
+            ...existingBreakdown,
+            extra_days_info: {
+              extra_days: recalculated.extraDays,
+              num_cats: (booking.booking_cats ?? []).length,
+              tariff_name: recalculated.extraTariffName,
+              extra_cost: recalculated.effectiveExtraCost,
+              reason: "check_in_anticipato",
+            },
+          };
+        }
       }
       await supabase.from("bookings").update(bookingUpdates).eq("id", booking.id);
       queryClient.invalidateQueries({ queryKey: ["bookings"] });

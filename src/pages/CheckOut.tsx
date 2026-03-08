@@ -273,6 +273,19 @@ export default function CheckOut() {
       if (recalculated.dateChanged) {
         bookingUpdates.check_out_date = recalculated.newCoStr;
         bookingUpdates.total_amount = recalculated.newTotal;
+        if (recalculated.extraDays > 0) {
+          const existingBreakdown = booking.price_breakdown ?? {};
+          bookingUpdates.price_breakdown = {
+            ...existingBreakdown,
+            extra_days_info: {
+              extra_days: recalculated.extraDays,
+              num_cats: (booking.booking_cats ?? []).length,
+              tariff_name: recalculated.extraTariffName,
+              extra_cost: recalculated.effectiveExtraCost,
+              reason: "check_out_posticipato",
+            },
+          };
+        }
       }
       await supabase.from("bookings").update(bookingUpdates).eq("id", booking.id);
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
