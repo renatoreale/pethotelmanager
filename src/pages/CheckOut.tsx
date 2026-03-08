@@ -273,9 +273,13 @@ export default function CheckOut() {
 
       // 3. Update booking date + total + transition to chiusa
       const bookingUpdates: any = { status: "chiusa" as const };
+      // Always save total if manually changed or date changed
+      const totalChanged = manualTotal !== null || recalculated.dateChanged;
+      if (totalChanged) {
+        bookingUpdates.total_amount = recalculated.newTotal;
+      }
       if (recalculated.dateChanged) {
         bookingUpdates.check_out_date = recalculated.newCoStr;
-        bookingUpdates.total_amount = recalculated.newTotal;
         if (recalculated.extraDays > 0) {
           const existingBreakdown = booking.price_breakdown ?? {};
           bookingUpdates.price_breakdown = {
