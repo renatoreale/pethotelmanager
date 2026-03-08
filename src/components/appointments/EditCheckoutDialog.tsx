@@ -310,7 +310,8 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
         }
 
         if (Object.keys(bookingUpdates).length > 0) {
-          await supabase.from("bookings").update(bookingUpdates).eq("id", bookingId);
+          const { error: bookingError } = await supabase.from("bookings").update(bookingUpdates).eq("id", bookingId);
+          if (bookingError) throw bookingError;
         }
       }
 
