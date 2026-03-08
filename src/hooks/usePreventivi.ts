@@ -180,18 +180,53 @@ export function useDeletePreventivo() {
 
 export function useConfirmPreventivo() {
   const qc = useQueryClient();
+  const { user, profile } = useAuth();
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (input: {
+      id: string;
+      deposit: {
+        amount: number;
+        payment_date: string;
+        payment_method_id: string;
+        notes?: string;
+      };
+    }) => {
+      if (!profile?.tenant_id) throw new Error("Tenant non configurato");
+
+      // 1. Update booking status and actual deposit
       const { data, error } = await supabase
         .from("bookings")
-        .update({ status: "confermata" as const })
-        .eq("id", id)
+        .update({
+          status: "confermata" as const,
+          deposit_amount: input.deposit.amount,
+        })
+        .eq("id", input.id)
         .select()
         .single();
       if (error) throw error;
+
+      // 2. Register deposit payment
+      const { error: payError } = await supabase
+        .from("payments")
+        .insert({
+          booking_id: input.id,
+          tenant_id: profile.tenant_id,
+          amount: input.deposit.amount,
+          payment_type: "caparra" as const,
+          payment_date: input.deposit.payment_date,
+          payment_method_id: input.deposit.payment_method_id,
+          notes: input.deposit.notes ?? null,
+          created_by: user?.id ?? null,
+        });
+      if (payError) throw payError;
+
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["preventivi"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["preventivi"] });
+      qc.invalidateQueries({ queryKey: ["bookings"] });
+      qc.invalidateQueries({ queryKey: ["booking-payments"] });
+    },
   });
 }
 
