@@ -24,6 +24,7 @@ import Utenti from "./pages/Utenti";
 import TemplateEmail from "./pages/TemplateEmail";
 import Pensione from "./pages/Pensione";
 import NotFound from "./pages/NotFound";
+import RegistroGatti from "./pages/RegistroGatti";
 
 const queryClient = new QueryClient();
 
