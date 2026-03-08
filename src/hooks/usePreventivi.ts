@@ -105,7 +105,7 @@ export function useCreatePreventivo() {
         .insert({
           ...booking,
           tenant_id: profile.tenant_id,
-          booking_number: generateBookingNumber(),
+          booking_number: await generateBookingNumber(profile.tenant_id),
           status: "preventivo" as const,
           created_by: user?.id ?? null,
           units_occupied: booking.units_occupied ?? 1,
