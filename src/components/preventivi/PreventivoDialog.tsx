@@ -24,6 +24,9 @@ import { cn } from "@/lib/utils";
 import { useClients } from "@/hooks/useClients";
 import { usePriceLists } from "@/hooks/usePensioneConfig";
 import { useClientCats } from "@/hooks/usePreventivi";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 // ── Client Autocomplete (inline) ──
 function HighlightMatch({ text, query }: { text: string; query: string }) {
@@ -39,12 +42,13 @@ function HighlightMatch({ text, query }: { text: string; query: string }) {
   );
 }
 
-function ClientAutocomplete({ clients, value, searchValue, onSearchChange, onSelect }: {
+function ClientAutocomplete({ clients, value, searchValue, onSearchChange, onSelect, catsByClient }: {
   clients: any[];
   value: string;
   searchValue: string;
   onSearchChange: (v: string) => void;
   onSelect: (clientId: string) => void;
+  catsByClient: Map<string, string[]>;
 }) {
   const [open, setOpen] = useState(false);
   const [focusIndex, setFocusIndex] = useState(-1);
@@ -62,12 +66,16 @@ function ClientAutocomplete({ clients, value, searchValue, onSearchChange, onSel
   const suggestions = useMemo(() => {
     if (!searchValue.trim() || searchValue.trim().length < 2) return [];
     const q = searchValue.toLowerCase();
-    return clients.filter((c: any) =>
-      `${c.first_name} ${c.last_name}`.toLowerCase().includes(q) ||
-      (c.email ?? "").toLowerCase().includes(q) ||
-      (c.phone ?? "").toLowerCase().includes(q)
-    ).slice(0, 8);
-  }, [clients, searchValue]);
+    return clients.filter((c: any) => {
+      const catNames = catsByClient.get(c.id) ?? [];
+      return (
+        `${c.first_name} ${c.last_name}`.toLowerCase().includes(q) ||
+        (c.email ?? "").toLowerCase().includes(q) ||
+        (c.phone ?? "").toLowerCase().includes(q) ||
+        catNames.some(name => name.toLowerCase().includes(q))
+      );
+    }).slice(0, 8);
+  }, [clients, searchValue, catsByClient]);
 
   useEffect(() => {
     setOpen(suggestions.length > 0 && searchValue.trim().length >= 2);
@@ -137,6 +145,7 @@ function ClientAutocomplete({ clients, value, searchValue, onSearchChange, onSel
         <div className="absolute z-50 top-full mt-1 w-full rounded-md border bg-popover shadow-md overflow-hidden max-h-[240px] overflow-y-auto">
           {suggestions.map((c: any, i: number) => {
             const name = `${c.first_name} ${c.last_name}`;
+            const catNames = catsByClient.get(c.id) ?? [];
             return (
               <button
                 key={c.id}
@@ -154,6 +163,17 @@ function ClientAutocomplete({ clients, value, searchValue, onSearchChange, onSel
                   </span>
                 </div>
                 <div className="flex items-center gap-3 pl-5 text-xs text-muted-foreground flex-wrap">
+                  {catNames.length > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Cat className="h-3 w-3 shrink-0" />
+                      {catNames.map((cn, ci) => (
+                        <span key={ci}>
+                          <HighlightMatch text={cn} query={searchValue} />
+                          {ci < catNames.length - 1 && ", "}
+                        </span>
+                      ))}
+                    </span>
+                  )}
                   {c.phone && (
                     <span className="flex items-center gap-1">
                       <Phone className="h-3 w-3 shrink-0" />
@@ -227,8 +247,34 @@ export function PreventivoDialog({
   open, onOpenChange, editing, onCreate, onUpdate,
   stayCalcType, countCheckinDay, countCheckoutDay,
 }: Props) {
+  const { profile } = useAuth();
   const { data: clients } = useClients();
   const { data: priceLists } = usePriceLists();
+
+  // Fetch all cats for autocomplete search
+  const { data: allCats } = useQuery({
+    queryKey: ["all-cats-for-search", profile?.tenant_id],
+    queryFn: async () => {
+      if (!profile?.tenant_id) return [];
+      const { data, error } = await supabase
+        .from("cats")
+        .select("id, name, client_id")
+        .eq("tenant_id", profile.tenant_id);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!profile?.tenant_id,
+  });
+
+  const catsByClient = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const cat of allCats ?? []) {
+      const arr = map.get(cat.client_id) ?? [];
+      arr.push(cat.name);
+      map.set(cat.client_id, arr);
+    }
+    return map;
+  }, [allCats]);
 
   // ── Core state ──
   const [clientId, setClientId] = useState("");
@@ -691,6 +737,7 @@ export function PreventivoDialog({
                     searchValue={clientSearch}
                     onSearchChange={setClientSearch}
                     onSelect={(id) => { setClientId(id); setSelectedCats([]); }}
+                    catsByClient={catsByClient}
                   />
                   <Button type="button" variant="outline" size="sm" onClick={() => setNewClientDialogOpen(true)}
                     className="shrink-0 gap-1 mt-0">
