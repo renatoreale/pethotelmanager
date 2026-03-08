@@ -537,7 +537,6 @@ function StatusBadge({ status }: { status: string }) {
     </span>
   );
 }
-  appointment,
   open,
   onOpenChange,
   onSave,
