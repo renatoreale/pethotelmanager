@@ -323,15 +323,14 @@ export function PreventivoDialog({
   // ── Grand total calculation ──
   const seasonTotal = useMemo(() => seasonPeriods.reduce((sum, p) => sum + p.total, 0), [seasonPeriods]);
   const extrasTotal = useMemo(() => extraServices.reduce((sum, s) => sum + s.total, 0), [extraServices]);
-  const subtotal = seasonTotal + extrasTotal;
 
-  // Recalculate discount amounts when subtotal changes
+  // Discount applies ONLY to stay total (seasonTotal), not extras
   useEffect(() => {
     setDiscounts(prev => prev.map(d => ({
       ...d,
-      amount: d.type === "percentuale" ? Math.round(subtotal * d.value) / 100 : d.value,
+      amount: d.type === "percentuale" ? Math.round(seasonTotal * d.value) / 100 : d.value,
     })));
-  }, [subtotal]);
+  }, [seasonTotal]);
 
   const updateDiscount = (idx: number, field: string, value: any) => {
     setDiscounts(prev => prev.map((d, i) => {
@@ -339,7 +338,7 @@ export function PreventivoDialog({
       const updated = { ...d, [field]: value };
       if (field === "value" || field === "type") {
         updated.amount = updated.type === "percentuale"
-          ? Math.round(subtotal * Number(updated.value)) / 100
+          ? Math.round(seasonTotal * Number(updated.value)) / 100
           : Number(updated.value);
       }
       return updated;
@@ -347,7 +346,46 @@ export function PreventivoDialog({
   };
 
   const discountTotal = useMemo(() => discounts.reduce((sum, d) => sum + d.amount, 0), [discounts]);
-  const grandTotal = Math.max(0, subtotal - discountTotal);
+  const discountedStay = Math.max(0, seasonTotal - discountTotal);
+  const grandTotal = discountedStay + extrasTotal;
+
+  // ── Period validation: days sum & gaps ──
+  const periodDaysTotal = useMemo(() => seasonPeriods.reduce((sum, p) => sum + p.days, 0), [seasonPeriods]);
+  const periodDaysMismatch = seasonPeriods.length > 0 && duration > 0 && periodDaysTotal !== duration;
+
+  const periodGaps = useMemo(() => {
+    if (seasonPeriods.length < 2 || !checkIn || !checkOut) return [];
+    const sorted = [...seasonPeriods].sort((a, b) => a.fromDate.localeCompare(b.fromDate));
+    const gaps: string[] = [];
+    // Check gap before first period
+    if (sorted[0].fromDate > checkIn) {
+      gaps.push(`${checkIn} → ${sorted[0].fromDate}`);
+    }
+    // Check gaps between periods
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const endCurrent = sorted[i].toDate;
+      const startNext = sorted[i + 1].fromDate;
+      // In "notti" mode the next period should start on the end date of the previous
+      // In "giorni" mode the next day after toDate should be the start of next period
+      const expectedNext = stayCalcType === "notti" ? endCurrent : format(
+        new Date(new Date(endCurrent).getTime() + 86400000), "yyyy-MM-dd"
+      );
+      if (startNext > expectedNext) {
+        gaps.push(`${expectedNext} → ${startNext}`);
+      }
+    }
+    // Check gap after last period
+    if (sorted[sorted.length - 1].toDate < checkOut) {
+      const lastEnd = sorted[sorted.length - 1].toDate;
+      const expectedStart = stayCalcType === "notti" ? lastEnd : format(
+        new Date(new Date(lastEnd).getTime() + 86400000), "yyyy-MM-dd"
+      );
+      if (expectedStart < checkOut || (stayCalcType === "notti" && lastEnd < checkOut)) {
+        gaps.push(`${expectedStart} → ${checkOut}`);
+      }
+    }
+    return gaps;
+  }, [seasonPeriods, checkIn, checkOut, stayCalcType]);
 
   // Apply calculated total
   const applyCalculation = () => {
