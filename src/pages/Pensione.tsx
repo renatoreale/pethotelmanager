@@ -341,9 +341,10 @@ function SlotTab() {
             </div>
             <div className="space-y-2">
               <Label>Giorno della settimana</Label>
-              <Select value={String(dayOfWeek)} onValueChange={(v) => setDayOfWeek(Number(v))}>
+              <Select value={String(dayOfWeek)} onValueChange={(v) => setDayOfWeek(v === "all" ? "all" : Number(v))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
+                  {!editing && <SelectItem value="all">Tutti i giorni</SelectItem>}
                   {DAYS.map((d, i) => <SelectItem key={i} value={String(i)}>{d}</SelectItem>)}
                 </SelectContent>
               </Select>
