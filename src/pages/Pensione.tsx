@@ -30,7 +30,7 @@ import {
 } from "@/hooks/usePensioneConfig";
 import {
   useAllPaymentMethods, useCreatePaymentMethod,
-  useTogglePaymentMethod, useDeletePaymentMethod,
+  useTogglePaymentMethod, useDeletePaymentMethod, useUpdatePaymentMethod,
 } from "@/hooks/usePayments";
 
 const DAYS = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
