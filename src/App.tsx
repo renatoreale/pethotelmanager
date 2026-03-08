@@ -26,6 +26,7 @@ import Pensione from "./pages/Pensione";
 import NotFound from "./pages/NotFound";
 import RegistroGatti from "./pages/RegistroGatti";
 import OccupazioneCasette from "./pages/OccupazioneCasette";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
