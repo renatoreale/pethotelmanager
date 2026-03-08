@@ -181,6 +181,7 @@ export function useCreatePayment() {
       qc.invalidateQueries({ queryKey: ["bookings"] });
       qc.invalidateQueries({ queryKey: ["preventivi"] });
       qc.invalidateQueries({ queryKey: ["payments-all"] });
+      qc.invalidateQueries({ queryKey: ["bookings-with-payments"] });
     },
   });
 }
@@ -207,6 +208,7 @@ export function useUpdatePayment() {
       qc.invalidateQueries({ queryKey: ["bookings"] });
       qc.invalidateQueries({ queryKey: ["preventivi"] });
       qc.invalidateQueries({ queryKey: ["payments-all"] });
+      qc.invalidateQueries({ queryKey: ["bookings-with-payments"] });
     },
   });
 }
@@ -226,6 +228,7 @@ export function useDeletePayment() {
       qc.invalidateQueries({ queryKey: ["bookings"] });
       qc.invalidateQueries({ queryKey: ["preventivi"] });
       qc.invalidateQueries({ queryKey: ["payments-all"] });
+      qc.invalidateQueries({ queryKey: ["bookings-with-payments"] });
     },
   });
 }
