@@ -26,6 +26,8 @@ import {
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 const TYPE_LABELS: Record<string, string> = {
   caparra: "Caparra",
