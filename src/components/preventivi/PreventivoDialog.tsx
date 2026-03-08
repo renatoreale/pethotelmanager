@@ -15,7 +15,8 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, CalendarIcon, X, User, Cat, Home, Calendar as CalIcon, Sparkles, Percent, FileText } from "lucide-react";
+import { Plus, CalendarIcon, X, User, Cat, Home, Calendar as CalIcon, Sparkles, Percent, FileText, UserPlus } from "lucide-react";
+import { ClientDialog } from "@/components/clients/ClientDialog";
 import { toast } from "sonner";
 import { format, differenceInDays, parseISO, startOfDay } from "date-fns";
 import { it } from "date-fns/locale";
@@ -92,6 +93,7 @@ export function PreventivoDialog({
   const [clientSearch, setClientSearch] = useState("");
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
+  const [newClientDialogOpen, setNewClientDialogOpen] = useState(false);
   // ── Pricing state ──
   const [seasonPeriods, setSeasonPeriods] = useState<SeasonPeriod[]>([]);
   const [extraServices, setExtraServices] = useState<ExtraServiceLine[]>([]);
@@ -509,6 +511,7 @@ export function PreventivoDialog({
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -528,8 +531,14 @@ export function PreventivoDialog({
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Cliente *</Label>
-                <Input placeholder="Cerca cliente per nome o email..." value={clientSearch}
-                  onChange={(e) => setClientSearch(e.target.value)} className="mb-1" />
+                <div className="flex gap-2">
+                  <Input placeholder="Cerca cliente per nome o email..." value={clientSearch}
+                    onChange={(e) => setClientSearch(e.target.value)} className="flex-1" />
+                  <Button type="button" variant="outline" size="sm" onClick={() => setNewClientDialogOpen(true)}
+                    className="shrink-0 gap-1">
+                    <UserPlus className="h-4 w-4" /> Nuovo
+                  </Button>
+                </div>
                 <Select value={clientId} onValueChange={(v) => { setClientId(v); setSelectedCats([]); }}>
                   <SelectTrigger><SelectValue placeholder="Seleziona cliente" /></SelectTrigger>
                   <SelectContent>
@@ -903,5 +912,14 @@ export function PreventivoDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <ClientDialog
+      open={newClientDialogOpen}
+      onOpenChange={(v) => {
+        setNewClientDialogOpen(v);
+        // After closing, the clients list will refetch automatically via react-query
+      }}
+    />
+    </>
   );
 }
