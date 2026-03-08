@@ -807,6 +807,9 @@ function PaymentMethodsTab() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => { setEditing(m); setEditName(m.name); }}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                           <Button variant="ghost" size="icon" onClick={() => handleToggle(m.id, m.is_active)}>
                             <Switch checked={m.is_active} className="pointer-events-none" />
                           </Button>
