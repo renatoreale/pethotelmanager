@@ -191,7 +191,7 @@ export default function Pagamenti() {
 
   const saveTx = async () => {
     const amount = parseFloat(txForm.amount);
-    if (!amount || amount <= 0) { toast.error("Inserisci un importo valido"); return; }
+    if (isNaN(amount) || amount === 0) { toast.error("Inserisci un importo valido"); return; }
     if (!txForm.payment_method_id) { toast.error("Seleziona una modalità di pagamento"); return; }
     try {
       if (txEditId) {
