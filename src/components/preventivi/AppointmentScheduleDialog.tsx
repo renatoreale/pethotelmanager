@@ -14,7 +14,7 @@ import {
   useCreateAppointment,
   generateTimeSlots,
 } from "@/hooks/useAppointments";
-import { useConfirmPreventivo } from "@/hooks/usePreventivi";
+import { useTransitionBooking } from "@/hooks/useBookings";
 
 interface Props {
   open: boolean;
@@ -27,7 +27,7 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
   const [checkOutTime, setCheckOutTime] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const confirmPreventivo = useConfirmPreventivo();
+  const transitionBooking = useTransitionBooking();
   const createAppointment = useCreateAppointment();
 
   const checkInDate = booking?.check_in_date;
@@ -82,12 +82,13 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
 
   const handleConfirm = async () => {
     if (!booking) return;
+    if (!checkInTime && !checkOutTime) {
+      toast.error("Seleziona almeno un appuntamento");
+      return;
+    }
     setSaving(true);
     try {
-      // 1. Confirm the preventivo
-      await confirmPreventivo.mutateAsync(booking.id);
-
-      // 2. Create check-in appointment if slot selected
+      // 1. Create check-in appointment if slot selected
       if (checkInTime && checkInDate) {
         const selectedSlot = checkInSlots.find(s => s.time === checkInTime);
         await createAppointment.mutateAsync({
@@ -98,7 +99,7 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
         });
       }
 
-      // 3. Create check-out appointment if slot selected
+      // 2. Create check-out appointment if slot selected
       if (checkOutTime && checkOutDate) {
         const selectedSlot = checkOutSlots.find(s => s.time === checkOutTime);
         await createAppointment.mutateAsync({
@@ -109,7 +110,10 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
         });
       }
 
-      toast.success("Preventivo confermato e appuntamenti fissati");
+      // 3. Transition to appuntamento_fissato
+      await transitionBooking.mutateAsync({ id: booking.id, newStatus: "appuntamento_fissato" });
+
+      toast.success("Appuntamenti fissati");
       setCheckInTime(null);
       setCheckOutTime(null);
       onOpenChange(false);
@@ -126,7 +130,7 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Conferma e Fissa Appuntamenti</DialogTitle>
+          <DialogTitle>Fissa Appuntamenti</DialogTitle>
         </DialogHeader>
 
         {booking && (
@@ -204,7 +208,7 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annulla</Button>
           <Button onClick={handleConfirm} disabled={saving}>
-            {saving ? "Conferma in corso..." : "Conferma Prenotazione"}
+            {saving ? "Salvataggio..." : "Fissa Appuntamenti"}
           </Button>
         </DialogFooter>
       </DialogContent>

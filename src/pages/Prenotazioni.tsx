@@ -17,6 +17,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Search, CalendarDays, MoreHorizontal } from "lucide-react";
+import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { toast } from "sonner";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
@@ -26,6 +27,7 @@ import { useBookings, useTransitionBooking, getTransitions } from "@/hooks/useBo
 const STATUS_OPTIONS = [
   { value: "tutti", label: "Tutti gli stati" },
   { value: "confermata", label: "Confermata" },
+  { value: "appuntamento_fissato", label: "Appuntamento fissato" },
   { value: "check_in", label: "Check-in" },
   { value: "in_corso", label: "In corso" },
   { value: "check_out", label: "Check-out" },
@@ -37,6 +39,7 @@ const STATUS_OPTIONS = [
 
 const STATUS_COLORS: Record<string, string> = {
   confermata: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  appuntamento_fissato: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
   check_in: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
   in_corso: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   check_out: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
@@ -48,6 +51,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 const STATUS_LABELS: Record<string, string> = {
   confermata: "Confermata",
+  appuntamento_fissato: "Appuntamento fissato",
   check_in: "Check-in",
   in_corso: "In corso",
   check_out: "Check-out",
@@ -61,6 +65,7 @@ export default function Prenotazioni() {
   const [statusFilter, setStatusFilter] = useState("tutti");
   const [search, setSearch] = useState("");
   const [transitioning, setTransitioning] = useState<{ id: string; bookingNumber: string; newStatus: string; label: string } | null>(null);
+  const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
 
   const { data: bookings, isLoading } = useBookings(statusFilter);
   const transitionBooking = useTransitionBooking();
@@ -198,12 +203,18 @@ export default function Prenotazioni() {
                                 {transitions.map((t) => (
                                   <DropdownMenuItem
                                     key={t.next}
-                                    onClick={() => setTransitioning({
-                                      id: b.id,
-                                      bookingNumber: b.booking_number,
-                                      newStatus: t.next,
-                                      label: t.label,
-                                    })}
+                                    onClick={() => {
+                                      if (t.next === "appuntamento_fissato") {
+                                        setSchedulingBooking(b);
+                                      } else {
+                                        setTransitioning({
+                                          id: b.id,
+                                          bookingNumber: b.booking_number,
+                                          newStatus: t.next,
+                                          label: t.label,
+                                        });
+                                      }
+                                    }}
                                   >
                                     {t.label}
                                   </DropdownMenuItem>
@@ -241,6 +252,12 @@ export default function Prenotazioni() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AppointmentScheduleDialog
+        open={!!schedulingBooking}
+        onOpenChange={(open) => { if (!open) setSchedulingBooking(null); }}
+        booking={schedulingBooking}
+      />
     </div>
   );
 }
