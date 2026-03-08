@@ -16,7 +16,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, CalendarDays, MoreHorizontal, Pencil, CalendarClock, CreditCard, ChevronDown } from "lucide-react";
+import { Search, CalendarDays, MoreHorizontal, Pencil, CalendarClock, CreditCard, ChevronDown, Trash2 } from "lucide-react";
 import { BookingDrillDown } from "@/components/BookingDrillDown";
 import { AutocompleteSearch } from "@/components/AutocompleteSearch";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
@@ -26,7 +26,7 @@ import { toast } from "sonner";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
-import { useBookings, useTransitionBooking, getTransitions } from "@/hooks/useBookings";
+import { useBookings, useTransitionBooking, useDeleteBooking, getTransitions } from "@/hooks/useBookings";
 import { useUpdatePreventivo } from "@/hooks/usePreventivi";
 
 const STATUS_OPTIONS = [
@@ -76,6 +76,7 @@ export default function Prenotazioni() {
   const [statusFilter, setStatusFilter] = useState("confermata");
   const [search, setSearch] = useState("");
   const [transitioning, setTransitioning] = useState<{ id: string; bookingNumber: string; newStatus: string; label: string } | null>(null);
+  const [deleting, setDeleting] = useState<{ id: string; bookingNumber: string } | null>(null);
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
   const [editingBooking, setEditingBooking] = useState<any>(null);
   const [paymentsBooking, setPaymentsBooking] = useState<any>(null);
@@ -83,6 +84,7 @@ export default function Prenotazioni() {
 
   const { data: bookings, isLoading } = useBookings(statusFilter);
   const transitionBooking = useTransitionBooking();
+  const deleteBooking = useDeleteBooking();
   const updatePreventivo = useUpdatePreventivo();
   const { data: tenantConfig } = useTenantConfig();
 
@@ -287,6 +289,15 @@ export default function Prenotazioni() {
                                       {t.label}
                                     </DropdownMenuItem>
                                   ))}
+                                  {!["check_in", "in_corso", "check_out", "chiusa"].includes(b.status) && (
+                                    <DropdownMenuItem
+                                      className="text-destructive focus:text-destructive"
+                                      onClick={() => setDeleting({ id: b.id, bookingNumber: b.booking_number })}
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Elimina
+                                    </DropdownMenuItem>
+                                  )}
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             ) : (
@@ -327,6 +338,35 @@ export default function Prenotazioni() {
               className={transitioning?.newStatus === "cancellata" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
             >
               Conferma
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!deleting} onOpenChange={() => setDeleting(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminare la prenotazione?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleting && `Vuoi eliminare definitivamente la prenotazione ${deleting.bookingNumber}? Questa azione non può essere annullata.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (!deleting) return;
+                try {
+                  await deleteBooking.mutateAsync(deleting.id);
+                  toast.success(`Prenotazione ${deleting.bookingNumber} eliminata`);
+                } catch (err: any) {
+                  toast.error(err.message || "Errore nell'eliminazione");
+                }
+                setDeleting(null);
+              }}
+            >
+              Elimina
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
