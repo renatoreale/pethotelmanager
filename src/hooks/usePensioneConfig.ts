@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 
-// ── Tenant config (gabbie) ──
+// ── Tenant config (casette) ──
 export function useTenantConfig() {
   const { profile } = useAuth();
   return useQuery({
@@ -106,7 +106,9 @@ export function useDeleteSlotConfig() {
   });
 }
 
-// ── Price lists ──
+// ── Price lists (tariffe) ──
+export type TariffType = "stagionale" | "extra_giornaliero" | "extra_km" | "extra_una_tantum";
+
 export function usePriceLists() {
   const { profile } = useAuth();
   return useQuery({
@@ -116,7 +118,6 @@ export function usePriceLists() {
         .from("price_lists")
         .select("*")
         .or(`tenant_id.is.null,tenant_id.eq.${profile?.tenant_id}`)
-        .order("cage_pool_type")
         .order("name");
       if (error) throw error;
       return data;
@@ -132,8 +133,12 @@ export function useUpsertPriceList() {
       id?: string;
       tenant_id?: string | null;
       name: string;
-      cage_pool_type: "singola" | "doppia";
-      price_per_day: number;
+      tariff_type: TariffType;
+      season?: string | null;
+      price_per_day?: number;
+      fixed_cost?: number;
+      included_km?: number;
+      extra_km_cost?: number;
       extra_cat_supplement?: number | null;
       valid_from?: string | null;
       valid_to?: string | null;

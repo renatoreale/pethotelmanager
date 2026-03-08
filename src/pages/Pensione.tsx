@@ -26,26 +26,40 @@ import {
   useTenantConfig, useUpdateTenantConfig,
   useSlotConfigs, useUpsertSlotConfig, useDeleteSlotConfig,
   usePriceLists, useUpsertPriceList, useDeletePriceList,
+  type TariffType,
 } from "@/hooks/usePensioneConfig";
 
 const DAYS = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
+
+const TARIFF_TYPE_LABELS: Record<TariffType, string> = {
+  stagionale: "Stagionale",
+  extra_giornaliero: "Extra giornaliero",
+  extra_km: "Extra con km",
+  extra_una_tantum: "Extra una tantum",
+};
+
+const SEASON_OPTIONS = [
+  { value: "alta", label: "Alta stagione" },
+  { value: "media", label: "Media stagione" },
+  { value: "bassa", label: "Bassa stagione" },
+];
 
 export default function Pensione() {
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Configurazione Pensione</h1>
-        <p className="text-muted-foreground text-sm mt-1">Gabbie, slot appuntamenti e listino prezzi</p>
+        <p className="text-muted-foreground text-sm mt-1">Casette, slot appuntamenti e listino prezzi</p>
       </div>
 
-      <Tabs defaultValue="gabbie" className="space-y-4">
+      <Tabs defaultValue="casette" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="gabbie" className="gap-2"><Settings className="h-4 w-4" /> Gabbie</TabsTrigger>
+          <TabsTrigger value="casette" className="gap-2"><Settings className="h-4 w-4" /> Casette</TabsTrigger>
           <TabsTrigger value="slot" className="gap-2"><Clock className="h-4 w-4" /> Slot Appuntamenti</TabsTrigger>
           <TabsTrigger value="listino" className="gap-2"><Euro className="h-4 w-4" /> Listino Prezzi</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="gabbie"><GabbieTab /></TabsContent>
+        <TabsContent value="casette"><CasetteTab /></TabsContent>
         <TabsContent value="slot"><SlotTab /></TabsContent>
         <TabsContent value="listino"><ListinoTab /></TabsContent>
       </Tabs>
@@ -53,8 +67,8 @@ export default function Pensione() {
   );
 }
 
-// ── GABBIE TAB ──
-function GabbieTab() {
+// ── CASETTE TAB ──
+function CasetteTab() {
   const { data: config, isLoading } = useTenantConfig();
   const updateConfig = useUpdateTenantConfig();
   const [singole, setSingole] = useState<number | null>(null);
@@ -74,7 +88,7 @@ function GabbieTab() {
         num_doppie: d,
         occupancy_rule_days: r,
       });
-      toast.success("Configurazione gabbie salvata");
+      toast.success("Configurazione casette salvata");
       setSingole(null);
       setDoppie(null);
       setRuleDays(null);
@@ -88,18 +102,18 @@ function GabbieTab() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Capacità Gabbie</CardTitle>
-        <CardDescription>Configura il numero di gabbie disponibili e la regola di occupazione</CardDescription>
+        <CardTitle>Capacità Casette</CardTitle>
+        <CardDescription>Configura il numero di casette disponibili e la regola di occupazione</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid gap-6 sm:grid-cols-3">
           <div className="space-y-2">
-            <Label htmlFor="singole">Gabbie Singole</Label>
+            <Label htmlFor="singole">Casette Singole</Label>
             <Input id="singole" type="number" min={0} value={s} onChange={(e) => setSingole(Number(e.target.value))} />
             <p className="text-xs text-muted-foreground">Per 1 gatto</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="doppie">Gabbie Doppie</Label>
+            <Label htmlFor="doppie">Casette Doppie</Label>
             <Input id="doppie" type="number" min={0} value={d} onChange={(e) => setDoppie(Number(e.target.value))} />
             <p className="text-xs text-muted-foreground">Per 2+ gatti fratelli</p>
           </div>
@@ -127,7 +141,6 @@ function SlotTab() {
   const [editing, setEditing] = useState<any>(null);
   const [deleting, setDeleting] = useState<any>(null);
 
-  // Form state
   const [dayOfWeek, setDayOfWeek] = useState(0);
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("12:00");
@@ -316,10 +329,14 @@ function ListinoTab() {
   const [editing, setEditing] = useState<any>(null);
   const [deleting, setDeleting] = useState<any>(null);
 
-  // Form
+  // Form state
   const [name, setName] = useState("");
-  const [cageType, setCageType] = useState<"singola" | "doppia">("singola");
+  const [tariffType, setTariffType] = useState<TariffType>("stagionale");
+  const [season, setSeason] = useState("");
   const [pricePerDay, setPricePerDay] = useState(0);
+  const [fixedCost, setFixedCost] = useState(0);
+  const [includedKm, setIncludedKm] = useState(0);
+  const [extraKmCost, setExtraKmCost] = useState(0);
   const [extraSupplement, setExtraSupplement] = useState(0);
   const [validFrom, setValidFrom] = useState("");
   const [validTo, setValidTo] = useState("");
@@ -328,8 +345,12 @@ function ListinoTab() {
   const openNew = () => {
     setEditing(null);
     setName("");
-    setCageType("singola");
+    setTariffType("stagionale");
+    setSeason("");
     setPricePerDay(0);
+    setFixedCost(0);
+    setIncludedKm(0);
+    setExtraKmCost(0);
     setExtraSupplement(0);
     setValidFrom("");
     setValidTo("");
@@ -340,8 +361,12 @@ function ListinoTab() {
   const openEdit = (p: any) => {
     setEditing(p);
     setName(p.name);
-    setCageType(p.cage_pool_type);
-    setPricePerDay(p.price_per_day);
+    setTariffType(p.tariff_type ?? "stagionale");
+    setSeason(p.season ?? "");
+    setPricePerDay(p.price_per_day ?? 0);
+    setFixedCost(p.fixed_cost ?? 0);
+    setIncludedKm(p.included_km ?? 0);
+    setExtraKmCost(p.extra_km_cost ?? 0);
     setExtraSupplement(p.extra_cat_supplement ?? 0);
     setValidFrom(p.valid_from ?? "");
     setValidTo(p.valid_to ?? "");
@@ -356,14 +381,18 @@ function ListinoTab() {
         id: editing?.id,
         tenant_id: profile?.tenant_id,
         name: name.trim(),
-        cage_pool_type: cageType,
-        price_per_day: pricePerDay,
-        extra_cat_supplement: extraSupplement || null,
+        tariff_type: tariffType,
+        season: tariffType === "stagionale" ? (season || null) : null,
+        price_per_day: (tariffType === "stagionale" || tariffType === "extra_giornaliero") ? pricePerDay : 0,
+        fixed_cost: tariffType === "extra_km" ? fixedCost : (tariffType === "extra_una_tantum" ? fixedCost : 0),
+        included_km: tariffType === "extra_km" ? includedKm : 0,
+        extra_km_cost: tariffType === "extra_km" ? extraKmCost : 0,
+        extra_cat_supplement: tariffType === "stagionale" ? (extraSupplement || null) : null,
         valid_from: validFrom || null,
         valid_to: validTo || null,
         is_active: active,
       });
-      toast.success(editing ? "Listino aggiornato" : "Listino creato");
+      toast.success(editing ? "Tariffa aggiornata" : "Tariffa creata");
       setDialogOpen(false);
     } catch (err: any) {
       toast.error(err.message || "Errore");
@@ -374,11 +403,27 @@ function ListinoTab() {
     if (!deleting) return;
     try {
       await deletePrice.mutateAsync(deleting.id);
-      toast.success("Listino eliminato");
+      toast.success("Tariffa eliminata");
     } catch (err: any) {
       toast.error(err.message || "Errore");
     }
     setDeleting(null);
+  };
+
+  const renderPriceInfo = (p: any) => {
+    const tt = p.tariff_type ?? "stagionale";
+    switch (tt) {
+      case "stagionale":
+        return `€ ${Number(p.price_per_day).toFixed(2)}/giorno`;
+      case "extra_giornaliero":
+        return `€ ${Number(p.price_per_day).toFixed(2)}/giorno`;
+      case "extra_km":
+        return `€ ${Number(p.fixed_cost).toFixed(2)} base + € ${Number(p.extra_km_cost).toFixed(2)}/km extra (incl. ${p.included_km} km)`;
+      case "extra_una_tantum":
+        return `€ ${Number(p.fixed_cost).toFixed(2)} una tantum`;
+      default:
+        return "—";
+    }
   };
 
   return (
@@ -387,7 +432,7 @@ function ListinoTab() {
         <CardHeader className="flex-row items-center justify-between">
           <div>
             <CardTitle>Listino Prezzi</CardTitle>
-            <CardDescription>Gestisci le tariffe per tipo gabbia con validità temporale</CardDescription>
+            <CardDescription>Gestisci tariffe stagionali e servizi extra</CardDescription>
           </div>
           <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Nuova Tariffa</Button>
         </CardHeader>
@@ -402,9 +447,8 @@ function ListinoTab() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>€/giorno</TableHead>
-                    <TableHead>Suppl. extra</TableHead>
+                    <TableHead>Tipologia</TableHead>
+                    <TableHead>Prezzo</TableHead>
                     <TableHead>Validità</TableHead>
                     <TableHead>Stato</TableHead>
                     <TableHead className="w-[100px]">Azioni</TableHead>
@@ -413,14 +457,20 @@ function ListinoTab() {
                 <TableBody>
                   {prices.map((p: any) => (
                     <TableRow key={p.id}>
-                      <TableCell className="font-medium">{p.name}</TableCell>
+                      <TableCell className="font-medium">
+                        {p.name}
+                        {p.season && (
+                          <Badge variant="outline" className="ml-2 text-xs">
+                            {SEASON_OPTIONS.find(s => s.value === p.season)?.label ?? p.season}
+                          </Badge>
+                        )}
+                      </TableCell>
                       <TableCell>
-                        <Badge variant={p.cage_pool_type === "doppia" ? "outline" : "secondary"}>
-                          {p.cage_pool_type === "singola" ? "Singola" : "Doppia"}
+                        <Badge variant="secondary">
+                          {TARIFF_TYPE_LABELS[p.tariff_type as TariffType] ?? p.tariff_type}
                         </Badge>
                       </TableCell>
-                      <TableCell>€ {Number(p.price_per_day).toFixed(2)}</TableCell>
-                      <TableCell>{p.extra_cat_supplement ? `€ ${Number(p.extra_cat_supplement).toFixed(2)}` : "—"}</TableCell>
+                      <TableCell className="text-sm">{renderPriceInfo(p)}</TableCell>
                       <TableCell className="text-muted-foreground text-sm">
                         {p.valid_from && p.valid_to
                           ? `${p.valid_from} → ${p.valid_to}`
@@ -447,35 +497,95 @@ function ListinoTab() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{editing ? "Modifica Tariffa" : "Nuova Tariffa"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label>Nome tariffa</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Es. Tariffa Base Estate" />
-            </div>
-            <div className="space-y-2">
-              <Label>Tipo gabbia</Label>
-              <Select value={cageType} onValueChange={(v) => setCageType(v as any)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="singola">Singola</SelectItem>
-                  <SelectItem value="doppia">Doppia</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Prezzo / giorno (€)</Label>
-                <Input type="number" min={0} step={0.5} value={pricePerDay} onChange={(e) => setPricePerDay(Number(e.target.value))} />
+                <Label>Nome tariffa</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Es. Alta Stagione" />
               </div>
               <div className="space-y-2">
-                <Label>Suppl. gatto extra (€)</Label>
-                <Input type="number" min={0} step={0.5} value={extraSupplement} onChange={(e) => setExtraSupplement(Number(e.target.value))} />
+                <Label>Tipologia</Label>
+                <Select value={tariffType} onValueChange={(v) => setTariffType(v as TariffType)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(TARIFF_TYPE_LABELS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
+
+            {/* Stagionale: season + price/day + supplement */}
+            {tariffType === "stagionale" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Stagione</Label>
+                  <Select value={season} onValueChange={setSeason}>
+                    <SelectTrigger><SelectValue placeholder="Seleziona stagione" /></SelectTrigger>
+                    <SelectContent>
+                      {SEASON_OPTIONS.map((s) => (
+                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Prezzo / giorno (€)</Label>
+                    <Input type="number" min={0} step={0.5} value={pricePerDay} onChange={(e) => setPricePerDay(Number(e.target.value))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Suppl. gatto extra (€)</Label>
+                    <Input type="number" min={0} step={0.5} value={extraSupplement} onChange={(e) => setExtraSupplement(Number(e.target.value))} />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Extra giornaliero: price/day */}
+            {tariffType === "extra_giornaliero" && (
+              <div className="space-y-2">
+                <Label>Costo / giorno (€)</Label>
+                <Input type="number" min={0} step={0.5} value={pricePerDay} onChange={(e) => setPricePerDay(Number(e.target.value))} />
+                <p className="text-xs text-muted-foreground">Es. somministrazione farmaci</p>
+              </div>
+            )}
+
+            {/* Extra km: fixed + included km + extra/km */}
+            {tariffType === "extra_km" && (
+              <div className="grid gap-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Costo fisso (€)</Label>
+                    <Input type="number" min={0} step={0.5} value={fixedCost} onChange={(e) => setFixedCost(Number(e.target.value))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Km inclusi</Label>
+                    <Input type="number" min={0} value={includedKm} onChange={(e) => setIncludedKm(Number(e.target.value))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>€ / km extra</Label>
+                    <Input type="number" min={0} step={0.1} value={extraKmCost} onChange={(e) => setExtraKmCost(Number(e.target.value))} />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">Es. Cat Taxi: costo fisso fino a X km, poi supplemento per km aggiuntivo</p>
+              </div>
+            )}
+
+            {/* Extra una tantum: fixed cost */}
+            {tariffType === "extra_una_tantum" && (
+              <div className="space-y-2">
+                <Label>Costo una tantum (€)</Label>
+                <Input type="number" min={0} step={0.5} value={fixedCost} onChange={(e) => setFixedCost(Number(e.target.value))} />
+                <p className="text-xs text-muted-foreground">Es. visita veterinaria</p>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Valido dal</Label>
