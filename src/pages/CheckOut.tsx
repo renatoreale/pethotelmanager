@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar as CalendarWidget } from "@/components/ui/calendar";
 import { LogOut, User, Cat, Calendar, CheckCircle2, CreditCard, PawPrint, CalendarIcon } from "lucide-react";
+import { BookingDrillDown } from "@/components/BookingDrillDown";
 import { AutocompleteSearch } from "@/components/AutocompleteSearch";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
@@ -333,7 +334,7 @@ export default function CheckOut() {
 
             return (
               <Card key={b.id} className={`transition-all ${isToday ? "ring-2 ring-primary" : ""}`}>
-                <CardContent className="flex items-center gap-4 p-4">
+                <CardContent className="flex items-center gap-4 p-4 pb-0">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10 shrink-0">
                     <LogOut className="h-5 w-5 text-destructive" />
                   </div>
@@ -360,6 +361,7 @@ export default function CheckOut() {
                     Check-out
                   </Button>
                 </CardContent>
+                <BookingDrillDown booking={b} />
               </Card>
             );
           })}
