@@ -95,7 +95,7 @@ export function useCreatePreventivo() {
           units_occupied: booking.units_occupied ?? 1,
           total_amount: booking.total_amount ?? 0,
           deposit_amount: booking.deposit_amount ?? 0,
-        })
+        } as any)
         .select()
         .single();
       if (bookingError) throw bookingError;
