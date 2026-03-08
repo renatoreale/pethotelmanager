@@ -555,8 +555,8 @@ export function PreventivoDialog({
                     <Input
                       placeholder="Cerca cliente per nome, email o telefono..."
                       value={clientSearch}
-                      onChange={(e) => { setClientSearch(e.target.value); setClientDropdownOpen(true); }}
-                      onFocus={() => { if (clientSearch.trim().length >= 1 || !clientId) setClientDropdownOpen(true); }}
+                      onChange={(e) => { setClientSearch(e.target.value); if (e.target.value.trim().length >= 1) setClientDropdownOpen(true); else setClientDropdownOpen(false); }}
+                      onFocus={() => { if (clientSearch.trim().length >= 1) setClientDropdownOpen(true); }}
                       className="pl-10"
                     />
                     {clientDropdownOpen && filteredClients.length > 0 && (
