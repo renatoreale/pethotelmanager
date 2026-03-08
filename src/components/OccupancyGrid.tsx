@@ -265,7 +265,7 @@ export function OccupancyGrid({
                 return (
                   <td key={dateStr} className={cn("text-center font-bold border-r py-1 text-[10px]",
                     total === 0 && "bg-destructive/20 text-destructive",
-                    isHighlight && "ring-2 ring-inset ring-destructive/50"
+                    isHighlight && total > 0 && "bg-destructive/10"
                   )}>{total}</td>
                 );
               })}
