@@ -301,12 +301,20 @@ export default function CheckIn() {
                     {format(parseISO(confirmBooking.check_in_date), "dd MMM yyyy", { locale: it })} → {format(parseISO(confirmBooking.check_out_date), "dd MMM yyyy", { locale: it })}
                   </span>
                 </div>
-                {confirmBooking.total_amount != null && (
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span>Totale: <strong>€ {Number(confirmBooking.total_amount).toFixed(2)}</strong></span>
-                  </div>
-                )}
+                {confirmBooking.total_amount != null && (() => {
+                  const total = Number(confirmBooking.total_amount);
+                  const residuo = total - bookingPaidAmount;
+                  return (
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span>
+                        Totale: <strong>€ {total.toFixed(2)}</strong>
+                        {" · "}Pagato: <strong className="text-accent">€ {bookingPaidAmount.toFixed(2)}</strong>
+                        {" · "}Residuo: <strong className={residuo > 0 ? "text-warning-foreground" : "text-accent"}>€ {residuo.toFixed(2)}</strong>
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Cat details section */}
