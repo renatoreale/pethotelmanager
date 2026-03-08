@@ -178,7 +178,20 @@ export function PreventivoDialog({
       setDepositManuallySet(false);
     }
     setClientSearch("");
+    setClientDropdownOpen(false);
   };
+
+  // Close client dropdown on click outside
+  const clientSearchRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (clientSearchRef.current && !clientSearchRef.current.contains(e.target as Node)) {
+        setClientDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   useEffect(() => { if (open) resetForm(); }, [open, editing]);
 
