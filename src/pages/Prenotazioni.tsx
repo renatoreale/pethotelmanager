@@ -77,6 +77,7 @@ export default function Prenotazioni() {
   const [transitioning, setTransitioning] = useState<{ id: string; bookingNumber: string; newStatus: string; label: string } | null>(null);
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
   const [editingBooking, setEditingBooking] = useState<any>(null);
+  const [paymentsBooking, setPaymentsBooking] = useState<any>(null);
 
   const { data: bookings, isLoading } = useBookings(statusFilter);
   const transitionBooking = useTransitionBooking();
