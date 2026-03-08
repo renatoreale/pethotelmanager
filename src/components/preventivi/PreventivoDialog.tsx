@@ -90,7 +90,8 @@ export function PreventivoDialog({
   const [depositAmount, setDepositAmount] = useState(0);
   const [depositManuallySet, setDepositManuallySet] = useState(false);
   const [clientSearch, setClientSearch] = useState("");
-
+  const [checkInOpen, setCheckInOpen] = useState(false);
+  const [checkOutOpen, setCheckOutOpen] = useState(false);
   // ── Pricing state ──
   const [seasonPeriods, setSeasonPeriods] = useState<SeasonPeriod[]>([]);
   const [extraServices, setExtraServices] = useState<ExtraServiceLine[]>([]);
