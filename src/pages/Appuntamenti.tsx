@@ -537,9 +537,6 @@ function StatusBadge({ status }: { status: string }) {
     </span>
   );
 }
-
-// Edit appointment dialog
-function EditAppointmentDialog({
   appointment,
   open,
   onOpenChange,
