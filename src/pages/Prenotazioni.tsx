@@ -203,12 +203,18 @@ export default function Prenotazioni() {
                                 {transitions.map((t) => (
                                   <DropdownMenuItem
                                     key={t.next}
-                                    onClick={() => setTransitioning({
-                                      id: b.id,
-                                      bookingNumber: b.booking_number,
-                                      newStatus: t.next,
-                                      label: t.label,
-                                    })}
+                                    onClick={() => {
+                                      if (t.next === "appuntamento_fissato") {
+                                        setSchedulingBooking(b);
+                                      } else {
+                                        setTransitioning({
+                                          id: b.id,
+                                          bookingNumber: b.booking_number,
+                                          newStatus: t.next,
+                                          label: t.label,
+                                        });
+                                      }
+                                    }}
                                   >
                                     {t.label}
                                   </DropdownMenuItem>
