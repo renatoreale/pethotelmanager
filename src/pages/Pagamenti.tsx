@@ -32,6 +32,7 @@ const TYPE_LABELS: Record<string, string> = {
   saldo: "Saldo",
   extra: "Extra",
   rimborso: "Rimborso",
+  manuale: "Manuale",
 };
 
 const STATUS_LABELS: Record<string, string> = {
