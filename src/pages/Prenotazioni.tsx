@@ -17,6 +17,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Search, CalendarDays, MoreHorizontal, Pencil, CalendarClock } from "lucide-react";
+import { AutocompleteSearch } from "@/components/AutocompleteSearch";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { PreventivoDialog } from "@/components/preventivi/PreventivoDialog";
 import { toast } from "sonner";
@@ -127,15 +128,12 @@ export default function Prenotazioni() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-4 flex-wrap">
-            <div className="relative flex-1 min-w-[200px] max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Cerca per cliente o numero..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+            <AutocompleteSearch
+              value={search}
+              onChange={setSearch}
+              placeholder="Cerca per cliente o numero..."
+              className="flex-1 min-w-[200px] max-w-sm"
+            />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue />

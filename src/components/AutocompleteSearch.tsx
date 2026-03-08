@@ -1,7 +1,8 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, User, Cat, Mail, Phone, Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useClients } from "@/hooks/useClients";
 
 export interface SearchableItem {
   label: string;
@@ -10,7 +11,6 @@ export interface SearchableItem {
 }
 
 interface AutocompleteSearchProps {
-  items: SearchableItem[];
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -33,11 +33,33 @@ const TYPE_LABELS: Record<string, string> = {
   prenotazione: "Prenotazione",
 };
 
-export function AutocompleteSearch({ items, value, onChange, placeholder, className }: AutocompleteSearchProps) {
+export function AutocompleteSearch({ value, onChange, placeholder, className }: AutocompleteSearchProps) {
   const [open, setOpen] = useState(false);
   const [focusIndex, setFocusIndex] = useState(-1);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const { data: clients } = useClients();
+
+  // Build searchable items from all clients
+  const items = useMemo<SearchableItem[]>(() => {
+    if (!clients) return [];
+    const result: SearchableItem[] = [];
+    const seen = new Set<string>();
+    for (const c of clients) {
+      const name = `${c.first_name} ${c.last_name}`;
+      if (!seen.has(`c:${name}`)) { seen.add(`c:${name}`); result.push({ label: name, value: name, type: "cliente" }); }
+      if (c.email && !seen.has(`e:${c.email}`)) { seen.add(`e:${c.email}`); result.push({ label: c.email, value: c.email, type: "email" }); }
+      if (c.phone && !seen.has(`p:${c.phone}`)) { seen.add(`p:${c.phone}`); result.push({ label: c.phone, value: c.phone, type: "telefono" }); }
+      const cats = (c as any).cats;
+      if (Array.isArray(cats)) {
+        for (const cat of cats) {
+          if (cat.name && !seen.has(`g:${cat.name}`)) { seen.add(`g:${cat.name}`); result.push({ label: cat.name, value: cat.name, type: "gatto" }); }
+        }
+      }
+    }
+    return result;
+  }, [clients]);
 
   const suggestions = useMemo(() => {
     if (!value.trim() || value.trim().length < 2) return [];
