@@ -24,6 +24,9 @@ import { cn } from "@/lib/utils";
 import { useClients } from "@/hooks/useClients";
 import { usePriceLists } from "@/hooks/usePensioneConfig";
 import { useClientCats } from "@/hooks/usePreventivi";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 // ── Client Autocomplete (inline) ──
 function HighlightMatch({ text, query }: { text: string; query: string }) {
