@@ -141,6 +141,9 @@ export interface AppointmentWithDetails {
     id: string;
     booking_number: string;
     status: string;
+    check_in_date: string;
+    check_out_date: string;
+    total_amount: number | null;
     client?: {
       id: string;
       first_name: string;
@@ -169,7 +172,7 @@ export function useAppointmentsByDate(date: string | undefined) {
         .select(`
           *,
           booking:bookings(
-            id, booking_number, status,
+            id, booking_number, status, check_in_date, check_out_date, total_amount,
             client:clients(id, first_name, last_name, phone, email),
             booking_cats(id, cat:cats(id, name))
           )
@@ -197,7 +200,7 @@ export function useAllAppointments(enabled: boolean) {
         .select(`
           *,
           booking:bookings(
-            id, booking_number, status,
+            id, booking_number, status, check_in_date, check_out_date, total_amount,
             client:clients(id, first_name, last_name, phone, email),
             booking_cats(id, cat:cats(id, name))
           )
@@ -226,7 +229,7 @@ export function useAppointmentsByDateRange(startDate: string | undefined, endDat
         .select(`
           *,
           booking:bookings(
-            id, booking_number, status,
+            id, booking_number, status, check_in_date, check_out_date, total_amount,
             client:clients(id, first_name, last_name, phone, email),
             booking_cats(id, cat:cats(id, name))
           )

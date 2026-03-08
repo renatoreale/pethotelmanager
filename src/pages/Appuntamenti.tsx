@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
+import { EditCheckoutDialog } from "@/components/appointments/EditCheckoutDialog";
 
 type ViewMode = "giorno" | "settimana" | "mese" | "personalizzato";
 
@@ -52,6 +53,7 @@ export default function Appuntamenti() {
   const [calendarToOpen, setCalendarToOpen] = useState(false);
   const [deleting, setDeleting] = useState<AppointmentWithDetails | null>(null);
   const [editing, setEditing] = useState<AppointmentWithDetails | null>(null);
+  const [editingCheckout, setEditingCheckout] = useState<AppointmentWithDetails | null>(null);
   const [search, setSearch] = useState("");
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
 
@@ -218,7 +220,14 @@ export default function Appuntamenti() {
         <TableCell className="text-sm text-muted-foreground max-w-[150px] truncate">{appt.notes || "—"}</TableCell>
         <TableCell>
           <div className="flex gap-1">
-            <Button variant="ghost" size="icon" onClick={() => setEditing(appt)}><Pencil className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => {
+              // For check_out appointments on in_corso bookings, use the special dialog
+              if (appt.appointment_type === "check_out" && appt.booking?.status === "in_corso") {
+                setEditingCheckout(appt);
+              } else {
+                setEditing(appt);
+              }
+            }}><Pencil className="h-4 w-4" /></Button>
             <Button variant="ghost" size="icon" onClick={() => setDeleting(appt)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
           </div>
         </TableCell>
@@ -459,6 +468,14 @@ export default function Appuntamenti() {
         onOpenChange={(open) => { if (!open) setSchedulingBooking(null); }}
         booking={schedulingBooking}
       />
+
+      {editingCheckout && (
+        <EditCheckoutDialog
+          open={!!editingCheckout}
+          onOpenChange={(open) => { if (!open) setEditingCheckout(null); }}
+          appointment={editingCheckout}
+        />
+      )}
     </div>
   );
 }
