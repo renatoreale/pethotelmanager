@@ -314,13 +314,15 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
         }
       }
 
-      queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      queryClient.invalidateQueries({ queryKey: ["preventivi"] });
-      queryClient.invalidateQueries({ queryKey: ["appointments-by-date"] });
-      queryClient.invalidateQueries({ queryKey: ["appointments-by-range"] });
-      queryClient.invalidateQueries({ queryKey: ["appointments-all"] });
-      queryClient.invalidateQueries({ queryKey: ["appointment-counts"] });
-      queryClient.invalidateQueries({ queryKey: ["booking-appointments"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["preventivi"] }),
+        queryClient.invalidateQueries({ queryKey: ["appointments-by-date"] }),
+        queryClient.invalidateQueries({ queryKey: ["appointments-by-range"] }),
+        queryClient.invalidateQueries({ queryKey: ["appointments-all"] }),
+        queryClient.invalidateQueries({ queryKey: ["appointment-counts"] }),
+        queryClient.invalidateQueries({ queryKey: ["booking-appointments"] }),
+      ]);
 
       const typeLabel = isCheckIn ? "check-in" : "check-out";
       toast.success(isCreateMode ? `Appuntamento ${typeLabel} creato` : `Appuntamento ${typeLabel} aggiornato`);
