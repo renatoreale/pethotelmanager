@@ -74,9 +74,11 @@ export default function Prenotazioni() {
   const [search, setSearch] = useState("");
   const [transitioning, setTransitioning] = useState<{ id: string; bookingNumber: string; newStatus: string; label: string } | null>(null);
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
+  const [editingBooking, setEditingBooking] = useState<any>(null);
 
   const { data: bookings, isLoading } = useBookings(statusFilter);
   const transitionBooking = useTransitionBooking();
+  const updatePreventivo = useUpdatePreventivo();
   const { data: tenantConfig } = useTenantConfig();
 
   const stayCalcType = (tenantConfig as any)?.stay_calc_type ?? "notti";
