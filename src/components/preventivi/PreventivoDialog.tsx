@@ -911,5 +911,14 @@ export function PreventivoDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <ClientDialog
+      open={newClientDialogOpen}
+      onOpenChange={(v) => {
+        setNewClientDialogOpen(v);
+        // After closing, the clients list will refetch automatically via react-query
+      }}
+    />
+    </>
   );
 }
