@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { AutocompleteSearch } from "@/components/AutocompleteSearch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -267,10 +268,12 @@ export default function Pagamenti() {
       </div>
 
       {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Cerca cliente o gatto..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
-      </div>
+      <AutocompleteSearch
+        value={search}
+        onChange={setSearch}
+        placeholder="Cerca cliente o gatto..."
+        className="max-w-sm"
+      />
 
       {isLoading ? (
         <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
