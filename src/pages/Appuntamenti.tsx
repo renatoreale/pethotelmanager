@@ -25,8 +25,17 @@ import {
   useAppointmentsByDate,
   useConfirmAppointment,
   useDeleteAppointment,
+  useUpdateAppointment,
+  useSlotConfigsForDay,
+  useAppointmentCounts,
+  generateTimeSlots,
   type AppointmentWithDetails,
 } from "@/hooks/useAppointments";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { getDay, parseISO } from "date-fns";
 
 export default function Appuntamenti() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
