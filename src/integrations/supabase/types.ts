@@ -148,6 +148,32 @@ export type Database = {
           },
         ]
       }
+      booking_counters: {
+        Row: {
+          last_counter: number
+          tenant_id: string
+          year: number
+        }
+        Insert: {
+          last_counter?: number
+          tenant_id: string
+          year: number
+        }
+        Update: {
+          last_counter?: number
+          tenant_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_counters_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           booking_number: string
@@ -1007,6 +1033,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      next_booking_number: { Args: { _tenant_id: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "ceo" | "titolare" | "manager" | "operatore"
