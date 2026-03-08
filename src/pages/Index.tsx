@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Cat, CalendarCheck, LogIn, LogOut, CreditCard, AlertTriangle, CalendarIcon } from "lucide-react";
+import { AvailabilityCheckDialog } from "@/components/AvailabilityCheckDialog";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
@@ -187,6 +188,7 @@ export default function Index() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <AvailabilityCheckDialog />
           {!isSelectedToday && (
             <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date())}>
               Oggi
