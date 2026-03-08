@@ -62,7 +62,7 @@ export function useBookings(statusFilter?: string) {
         .order("check_in_date", { ascending: true });
 
       if (statusFilter && statusFilter !== "tutti") {
-        query = query.eq("status", statusFilter);
+        query = query.eq("status", statusFilter as any);
       }
 
       const { data, error } = await query;
