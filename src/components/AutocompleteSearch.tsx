@@ -11,7 +11,6 @@ export interface SearchableItem {
 }
 
 interface AutocompleteSearchProps {
-  items: SearchableItem[];
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
