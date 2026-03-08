@@ -751,6 +751,7 @@ export type Database = {
       }
       slot_configs: {
         Row: {
+          appointment_type: string
           created_at: string
           day_of_week: number
           end_time: string
@@ -763,6 +764,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          appointment_type?: string
           created_at?: string
           day_of_week: number
           end_time: string
@@ -775,6 +777,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          appointment_type?: string
           created_at?: string
           day_of_week?: number
           end_time?: string
