@@ -39,6 +39,7 @@ const STATUS_OPTIONS = [
 
 const STATUS_COLORS: Record<string, string> = {
   confermata: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  appuntamento_fissato: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
   check_in: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
   in_corso: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   check_out: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
@@ -50,6 +51,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 const STATUS_LABELS: Record<string, string> = {
   confermata: "Confermata",
+  appuntamento_fissato: "Appuntamento fissato",
   check_in: "Check-in",
   in_corso: "In corso",
   check_out: "Check-out",
