@@ -261,6 +261,76 @@ export type Database = {
           },
         ]
       }
+      cat_registry: {
+        Row: {
+          booking_id: string
+          cat_id: string
+          cat_name: string
+          check_in_date: string
+          check_out_date: string | null
+          client_name: string
+          created_at: string
+          id: string
+          microchip: string | null
+          notes: string | null
+          reason: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          cat_id: string
+          cat_name: string
+          check_in_date: string
+          check_out_date?: string | null
+          client_name: string
+          created_at?: string
+          id?: string
+          microchip?: string | null
+          notes?: string | null
+          reason?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          cat_id?: string
+          cat_name?: string
+          check_in_date?: string
+          check_out_date?: string | null
+          client_name?: string
+          created_at?: string
+          id?: string
+          microchip?: string | null
+          notes?: string | null
+          reason?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cat_registry_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cat_registry_cat_id_fkey"
+            columns: ["cat_id"]
+            isOneToOne: false
+            referencedRelation: "cats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cat_registry_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cats: {
         Row: {
           behavioral_notes: string | null
