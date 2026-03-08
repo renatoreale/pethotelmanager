@@ -74,10 +74,16 @@ function CasetteTab() {
   const [singole, setSingole] = useState<number | null>(null);
   const [doppie, setDoppie] = useState<number | null>(null);
   const [ruleDays, setRuleDays] = useState<number | null>(null);
+  const [stayCalcType, setStayCalcType] = useState<string | null>(null);
+  const [countCheckinDay, setCountCheckinDay] = useState<boolean | null>(null);
+  const [countCheckoutDay, setCountCheckoutDay] = useState<boolean | null>(null);
 
   const s = singole ?? config?.num_singole ?? 0;
   const d = doppie ?? config?.num_doppie ?? 0;
   const r = ruleDays ?? config?.occupancy_rule_days ?? 4;
+  const sct = stayCalcType ?? (config as any)?.stay_calc_type ?? "notti";
+  const cid = countCheckinDay ?? (config as any)?.count_checkin_day ?? false;
+  const cod = countCheckoutDay ?? (config as any)?.count_checkout_day ?? false;
 
   const handleSave = async () => {
     if (!config) return;
@@ -87,11 +93,17 @@ function CasetteTab() {
         num_singole: s,
         num_doppie: d,
         occupancy_rule_days: r,
+        stay_calc_type: sct,
+        count_checkin_day: cid,
+        count_checkout_day: cod,
       });
       toast.success("Configurazione casette salvata");
       setSingole(null);
       setDoppie(null);
       setRuleDays(null);
+      setStayCalcType(null);
+      setCountCheckinDay(null);
+      setCountCheckoutDay(null);
     } catch (err: any) {
       toast.error(err.message || "Errore nel salvataggio");
     }
