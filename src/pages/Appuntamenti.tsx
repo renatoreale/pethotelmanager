@@ -507,6 +507,66 @@ export default function Appuntamenti() {
         </Badge>
       </div>
 
+
+      {/* Confirmed bookings without appointments */}
+      {(statusFilter === "tutti" || statusFilter === "confermata") && filteredConfirmed.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <CalendarClock className="h-4 w-4 text-primary" />
+              Prenotazioni confermate — da fissare
+            </CardTitle>
+            <CardDescription>{filteredConfirmed.length} prenotazion{filteredConfirmed.length === 1 ? "e" : "i"} in attesa di appuntamento</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>N° Prenotazione</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Gatti</TableHead>
+                    <TableHead>Check-in</TableHead>
+                    <TableHead>Check-out</TableHead>
+                    <TableHead>Stato</TableHead>
+                    <TableHead className="w-[120px]">Azioni</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredConfirmed.map((b) => {
+                    const catNames = b.booking_cats?.map(bc => bc.cat?.name).filter(Boolean).join(", ") || "—";
+                    return (
+                      <TableRow key={b.id}>
+                        <TableCell className="font-mono text-sm">{b.booking_number}</TableCell>
+                        <TableCell className="font-medium">
+                          {b.client ? `${b.client.first_name} ${b.client.last_name}` : "—"}
+                          {b.client?.phone && <span className="block text-xs text-muted-foreground">{b.client.phone}</span>}
+                        </TableCell>
+                        <TableCell className="text-sm">{catNames}</TableCell>
+                        <TableCell className="text-sm">{format(parseISO(b.check_in_date), "dd MMM yyyy", { locale: it })}</TableCell>
+                        <TableCell className="text-sm">{format(parseISO(b.check_out_date), "dd MMM yyyy", { locale: it })}</TableCell>
+                        <TableCell><StatusBadge status={b.status} /></TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1 text-xs"
+                            onClick={() => setSchedulingBooking(b)}
+                          >
+                            <CalendarClock className="h-3.5 w-3.5" />
+                            Fissa Appuntamento
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {isLoading ? (
         <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
       ) : (
