@@ -471,7 +471,13 @@ export function PreventivoDialog({
       if (parts.length > 0) breakdownParts.push(`[Sconti: ${parts.join("; ")}]`);
     }
 
-    const fullNotes = [notes, ...breakdownParts].filter(Boolean).join("\n");
+    // Strip any previous breakdown lines (lines starting with "[") from saved notes
+    const userNotes = (editing?.notes ?? notes ?? "")
+      .split("\n")
+      .filter(line => !line.startsWith("["))
+      .join("\n")
+      .trim();
+    const fullNotes = [userNotes, ...breakdownParts].filter(Boolean).join("\n");
 
     try {
       if (editing) {
