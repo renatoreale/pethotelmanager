@@ -420,46 +420,7 @@ export default function Appuntamenti() {
       {isLoading ? (
         <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
       ) : (
-        <Tabs defaultValue="check_in" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="check_in" className="gap-2">
-              <LogIn className="h-4 w-4" />
-              Check-in ({checkInAppts.length})
-            </TabsTrigger>
-            <TabsTrigger value="check_out" className="gap-2">
-              <LogOut className="h-4 w-4" />
-              Check-out ({checkOutAppts.length})
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="check_in">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Appuntamenti Check-in</CardTitle>
-                <CardDescription className="capitalize">
-                  {viewMode === "giorno"
-                    ? `Arrivi previsti per ${format(selectedDate, "dd MMMM yyyy", { locale: it })}`
-                    : `Arrivi dal ${format(parseISO(startDate), "dd MMM", { locale: it })} al ${format(parseISO(endDate), "dd MMM yyyy", { locale: it })}`}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>{renderTable(checkInAppts, "check_in")}</CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="check_out">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Appuntamenti Check-out</CardTitle>
-                <CardDescription className="capitalize">
-                  {viewMode === "giorno"
-                    ? `Partenze previste per ${format(selectedDate, "dd MMMM yyyy", { locale: it })}`
-                    : `Partenze dal ${format(parseISO(startDate), "dd MMM", { locale: it })} al ${format(parseISO(endDate), "dd MMM yyyy", { locale: it })}`}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>{renderTable(checkOutAppts, "check_out")}</CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        renderAllAppointments()
       )}
 
       <AlertDialog open={!!deleting} onOpenChange={() => setDeleting(null)}>
