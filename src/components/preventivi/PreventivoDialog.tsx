@@ -135,7 +135,8 @@ export function PreventivoDialog({
   const resetForm = () => {
     if (editing) {
       setClientId(editing.client_id);
-      setUnitsOccupied(editing.units_occupied);
+      const editClient = clients?.find((c: any) => c.id === editing.client_id);
+      setClientSearch(editClient ? `${editClient.first_name} ${editClient.last_name}` : "");
       const arr: ("singola" | "doppia")[] = [];
       for (let i = 0; i < editing.units_occupied; i++) {
         arr.push(i === 0 ? editing.cage_pool_type : "singola");
