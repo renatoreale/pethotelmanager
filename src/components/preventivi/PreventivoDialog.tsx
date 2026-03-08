@@ -39,12 +39,13 @@ function HighlightMatch({ text, query }: { text: string; query: string }) {
   );
 }
 
-function ClientAutocomplete({ clients, value, searchValue, onSearchChange, onSelect }: {
+function ClientAutocomplete({ clients, value, searchValue, onSearchChange, onSelect, catsByClient }: {
   clients: any[];
   value: string;
   searchValue: string;
   onSearchChange: (v: string) => void;
   onSelect: (clientId: string) => void;
+  catsByClient: Map<string, string[]>;
 }) {
   const [open, setOpen] = useState(false);
   const [focusIndex, setFocusIndex] = useState(-1);
@@ -62,12 +63,16 @@ function ClientAutocomplete({ clients, value, searchValue, onSearchChange, onSel
   const suggestions = useMemo(() => {
     if (!searchValue.trim() || searchValue.trim().length < 2) return [];
     const q = searchValue.toLowerCase();
-    return clients.filter((c: any) =>
-      `${c.first_name} ${c.last_name}`.toLowerCase().includes(q) ||
-      (c.email ?? "").toLowerCase().includes(q) ||
-      (c.phone ?? "").toLowerCase().includes(q)
-    ).slice(0, 8);
-  }, [clients, searchValue]);
+    return clients.filter((c: any) => {
+      const catNames = catsByClient.get(c.id) ?? [];
+      return (
+        `${c.first_name} ${c.last_name}`.toLowerCase().includes(q) ||
+        (c.email ?? "").toLowerCase().includes(q) ||
+        (c.phone ?? "").toLowerCase().includes(q) ||
+        catNames.some(name => name.toLowerCase().includes(q))
+      );
+    }).slice(0, 8);
+  }, [clients, searchValue, catsByClient]);
 
   useEffect(() => {
     setOpen(suggestions.length > 0 && searchValue.trim().length >= 2);
