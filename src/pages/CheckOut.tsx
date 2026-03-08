@@ -89,6 +89,18 @@ export default function CheckOut() {
     return Math.max(0, days);
   };
 
+  const seasonalTariffs = useMemo(() => {
+    if (!priceLists) return [];
+    return priceLists.filter((pl: any) => pl.tariff_type === "stagionale" && pl.is_active);
+  }, [priceLists]);
+
+  const findSeasonalTariff = (dateStr: string) => {
+    return seasonalTariffs.find((t: any) => {
+      if (!t.valid_from || !t.valid_to) return true;
+      return dateStr >= t.valid_from && dateStr <= t.valid_to;
+    }) ?? seasonalTariffs[0] ?? null;
+  };
+
   // Recalculated values when date changes
   const recalculated = useMemo(() => {
     if (!confirmBooking) return null;
@@ -100,13 +112,29 @@ export default function CheckOut() {
     const newDays = calcDuration(ciStr, newCoStr);
 
     const originalTotal = Number(confirmBooking.total_amount ?? 0);
-    const dailyRate = originalDays > 0 ? originalTotal / originalDays : 0;
-    const newTotal = Math.round(dailyRate * newDays * 100) / 100;
-
     const dateChanged = newCoStr !== originalCoStr;
 
-    return { newCoStr, originalDays, newDays, dailyRate, newTotal, dateChanged, originalTotal };
-  }, [confirmBooking, actualCheckOutDate, stayCalcType, countCheckinDay, countCheckoutDay]);
+    const extraDays = Math.max(0, newDays - originalDays);
+    let extraCost = 0;
+    let extraTariffName = "";
+
+    if (extraDays > 0) {
+      const numCats = (confirmBooking.booking_cats ?? []).length;
+      const tariff = findSeasonalTariff(newCoStr > originalCoStr ? originalCoStr : ciStr);
+      if (tariff) {
+        extraTariffName = tariff.name;
+        const baseCost = Number(tariff.price_per_day) * extraDays * numCats;
+        const extraCats = Math.max(0, numCats - 1);
+        const supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * extraDays;
+        extraCost = Math.round((baseCost + supplementCost) * 100) / 100;
+      }
+    }
+
+    // If fewer days: keep original total. If more days: add extra cost.
+    const newTotal = newDays <= originalDays ? originalTotal : Math.round((originalTotal + extraCost) * 100) / 100;
+
+    return { newCoStr, originalDays, newDays, newTotal, dateChanged, originalTotal, extraDays, extraCost, extraTariffName };
+  }, [confirmBooking, actualCheckOutDate, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs]);
 
   const checkOutBookings = useMemo(() => {
     if (!bookings) return [];
