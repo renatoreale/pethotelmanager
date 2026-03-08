@@ -233,7 +233,7 @@ export function OccupancyGrid({
                   <td key={dateStr} className={cn("text-center font-semibold border-r py-1 text-[10px]",
                     pct >= 1 && "bg-destructive/20 text-destructive",
                     pct > 0 && pct < 1 && "bg-warning/20 text-warning-foreground",
-                    isHighlight && "ring-2 ring-inset ring-destructive/50"
+                    isHighlight && pct < 1 && "bg-destructive/10"
                   )}>{occ}/{totalSingole}</td>
                 );
               })}
