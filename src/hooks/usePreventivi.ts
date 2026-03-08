@@ -18,6 +18,7 @@ export interface Preventivo {
   created_at: string;
   updated_at: string;
   created_by: string | null;
+  price_breakdown: any;
   client?: {
     id: string;
     first_name: string;
