@@ -27,7 +27,7 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
   const [checkOutTime, setCheckOutTime] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const confirmPreventivo = useConfirmPreventivo();
+  const transitionBooking = useTransitionBooking();
   const createAppointment = useCreateAppointment();
 
   const checkInDate = booking?.check_in_date;
