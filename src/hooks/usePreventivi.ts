@@ -164,6 +164,11 @@ export function useUpdatePreventivo() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["preventivi"] });
       qc.invalidateQueries({ queryKey: ["bookings"] });
+      qc.invalidateQueries({ queryKey: ["appointments-by-date"] });
+      qc.invalidateQueries({ queryKey: ["appointments-by-range"] });
+      qc.invalidateQueries({ queryKey: ["appointments-all"] });
+      qc.invalidateQueries({ queryKey: ["appointment-counts"] });
+      qc.invalidateQueries({ queryKey: ["booking-appointments"] });
     },
   });
 }
