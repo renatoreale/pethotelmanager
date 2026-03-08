@@ -339,6 +339,8 @@ export function useUpdateAppointment() {
       qc.invalidateQueries({ queryKey: ["appointments-all"] });
       qc.invalidateQueries({ queryKey: ["appointment-counts"] });
       qc.invalidateQueries({ queryKey: ["booking-appointments"] });
+      qc.invalidateQueries({ queryKey: ["bookings"] });
+      qc.invalidateQueries({ queryKey: ["preventivi"] });
     },
   });
 }
