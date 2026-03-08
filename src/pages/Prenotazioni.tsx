@@ -308,6 +308,12 @@ export default function Prenotazioni() {
         countCheckinDay={countCheckinDay}
         countCheckoutDay={countCheckoutDay}
       />
+
+      <BookingPaymentsDialog
+        open={!!paymentsBooking}
+        onOpenChange={(v) => { if (!v) setPaymentsBooking(null); }}
+        booking={paymentsBooking}
+      />
     </div>
   );
 }
