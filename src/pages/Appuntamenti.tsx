@@ -453,6 +453,31 @@ export default function Appuntamenti() {
         className="max-w-sm"
       />
 
+      {/* Status filter buttons */}
+      <div className="flex flex-wrap gap-1.5">
+        {[
+          { value: "tutti", label: "Tutti" },
+          { value: "confermata", label: "Confermata" },
+          { value: "appuntamento_in_fissato", label: "Appt. IN" },
+          { value: "appuntamento_out_fissato", label: "Appt. OUT" },
+          { value: "appuntamento_in_out_fissato", label: "Appt. IN-OUT" },
+          { value: "check_in", label: "Check-in" },
+          { value: "in_corso", label: "In corso" },
+          { value: "check_out", label: "Check-out" },
+          { value: "chiusa", label: "Chiusa" },
+        ].map((o) => (
+          <Button
+            key={o.value}
+            size="sm"
+            variant={statusFilter === o.value ? "default" : "outline"}
+            className="h-7 text-xs px-2.5"
+            onClick={() => setStatusFilter(statusFilter === o.value && o.value !== "tutti" ? "tutti" : o.value)}
+          >
+            {o.label}
+          </Button>
+        ))}
+      </div>
+
       {/* Summary badges */}
       <div className="flex gap-3 flex-wrap">
         <Badge variant="outline" className="gap-1 text-sm py-1 px-3">
