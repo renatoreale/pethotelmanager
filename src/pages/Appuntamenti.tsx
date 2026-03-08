@@ -53,6 +53,7 @@ export default function Appuntamenti() {
   const [calendarToOpen, setCalendarToOpen] = useState(false);
   const [deleting, setDeleting] = useState<AppointmentWithDetails | null>(null);
   const [editing, setEditing] = useState<AppointmentWithDetails | null>(null);
+  const [editingCheckout, setEditingCheckout] = useState<AppointmentWithDetails | null>(null);
   const [search, setSearch] = useState("");
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
 
