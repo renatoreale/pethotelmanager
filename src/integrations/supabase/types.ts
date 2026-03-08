@@ -908,6 +908,9 @@ export type Database = {
         | "cancellata"
         | "rimborsata"
         | "scaduto"
+        | "appuntamento_in_fissato"
+        | "appuntamento_out_fissato"
+        | "appuntamento_in_out_fissato"
       cage_pool_type: "singola" | "doppia"
       email_status: "queued" | "sent" | "failed"
       payment_type: "caparra" | "saldo" | "extra" | "rimborso"
@@ -1057,6 +1060,9 @@ export const Constants = {
         "cancellata",
         "rimborsata",
         "scaduto",
+        "appuntamento_in_fissato",
+        "appuntamento_out_fissato",
+        "appuntamento_in_out_fissato",
       ],
       cage_pool_type: ["singola", "doppia"],
       email_status: ["queued", "sent", "failed"],
