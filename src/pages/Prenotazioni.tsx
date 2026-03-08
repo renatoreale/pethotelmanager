@@ -372,6 +372,7 @@ export default function Prenotazioni() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <AppointmentScheduleDialog
         open={!!schedulingBooking}
         onOpenChange={(open) => { if (!open) setSchedulingBooking(null); }}
         booking={schedulingBooking}
