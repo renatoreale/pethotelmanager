@@ -215,7 +215,7 @@ export function useDeleteAppointment() {
       // Check if any appointments remain for this booking
       const { data: remaining } = await supabase
         .from("appointments")
-        .select("id")
+        .select("id, appointment_type")
         .eq("booking_id", bookingId);
 
       // Determine new status based on remaining appointments
