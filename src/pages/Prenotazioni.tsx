@@ -190,8 +190,8 @@ export default function Prenotazioni() {
                           // Don't toggle if clicking buttons/menus
                           if ((e.target as HTMLElement).closest('button, [role="menuitem"]')) return;
                           setExpandedRows(prev => {
-                            const next = new Set(prev);
-                            next.has(b.id) ? next.delete(b.id) : next.add(b.id);
+                            const next = new Set<string>();
+                            if (!prev.has(b.id)) next.add(b.id);
                             return next;
                           });
                         }}
