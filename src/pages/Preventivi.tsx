@@ -11,13 +11,14 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, Search, CheckCircle2, FileText } from "lucide-react";
+import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { toast } from "sonner";
 import { format, differenceInDays, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import {
   usePreventivi, useCreatePreventivo, useUpdatePreventivo,
-  useDeletePreventivo, useConfirmPreventivo,
+  useDeletePreventivo,
 } from "@/hooks/usePreventivi";
 import { PreventivoDialog } from "@/components/preventivi/PreventivoDialog";
 
@@ -26,7 +27,6 @@ export default function Preventivi() {
   const createPreventivo = useCreatePreventivo();
   const updatePreventivo = useUpdatePreventivo();
   const deletePreventivo = useDeletePreventivo();
-  const confirmPreventivo = useConfirmPreventivo();
   const { data: tenantConfig } = useTenantConfig();
 
   const [search, setSearch] = useState("");
@@ -67,16 +67,7 @@ export default function Preventivi() {
   const openNew = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (p: any) => { setEditing(p); setDialogOpen(true); };
 
-  const handleConfirm = async () => {
-    if (!confirming) return;
-    try {
-      await confirmPreventivo.mutateAsync(confirming.id);
-      toast.success("Preventivo confermato → Prenotazione");
-    } catch (err: any) {
-      toast.error(err.message || "Errore");
-    }
-    setConfirming(null);
-  };
+  // Confirm is now handled by AppointmentScheduleDialog
 
   const handleDelete = async () => {
     if (!deleting) return;
@@ -194,20 +185,11 @@ export default function Preventivi() {
         countCheckoutDay={countCheckoutDay}
       />
 
-      <AlertDialog open={!!confirming} onOpenChange={() => setConfirming(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confermare il preventivo?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirming && `Il preventivo ${confirming.booking_number} diventerà una prenotazione confermata.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annulla</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>Conferma</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <AppointmentScheduleDialog
+        open={!!confirming}
+        onOpenChange={(open) => { if (!open) setConfirming(null); }}
+        booking={confirming}
+      />
 
       <AlertDialog open={!!deleting} onOpenChange={() => setDeleting(null)}>
         <AlertDialogContent>

@@ -193,6 +193,7 @@ function SlotTab() {
   const [deleting, setDeleting] = useState<any>(null);
 
   const [dayOfWeek, setDayOfWeek] = useState(0);
+  const [appointmentType, setAppointmentType] = useState("check_in");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("12:00");
   const [duration, setDuration] = useState(30);
@@ -202,6 +203,7 @@ function SlotTab() {
   const openNew = () => {
     setEditing(null);
     setDayOfWeek(0);
+    setAppointmentType("check_in");
     setStartTime("09:00");
     setEndTime("12:00");
     setDuration(30);
@@ -213,6 +215,7 @@ function SlotTab() {
   const openEdit = (slot: any) => {
     setEditing(slot);
     setDayOfWeek(slot.day_of_week);
+    setAppointmentType(slot.appointment_type ?? "check_in");
     setStartTime(slot.start_time.slice(0, 5));
     setEndTime(slot.end_time.slice(0, 5));
     setDuration(slot.slot_duration_minutes);
@@ -228,6 +231,7 @@ function SlotTab() {
         id: editing?.id,
         tenant_id: profile.tenant_id,
         day_of_week: dayOfWeek,
+        appointment_type: appointmentType,
         start_time: startTime,
         end_time: endTime,
         slot_duration_minutes: duration,
@@ -272,10 +276,11 @@ function SlotTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Tipo</TableHead>
                     <TableHead>Giorno</TableHead>
                     <TableHead>Orario</TableHead>
                     <TableHead>Durata</TableHead>
-                    <TableHead>Max Appt.</TableHead>
+                    <TableHead>Max Clienti/Slot</TableHead>
                     <TableHead>Stato</TableHead>
                     <TableHead className="w-[100px]">Azioni</TableHead>
                   </TableRow>
@@ -283,6 +288,11 @@ function SlotTab() {
                 <TableBody>
                   {slots.map((slot: any) => (
                     <TableRow key={slot.id}>
+                      <TableCell>
+                        <Badge variant={slot.appointment_type === "check_in" ? "default" : "outline"}>
+                          {slot.appointment_type === "check_in" ? "Check-in" : "Check-out"}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="font-medium">{DAYS[slot.day_of_week] ?? slot.day_of_week}</TableCell>
                       <TableCell>{slot.start_time?.slice(0, 5)} – {slot.end_time?.slice(0, 5)}</TableCell>
                       <TableCell>{slot.slot_duration_minutes} min</TableCell>
@@ -313,6 +323,16 @@ function SlotTab() {
             <DialogTitle>{editing ? "Modifica Slot" : "Nuovo Slot"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>Tipo appuntamento</Label>
+              <Select value={appointmentType} onValueChange={setAppointmentType}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="check_in">Check-in</SelectItem>
+                  <SelectItem value="check_out">Check-out</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2">
               <Label>Giorno della settimana</Label>
               <Select value={String(dayOfWeek)} onValueChange={(v) => setDayOfWeek(Number(v))}>
