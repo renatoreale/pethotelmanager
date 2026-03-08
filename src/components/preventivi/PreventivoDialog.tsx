@@ -428,7 +428,8 @@ export function PreventivoDialog({
     return clients.filter((c: any) =>
       `${c.first_name} ${c.last_name}`.toLowerCase().includes(q) ||
       (c.email ?? "").toLowerCase().includes(q) ||
-      (c.phone ?? "").toLowerCase().includes(q)
+      (c.phone ?? "").toLowerCase().includes(q) ||
+      (c.cats ?? []).some((cat: any) => (cat.name ?? "").toLowerCase().includes(q))
     );
   }, [clients, clientSearch]);
 
@@ -580,7 +581,10 @@ export function PreventivoDialog({
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{c.first_name} {c.last_name}</span>
                             </div>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                              {(c.cats ?? []).length > 0 && (
+                                <span>🐱 {(c.cats as any[]).map((cat: any) => cat.name).join(", ")}</span>
+                              )}
                               {c.phone && <span>📞 {c.phone}</span>}
                               {c.email && <span>✉️ {c.email}</span>}
                             </div>
