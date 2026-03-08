@@ -185,6 +185,36 @@ export function useAppointmentsByDate(date: string | undefined) {
   });
 }
 
+// Fetch all appointments for a date range with booking + client + cats
+export function useAppointmentsByDateRange(startDate: string | undefined, endDate: string | undefined) {
+  const { profile } = useAuth();
+  return useQuery({
+    queryKey: ["appointments-by-range", profile?.tenant_id, startDate, endDate],
+    queryFn: async () => {
+      if (!profile?.tenant_id || !startDate || !endDate) return [];
+      const rangeStart = `${startDate}T00:00:00`;
+      const rangeEnd = `${endDate}T23:59:59`;
+      const { data, error } = await supabase
+        .from("appointments")
+        .select(`
+          *,
+          booking:bookings(
+            id, booking_number, status,
+            client:clients(id, first_name, last_name, phone, email),
+            booking_cats(id, cat:cats(id, name))
+          )
+        `)
+        .eq("tenant_id", profile.tenant_id)
+        .gte("scheduled_at", rangeStart)
+        .lte("scheduled_at", rangeEnd)
+        .order("scheduled_at");
+      if (error) throw error;
+      return data as unknown as AppointmentWithDetails[];
+    },
+    enabled: !!profile?.tenant_id && !!startDate && !!endDate,
+  });
+}
+
 export function useConfirmAppointment() {
   const qc = useQueryClient();
   return useMutation({
