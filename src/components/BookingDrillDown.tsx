@@ -163,6 +163,38 @@ export function BookingDrillDown({ booking }: BookingDrillDownProps) {
             </div>
           )}
 
+          {/* Extra days from date changes */}
+          {extraDaysInfo && Number(extraDaysInfo.extra_days) > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5" /> Giorni extra
+              </h4>
+              <div className="rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3 text-sm space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    {extraDaysInfo.reason === "check_in_anticipato" ? "Check-in anticipato" : "Check-out posticipato"}
+                  </span>
+                  <span className="font-medium">{extraDaysInfo.extra_days} {stayLabel} extra</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Gatti</span>
+                  <span className="font-medium">{extraDaysInfo.num_cats}</span>
+                </div>
+                {extraDaysInfo.tariff_name && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tariffa applicata</span>
+                    <span className="font-medium">{extraDaysInfo.tariff_name}</span>
+                  </div>
+                )}
+                <Separator className="my-1" />
+                <div className="flex justify-between font-semibold">
+                  <span>Totale giorni extra</span>
+                  <span>€ {Number(extraDaysInfo.extra_cost).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Discount */}
           {discount > 0 && (
             <div className="space-y-2">
