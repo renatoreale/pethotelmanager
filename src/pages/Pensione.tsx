@@ -276,10 +276,11 @@ function SlotTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Tipo</TableHead>
                     <TableHead>Giorno</TableHead>
                     <TableHead>Orario</TableHead>
                     <TableHead>Durata</TableHead>
-                    <TableHead>Max Appt.</TableHead>
+                    <TableHead>Max Clienti/Slot</TableHead>
                     <TableHead>Stato</TableHead>
                     <TableHead className="w-[100px]">Azioni</TableHead>
                   </TableRow>
@@ -287,6 +288,11 @@ function SlotTab() {
                 <TableBody>
                   {slots.map((slot: any) => (
                     <TableRow key={slot.id}>
+                      <TableCell>
+                        <Badge variant={slot.appointment_type === "check_in" ? "default" : "outline"}>
+                          {slot.appointment_type === "check_in" ? "Check-in" : "Check-out"}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="font-medium">{DAYS[slot.day_of_week] ?? slot.day_of_week}</TableCell>
                       <TableCell>{slot.start_time?.slice(0, 5)} – {slot.end_time?.slice(0, 5)}</TableCell>
                       <TableCell>{slot.slot_duration_minutes} min</TableCell>
