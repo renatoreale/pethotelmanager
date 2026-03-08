@@ -143,6 +143,20 @@ export function PreventivoDialog({
       setNotes(editing.notes ?? "");
       setTotalAmount(Number(editing.total_amount ?? 0));
       setDepositAmount(Number(editing.deposit_amount ?? 0));
+
+      // Restore breakdown from JSON
+      const bd = editing.price_breakdown;
+      if (bd) {
+        setSeasonPeriods(bd.seasonPeriods ?? []);
+        setExtraServices(bd.extraServices ?? []);
+        setDiscounts(bd.discounts ?? []);
+        if (bd.cageUnits) setCageUnits(bd.cageUnits);
+      } else {
+        setSeasonPeriods([]);
+        setExtraServices([]);
+        setDiscounts([]);
+      }
+      setDepositManuallySet(true); // keep saved deposit
     } else {
       setClientId("");
       setUnitsOccupied(1);
@@ -153,11 +167,11 @@ export function PreventivoDialog({
       setNotes("");
       setTotalAmount(0);
       setDepositAmount(0);
+      setSeasonPeriods([]);
+      setExtraServices([]);
+      setDiscounts([]);
+      setDepositManuallySet(false);
     }
-    setSeasonPeriods([]);
-    setExtraServices([]);
-    setDiscounts([]);
-    setDepositManuallySet(false);
     setClientSearch("");
   };
 
