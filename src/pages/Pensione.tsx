@@ -227,18 +227,24 @@ function SlotTab() {
   const handleSave = async () => {
     if (!profile?.tenant_id) return;
     try {
-      await upsertSlot.mutateAsync({
-        id: editing?.id,
-        tenant_id: profile.tenant_id,
-        day_of_week: dayOfWeek,
-        appointment_type: appointmentType,
-        start_time: startTime,
-        end_time: endTime,
-        slot_duration_minutes: duration,
-        max_appointments: maxAppts,
-        is_active: isActive,
-      });
-      toast.success(editing ? "Slot aggiornato" : "Slot creato");
+      const daysToSave = dayOfWeek === "all" && !editing
+        ? [0, 1, 2, 3, 4, 5, 6]
+        : [typeof dayOfWeek === "number" ? dayOfWeek : 0];
+
+      for (const dow of daysToSave) {
+        await upsertSlot.mutateAsync({
+          id: editing?.id,
+          tenant_id: profile.tenant_id,
+          day_of_week: dow,
+          appointment_type: appointmentType,
+          start_time: startTime,
+          end_time: endTime,
+          slot_duration_minutes: duration,
+          max_appointments: maxAppts,
+          is_active: isActive,
+        });
+      }
+      toast.success(editing ? "Slot aggiornato" : daysToSave.length > 1 ? "Slot creati per tutti i giorni" : "Slot creato");
       setDialogOpen(false);
     } catch (err: any) {
       toast.error(err.message || "Errore");
