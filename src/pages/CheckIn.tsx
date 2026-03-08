@@ -50,6 +50,7 @@ export default function CheckIn() {
   const { data: bookings, isLoading } = useBookings();
   const { data: paymentMethods } = usePaymentMethods();
   const { data: tenantConfig } = useTenantConfig();
+  const { data: priceLists } = usePriceLists();
   const transitionBooking = useTransitionBooking();
   const insertCatRegistry = useInsertCatRegistry();
   const createPayment = useCreatePayment();
