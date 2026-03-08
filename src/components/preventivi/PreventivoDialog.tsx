@@ -247,6 +247,31 @@ export function PreventivoDialog({
   const { data: clients } = useClients();
   const { data: priceLists } = usePriceLists();
 
+  // Fetch all cats for autocomplete search
+  const { data: allCats } = useQuery({
+    queryKey: ["all-cats-for-search", profile?.tenant_id],
+    queryFn: async () => {
+      if (!profile?.tenant_id) return [];
+      const { data, error } = await supabase
+        .from("cats")
+        .select("id, name, client_id")
+        .eq("tenant_id", profile.tenant_id);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!profile?.tenant_id,
+  });
+
+  const catsByClient = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const cat of allCats ?? []) {
+      const arr = map.get(cat.client_id) ?? [];
+      arr.push(cat.name);
+      map.set(cat.client_id, arr);
+    }
+    return map;
+  }, [allCats]);
+
   // ── Core state ──
   const [clientId, setClientId] = useState("");
   const [selectedCats, setSelectedCats] = useState<string[]>([]);
