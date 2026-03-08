@@ -93,6 +93,7 @@ export function PreventivoDialog({
   const [clientSearch, setClientSearch] = useState("");
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
+  const [newClientDialogOpen, setNewClientDialogOpen] = useState(false);
   // ── Pricing state ──
   const [seasonPeriods, setSeasonPeriods] = useState<SeasonPeriod[]>([]);
   const [extraServices, setExtraServices] = useState<ExtraServiceLine[]>([]);
