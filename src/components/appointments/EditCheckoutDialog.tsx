@@ -19,6 +19,7 @@ import {
   useSlotConfigsForDay,
   useAppointmentCounts,
   useUpdateAppointment,
+  useCreateAppointment,
   generateTimeSlots,
   type AppointmentWithDetails,
 } from "@/hooks/useAppointments";
@@ -26,21 +27,41 @@ import { useTenantConfig, usePriceLists } from "@/hooks/usePensioneConfig";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
+/** Booking-only data for create mode */
+export interface CheckoutBookingData {
+  id: string;
+  booking_number: string;
+  status: string;
+  check_in_date: string;
+  check_out_date: string;
+  total_amount: number | null;
+  client?: {
+    first_name: string;
+    last_name: string;
+  };
+  booking_cats?: { id: string; cat?: { id: string; name: string } }[];
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  appointment: AppointmentWithDetails;
+  /** Existing appointment (edit mode) */
+  appointment?: AppointmentWithDetails | null;
+  /** Booking data for create mode (when no checkout appointment exists) */
+  bookingData?: CheckoutBookingData | null;
 }
 
-export function EditCheckoutDialog({ open, onOpenChange, appointment }: Props) {
+export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingData }: Props) {
   const queryClient = useQueryClient();
   const updateAppointment = useUpdateAppointment();
+  const createAppointment = useCreateAppointment();
   const { data: tenantConfig } = useTenantConfig();
   const { data: priceLists } = usePriceLists();
 
-  const booking = appointment.booking as any;
-  const originalCoDate = booking?.check_out_date;
-  const checkInDate = booking?.check_in_date;
+  const isCreateMode = !appointment;
+  const booking = appointment?.booking ?? bookingData;
+  const originalCoDate = (booking as any)?.check_out_date;
+  const checkInDate = (booking as any)?.check_in_date;
 
   const [newDate, setNewDate] = useState<Date>(
     originalCoDate ? parseISO(originalCoDate) : new Date()
@@ -50,20 +71,21 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment }: Props) {
   const [manualExtraCost, setManualExtraCost] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Extract current time from appointment
+  // Extract current time from appointment (edit mode only)
   const currentTime = useMemo(() => {
+    if (!appointment) return "";
     const tIndex = appointment.scheduled_at.indexOf("T");
     return tIndex >= 0 ? appointment.scheduled_at.slice(tIndex + 1, tIndex + 6) : "";
-  }, [appointment.scheduled_at]);
+  }, [appointment]);
 
   // Init state when dialog opens
   useEffect(() => {
     if (open) {
       setNewDate(originalCoDate ? parseISO(originalCoDate) : new Date());
-      setSelectedTime(currentTime);
+      setSelectedTime(isCreateMode ? "" : currentTime);
       setManualExtraCost(null);
     }
-  }, [open, originalCoDate, currentTime]);
+  }, [open, originalCoDate, currentTime, isCreateMode]);
 
   const newDateStr = format(newDate, "yyyy-MM-dd");
   const dateChanged = newDateStr !== originalCoDate;
@@ -81,8 +103,8 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment }: Props) {
       const times = generateTimeSlots(config);
       for (const time of times) {
         let used = counts?.[time] ?? 0;
-        // Don't count current appointment as used if same date
-        if (!dateChanged && time === currentTime) used = Math.max(0, used - 1);
+        // Don't count current appointment as used if same date (edit mode)
+        if (!isCreateMode && !dateChanged && time === currentTime) used = Math.max(0, used - 1);
         slots.push({
           time,
           available: config.max_appointments - used,
@@ -92,7 +114,15 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment }: Props) {
       }
     }
     return slots;
-  }, [slotConfigs, counts, currentTime, dateChanged]);
+  }, [slotConfigs, counts, currentTime, dateChanged, isCreateMode]);
+
+  // Auto-select first available slot in create mode
+  useEffect(() => {
+    if (availableSlots.length > 0 && !selectedTime) {
+      const firstAvailable = availableSlots.find(s => s.available > 0);
+      if (firstAvailable) setSelectedTime(firstAvailable.time);
+    }
+  }, [availableSlots, selectedTime]);
 
   // Reset time selection when date changes and current time is not available
   useEffect(() => {
@@ -138,14 +168,14 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment }: Props) {
 
     const originalDays = calcDuration(checkInDate, originalCoDate);
     const newDays = calcDuration(checkInDate, newDateStr);
-    const originalTotal = Number(booking.total_amount ?? 0);
+    const originalTotal = Number((booking as any).total_amount ?? 0);
 
     const extraDays = Math.max(0, newDays - originalDays);
     let extraCost = 0;
     let extraTariffName = "";
 
     if (extraDays > 0) {
-      const numCats = (booking.booking_cats ?? []).length;
+      const numCats = ((booking as any).booking_cats ?? []).length;
       const tariff = findSeasonalTariff(newDateStr > originalCoDate ? originalCoDate : checkInDate);
       if (tariff) {
         extraTariffName = tariff.name;
@@ -169,26 +199,46 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment }: Props) {
       toast.error("Seleziona un orario per il check-out");
       return;
     }
+    if (!booking) return;
     setSaving(true);
     try {
-      // 1. Update appointment scheduled_at
-      await updateAppointment.mutateAsync({
-        id: appointment.id,
-        scheduled_at: `${newDateStr}T${selectedTime}:00`,
-      });
+      const bookingId = (booking as any).id;
 
-      // 2. Update booking check_out_date and total if date changed
+      if (isCreateMode) {
+        // Create new checkout appointment
+        const selectedSlot = availableSlots.find(s => s.time === selectedTime);
+        await createAppointment.mutateAsync({
+          booking_id: bookingId,
+          appointment_type: "check_out",
+          scheduled_at: `${newDateStr}T${selectedTime}:00`,
+          duration_minutes: selectedSlot?.duration ?? 30,
+        });
+      } else {
+        // Update existing appointment
+        await updateAppointment.mutateAsync({
+          id: appointment!.id,
+          scheduled_at: `${newDateStr}T${selectedTime}:00`,
+        });
+      }
+
+      // Update booking check_out_date and total if date changed
       if (dateChanged && recalculated) {
         const bookingUpdates: any = {
           check_out_date: newDateStr,
           total_amount: recalculated.newTotal,
         };
-        await supabase.from("bookings").update(bookingUpdates).eq("id", booking.id);
-        queryClient.invalidateQueries({ queryKey: ["bookings"] });
-        queryClient.invalidateQueries({ queryKey: ["preventivi"] });
+        await supabase.from("bookings").update(bookingUpdates).eq("id", bookingId);
       }
 
-      toast.success("Appuntamento check-out aggiornato");
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["preventivi"] });
+      queryClient.invalidateQueries({ queryKey: ["appointments-by-date"] });
+      queryClient.invalidateQueries({ queryKey: ["appointments-by-range"] });
+      queryClient.invalidateQueries({ queryKey: ["appointments-all"] });
+      queryClient.invalidateQueries({ queryKey: ["appointment-counts"] });
+      queryClient.invalidateQueries({ queryKey: ["booking-appointments"] });
+
+      toast.success(isCreateMode ? "Appuntamento check-out creato" : "Appuntamento check-out aggiornato");
       onOpenChange(false);
     } catch (err: any) {
       toast.error(err.message || "Errore durante il salvataggio");
@@ -197,27 +247,27 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment }: Props) {
     }
   };
 
-  const noChanges = !dateChanged && selectedTime === currentTime;
+  const noChanges = !isCreateMode && !dateChanged && selectedTime === currentTime;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Modifica Check-out</DialogTitle>
+          <DialogTitle>{isCreateMode ? "Fissa Check-out" : "Modifica Check-out"}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           {/* Booking info */}
           <div className="rounded-md bg-muted p-3 space-y-1 text-sm">
-            <p><span className="text-muted-foreground">Cliente:</span> {booking?.client?.first_name} {booking?.client?.last_name}</p>
-            <p><span className="text-muted-foreground">Prenotazione:</span> <span className="font-mono">{booking?.booking_number}</span></p>
+            <p><span className="text-muted-foreground">Cliente:</span> {(booking as any)?.client?.first_name} {(booking as any)?.client?.last_name}</p>
+            <p><span className="text-muted-foreground">Prenotazione:</span> <span className="font-mono">{(booking as any)?.booking_number}</span></p>
             <p><span className="text-muted-foreground">Check-in:</span> {checkInDate ? format(parseISO(checkInDate), "dd MMM yyyy", { locale: it }) : "—"}</p>
-            <p><span className="text-muted-foreground">Check-out originale:</span> {originalCoDate ? format(parseISO(originalCoDate), "dd MMM yyyy", { locale: it }) : "—"}</p>
+            <p><span className="text-muted-foreground">Check-out {isCreateMode ? "previsto" : "originale"}:</span> {originalCoDate ? format(parseISO(originalCoDate), "dd MMM yyyy", { locale: it }) : "—"}</p>
           </div>
 
           {/* Date picker */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Nuova data di check-out</Label>
+            <Label className="text-sm font-medium">{isCreateMode ? "Data di check-out" : "Nuova data di check-out"}</Label>
             <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -253,7 +303,7 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment }: Props) {
               <div className="flex flex-wrap gap-2">
                 {availableSlots.map((slot) => {
                   const isSelected = selectedTime === slot.time;
-                  const isCurrent = !dateChanged && slot.time === currentTime;
+                  const isCurrent = !isCreateMode && !dateChanged && slot.time === currentTime;
                   return (
                     <Button
                       key={slot.time}
@@ -335,8 +385,8 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment }: Props) {
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annulla</Button>
-          <Button onClick={handleSave} disabled={saving || noChanges}>
-            {saving ? "Salvataggio..." : "Salva Modifiche"}
+          <Button onClick={handleSave} disabled={saving || noChanges || !selectedTime}>
+            {saving ? "Salvataggio..." : isCreateMode ? "Fissa Check-out" : "Salva Modifiche"}
           </Button>
         </DialogFooter>
       </DialogContent>
