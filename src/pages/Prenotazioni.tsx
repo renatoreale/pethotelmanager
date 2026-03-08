@@ -346,6 +346,34 @@ export default function Prenotazioni() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <AlertDialog open={!!deletingBooking} onOpenChange={() => setDeletingBooking(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminare definitivamente la prenotazione?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deletingBooking && `Stai per eliminare la prenotazione ${deletingBooking.bookingNumber} con tutti i dati collegati (appuntamenti, pagamenti, registro gatti, documenti). L'anagrafica del cliente e dei gatti NON verrà eliminata. Questa azione non può essere annullata.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!deletingBooking) return;
+                try {
+                  await deleteBooking.mutateAsync(deletingBooking.id);
+                  toast.success(`Prenotazione ${deletingBooking.bookingNumber} eliminata`);
+                } catch (err: any) {
+                  toast.error(err.message || "Errore nell'eliminazione");
+                }
+                setDeletingBooking(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Elimina definitivamente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+
       <AppointmentScheduleDialog
         open={!!schedulingBooking}
         onOpenChange={(open) => { if (!open) setSchedulingBooking(null); }}
