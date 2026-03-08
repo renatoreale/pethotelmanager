@@ -156,7 +156,7 @@ export function PreventivoDialog({
         setExtraServices([]);
         setDiscounts([]);
       }
-      setDepositManuallySet(true); // keep saved deposit
+      setDepositManuallySet(false);
     } else {
       setClientId("");
       setUnitsOccupied(1);
