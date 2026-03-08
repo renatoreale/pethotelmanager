@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,7 +11,10 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { LogIn, User, Cat, Calendar, CheckCircle2, CreditCard } from "lucide-react";
+import {
+  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
+} from "@/components/ui/accordion";
+import { LogIn, User, Cat, Calendar, CheckCircle2, CreditCard, PawPrint } from "lucide-react";
 import { AutocompleteSearch } from "@/components/AutocompleteSearch";
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
@@ -20,8 +23,19 @@ import { useBookings, useTransitionBooking } from "@/hooks/useBookings";
 import { useInsertCatRegistry } from "@/hooks/useCatRegistry";
 import { useCreatePayment, usePaymentMethods } from "@/hooks/usePayments";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const CHECKIN_STATUSES = ["check_in", "appuntamento_in_fissato", "appuntamento_in_out_fissato"];
+
+interface CatDetails {
+  id: string;
+  name: string;
+  microchip: string;
+  gender: string;
+  breed: string;
+  color: string;
+  weight_kg: string;
+}
 
 export default function CheckIn() {
   const { profile } = useAuth();
@@ -34,13 +48,17 @@ export default function CheckIn() {
   const [search, setSearch] = useState("");
   const [confirmBooking, setConfirmBooking] = useState<any>(null);
 
-  // Transaction form state
-  const [addTransaction, setAddTransaction] = useState(false);
+  // Payment form state
+  const [addPayment, setAddPayment] = useState(false);
   const [txAmount, setTxAmount] = useState("");
   const [txType, setTxType] = useState<"caparra" | "saldo" | "extra" | "rimborso">("saldo");
   const [txMethodId, setTxMethodId] = useState("");
   const [txNotes, setTxNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Cat details state
+  const [catDetails, setCatDetails] = useState<CatDetails[]>([]);
+  const [loadingCats, setLoadingCats] = useState(false);
 
   const checkInBookings = useMemo(() => {
     if (!bookings) return [];
@@ -60,25 +78,55 @@ export default function CheckIn() {
     return filtered.sort((a, b) => a.check_in_date.localeCompare(b.check_in_date));
   }, [bookings, search]);
 
-  const resetTxForm = () => {
-    setAddTransaction(false);
+  const resetForm = () => {
+    setAddPayment(false);
     setTxAmount("");
     setTxType("saldo");
     setTxMethodId("");
     setTxNotes("");
+    setCatDetails([]);
   };
 
-  const openConfirm = (b: any) => {
+  const openConfirm = async (b: any) => {
     setConfirmBooking(b);
-    resetTxForm();
+    resetForm();
+
+    // Load full cat details
+    const cats = (b.booking_cats ?? []).map((bc: any) => bc.cat).filter(Boolean);
+    if (cats.length > 0) {
+      setLoadingCats(true);
+      const catIds = cats.map((c: any) => c.id);
+      const { data: fullCats } = await supabase
+        .from("cats")
+        .select("id, name, microchip, gender, breed, color, weight_kg")
+        .in("id", catIds);
+
+      setCatDetails(
+        (fullCats ?? cats).map((c: any) => ({
+          id: c.id,
+          name: c.name ?? "",
+          microchip: c.microchip ?? "",
+          gender: c.gender ?? "",
+          breed: c.breed ?? "",
+          color: c.color ?? "",
+          weight_kg: c.weight_kg != null ? String(c.weight_kg) : "",
+        }))
+      );
+      setLoadingCats(false);
+    }
+  };
+
+  const updateCatField = (catId: string, field: keyof CatDetails, value: string) => {
+    setCatDetails(prev =>
+      prev.map(c => (c.id === catId ? { ...c, [field]: value } : c))
+    );
   };
 
   const handleCheckIn = async () => {
     const booking = confirmBooking;
     if (!booking) return;
 
-    // Validate transaction if enabled
-    if (addTransaction) {
+    if (addPayment) {
       const amount = parseFloat(txAmount);
       if (!amount || amount <= 0) { toast.error("Inserisci un importo valido"); return; }
       if (!txMethodId) { toast.error("Seleziona una modalità di pagamento"); return; }
@@ -86,39 +134,43 @@ export default function CheckIn() {
 
     setIsSubmitting(true);
     try {
-      // 1. Transition booking
+      // 1. Update cat details in the cats table
+      for (const cat of catDetails) {
+        const updates: any = {};
+        if (cat.microchip) updates.microchip = cat.microchip;
+        if (cat.gender) updates.gender = cat.gender;
+        if (cat.breed) updates.breed = cat.breed;
+        if (cat.color) updates.color = cat.color;
+        if (cat.weight_kg) updates.weight_kg = parseFloat(cat.weight_kg);
+        if (Object.keys(updates).length > 0) {
+          await supabase.from("cats").update(updates).eq("id", cat.id);
+        }
+      }
+
+      // 2. Transition booking
       await transitionBooking.mutateAsync({ id: booking.id, newStatus: "in_corso" });
 
-      // 2. Insert cats into registry
+      // 3. Insert cats into registry
       const clientName = booking.client
         ? `${booking.client.first_name} ${booking.client.last_name}`
         : "—";
 
-      const cats = (booking.booking_cats ?? []).map((bc: any) => bc.cat).filter(Boolean);
-
-      if (cats.length > 0 && profile?.tenant_id) {
-        const { supabase } = await import("@/integrations/supabase/client");
-        const catIds = cats.map((c: any) => c.id);
-        const { data: fullCats } = await supabase
-          .from("cats")
-          .select("id, name, microchip")
-          .in("id", catIds);
-
-        const entries = (fullCats ?? cats).map((cat: any) => ({
+      if (catDetails.length > 0 && profile?.tenant_id) {
+        const entries = catDetails.map(cat => ({
           tenant_id: profile.tenant_id!,
           booking_id: booking.id,
           cat_id: cat.id,
           client_name: clientName,
           cat_name: cat.name,
-          microchip: cat.microchip ?? null,
+          microchip: cat.microchip || null,
           check_in_date: booking.check_in_date,
         }));
 
         await insertCatRegistry.mutateAsync(entries);
       }
 
-      // 3. Create transaction if enabled
-      if (addTransaction) {
+      // 4. Create payment if enabled
+      if (addPayment) {
         await createPayment.mutateAsync({
           booking_id: booking.id,
           amount: parseFloat(txAmount),
@@ -204,9 +256,9 @@ export default function CheckIn() {
         </div>
       )}
 
-      {/* Check-in confirmation dialog with optional transaction */}
+      {/* Check-in confirmation dialog */}
       <Dialog open={!!confirmBooking} onOpenChange={open => !open && setConfirmBooking(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <LogIn className="h-5 w-5" />
@@ -243,23 +295,99 @@ export default function CheckIn() {
                 )}
               </div>
 
-              {/* Toggle for adding transaction */}
+              {/* Cat details section */}
+              {catDetails.length > 0 && (
+                <Accordion type="multiple" className="w-full">
+                  {catDetails.map(cat => (
+                    <AccordionItem key={cat.id} value={cat.id}>
+                      <AccordionTrigger className="text-sm py-2 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                          <PawPrint className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">{cat.name}</span>
+                          {!cat.microchip && (
+                            <Badge variant="outline" className="text-[10px] h-5 text-warning-foreground border-warning">
+                              Dati incompleti
+                            </Badge>
+                          )}
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-3 pt-1">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                              <Label className="text-xs">Microchip</Label>
+                              <Input
+                                value={cat.microchip}
+                                onChange={e => updateCatField(cat.id, "microchip", e.target.value)}
+                                placeholder="Numero microchip"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs">Sesso</Label>
+                              <Select value={cat.gender} onValueChange={v => updateCatField(cat.id, "gender", v)}>
+                                <SelectTrigger><SelectValue placeholder="Seleziona..." /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="maschio">Maschio</SelectItem>
+                                  <SelectItem value="femmina">Femmina</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                              <Label className="text-xs">Razza</Label>
+                              <Input
+                                value={cat.breed}
+                                onChange={e => updateCatField(cat.id, "breed", e.target.value)}
+                                placeholder="Es. Europeo"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label className="text-xs">Colore</Label>
+                              <Input
+                                value={cat.color}
+                                onChange={e => updateCatField(cat.id, "color", e.target.value)}
+                                placeholder="Es. Tigrato"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                              <Label className="text-xs">Peso (kg)</Label>
+                              <Input
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                value={cat.weight_kg}
+                                onChange={e => updateCatField(cat.id, "weight_kg", e.target.value)}
+                                placeholder="Es. 4.5"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              )}
+
+              {/* Toggle for adding payment */}
               <div className="flex items-center justify-between rounded-md border p-3">
                 <div className="flex items-center gap-2">
                   <CreditCard className="h-4 w-4 text-muted-foreground" />
                   <Label htmlFor="add-tx" className="text-sm font-medium cursor-pointer">
-                    Registra transazione
+                    Registra pagamento
                   </Label>
                 </div>
                 <Switch
                   id="add-tx"
-                  checked={addTransaction}
-                  onCheckedChange={setAddTransaction}
+                  checked={addPayment}
+                  onCheckedChange={setAddPayment}
                 />
               </div>
 
-              {/* Transaction form */}
-              {addTransaction && (
+              {/* Payment form */}
+              {addPayment && (
                 <div className="space-y-3 rounded-md border p-3 bg-muted/30">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
