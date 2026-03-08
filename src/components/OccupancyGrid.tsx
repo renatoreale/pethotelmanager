@@ -202,16 +202,18 @@ export function OccupancyGrid({
                     const dateStr = format(day, "yyyy-MM-dd");
                     const isOccupied = bo.occupiedDates.has(dateStr);
                     const isStay = dateStr >= bo.stayStart && dateStr <= bo.stayEnd;
+                    const isHighlight = highlightDate === dateStr;
                     return (
-                      <td key={dateStr} className={cn("px-0 py-0 text-center border-r", compact ? "h-6" : "h-7")}>
+                      <td key={dateStr} className={cn("px-0 py-0 text-center border-r", compact ? "h-6" : "h-7", isHighlight && !isOccupied && !isStay && "bg-destructive/5")}>
                         {isOccupied ? (
                           <div className={cn("w-full h-full flex items-center justify-center",
-                            b.cage_pool_type === "singola" ? "bg-primary/70" : "bg-accent/70"
+                            b.cage_pool_type === "singola" ? "bg-primary/70" : "bg-accent/70",
+                            isHighlight && "ring-2 ring-inset ring-destructive/60"
                           )}>
                             <span className="text-[9px] font-bold text-primary-foreground">{poolLabel}</span>
                           </div>
                         ) : isStay ? (
-                          <div className={cn("w-full h-full", b.cage_pool_type === "singola" ? "bg-primary/15" : "bg-accent/15")} />
+                          <div className={cn("w-full h-full", b.cage_pool_type === "singola" ? "bg-primary/15" : "bg-accent/15", isHighlight && "ring-2 ring-inset ring-destructive/60")} />
                         ) : null}
                       </td>
                     );
