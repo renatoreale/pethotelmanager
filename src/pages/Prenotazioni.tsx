@@ -343,7 +343,35 @@ export default function Prenotazioni() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AppointmentScheduleDialog
+      <AlertDialog open={!!deleting} onOpenChange={() => setDeleting(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminare la prenotazione?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleting && `Vuoi eliminare definitivamente la prenotazione ${deleting.bookingNumber}? Questa azione non può essere annullata.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (!deleting) return;
+                try {
+                  await deleteBooking.mutateAsync(deleting.id);
+                  toast.success(`Prenotazione ${deleting.bookingNumber} eliminata`);
+                } catch (err: any) {
+                  toast.error(err.message || "Errore nell'eliminazione");
+                }
+                setDeleting(null);
+              }}
+            >
+              Elimina
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
         open={!!schedulingBooking}
         onOpenChange={(open) => { if (!open) setSchedulingBooking(null); }}
         booking={schedulingBooking}
