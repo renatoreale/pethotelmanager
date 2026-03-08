@@ -128,10 +128,10 @@ export default function RegistroGatti() {
                     {entry.microchip ?? <span className="text-muted-foreground">—</span>}
                   </TableCell>
                   <TableCell className="text-sm">
-                    {entry.breed ?? <span className="text-muted-foreground">—</span>}
+                    {entry.cats?.breed ?? <span className="text-muted-foreground">—</span>}
                   </TableCell>
                   <TableCell className="text-sm">
-                    {entry.gender ?? <span className="text-muted-foreground">—</span>}
+                    {entry.cats?.gender ?? <span className="text-muted-foreground">—</span>}
                   </TableCell>
                   <TableCell>
                     {format(parseISO(entry.check_in_date), "dd MMM yyyy", { locale: it })}
