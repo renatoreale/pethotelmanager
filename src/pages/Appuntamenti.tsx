@@ -176,20 +176,21 @@ export default function Appuntamenti() {
     return `${format(rangeFrom, "dd/MM/yyyy")} – ${format(rangeTo, "dd/MM/yyyy")}`;
   }, [viewMode, selectedDate, rangeFrom, rangeTo]);
 
-  const renderApptRow = (appt: AppointmentWithDetails, showDate: boolean) => {
+  const renderApptRow = (appt: AppointmentWithDetails) => {
     const time = extractTime(appt.scheduled_at);
     const client = appt.booking?.client;
     const cats = appt.booking?.booking_cats?.map(bc => bc.cat?.name).filter(Boolean).join(", ") || "—";
     const bookingStatus = appt.booking?.status ?? "";
+    const isIn = appt.appointment_type === "check_in";
 
     return (
       <TableRow key={appt.id} className={appt.confirmed ? "bg-green-50/50 dark:bg-green-950/20" : ""}>
-        {showDate && (
-          <TableCell className="text-sm font-medium">
-            {format(parseISO(appt.scheduled_at.slice(0, 10)), "dd/MM", { locale: it })}
-          </TableCell>
-        )}
         <TableCell className="font-mono text-base font-semibold">{time}</TableCell>
+        <TableCell>
+          <Badge variant="outline" className={cn("text-xs", isIn ? "border-blue-300 text-blue-700 dark:border-blue-700 dark:text-blue-300" : "border-orange-300 text-orange-700 dark:border-orange-700 dark:text-orange-300")}>
+            {isIn ? <><LogIn className="h-3 w-3 mr-1" />IN</> : <><LogOut className="h-3 w-3 mr-1" />OUT</>}
+          </Badge>
+        </TableCell>
         <TableCell className="font-medium">
           {client ? `${client.first_name} ${client.last_name}` : "—"}
           {client?.phone && (
@@ -225,72 +226,82 @@ export default function Appuntamenti() {
     );
   };
 
-  const renderTable = (appts: AppointmentWithDetails[], type: "check_in" | "check_out") => {
-    if (!appts.length) {
+  const tableHeaders = (
+    <TableHeader>
+      <TableRow>
+        <TableHead className="w-[80px]">Orario</TableHead>
+        <TableHead className="w-[80px]">Tipo</TableHead>
+        <TableHead>Cliente</TableHead>
+        <TableHead>Gatti</TableHead>
+        <TableHead>N° Prenotazione</TableHead>
+        <TableHead>Stato</TableHead>
+        <TableHead className="w-[100px]">Confermato</TableHead>
+        <TableHead>Note</TableHead>
+        <TableHead className="w-[80px]">Azioni</TableHead>
+      </TableRow>
+    </TableHeader>
+  );
+
+  const renderAllAppointments = () => {
+    if (!filteredAppointments.length) {
       return (
         <div className="py-12 text-center text-muted-foreground">
           <Clock className="mx-auto h-10 w-10 mb-3 opacity-30" />
-          Nessun appuntamento {type === "check_in" ? "check-in" : "check-out"}
+          Nessun appuntamento trovato
         </div>
       );
     }
 
-    const showDate = isRange;
-
-    if (showDate) {
-      const grouped = groupByDate(appts);
+    if (isRange) {
+      const grouped = groupByDate(filteredAppointments);
       return (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {grouped.map(([date, dayAppts]) => (
-            <div key={date}>
-              <h4 className="text-sm font-semibold text-muted-foreground mb-2 capitalize">
-                {format(parseISO(date), "EEEE dd MMMM", { locale: it })}
-              </h4>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[80px]">Orario</TableHead>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Gatti</TableHead>
-                      <TableHead>N° Prenotazione</TableHead>
-                      <TableHead>Stato</TableHead>
-                      <TableHead className="w-[100px]">Confermato</TableHead>
-                      <TableHead>Note</TableHead>
-                      <TableHead className="w-[80px]">Azioni</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {dayAppts.map((appt) => renderApptRow(appt, false))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
+            <Card key={date}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base capitalize">
+                  {format(parseISO(date), "EEEE dd MMMM", { locale: it })}
+                </CardTitle>
+                <CardDescription>
+                  {dayAppts.filter(a => a.appointment_type === "check_in").length} check-in, {dayAppts.filter(a => a.appointment_type === "check_out").length} check-out
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <Table>
+                    {tableHeaders}
+                    <TableBody>
+                      {dayAppts.map((appt) => renderApptRow(appt))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       );
     }
 
+    // Single day view
     return (
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[80px]">Orario</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Gatti</TableHead>
-              <TableHead>N° Prenotazione</TableHead>
-              <TableHead>Stato</TableHead>
-              <TableHead className="w-[100px]">Confermato</TableHead>
-              <TableHead>Note</TableHead>
-              <TableHead className="w-[80px]">Azioni</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {appts.map((appt) => renderApptRow(appt, false))}
-          </TableBody>
-        </Table>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Appuntamenti</CardTitle>
+          <CardDescription className="capitalize">
+            {format(selectedDate, "EEEE dd MMMM yyyy", { locale: it })}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              {tableHeaders}
+              <TableBody>
+                {filteredAppointments.map((appt) => renderApptRow(appt))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     );
   };
 
