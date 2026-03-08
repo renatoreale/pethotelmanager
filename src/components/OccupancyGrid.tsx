@@ -231,7 +231,8 @@ export function OccupancyGrid({
                 const isHighlight = highlightDate === dateStr;
                 return (
                   <td key={dateStr} className={cn("text-center font-semibold border-r py-1 text-[10px]",
-                    pct >= 1 && "bg-destructive text-destructive-foreground",
+                    pct > 1 && "bg-[hsl(340,80%,25%)] text-white",
+                    pct === 1 && "bg-destructive text-destructive-foreground",
                     pct > 0 && pct < 1 && "bg-warning/20 text-warning-foreground",
                     isHighlight && pct < 1 && "bg-destructive/10"
                   )}>{occ}/{totalSingole}</td>
@@ -247,7 +248,8 @@ export function OccupancyGrid({
                 const isHighlight = highlightDate === dateStr;
                 return (
                   <td key={dateStr} className={cn("text-center font-semibold border-r py-1 text-[10px]",
-                    pct >= 1 && "bg-destructive text-destructive-foreground",
+                    pct > 1 && "bg-[hsl(340,80%,25%)] text-white",
+                    pct === 1 && "bg-destructive text-destructive-foreground",
                     pct > 0 && pct < 1 && "bg-warning/20 text-warning-foreground",
                     isHighlight && pct < 1 && "bg-destructive/10"
                   )}>{occ}/{totalDoppie}</td>
