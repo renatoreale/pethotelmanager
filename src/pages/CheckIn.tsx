@@ -91,6 +91,19 @@ export default function CheckIn() {
   const openConfirm = async (b: any) => {
     setConfirmBooking(b);
     resetForm();
+    setBookingPaidAmount(0);
+
+    // Load payments to calculate residuo
+    const { data: payments } = await supabase
+      .from("payments")
+      .select("amount, payment_type")
+      .eq("booking_id", b.id);
+
+    if (payments) {
+      const paid = payments.filter(p => p.payment_type !== "rimborso").reduce((s, p) => s + Number(p.amount), 0);
+      const refunded = payments.filter(p => p.payment_type === "rimborso").reduce((s, p) => s + Number(p.amount), 0);
+      setBookingPaidAmount(paid - refunded);
+    }
 
     // Load full cat details
     const cats = (b.booking_cats ?? []).map((bc: any) => bc.cat).filter(Boolean);
