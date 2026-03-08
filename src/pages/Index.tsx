@@ -59,29 +59,29 @@ export default function Index() {
   const stats = useMemo(() => {
     if (!bookings) return null;
 
-    // Cats currently in structure (status in_corso)
-    const inCorsoBookings = bookings.filter(b => b.status === "in_corso");
-    const catsInStructure = inCorsoBookings.reduce((sum, b) => sum + (b.booking_cats?.length ?? 0), 0);
+    // Cats in structure on selected date (in_corso bookings overlapping that date)
+    const inCorsoOverlapping = bookings.filter(b => b.status === "in_corso" && b.check_in_date <= selectedDateStr && b.check_out_date >= selectedDateStr);
+    const catsInStructure = inCorsoOverlapping.reduce((sum, b) => sum + (b.booking_cats?.length ?? 0), 0);
 
-    // Occupancy by cage type: include all accepted bookings overlapping today
+    // Occupancy by cage type: include all accepted bookings overlapping selected date
     const occupancyStatuses = ["confermata", "appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato", "check_in", "in_corso"];
     const occupyingBookings = bookings.filter(b =>
-      occupancyStatuses.includes(b.status) && b.check_in_date <= today && b.check_out_date >= today
+      occupancyStatuses.includes(b.status) && b.check_in_date <= selectedDateStr && b.check_out_date >= selectedDateStr
     );
     const singoleOccupied = occupyingBookings.filter(b => b.cage_pool_type === "singola").reduce((s, b) => s + b.units_occupied, 0);
     const doppieOccupied = occupyingBookings.filter(b => b.cage_pool_type === "doppia").reduce((s, b) => s + b.units_occupied, 0);
 
-    // Active bookings (confermata, appuntamento*, in_corso)
+    // Active bookings overlapping selected date
     const activeStatuses = ["confermata", "appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato", "check_in", "in_corso"];
-    const activeBookings = bookings.filter(b => activeStatuses.includes(b.status));
+    const activeBookings = bookings.filter(b => activeStatuses.includes(b.status) && b.check_in_date <= selectedDateStr && b.check_out_date >= selectedDateStr);
 
-    // Check-ins today
-    const checkInsToday = bookings.filter(b => b.check_in_date === today && ["check_in", "in_corso"].includes(b.status));
+    // Check-ins on selected date
+    const checkInsToday = bookings.filter(b => b.check_in_date === selectedDateStr && !["preventivo", "cancellata", "rimborsata", "scaduto"].includes(b.status));
 
-    // Check-outs today
-    const checkOutsToday = bookings.filter(b => b.check_out_date === today && ["in_corso", "check_out"].includes(b.status));
+    // Check-outs on selected date
+    const checkOutsToday = bookings.filter(b => b.check_out_date === selectedDateStr && !["preventivo", "cancellata", "rimborsata", "scaduto"].includes(b.status));
 
-    // Monthly revenue
+    // Monthly revenue (month of selected date)
     const monthPayments = (allPayments ?? []).filter(p => {
       const pDate = p.payment_date?.slice(0, 10);
       return pDate >= monthStart && pDate <= monthEnd && p.payment_type !== "rimborso";
@@ -92,17 +92,18 @@ export default function Index() {
     });
     const monthRevenue = monthPayments.reduce((s, p) => s + Number(p.amount), 0) - monthRefunds.reduce((s, p) => s + Number(p.amount), 0);
 
-    // Recent bookings (last 5 updated)
-    const recentBookings = [...bookings]
-      .filter(b => !["cancellata", "rimborsata"].includes(b.status))
-      .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
-      .slice(0, 5);
+    // Bookings with activity on the selected date
+    const dayBookings = bookings.filter(b =>
+      !["cancellata", "rimborsata"].includes(b.status) &&
+      (b.check_in_date === selectedDateStr || b.check_out_date === selectedDateStr ||
+       (b.check_in_date <= selectedDateStr && b.check_out_date >= selectedDateStr))
+    ).slice(0, 5);
 
-    // Expiring preventivi (preventivo with check_in_date <= today + 3 days)
-    const soonDate = new Date();
+    // Expiring preventivi (preventivo with check_in_date <= selected date + 3 days)
+    const soonDate = new Date(selectedDate);
     soonDate.setDate(soonDate.getDate() + 3);
     const soonStr = format(soonDate, "yyyy-MM-dd");
-    const expiringPreventivi = bookings.filter(b => b.status === "preventivo" && b.check_in_date <= soonStr);
+    const expiringPreventivi = bookings.filter(b => b.status === "preventivo" && b.check_in_date >= selectedDateStr && b.check_in_date <= soonStr);
 
     return {
       catsInStructure,
@@ -112,10 +113,10 @@ export default function Index() {
       checkInsToday: checkInsToday.length,
       checkOutsToday: checkOutsToday.length,
       monthRevenue,
-      recentBookings,
+      dayBookings,
       expiringPreventivi: expiringPreventivi.length,
     };
-  }, [bookings, allPayments, today, monthStart, monthEnd]);
+  }, [bookings, allPayments, selectedDateStr, monthStart, monthEnd]);
 
   const numSingole = tenantConfig?.num_singole ?? 0;
   const numDoppie = tenantConfig?.num_doppie ?? 0;
