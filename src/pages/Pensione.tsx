@@ -193,6 +193,7 @@ function SlotTab() {
   const [deleting, setDeleting] = useState<any>(null);
 
   const [dayOfWeek, setDayOfWeek] = useState(0);
+  const [appointmentType, setAppointmentType] = useState("check_in");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("12:00");
   const [duration, setDuration] = useState(30);
@@ -202,6 +203,7 @@ function SlotTab() {
   const openNew = () => {
     setEditing(null);
     setDayOfWeek(0);
+    setAppointmentType("check_in");
     setStartTime("09:00");
     setEndTime("12:00");
     setDuration(30);
