@@ -126,10 +126,29 @@ export function OccupancyGrid({
     return totals;
   }, [days, bookingOccupancy]);
 
-  const visibleBookings = useMemo(() => {
+  // Expand bookings into individual rows per unit/cat
+  const visibleRows = useMemo(() => {
     const startStr = format(rangeStart, "yyyy-MM-dd");
     const endStr = format(rangeEnd, "yyyy-MM-dd");
-    return bookingOccupancy.filter(bo => bo.stayStart <= endStr && bo.stayEnd >= startStr);
+    const filtered = bookingOccupancy.filter(bo => bo.stayStart <= endStr && bo.stayEnd >= startStr);
+    
+    const rows: { bo: BookingOccupancy; catName: string; rowKey: string }[] = [];
+    for (const bo of filtered) {
+      const b = bo.booking;
+      const cats = b.booking_cats?.map(bc => bc.cat?.name).filter(Boolean) ?? [];
+      const units = b.units_occupied ?? 1;
+      
+      if (units <= 1 || cats.length <= 1) {
+        // Single row
+        rows.push({ bo, catName: cats.join(", ") || "—", rowKey: b.id });
+      } else {
+        // One row per cat/unit
+        for (let i = 0; i < Math.max(units, cats.length); i++) {
+          rows.push({ bo, catName: cats[i] || `Gatto ${i + 1}`, rowKey: `${b.id}-${i}` });
+        }
+      }
+    }
+    return rows;
   }, [bookingOccupancy, rangeStart, rangeEnd]);
 
   if (days.length === 0) return <div className="text-center py-4 text-muted-foreground text-sm">Nessun periodo</div>;
