@@ -448,7 +448,20 @@ export function PreventivoDialog({
     if (!checkIn || !checkOut) { toast.error("Date check-in/out obbligatorie"); return; }
     if (selectedCats.length === 0) { toast.error("Seleziona almeno un gatto"); return; }
 
-    // Build breakdown notes
+    // Build price_breakdown JSON
+    const priceBreakdown = {
+      seasonPeriods,
+      extraServices,
+      discounts,
+      cageUnits,
+      seasonTotal,
+      extrasTotal,
+      discountTotal,
+      discountedStay,
+      grandTotal,
+    };
+
+    // Build breakdown notes for display
     const breakdownParts: string[] = [];
     if (unitsOccupied > 1) {
       const ns = cageUnits.filter(t => t === "singola").length;
@@ -485,6 +498,7 @@ export function PreventivoDialog({
           deposit_amount: depositAmount,
           notes: fullNotes || null,
           cat_ids: selectedCats,
+          price_breakdown: priceBreakdown,
         });
         toast.success("Preventivo aggiornato");
       } else {
@@ -498,6 +512,7 @@ export function PreventivoDialog({
           deposit_amount: depositAmount,
           notes: fullNotes || undefined,
           cat_ids: selectedCats,
+          price_breakdown: priceBreakdown,
         });
         toast.success("Preventivo creato");
       }
