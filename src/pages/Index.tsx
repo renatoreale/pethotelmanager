@@ -59,17 +59,33 @@ export default function Index() {
   const stats = useMemo(() => {
     if (!bookings) return null;
 
-    // Gatti in struttura: bookings con status "in_corso"
+    // Stati che occupano casette (in_corso + confermata/appuntamento con date che coprono oggi)
+    const occupyingStatuses = [
+      "confermata",
+      "appuntamento_in_fissato",
+      "appuntamento_out_fissato",
+      "appuntamento_in_out_fissato",
+      "check_in",
+      "in_corso",
+      "check_out",
+    ];
+    const occupyingBookings = bookings.filter(b =>
+      occupyingStatuses.includes(b.status) &&
+      b.check_in_date <= today &&
+      b.check_out_date >= today
+    );
+
+    // Gatti in struttura: solo bookings "in_corso"
     const inCorso = bookings.filter(b => b.status === "in_corso");
     const catsInStructure = inCorso.reduce(
       (sum, b) => sum + (b.booking_cats?.length ?? 0), 0
     );
 
-    // Occupazione casette
-    const singoleOccupate = inCorso
+    // Occupazione casette (tutte le prenotazioni attive che coprono oggi)
+    const singoleOccupate = occupyingBookings
       .filter(b => b.cage_pool_type === "singola")
       .reduce((sum, b) => sum + b.units_occupied, 0);
-    const doppieOccupate = inCorso
+    const doppieOccupate = occupyingBookings
       .filter(b => b.cage_pool_type === "doppia")
       .reduce((sum, b) => sum + b.units_occupied, 0);
 
