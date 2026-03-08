@@ -47,6 +47,7 @@ export default function Appuntamenti() {
   const { data: appointments, isLoading } = useAppointmentsByDate(dateStr);
   const confirmAppointment = useConfirmAppointment();
   const deleteAppointment = useDeleteAppointment();
+  const updateAppointment = useUpdateAppointment();
 
   const checkInAppts = useMemo(() =>
     (appointments ?? []).filter(a => a.appointment_type === "check_in"),
