@@ -30,7 +30,7 @@ import {
 } from "@/hooks/usePensioneConfig";
 import {
   useAllPaymentMethods, useCreatePaymentMethod,
-  useTogglePaymentMethod, useDeletePaymentMethod,
+  useTogglePaymentMethod, useDeletePaymentMethod, useUpdatePaymentMethod,
 } from "@/hooks/usePayments";
 
 const DAYS = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
@@ -716,9 +716,12 @@ function PaymentMethodsTab() {
   const createMethod = useCreatePaymentMethod();
   const toggleMethod = useTogglePaymentMethod();
   const deleteMethod = useDeletePaymentMethod();
+  const updateMethod = useUpdatePaymentMethod();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [deleting, setDeleting] = useState<any>(null);
+  const [editing, setEditing] = useState<any>(null);
+  const [editName, setEditName] = useState("");
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
@@ -730,6 +733,17 @@ function PaymentMethodsTab() {
       toast.success("Modalità di pagamento creata");
       setNewName("");
       setDialogOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || "Errore");
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!editing || !editName.trim()) return;
+    try {
+      await updateMethod.mutateAsync({ id: editing.id, name: editName.trim() });
+      toast.success("Modalità aggiornata");
+      setEditing(null);
     } catch (err: any) {
       toast.error(err.message || "Errore");
     }
@@ -793,6 +807,9 @@ function PaymentMethodsTab() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => { setEditing(m); setEditName(m.name); }}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                           <Button variant="ghost" size="icon" onClick={() => handleToggle(m.id, m.is_active)}>
                             <Switch checked={m.is_active} className="pointer-events-none" />
                           </Button>
@@ -829,6 +846,28 @@ function PaymentMethodsTab() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Annulla</Button>
             <Button onClick={handleCreate} disabled={createMethod.isPending || !newName.trim()}>Salva</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editing} onOpenChange={() => setEditing(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifica Modalità di Pagamento</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome</Label>
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleUpdate()}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)}>Annulla</Button>
+            <Button onClick={handleUpdate} disabled={updateMethod.isPending || !editName.trim()}>Salva</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
