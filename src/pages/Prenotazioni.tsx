@@ -219,20 +219,24 @@ export default function Prenotazioni() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            {!["check_in", "in_corso", "check_out", "chiusa", "cancellata", "rimborsata"].includes(b.status) && (
+                            {!["check_in", "in_corso", "check_out", "chiusa", "cancellata", "rimborsata"].includes(b.status) ? (
                               <Button variant="ghost" size="icon" onClick={() => setEditingBooking(b)} title="Modifica prenotazione">
                                 <Pencil className="h-4 w-4" />
                               </Button>
+                            ) : (
+                              <div className="h-8 w-8" />
                             )}
                             <Button variant="ghost" size="icon" onClick={() => setPaymentsBooking(b)} title="Pagamenti">
                               <CreditCard className="h-4 w-4" />
                             </Button>
-                            {["appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato"].includes(b.status) && (
+                            {["appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato"].includes(b.status) ? (
                               <Button variant="ghost" size="icon" onClick={() => setSchedulingBooking(b)} title="Modifica appuntamenti">
                                 <CalendarClock className="h-4 w-4" />
                               </Button>
+                            ) : (
+                              <div className="h-8 w-8" />
                             )}
-                            {transitions.length > 0 && (
+                            {transitions.length > 0 ? (
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="icon">
@@ -261,6 +265,8 @@ export default function Prenotazioni() {
                                   ))}
                                 </DropdownMenuContent>
                               </DropdownMenu>
+                            ) : (
+                              <div className="h-8 w-8" />
                             )}
                           </div>
                         </TableCell>
