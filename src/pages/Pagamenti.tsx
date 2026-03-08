@@ -376,7 +376,7 @@ export default function Pagamenti() {
 
                           {/* Transactions */}
                           {bookingExpanded && (
-                            <div className="bg-muted/20 border-t">
+                            <div className="bg-secondary/40 border-t">
                               {/* Booking totals strip */}
                               <div className="flex items-center justify-between px-4 py-2 pl-12 border-b border-border/50">
                                 <div className="flex items-center gap-3">
