@@ -168,14 +168,16 @@ export function OccupancyGrid({
                 const dateStr = format(day, "yyyy-MM-dd");
                 const isToday = dateStr === format(today, "yyyy-MM-dd");
                 const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+                const isHighlight = highlightDate === dateStr;
                 return (
                   <th key={dateStr} className={cn(
                     "px-1 py-1.5 text-center font-medium min-w-[32px] border-r",
-                    isToday && "bg-primary/10",
-                    isWeekend && !isToday && "bg-muted/30"
+                    isHighlight && "bg-destructive/20 ring-2 ring-inset ring-destructive/50",
+                    isToday && !isHighlight && "bg-primary/10",
+                    isWeekend && !isToday && !isHighlight && "bg-muted/30"
                   )}>
-                    <div className="text-[9px] text-muted-foreground">{format(day, "EEE", { locale: it })}</div>
-                    <div className={cn("text-[11px]", isToday && "font-bold text-primary")}>{format(day, "d")}</div>
+                    <div className={cn("text-[9px]", isHighlight ? "text-destructive font-bold" : "text-muted-foreground")}>{format(day, "EEE", { locale: it })}</div>
+                    <div className={cn("text-[11px]", isHighlight ? "font-bold text-destructive" : isToday ? "font-bold text-primary" : "")}>{format(day, "d")}</div>
                   </th>
                 );
               })}
