@@ -98,7 +98,7 @@ export default function Pagamenti() {
   const deletePayment = useDeletePayment();
 
   const [expandedClients, setExpandedClients] = useState<Set<string>>(new Set());
-  const [expandedBookings, setExpandedBookings] = useState<Set<string>>(new Set());
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [search, setSearch] = useState("");
 
   const [txDialogOpen, setTxDialogOpen] = useState(false);
