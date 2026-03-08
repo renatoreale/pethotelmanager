@@ -165,6 +165,7 @@ export default function CheckIn() {
     setTxMethodId("");
     setTxNotes("");
     setCatDetails([]);
+    setManualExtraCost(null);
   };
 
   const openConfirm = async (b: any) => {
