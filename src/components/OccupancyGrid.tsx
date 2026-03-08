@@ -245,10 +245,12 @@ export function OccupancyGrid({
                 const dateStr = format(day, "yyyy-MM-dd");
                 const occ = dailyTotals[dateStr]?.doppie ?? 0;
                 const pct = totalDoppie > 0 ? occ / totalDoppie : 0;
+                const isHighlight = highlightDate === dateStr;
                 return (
                   <td key={dateStr} className={cn("text-center font-semibold border-r py-1 text-[10px]",
                     pct >= 1 && "bg-destructive/20 text-destructive",
-                    pct > 0 && pct < 1 && "bg-warning/20 text-warning-foreground"
+                    pct > 0 && pct < 1 && "bg-warning/20 text-warning-foreground",
+                    isHighlight && "ring-2 ring-inset ring-destructive/50"
                   )}>{occ}/{totalDoppie}</td>
                 );
               })}
