@@ -341,13 +341,18 @@ export function useBulkUpsertPermissions() {
   return useMutation({
     mutationFn: async (permissions: RolePermission[]) => {
       for (const perm of permissions) {
-        const { data: existing } = await supabase
+        let checkQuery = supabase
           .from("role_permissions")
           .select("id")
           .eq("role", perm.role)
-          .eq("resource", perm.resource)
-          .is("tenant_id", perm.tenant_id)
-          .maybeSingle();
+          .eq("resource", perm.resource);
+        
+        if (perm.tenant_id) {
+          checkQuery = checkQuery.eq("tenant_id", perm.tenant_id);
+        } else {
+          checkQuery = checkQuery.is("tenant_id", null);
+        }
+        const { data: existing } = await checkQuery.maybeSingle();
 
         if (existing) {
           await supabase
