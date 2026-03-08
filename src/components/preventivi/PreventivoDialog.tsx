@@ -410,11 +410,19 @@ export function PreventivoDialog({
     return gaps;
   }, [seasonPeriods, checkIn, checkOut, stayCalcType]);
 
-  // Apply calculated total
-  const applyCalculation = () => {
-    setTotalAmount(grandTotal);
-    setDepositManuallySet(false);
-  };
+  // Auto-apply calculated total
+  useEffect(() => {
+    if (seasonPeriods.length > 0 || extraServices.length > 0) {
+      setTotalAmount(grandTotal);
+    }
+  }, [grandTotal, seasonPeriods.length, extraServices.length]);
+
+  // Auto-apply deposit (50%) when total changes and not manually set
+  useEffect(() => {
+    if (!depositManuallySet && totalAmount > 0) {
+      setDepositAmount(Math.round(totalAmount * 50) / 100);
+    }
+  }, [totalAmount, depositManuallySet]);
 
   // ── Client filter ──
   const filteredClients = useMemo(() => {
