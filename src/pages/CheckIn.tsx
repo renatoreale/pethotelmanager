@@ -479,9 +479,30 @@ export default function CheckIn() {
                   <span>€ {recalculated.originalTotal.toFixed(2)}</span>
                 </div>
                 {recalculated.extraDays > 0 && (
-                  <div className="flex justify-between text-primary">
-                    <span>+ {recalculated.extraDays} {stayLabel} extra ({recalculated.extraTariffName})</span>
-                    <span className="font-medium">+ € {recalculated.extraCost.toFixed(2)}</span>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center text-primary">
+                      <span>+ {recalculated.extraDays} {stayLabel} extra ({recalculated.extraTariffName})</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">Importo extra €</span>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        className="h-7 w-28 text-sm"
+                        value={manualExtraCost !== null ? manualExtraCost : recalculated.extraCost.toFixed(2)}
+                        onChange={e => setManualExtraCost(e.target.value)}
+                      />
+                      {manualExtraCost !== null && (
+                        <button
+                          type="button"
+                          className="text-xs text-muted-foreground underline hover:text-foreground"
+                          onClick={() => setManualExtraCost(null)}
+                        >
+                          Reset
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
                 {recalculated.dateChanged && recalculated.newDays < recalculated.originalDays && (
