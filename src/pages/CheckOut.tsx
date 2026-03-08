@@ -505,9 +505,28 @@ export default function CheckOut() {
                     Soggiorno ridotto di {recalculated.originalDays - recalculated.newDays} {stayLabel} — totale invariato
                   </div>
                 )}
-                <div className="flex justify-between border-t pt-1.5">
-                  <span className="font-medium">Nuovo totale</span>
-                  <span className="font-bold">€ {recalculated.newTotal.toFixed(2)}</span>
+                <div className="flex justify-between items-center border-t pt-1.5">
+                  <span className="font-medium">Totale</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">€</span>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      className="h-7 w-28 text-sm font-bold text-right"
+                      value={manualTotal !== null ? manualTotal : recalculated.calculatedTotal.toFixed(2)}
+                      onChange={e => setManualTotal(e.target.value)}
+                    />
+                    {manualTotal !== null && (
+                      <button
+                        type="button"
+                        className="text-xs text-muted-foreground underline hover:text-foreground"
+                        onClick={() => setManualTotal(null)}
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Pagato</span>
