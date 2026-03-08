@@ -131,24 +131,29 @@ export default function Prenotazioni() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-4 flex-wrap">
-            <AutocompleteSearch
-              value={search}
-              onChange={setSearch}
-              placeholder="Cerca per cliente o numero..."
-              className="flex-1 min-w-[200px] max-w-sm"
-            />
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Badge variant="outline">{filtered.length} prenotazion{filtered.length === 1 ? "e" : "i"}</Badge>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-4 flex-wrap">
+              <AutocompleteSearch
+                value={search}
+                onChange={setSearch}
+                placeholder="Cerca per cliente o numero..."
+                className="flex-1 min-w-[200px] max-w-sm"
+              />
+              <Badge variant="outline">{filtered.length} prenotazion{filtered.length === 1 ? "e" : "i"}</Badge>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {STATUS_OPTIONS.map((o) => (
+                <Button
+                  key={o.value}
+                  size="sm"
+                  variant={statusFilter === o.value ? "default" : "outline"}
+                  className="h-7 text-xs px-2.5"
+                  onClick={() => setStatusFilter(statusFilter === o.value && o.value !== "tutti" ? "tutti" : o.value)}
+                >
+                  {o.label}
+                </Button>
+              ))}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
