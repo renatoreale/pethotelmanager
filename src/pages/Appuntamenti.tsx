@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
+import { EditCheckoutDialog } from "@/components/appointments/EditCheckoutDialog";
 
 type ViewMode = "giorno" | "settimana" | "mese" | "personalizzato";
 
