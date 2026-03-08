@@ -66,7 +66,7 @@ export default function CheckIn() {
   // Payment form state
   const [addPayment, setAddPayment] = useState(false);
   const [txAmount, setTxAmount] = useState("");
-  const [txType, setTxType] = useState<"caparra" | "saldo" | "extra" | "rimborso">("caparra");
+  const [txType, setTxType] = useState<"caparra" | "saldo" | "extra" | "rimborso">("saldo");
   const [txMethodId, setTxMethodId] = useState("");
   const [txNotes, setTxNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
