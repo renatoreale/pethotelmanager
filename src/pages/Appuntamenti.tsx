@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import {
   useAppointmentsByDate,
   useAppointmentsByDateRange,
+  useAllAppointments,
   useConfirmAppointment,
   useDeleteAppointment,
   useUpdateAppointment,
@@ -75,18 +76,20 @@ export default function Appuntamenti() {
   }, [viewMode, selectedDate, rangeFrom, rangeTo]);
 
   const isRange = viewMode !== "giorno";
+  const hasSearch = search.trim().length >= 2;
 
   // Use single-day hook for "giorno", range hook for others
   const { data: dayAppointments, isLoading: dayLoading } = useAppointmentsByDate(
-    !isRange ? startDate : undefined
+    !isRange && !hasSearch ? startDate : undefined
   );
   const { data: rangeAppointments, isLoading: rangeLoading } = useAppointmentsByDateRange(
-    isRange ? startDate : undefined,
-    isRange ? endDate : undefined
+    isRange && !hasSearch ? startDate : undefined,
+    isRange && !hasSearch ? endDate : undefined
   );
+  const { data: allAppointments, isLoading: allLoading } = useAllAppointments(hasSearch);
 
-  const appointments = isRange ? rangeAppointments : dayAppointments;
-  const isLoading = isRange ? rangeLoading : dayLoading;
+  const appointments = hasSearch ? allAppointments : (isRange ? rangeAppointments : dayAppointments);
+  const isLoading = hasSearch ? allLoading : (isRange ? rangeLoading : dayLoading);
 
   const confirmAppointment = useConfirmAppointment();
   const deleteAppointment = useDeleteAppointment();
@@ -249,7 +252,7 @@ export default function Appuntamenti() {
       );
     }
 
-    if (isRange) {
+    if (isRange || hasSearch) {
       const grouped = groupByDate(filteredAppointments);
       return (
         <div className="space-y-6">
