@@ -714,6 +714,27 @@ export function PreventivoDialog({
             )}
           </div>
 
+          {/* ── Alert periodi ── */}
+          {seasonPeriods.length > 0 && duration > 0 && (
+            <>
+              {periodDaysMismatch && (
+                <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+                  ⚠️ La somma dei giorni dei periodi ({periodDaysTotal} {stayLabel}) non corrisponde alla durata totale del soggiorno ({duration} {stayLabel}).
+                </div>
+              )}
+              {periodGaps.length > 0 && (
+                <div className="rounded-md border border-yellow-500/50 bg-yellow-500/10 p-3 text-sm text-yellow-700 dark:text-yellow-400">
+                  ⚠️ Ci sono date non coperte dai periodi tariffari: {periodGaps.join(", ")}
+                </div>
+              )}
+              {!periodDaysMismatch && periodGaps.length === 0 && (
+                <div className="rounded-md border border-green-500/50 bg-green-500/10 p-3 text-sm text-green-700 dark:text-green-400">
+                  ✓ Tutti i {duration} {stayLabel} sono coperti dai periodi tariffari.
+                </div>
+              )}
+            </>
+          )}
+
           {/* ── 6. SERVIZI EXTRA ── */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
