@@ -97,6 +97,7 @@ export default function Gatti() {
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>Proprietario</TableHead>
+                    <TableHead>Microchip</TableHead>
                     <TableHead>Razza</TableHead>
                     <TableHead>Sesso</TableHead>
                     <TableHead>Peso</TableHead>
