@@ -562,6 +562,56 @@ export function PreventivoDialog({
     }
   };
 
+  const invalidateAppointmentQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ["appointments-by-date"] });
+    queryClient.invalidateQueries({ queryKey: ["appointments-by-range"] });
+    queryClient.invalidateQueries({ queryKey: ["appointments-all"] });
+    queryClient.invalidateQueries({ queryKey: ["appointment-counts"] });
+    queryClient.invalidateQueries({ queryKey: ["booking-appointments"] });
+    queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    queryClient.invalidateQueries({ queryKey: ["preventivi"] });
+  };
+
+  const handleUpdateAppointments = async () => {
+    if (!appointmentSyncDialog) return;
+    const { appointments, newCheckIn, newCheckOut } = appointmentSyncDialog;
+    try {
+      for (const appt of appointments) {
+        const oldDate = appt.scheduled_at;
+        const time = oldDate.split("T")[1]; // preserve time
+        const newDate = appt.appointment_type === "check_in" ? newCheckIn : newCheckOut;
+        await supabase
+          .from("appointments")
+          .update({ scheduled_at: `${newDate}T${time}` })
+          .eq("id", appt.id);
+      }
+      invalidateAppointmentQueries();
+      toast.success("Appuntamenti aggiornati alle nuove date");
+    } catch (err: any) {
+      toast.error(err.message || "Errore aggiornamento appuntamenti");
+    }
+    setAppointmentSyncDialog(null);
+    onOpenChange(false);
+  };
+
+  const handleDeleteAppointments = async () => {
+    if (!appointmentSyncDialog) return;
+    const { bookingId } = appointmentSyncDialog;
+    try {
+      await supabase.from("appointments").delete().eq("booking_id", bookingId);
+      await supabase
+        .from("bookings")
+        .update({ status: "confermata" as any })
+        .eq("id", bookingId);
+      invalidateAppointmentQueries();
+      toast.success("Appuntamenti eliminati, stato riportato a Confermata");
+    } catch (err: any) {
+      toast.error(err.message || "Errore eliminazione appuntamenti");
+    }
+    setAppointmentSyncDialog(null);
+    onOpenChange(false);
+  };
+
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
