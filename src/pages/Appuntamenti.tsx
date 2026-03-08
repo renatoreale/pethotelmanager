@@ -285,6 +285,23 @@ export default function Appuntamenti() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {editing && (
+        <EditAppointmentDialog
+          appointment={editing}
+          open={!!editing}
+          onOpenChange={(open) => { if (!open) setEditing(null); }}
+          onSave={async (newTime: string) => {
+            const date = editing.scheduled_at.slice(0, 10);
+            await updateAppointment.mutateAsync({
+              id: editing.id,
+              scheduled_at: `${date}T${newTime}:00`,
+            });
+            toast.success("Appuntamento aggiornato");
+            setEditing(null);
+          }}
+        />
+      )}
     </div>
   );
 }
