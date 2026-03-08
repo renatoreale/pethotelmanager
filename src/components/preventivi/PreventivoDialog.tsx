@@ -206,26 +206,27 @@ export function PreventivoDialog({
     return priceLists.filter((pl: any) => pl.tariff_type !== "stagionale" && pl.is_active);
   }, [priceLists]);
 
+  // ── Period cost calculation helper ──
+  const calcPeriodCost = useCallback((days: number, tariff: any, numCats: number) => {
+    if (!tariff || numCats === 0) return { baseCost: 0, supplementCost: 0, total: 0 };
+    const baseCost = Number(tariff.price_per_day) * days * numCats;
+    const extraCats = Math.max(0, numCats - 1);
+    const supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * days;
+    return { baseCost, supplementCost, total: baseCost + supplementCost };
+  }, []);
+
   // ── Season period helpers ──
   const addSeasonPeriod = () => {
     const defaultTariff = seasonalTariffs[0];
     const days = calcPeriodDays(checkIn, checkOut);
-    const extraCats = Math.max(0, selectedCats.length - 1);
-    let baseCost = 0, supplementCost = 0, total = 0;
-    if (defaultTariff) {
-      baseCost = Number(defaultTariff.price_per_day) * days;
-      supplementCost = extraCats * Number(defaultTariff.extra_cat_supplement ?? 0) * days;
-      total = baseCost + supplementCost;
-    }
+    const costs = calcPeriodCost(days, defaultTariff, selectedCats.length);
     setSeasonPeriods(prev => [...prev, {
       id: genId(),
       fromDate: checkIn,
       toDate: checkOut,
       tariffId: defaultTariff?.id ?? "",
       days,
-      baseCost,
-      supplementCost,
-      total,
+      ...costs,
     }]);
   };
 
@@ -234,28 +235,11 @@ export function PreventivoDialog({
       if (i !== idx) return p;
       const updated = { ...p, [field]: value };
 
-      // If tariff changed, update pricing info
-      if (field === "tariffId") {
-        const tariff = seasonalTariffs.find((t: any) => t.id === value);
-        if (tariff) {
-          updated.days = calcPeriodDays(updated.fromDate, updated.toDate);
-          const extraCats = Math.max(0, selectedCats.length - 1);
-          updated.baseCost = Number(tariff.price_per_day) * updated.days;
-          updated.supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * updated.days;
-          updated.total = updated.baseCost + updated.supplementCost;
-        }
-      }
-
-      // If dates changed, recalculate
-      if (field === "fromDate" || field === "toDate") {
+      if (field === "tariffId" || field === "fromDate" || field === "toDate") {
         updated.days = calcPeriodDays(updated.fromDate, updated.toDate);
-        const tariff = seasonalTariffs.find((t: any) => t.id === updated.tariffId);
-        if (tariff) {
-          const extraCats = Math.max(0, selectedCats.length - 1);
-          updated.baseCost = Number(tariff.price_per_day) * updated.days;
-          updated.supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * updated.days;
-          updated.total = updated.baseCost + updated.supplementCost;
-        }
+        const tariff = seasonalTariffs.find((t: any) => t.id === (field === "tariffId" ? value : updated.tariffId));
+        const costs = calcPeriodCost(updated.days, tariff, selectedCats.length);
+        Object.assign(updated, costs);
       }
 
       return updated;
@@ -265,17 +249,16 @@ export function PreventivoDialog({
   // Recalculate all periods when cats change
   const numSelectedCats = selectedCats.length;
   useEffect(() => {
-    if (seasonPeriods.length === 0 || !seasonalTariffs) return;
-    setSeasonPeriods(prev => prev.map(p => {
-      const tariff = seasonalTariffs.find((t: any) => t.id === p.tariffId);
-      if (!tariff) return p;
-      const days = calcPeriodDays(p.fromDate, p.toDate);
-      const extraCats = Math.max(0, numSelectedCats - 1);
-      const baseCost = Number(tariff.price_per_day) * days;
-      const supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * days;
-      return { ...p, days, baseCost, supplementCost, total: baseCost + supplementCost };
-    }));
-  }, [numSelectedCats, seasonalTariffs, calcPeriodDays]);
+    setSeasonPeriods(prev => {
+      if (prev.length === 0) return prev;
+      return prev.map(p => {
+        const tariff = seasonalTariffs?.find((t: any) => t.id === p.tariffId);
+        const days = calcPeriodDays(p.fromDate, p.toDate);
+        const costs = calcPeriodCost(days, tariff, numSelectedCats);
+        return { ...p, days, ...costs };
+      });
+    });
+  }, [numSelectedCats, seasonalTariffs, calcPeriodDays, calcPeriodCost]);
 
   const removePeriod = (idx: number) => {
     setSeasonPeriods(prev => prev.filter((_, i) => i !== idx));
