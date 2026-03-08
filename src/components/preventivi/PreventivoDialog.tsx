@@ -15,6 +15,10 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import { Plus, CalendarIcon, X, User, Cat, Home, Calendar as CalIcon, Sparkles, Percent, FileText, UserPlus } from "lucide-react";
 import { ClientDialog } from "@/components/clients/ClientDialog";
 import { toast } from "sonner";
@@ -24,6 +28,8 @@ import { cn } from "@/lib/utils";
 import { useClients } from "@/hooks/useClients";
 import { usePriceLists } from "@/hooks/usePensioneConfig";
 import { useClientCats } from "@/hooks/usePreventivi";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 // ── Types ──
 interface SeasonPeriod {
@@ -95,6 +101,15 @@ export function PreventivoDialog({
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
   const [newClientDialogOpen, setNewClientDialogOpen] = useState(false);
+  const [appointmentSyncDialog, setAppointmentSyncDialog] = useState<{
+    bookingId: string;
+    oldCheckIn: string;
+    oldCheckOut: string;
+    newCheckIn: string;
+    newCheckOut: string;
+    appointments: { id: string; appointment_type: string; scheduled_at: string }[];
+  } | null>(null);
+  const queryClient = useQueryClient();
   // ── Pricing state ──
   const [seasonPeriods, setSeasonPeriods] = useState<SeasonPeriod[]>([]);
   const [extraServices, setExtraServices] = useState<ExtraServiceLine[]>([]);
@@ -494,6 +509,9 @@ export function PreventivoDialog({
 
     try {
       if (editing) {
+        const datesChanged =
+          checkIn !== editing.check_in_date || checkOut !== editing.check_out_date;
+
         await onUpdate.mutateAsync({
           id: editing.id,
           client_id: clientId,
@@ -507,6 +525,21 @@ export function PreventivoDialog({
           cat_ids: selectedCats,
           price_breakdown: priceBreakdown,
         });
+
+        // Check if dates changed and there are existing appointments
+        if (datesChanged && editing.appointments && editing.appointments.length > 0) {
+          setAppointmentSyncDialog({
+            bookingId: editing.id,
+            oldCheckIn: editing.check_in_date,
+            oldCheckOut: editing.check_out_date,
+            newCheckIn: checkIn,
+            newCheckOut: checkOut,
+            appointments: editing.appointments,
+          });
+          toast.success("Prenotazione aggiornata");
+          return; // Don't close dialog yet, wait for appointment sync choice
+        }
+
         toast.success("Preventivo aggiornato");
       } else {
         await onCreate.mutateAsync({
@@ -527,6 +560,56 @@ export function PreventivoDialog({
     } catch (err: any) {
       toast.error(err.message || "Errore");
     }
+  };
+
+  const invalidateAppointmentQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ["appointments-by-date"] });
+    queryClient.invalidateQueries({ queryKey: ["appointments-by-range"] });
+    queryClient.invalidateQueries({ queryKey: ["appointments-all"] });
+    queryClient.invalidateQueries({ queryKey: ["appointment-counts"] });
+    queryClient.invalidateQueries({ queryKey: ["booking-appointments"] });
+    queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    queryClient.invalidateQueries({ queryKey: ["preventivi"] });
+  };
+
+  const handleUpdateAppointments = async () => {
+    if (!appointmentSyncDialog) return;
+    const { appointments, newCheckIn, newCheckOut } = appointmentSyncDialog;
+    try {
+      for (const appt of appointments) {
+        const oldDate = appt.scheduled_at;
+        const time = oldDate.split("T")[1]; // preserve time
+        const newDate = appt.appointment_type === "check_in" ? newCheckIn : newCheckOut;
+        await supabase
+          .from("appointments")
+          .update({ scheduled_at: `${newDate}T${time}` })
+          .eq("id", appt.id);
+      }
+      invalidateAppointmentQueries();
+      toast.success("Appuntamenti aggiornati alle nuove date");
+    } catch (err: any) {
+      toast.error(err.message || "Errore aggiornamento appuntamenti");
+    }
+    setAppointmentSyncDialog(null);
+    onOpenChange(false);
+  };
+
+  const handleDeleteAppointments = async () => {
+    if (!appointmentSyncDialog) return;
+    const { bookingId } = appointmentSyncDialog;
+    try {
+      await supabase.from("appointments").delete().eq("booking_id", bookingId);
+      await supabase
+        .from("bookings")
+        .update({ status: "confermata" as any })
+        .eq("id", bookingId);
+      invalidateAppointmentQueries();
+      toast.success("Appuntamenti eliminati, stato riportato a Confermata");
+    } catch (err: any) {
+      toast.error(err.message || "Errore eliminazione appuntamenti");
+    }
+    setAppointmentSyncDialog(null);
+    onOpenChange(false);
   };
 
   return (
@@ -981,6 +1064,28 @@ export function PreventivoDialog({
         // After closing, the clients list will refetch automatically via react-query
       }}
     />
+
+    <AlertDialog open={!!appointmentSyncDialog} onOpenChange={(open) => { if (!open) { setAppointmentSyncDialog(null); onOpenChange(false); } }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Date modificate – Appuntamenti esistenti</AlertDialogTitle>
+          <AlertDialogDescription>
+            Le date di check-in/check-out sono cambiate. Ci sono appuntamenti già fissati per questa prenotazione. Cosa vuoi fare?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+          <AlertDialogCancel onClick={() => { setAppointmentSyncDialog(null); onOpenChange(false); }}>
+            Non fare nulla
+          </AlertDialogCancel>
+          <Button variant="outline" onClick={handleDeleteAppointments}>
+            Elimina appuntamenti
+          </Button>
+          <Button onClick={handleUpdateAppointments}>
+            Aggiorna alle nuove date
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     </>
   );
 }
