@@ -53,6 +53,7 @@ export function useAppointmentCounts(date: string | undefined, appointmentType: 
     queryFn: async () => {
       if (!profile?.tenant_id || !date) return {};
       // Fetch all appointments of this type on this date
+      // Use timezone-aware range to cover the full local day
       const dayStart = `${date}T00:00:00`;
       const dayEnd = `${date}T23:59:59`;
       const { data, error } = await supabase
@@ -63,10 +64,14 @@ export function useAppointmentCounts(date: string | undefined, appointmentType: 
         .gte("scheduled_at", dayStart)
         .lte("scheduled_at", dayEnd);
       if (error) throw error;
-      // Count per time slot
+      // Count per time slot — extract HH:MM from the stored string directly
+      // scheduled_at is stored as "YYYY-MM-DDTHH:MM:00" without timezone
       const counts: Record<string, number> = {};
       for (const appt of data ?? []) {
-        const time = new Date(appt.scheduled_at).toTimeString().slice(0, 5);
+        // Extract time directly from the ISO string to avoid timezone shifts
+        const isoStr = appt.scheduled_at;
+        const tIndex = isoStr.indexOf("T");
+        const time = tIndex >= 0 ? isoStr.slice(tIndex + 1, tIndex + 6) : new Date(isoStr).toTimeString().slice(0, 5);
         counts[time] = (counts[time] || 0) + 1;
       }
       return counts;
