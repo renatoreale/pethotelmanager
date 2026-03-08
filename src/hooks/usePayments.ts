@@ -124,7 +124,7 @@ export interface Payment {
   booking_id: string;
   tenant_id: string;
   amount: number;
-  payment_type: "caparra" | "saldo" | "extra" | "rimborso";
+  payment_type: "caparra" | "saldo" | "extra" | "rimborso" | "manuale";
   payment_date: string;
   payment_method_id: string | null;
   method: string | null;
@@ -158,7 +158,7 @@ export function useCreatePayment() {
     mutationFn: async (input: {
       booking_id: string;
       amount: number;
-      payment_type: "caparra" | "saldo" | "extra" | "rimborso";
+      payment_type: "caparra" | "saldo" | "extra" | "rimborso" | "manuale";
       payment_date: string;
       payment_method_id: string;
       notes?: string;
@@ -192,7 +192,7 @@ export function useUpdatePayment() {
     mutationFn: async ({ id, ...updates }: {
       id: string;
       amount?: number;
-      payment_type?: "caparra" | "saldo" | "extra" | "rimborso";
+      payment_type?: "caparra" | "saldo" | "extra" | "rimborso" | "manuale";
       payment_date?: string;
       payment_method_id?: string | null;
       notes?: string | null;

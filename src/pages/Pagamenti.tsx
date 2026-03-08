@@ -32,6 +32,7 @@ const TYPE_LABELS: Record<string, string> = {
   saldo: "Saldo",
   extra: "Extra",
   rimborso: "Rimborso",
+  manuale: "Manuale",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -62,7 +63,7 @@ function calcTotals(payments: any[]) {
 
 interface TransactionFormData {
   amount: string;
-  payment_type: "caparra" | "saldo" | "extra" | "rimborso";
+  payment_type: "caparra" | "saldo" | "extra" | "rimborso" | "manuale";
   payment_date: string;
   payment_method_id: string;
   notes: string;
@@ -70,7 +71,7 @@ interface TransactionFormData {
 
 const emptyForm: TransactionFormData = {
   amount: "",
-  payment_type: "saldo",
+  payment_type: "manuale",
   payment_date: new Date().toISOString().slice(0, 10),
   payment_method_id: "",
   notes: "",
@@ -498,6 +499,7 @@ export default function Pagamenti() {
                     <SelectItem value="saldo">Saldo</SelectItem>
                     <SelectItem value="extra">Extra</SelectItem>
                     <SelectItem value="rimborso">Rimborso</SelectItem>
+                    <SelectItem value="manuale">Manuale</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
