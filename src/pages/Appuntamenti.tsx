@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import {
   useAppointmentsByDate,
   useAppointmentsByDateRange,
+  useAllAppointments,
   useConfirmAppointment,
   useDeleteAppointment,
   useUpdateAppointment,
