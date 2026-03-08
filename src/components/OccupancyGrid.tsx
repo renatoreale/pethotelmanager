@@ -172,7 +172,7 @@ export function OccupancyGrid({
                 return (
                   <th key={dateStr} className={cn(
                     "px-1 py-1.5 text-center font-medium min-w-[32px] border-r",
-                    isHighlight && "bg-destructive/20 ring-2 ring-inset ring-destructive/50",
+                    isHighlight && "bg-destructive/20",
                     isToday && !isHighlight && "bg-primary/10",
                     isWeekend && !isToday && !isHighlight && "bg-muted/30"
                   )}>
