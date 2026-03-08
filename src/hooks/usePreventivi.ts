@@ -33,12 +33,28 @@ export interface Preventivo {
   }[];
 }
 
-// Generate booking number: PRV-YYYYMMDD-XXXX
-function generateBookingNumber() {
-  const now = new Date();
-  const date = now.toISOString().slice(0, 10).replace(/-/g, "");
-  const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `PRV-${date}-${rand}`;
+// Generate booking number: YY + 3-digit counter (e.g. 26001)
+async function generateBookingNumber(tenantId: string): Promise<string> {
+  const yy = new Date().getFullYear().toString().slice(-2);
+  const prefix = yy;
+
+  // Find the highest existing number for this year
+  const { data } = await supabase
+    .from("bookings")
+    .select("booking_number")
+    .eq("tenant_id", tenantId)
+    .like("booking_number", `${prefix}%`)
+    .order("booking_number", { ascending: false })
+    .limit(1);
+
+  let counter = 1;
+  if (data && data.length > 0) {
+    const last = data[0].booking_number;
+    const lastNum = parseInt(last.slice(2), 10);
+    if (!isNaN(lastNum)) counter = lastNum + 1;
+  }
+
+  return `${prefix}${counter.toString().padStart(3, "0")}`;
 }
 
 export function usePreventivi() {
@@ -89,7 +105,7 @@ export function useCreatePreventivo() {
         .insert({
           ...booking,
           tenant_id: profile.tenant_id,
-          booking_number: generateBookingNumber(),
+          booking_number: await generateBookingNumber(profile.tenant_id),
           status: "preventivo" as const,
           created_by: user?.id ?? null,
           units_occupied: booking.units_occupied ?? 1,
