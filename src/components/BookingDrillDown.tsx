@@ -77,11 +77,21 @@ export function BookingDrillDown({ booking }: BookingDrillDownProps) {
         items.push({ label: e.name || e.label || "Extra", amount: Number(e.amount || e.total || 0) });
       });
     }
+    if (priceBreakdown.extraServices && Array.isArray(priceBreakdown.extraServices)) {
+      priceBreakdown.extraServices.forEach((e: any) => {
+        if (Number(e.total || e.amount || 0) > 0) {
+          items.push({ label: e.name || e.label || "Extra", amount: Number(e.total || e.amount || 0) });
+        }
+      });
+    }
     if (priceBreakdown.extra_km_cost && Number(priceBreakdown.extra_km_cost) > 0) {
       items.push({ label: `Trasporto (${priceBreakdown.extra_km ?? 0} km extra)`, amount: Number(priceBreakdown.extra_km_cost) });
     }
     return items;
   }, [priceBreakdown]);
+
+  // Extra days from date changes (check-in anticipato / check-out posticipato)
+  const extraDaysInfo = priceBreakdown?.extra_days_info ?? null;
 
   const discount = priceBreakdown?.discount ? Number(priceBreakdown.discount) : 0;
 
