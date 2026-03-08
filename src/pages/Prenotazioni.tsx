@@ -289,7 +289,7 @@ export default function Prenotazioni() {
                                       {t.label}
                                     </DropdownMenuItem>
                                   ))}
-                                  {!["check_in", "in_corso", "check_out", "chiusa"].includes(b.status) && (
+                                  {true && (
                                     <DropdownMenuItem
                                       className="text-destructive focus:text-destructive"
                                       onClick={() => setDeleting({ id: b.id, bookingNumber: b.booking_number })}
