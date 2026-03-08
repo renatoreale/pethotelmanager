@@ -184,6 +184,7 @@ export default function Appuntamenti() {
     const cats = appt.booking?.booking_cats?.map(bc => bc.cat?.name).filter(Boolean).join(", ") || "—";
     const bookingStatus = appt.booking?.status ?? "";
     const isIn = appt.appointment_type === "check_in";
+    const isLocked = ["chiusa", "cancellata", "rimborsata"].includes(bookingStatus);
 
     return (
       <TableRow key={appt.id} className={appt.confirmed ? "bg-green-50/50 dark:bg-green-950/20" : ""}>
@@ -203,33 +204,40 @@ export default function Appuntamenti() {
         <TableCell className="font-mono text-sm">{appt.booking?.booking_number ?? "—"}</TableCell>
         <TableCell><StatusBadge status={bookingStatus} /></TableCell>
         <TableCell>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleConfirmToggle(appt)}
-            className={cn(
-              "gap-1",
-              appt.confirmed
-                ? "text-green-600 hover:text-green-700"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {appt.confirmed ? <><CheckCircle2 className="h-4 w-4" /> Sì</> : <><XCircle className="h-4 w-4" /> No</>}
-          </Button>
+          {!isLocked ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleConfirmToggle(appt)}
+              className={cn(
+                "gap-1",
+                appt.confirmed
+                  ? "text-green-600 hover:text-green-700"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {appt.confirmed ? <><CheckCircle2 className="h-4 w-4" /> Sì</> : <><XCircle className="h-4 w-4" /> No</>}
+            </Button>
+          ) : (
+            <span className="text-xs text-muted-foreground">{appt.confirmed ? "Sì" : "No"}</span>
+          )}
         </TableCell>
         <TableCell className="text-sm text-muted-foreground max-w-[150px] truncate">{appt.notes || "—"}</TableCell>
         <TableCell>
-          <div className="flex gap-1">
-            <Button variant="ghost" size="icon" onClick={() => {
-              // For check_out appointments on in_corso bookings, use the special dialog
-              if (appt.appointment_type === "check_out" && appt.booking?.status === "in_corso") {
-                setEditingCheckout(appt);
-              } else {
-                setEditing(appt);
-              }
-            }}><Pencil className="h-4 w-4" /></Button>
-            <Button variant="ghost" size="icon" onClick={() => setDeleting(appt)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-          </div>
+          {!isLocked ? (
+            <div className="flex gap-1">
+              <Button variant="ghost" size="icon" onClick={() => {
+                if (appt.appointment_type === "check_out" && appt.booking?.status === "in_corso") {
+                  setEditingCheckout(appt);
+                } else {
+                  setEditing(appt);
+                }
+              }}><Pencil className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={() => setDeleting(appt)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+            </div>
+          ) : (
+            <div className="w-[68px] shrink-0" />
+          )}
         </TableCell>
       </TableRow>
     );
