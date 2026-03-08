@@ -130,6 +130,7 @@ export function useUpdatePreventivo() {
       deposit_amount?: number;
       notes?: string;
       cat_ids?: string[];
+      price_breakdown?: any;
     }) => {
       const { id, cat_ids, ...updates } = input;
 
