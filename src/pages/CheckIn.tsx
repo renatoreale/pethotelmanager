@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,15 +14,21 @@ import {
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
-import { LogIn, User, Cat, Calendar, CheckCircle2, CreditCard, PawPrint } from "lucide-react";
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarWidget } from "@/components/ui/calendar";
+import { LogIn, User, Cat, Calendar, CheckCircle2, CreditCard, PawPrint, CalendarIcon } from "lucide-react";
 import { AutocompleteSearch } from "@/components/AutocompleteSearch";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useBookings, useTransitionBooking } from "@/hooks/useBookings";
 import { useInsertCatRegistry } from "@/hooks/useCatRegistry";
 import { useCreatePayment, usePaymentMethods } from "@/hooks/usePayments";
 import { useAuth } from "@/hooks/useAuth";
+import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -43,12 +49,17 @@ export default function CheckIn() {
   const { profile } = useAuth();
   const { data: bookings, isLoading } = useBookings();
   const { data: paymentMethods } = usePaymentMethods();
+  const { data: tenantConfig } = useTenantConfig();
   const transitionBooking = useTransitionBooking();
   const insertCatRegistry = useInsertCatRegistry();
   const createPayment = useCreatePayment();
 
   const [search, setSearch] = useState("");
   const [confirmBooking, setConfirmBooking] = useState<any>(null);
+
+  // Date state
+  const [actualCheckInDate, setActualCheckInDate] = useState<Date>(new Date());
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   // Payment form state
   const [addPayment, setAddPayment] = useState(false);
@@ -62,6 +73,40 @@ export default function CheckIn() {
   const [catDetails, setCatDetails] = useState<CatDetails[]>([]);
   const [loadingCats, setLoadingCats] = useState(false);
   const [bookingPaidAmount, setBookingPaidAmount] = useState(0);
+
+  const stayCalcType = tenantConfig?.stay_calc_type ?? "notti";
+  const countCheckinDay = tenantConfig?.count_checkin_day ?? true;
+  const countCheckoutDay = tenantConfig?.count_checkout_day ?? true;
+
+  const calcDuration = (ciStr: string, coStr: string) => {
+    if (!ciStr || !coStr) return 0;
+    const diff = differenceInDays(parseISO(coStr), parseISO(ciStr));
+    if (diff < 0) return 0;
+    if (stayCalcType === "notti") return diff;
+    let days = diff + 1;
+    if (!countCheckinDay) days -= 1;
+    if (!countCheckoutDay) days -= 1;
+    return Math.max(0, days);
+  };
+
+  // Recalculated values when date changes
+  const recalculated = useMemo(() => {
+    if (!confirmBooking) return null;
+    const originalCiStr = confirmBooking.check_in_date;
+    const coStr = confirmBooking.check_out_date;
+    const newCiStr = format(actualCheckInDate, "yyyy-MM-dd");
+
+    const originalDays = calcDuration(originalCiStr, coStr);
+    const newDays = calcDuration(newCiStr, coStr);
+
+    const originalTotal = Number(confirmBooking.total_amount ?? 0);
+    const dailyRate = originalDays > 0 ? originalTotal / originalDays : 0;
+    const newTotal = Math.round(dailyRate * newDays * 100) / 100;
+
+    const dateChanged = newCiStr !== originalCiStr;
+
+    return { newCiStr, originalDays, newDays, dailyRate, newTotal, dateChanged, originalTotal };
+  }, [confirmBooking, actualCheckInDate, stayCalcType, countCheckinDay, countCheckoutDay]);
 
   const checkInBookings = useMemo(() => {
     if (!bookings) return [];
@@ -94,6 +139,7 @@ export default function CheckIn() {
     setConfirmBooking(b);
     resetForm();
     setBookingPaidAmount(0);
+    setActualCheckInDate(parseISO(b.check_in_date));
 
     // Load payments to calculate residuo
     const { data: payments } = await supabase
@@ -140,7 +186,7 @@ export default function CheckIn() {
 
   const handleCheckIn = async () => {
     const booking = confirmBooking;
-    if (!booking) return;
+    if (!booking || !recalculated) return;
 
     if (addPayment) {
       const amount = parseFloat(txAmount);
@@ -162,13 +208,19 @@ export default function CheckIn() {
           await supabase.from("cats").update(updates).eq("id", cat.id);
         }
       }
-      // Invalidate cats query so Gatti page refreshes
       queryClient.invalidateQueries({ queryKey: ["cats"] });
 
-      // 2. Transition booking
-      await transitionBooking.mutateAsync({ id: booking.id, newStatus: "in_corso" });
+      // 2. Update booking date + total if changed
+      const bookingUpdates: any = { status: "in_corso" as const };
+      if (recalculated.dateChanged) {
+        bookingUpdates.check_in_date = recalculated.newCiStr;
+        bookingUpdates.total_amount = recalculated.newTotal;
+      }
+      await supabase.from("bookings").update(bookingUpdates).eq("id", booking.id);
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["preventivi"] });
 
-      // 3. Sync cats into registry (insert missing + refresh microchip/name)
+      // 3. Sync cats into registry
       const clientName = booking.client
         ? `${booking.client.first_name} ${booking.client.last_name}`
         : "—";
@@ -181,7 +233,7 @@ export default function CheckIn() {
           client_name: clientName,
           cat_name: cat.name,
           microchip: cat.microchip || null,
-          check_in_date: booking.check_in_date,
+          check_in_date: recalculated.newCiStr,
         }));
 
         const catIds = catDetails.map(c => c.id);
@@ -200,17 +252,16 @@ export default function CheckIn() {
 
         await Promise.all(
           catDetails.map(async (cat) => {
-            const { error } = await supabase
+            await supabase
               .from("cat_registry")
               .update({
                 microchip: cat.microchip || null,
                 cat_name: cat.name,
                 client_name: clientName,
+                check_in_date: recalculated.newCiStr,
               })
               .eq("booking_id", booking.id)
               .eq("cat_id", cat.id);
-
-            if (error) throw error;
           })
         );
 
@@ -237,6 +288,8 @@ export default function CheckIn() {
       setIsSubmitting(false);
     }
   };
+
+  const stayLabel = stayCalcType === "notti" ? "notti" : "giorni";
 
   return (
     <div className="space-y-6">
@@ -314,7 +367,7 @@ export default function CheckIn() {
             </DialogTitle>
           </DialogHeader>
 
-          {confirmBooking && (
+          {confirmBooking && recalculated && (
             <div className="space-y-4">
               {/* Booking summary */}
               <div className="rounded-md bg-muted p-3 space-y-1.5 text-sm">
@@ -329,26 +382,84 @@ export default function CheckIn() {
                   <Cat className="h-3.5 w-3.5 text-muted-foreground" />
                   <span>{(confirmBooking.booking_cats ?? []).map((bc: any) => bc.cat?.name).filter(Boolean).join(", ") || "—"}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+              </div>
+
+              {/* Date picker for actual check-in date */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Data effettiva di check-in</Label>
+                <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !actualCheckInDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {format(actualCheckInDate, "dd MMMM yyyy", { locale: it })}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarWidget
+                      mode="single"
+                      selected={actualCheckInDate}
+                      onSelect={(d) => {
+                        if (d) {
+                          setActualCheckInDate(d);
+                          setDatePickerOpen(false);
+                        }
+                      }}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                {recalculated.dateChanged && (
+                  <p className="text-xs text-muted-foreground">
+                    Data originale: {format(parseISO(confirmBooking.check_in_date), "dd MMM yyyy", { locale: it })}
+                    {" → "} Check-out: {format(parseISO(confirmBooking.check_out_date), "dd MMM yyyy", { locale: it })}
+                  </p>
+                )}
+              </div>
+
+              {/* Days & totals recap */}
+              <div className="rounded-md border p-3 space-y-1.5 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Periodo</span>
                   <span>
-                    {format(parseISO(confirmBooking.check_in_date), "dd MMM yyyy", { locale: it })} → {format(parseISO(confirmBooking.check_out_date), "dd MMM yyyy", { locale: it })}
+                    {format(actualCheckInDate, "dd/MM/yyyy")} → {format(parseISO(confirmBooking.check_out_date), "dd/MM/yyyy")}
                   </span>
                 </div>
-                {confirmBooking.total_amount != null && (() => {
-                  const total = Number(confirmBooking.total_amount);
-                  const residuo = total - bookingPaidAmount;
-                  return (
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span>
-                        Totale: <strong>€ {total.toFixed(2)}</strong>
-                        {" · "}Pagato: <strong className="text-accent">€ {bookingPaidAmount.toFixed(2)}</strong>
-                        {" · "}Residuo: <strong className={residuo > 0 ? "text-warning-foreground" : "text-accent"}>€ {residuo.toFixed(2)}</strong>
-                      </span>
-                    </div>
-                  );
-                })()}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Durata</span>
+                  <span className="font-medium">
+                    {recalculated.newDays} {stayLabel}
+                    {recalculated.dateChanged && recalculated.newDays !== recalculated.originalDays && (
+                      <span className="text-muted-foreground ml-1">(era {recalculated.originalDays})</span>
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Totale</span>
+                  <span className="font-bold">
+                    € {recalculated.newTotal.toFixed(2)}
+                    {recalculated.dateChanged && recalculated.newTotal !== recalculated.originalTotal && (
+                      <span className="text-muted-foreground font-normal ml-1 line-through">€ {recalculated.originalTotal.toFixed(2)}</span>
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Pagato</span>
+                  <span>€ {bookingPaidAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between border-t pt-1.5">
+                  <span className="text-muted-foreground font-medium">Residuo</span>
+                  <span className={cn("font-bold", (recalculated.newTotal - bookingPaidAmount) > 0 ? "text-destructive" : "")}>
+                    € {(recalculated.newTotal - bookingPaidAmount).toFixed(2)}
+                  </span>
+                </div>
               </div>
 
               {/* Cat details section */}
@@ -361,7 +472,7 @@ export default function CheckIn() {
                           <PawPrint className="h-4 w-4 text-muted-foreground" />
                           <span className="font-medium">{cat.name}</span>
                           {!cat.microchip && (
-                            <Badge variant="outline" className="text-[10px] h-5 text-warning-foreground border-warning">
+                            <Badge variant="outline" className="text-[10px] h-5 text-destructive border-destructive">
                               Dati incompleti
                             </Badge>
                           )}

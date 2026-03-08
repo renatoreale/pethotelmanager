@@ -14,15 +14,21 @@ import {
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
-import { LogOut, User, Cat, Calendar, CheckCircle2, CreditCard, PawPrint } from "lucide-react";
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarWidget } from "@/components/ui/calendar";
+import { LogOut, User, Cat, Calendar, CheckCircle2, CreditCard, PawPrint, CalendarIcon } from "lucide-react";
 import { AutocompleteSearch } from "@/components/AutocompleteSearch";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useBookings, useTransitionBooking } from "@/hooks/useBookings";
 import { useUpdateCatRegistryCheckout } from "@/hooks/useCatRegistry";
 import { useCreatePayment, usePaymentMethods } from "@/hooks/usePayments";
 import { useAuth } from "@/hooks/useAuth";
+import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -43,12 +49,17 @@ export default function CheckOut() {
   const { profile } = useAuth();
   const { data: bookings, isLoading } = useBookings();
   const { data: paymentMethods } = usePaymentMethods();
+  const { data: tenantConfig } = useTenantConfig();
   const transitionBooking = useTransitionBooking();
   const updateCatRegistryCheckout = useUpdateCatRegistryCheckout();
   const createPayment = useCreatePayment();
 
   const [search, setSearch] = useState("");
   const [confirmBooking, setConfirmBooking] = useState<any>(null);
+
+  // Date state
+  const [actualCheckOutDate, setActualCheckOutDate] = useState<Date>(new Date());
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   // Payment form state
   const [addPayment, setAddPayment] = useState(false);
@@ -58,9 +69,43 @@ export default function CheckOut() {
   const [txNotes, setTxNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Cat details state (read-only display)
+  // Cat details state
   const [catDetails, setCatDetails] = useState<CatInfo[]>([]);
   const [bookingPaidAmount, setBookingPaidAmount] = useState(0);
+
+  const stayCalcType = tenantConfig?.stay_calc_type ?? "notti";
+  const countCheckinDay = tenantConfig?.count_checkin_day ?? true;
+  const countCheckoutDay = tenantConfig?.count_checkout_day ?? true;
+
+  const calcDuration = (ciStr: string, coStr: string) => {
+    if (!ciStr || !coStr) return 0;
+    const diff = differenceInDays(parseISO(coStr), parseISO(ciStr));
+    if (diff < 0) return 0;
+    if (stayCalcType === "notti") return diff;
+    let days = diff + 1;
+    if (!countCheckinDay) days -= 1;
+    if (!countCheckoutDay) days -= 1;
+    return Math.max(0, days);
+  };
+
+  // Recalculated values when date changes
+  const recalculated = useMemo(() => {
+    if (!confirmBooking) return null;
+    const ciStr = confirmBooking.check_in_date;
+    const originalCoStr = confirmBooking.check_out_date;
+    const newCoStr = format(actualCheckOutDate, "yyyy-MM-dd");
+
+    const originalDays = calcDuration(ciStr, originalCoStr);
+    const newDays = calcDuration(ciStr, newCoStr);
+
+    const originalTotal = Number(confirmBooking.total_amount ?? 0);
+    const dailyRate = originalDays > 0 ? originalTotal / originalDays : 0;
+    const newTotal = Math.round(dailyRate * newDays * 100) / 100;
+
+    const dateChanged = newCoStr !== originalCoStr;
+
+    return { newCoStr, originalDays, newDays, dailyRate, newTotal, dateChanged, originalTotal };
+  }, [confirmBooking, actualCheckOutDate, stayCalcType, countCheckinDay, countCheckoutDay]);
 
   const checkOutBookings = useMemo(() => {
     if (!bookings) return [];
@@ -93,6 +138,7 @@ export default function CheckOut() {
     setConfirmBooking(b);
     resetForm();
     setBookingPaidAmount(0);
+    setActualCheckOutDate(parseISO(b.check_out_date));
 
     // Load payments to calculate residuo
     const { data: payments } = await supabase
@@ -137,7 +183,7 @@ export default function CheckOut() {
 
   const handleCheckOut = async () => {
     const booking = confirmBooking;
-    if (!booking) return;
+    if (!booking || !recalculated) return;
 
     if (addPayment) {
       const amount = parseFloat(txAmount);
@@ -166,14 +212,13 @@ export default function CheckOut() {
       queryClient.invalidateQueries({ queryKey: ["cats"] });
 
       // 2. Update cat registry: set check_out_date and reason
-      const today = format(new Date(), "yyyy-MM-dd");
       await updateCatRegistryCheckout.mutateAsync({
         bookingId: booking.id,
-        checkOutDate: today,
+        checkOutDate: recalculated.newCoStr,
         reason: "Ritorno a casa",
       });
 
-      // 3. Also update microchip in registry rows
+      // Also update microchip in registry rows
       await Promise.all(
         catDetails.map(async (cat) => {
           await supabase
@@ -189,10 +234,17 @@ export default function CheckOut() {
       );
       queryClient.invalidateQueries({ queryKey: ["cat-registry"] });
 
-      // 4. Transition booking to "chiusa"
-      await transitionBooking.mutateAsync({ id: booking.id, newStatus: "chiusa" });
+      // 3. Update booking date + total + transition to chiusa
+      const bookingUpdates: any = { status: "chiusa" as const };
+      if (recalculated.dateChanged) {
+        bookingUpdates.check_out_date = recalculated.newCoStr;
+        bookingUpdates.total_amount = recalculated.newTotal;
+      }
+      await supabase.from("bookings").update(bookingUpdates).eq("id", booking.id);
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["preventivi"] });
 
-      // 5. Create payment if enabled
+      // 4. Create payment if enabled
       if (addPayment) {
         await createPayment.mutateAsync({
           booking_id: booking.id,
@@ -212,6 +264,8 @@ export default function CheckOut() {
       setIsSubmitting(false);
     }
   };
+
+  const stayLabel = stayCalcType === "notti" ? "notti" : "giorni";
 
   return (
     <div className="space-y-6">
@@ -289,7 +343,7 @@ export default function CheckOut() {
             </DialogTitle>
           </DialogHeader>
 
-          {confirmBooking && (
+          {confirmBooking && recalculated && (
             <div className="space-y-4">
               {/* Booking summary */}
               <div className="rounded-md bg-muted p-3 space-y-1.5 text-sm">
@@ -304,26 +358,91 @@ export default function CheckOut() {
                   <Cat className="h-3.5 w-3.5 text-muted-foreground" />
                   <span>{(confirmBooking.booking_cats ?? []).map((bc: any) => bc.cat?.name).filter(Boolean).join(", ") || "—"}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+              </div>
+
+              {/* Date picker for actual check-out date */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Data effettiva di check-out</Label>
+                <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !actualCheckOutDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {format(actualCheckOutDate, "dd MMMM yyyy", { locale: it })}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarWidget
+                      mode="single"
+                      selected={actualCheckOutDate}
+                      onSelect={(d) => {
+                        if (d) {
+                          setActualCheckOutDate(d);
+                          setDatePickerOpen(false);
+                        }
+                      }}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                {recalculated.dateChanged && (
+                  <p className="text-xs text-muted-foreground">
+                    Check-in: {format(parseISO(confirmBooking.check_in_date), "dd MMM yyyy", { locale: it })}
+                    {" → "} Data originale uscita: {format(parseISO(confirmBooking.check_out_date), "dd MMM yyyy", { locale: it })}
+                  </p>
+                )}
+              </div>
+
+              {/* Days & totals recap */}
+              <div className="rounded-md border p-3 space-y-1.5 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Periodo</span>
                   <span>
-                    {format(parseISO(confirmBooking.check_in_date), "dd MMM yyyy", { locale: it })} → {format(parseISO(confirmBooking.check_out_date), "dd MMM yyyy", { locale: it })}
+                    {format(parseISO(confirmBooking.check_in_date), "dd/MM/yyyy")} → {format(actualCheckOutDate, "dd/MM/yyyy")}
                   </span>
                 </div>
-                {confirmBooking.total_amount != null && (() => {
-                  const total = Number(confirmBooking.total_amount);
-                  const residuo = total - bookingPaidAmount;
-                  return (
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span>
-                        Totale: <strong>€ {total.toFixed(2)}</strong>
-                        {" · "}Pagato: <strong>€ {bookingPaidAmount.toFixed(2)}</strong>
-                        {" · "}Residuo: <strong className={residuo > 0 ? "text-destructive" : ""}>€ {residuo.toFixed(2)}</strong>
-                      </span>
-                    </div>
-                  );
-                })()}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Durata</span>
+                  <span className="font-medium">
+                    {recalculated.newDays} {stayLabel}
+                    {recalculated.dateChanged && recalculated.newDays !== recalculated.originalDays && (
+                      <span className="text-muted-foreground ml-1">(era {recalculated.originalDays})</span>
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Totale</span>
+                  <span className="font-bold">
+                    € {recalculated.newTotal.toFixed(2)}
+                    {recalculated.dateChanged && recalculated.newTotal !== recalculated.originalTotal && (
+                      <span className="text-muted-foreground font-normal ml-1 line-through">€ {recalculated.originalTotal.toFixed(2)}</span>
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Pagato</span>
+                  <span>€ {bookingPaidAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between border-t pt-1.5">
+                  <span className="text-muted-foreground font-medium">Residuo</span>
+                  <span className={cn("font-bold", (recalculated.newTotal - bookingPaidAmount) > 0 ? "text-destructive" : "")}>
+                    € {(recalculated.newTotal - bookingPaidAmount).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Registry info */}
+              <div className="rounded-md bg-muted/50 border p-3 text-sm">
+                <p className="text-muted-foreground">
+                  Il registro gatti verrà aggiornato con la data di check-out selezionata e motivazione <strong>"Ritorno a casa"</strong>.
+                </p>
               </div>
 
               {/* Cat details section */}
@@ -388,6 +507,7 @@ export default function CheckOut() {
                               <Input
                                 type="number"
                                 step="0.1"
+                                min="0"
                                 value={cat.weight_kg}
                                 onChange={e => updateCatField(cat.id, "weight_kg", e.target.value)}
                                 placeholder="Es. 4.5"
@@ -401,14 +521,7 @@ export default function CheckOut() {
                 </Accordion>
               )}
 
-              {/* Registry info */}
-              <div className="rounded-md bg-muted/50 border p-3 text-sm">
-                <p className="text-muted-foreground">
-                  Il registro gatti verrà aggiornato con la data di check-out odierna e motivazione <strong>"Ritorno a casa"</strong>.
-                </p>
-              </div>
-
-              {/* Payment toggle */}
+              {/* Toggle for adding payment */}
               <div className="flex items-center gap-3 pt-1">
                 <Switch id="add-payment" checked={addPayment} onCheckedChange={setAddPayment} />
                 <Label htmlFor="add-payment" className="text-sm font-medium cursor-pointer">
