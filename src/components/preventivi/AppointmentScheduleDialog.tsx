@@ -130,7 +130,7 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Conferma e Fissa Appuntamenti</DialogTitle>
+          <DialogTitle>Fissa Appuntamenti</DialogTitle>
         </DialogHeader>
 
         {booking && (
