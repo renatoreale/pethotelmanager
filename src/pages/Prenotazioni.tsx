@@ -16,7 +16,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, CalendarDays, MoreHorizontal, Pencil } from "lucide-react";
+import { Search, CalendarDays, MoreHorizontal, Pencil, CalendarClock } from "lucide-react";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { PreventivoDialog } from "@/components/preventivi/PreventivoDialog";
 import { toast } from "sonner";
@@ -203,9 +203,14 @@ export default function Prenotazioni() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => setEditingBooking(b)} title="Modifica">
+                            <Button variant="ghost" size="icon" onClick={() => setEditingBooking(b)} title="Modifica prenotazione">
                               <Pencil className="h-4 w-4" />
                             </Button>
+                            {["appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato"].includes(b.status) && (
+                              <Button variant="ghost" size="icon" onClick={() => setSchedulingBooking(b)} title="Modifica appuntamenti">
+                                <CalendarClock className="h-4 w-4" />
+                              </Button>
+                            )}
                             {transitions.length > 0 && (
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
