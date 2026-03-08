@@ -26,6 +26,8 @@ import {
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 const TYPE_LABELS: Record<string, string> = {
   caparra: "Caparra",
@@ -93,6 +95,7 @@ function MoneyBadge({ value, variant }: { value: number; variant: "total" | "pai
 }
 
 export default function Pagamenti() {
+  const queryClient = useQueryClient();
   const { data: bookings, isLoading } = useAllBookingsWithPayments();
   const { data: paymentMethods } = usePaymentMethods();
   const createPayment = useCreatePayment();
@@ -109,6 +112,7 @@ export default function Pagamenti() {
   const [txBookingId, setTxBookingId] = useState<string>("");
   const [txForm, setTxForm] = useState<TransactionFormData>(emptyForm);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editingTotal, setEditingTotal] = useState<string | null>(null);
 
   // Keep selectedBooking in sync with fresh data from the query cache
   useEffect(() => {
@@ -167,6 +171,7 @@ export default function Pagamenti() {
 
   const openBookingTransactions = (booking: any) => {
     setSelectedBooking(booking);
+    setEditingTotal(null);
   };
 
   const openNewTx = (bookingId: string) => {
@@ -224,7 +229,20 @@ export default function Pagamenti() {
     setDeleteId(null);
   };
 
-  // Global totals
+  const saveBookingTotal = async (newTotal: number) => {
+    if (!selectedBooking) return;
+    try {
+      await supabase.from("bookings").update({ total_amount: newTotal }).eq("id", selectedBooking.id);
+      queryClient.invalidateQueries({ queryKey: ["bookings-with-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["preventivi"] });
+      setEditingTotal(null);
+      toast.success("Totale aggiornato");
+    } catch {
+      toast.error("Errore nell'aggiornamento del totale");
+    }
+  };
+
   const globalTotals = useMemo(() => {
     if (!clientGroups.length) return { total: 0, paid: 0, remaining: 0 };
     let total = 0, paid = 0;
@@ -414,7 +432,37 @@ export default function Pagamenti() {
             return (
               <>
                 <div className="grid grid-cols-3 gap-3">
-                  <MoneyBadge value={bTotal} variant="total" />
+                  {editingTotal !== null ? (
+                    <div className="rounded-lg border p-2 text-center space-y-1">
+                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Totale</div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs">€</span>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          className="h-7 text-sm font-bold text-center"
+                          value={editingTotal}
+                          onChange={e => setEditingTotal(e.target.value)}
+                          autoFocus
+                          onKeyDown={e => {
+                            if (e.key === "Enter") {
+                              const v = parseFloat(editingTotal);
+                              if (!isNaN(v)) saveBookingTotal(v);
+                            }
+                            if (e.key === "Escape") setEditingTotal(null);
+                          }}
+                        />
+                      </div>
+                      <div className="flex gap-1 justify-center">
+                        <Button size="sm" variant="ghost" className="h-5 text-[10px] px-1.5" onClick={() => setEditingTotal(null)}>Annulla</Button>
+                        <Button size="sm" className="h-5 text-[10px] px-1.5" onClick={() => { const v = parseFloat(editingTotal); if (!isNaN(v)) saveBookingTotal(v); }}>Salva</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button type="button" className="text-left" onClick={() => setEditingTotal(String(bTotal))} title="Clicca per modificare il totale">
+                      <MoneyBadge value={bTotal} variant="total" />
+                    </button>
+                  )}
                   <MoneyBadge value={bNet} variant="paid" />
                   <MoneyBadge value={bRemaining} variant="remaining" />
                 </div>
