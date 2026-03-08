@@ -1,13 +1,48 @@
-import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, User, Cat, Mail, Phone, Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useClients } from "@/hooks/useClients";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface SearchableItem {
   label: string;
   value: string;
   type: "cliente" | "gatto" | "email" | "telefono" | "prenotazione";
+}
+
+const ACTIVE_STATUSES = [
+  "confermata",
+  "appuntamento_in_fissato",
+  "appuntamento_out_fissato",
+  "appuntamento_in_out_fissato",
+  "check_in",
+  "in_corso",
+  "check_out",
+];
+
+function useActiveBookingSuggestions() {
+  const { profile } = useAuth();
+  return useQuery({
+    queryKey: ["autocomplete-suggestions", profile?.tenant_id],
+    queryFn: async () => {
+      if (!profile?.tenant_id) return [];
+      const { data, error } = await supabase
+        .from("bookings")
+        .select(`
+          booking_number,
+          client:clients(id, first_name, last_name, email, phone),
+          booking_cats(cat:cats(name))
+        `)
+        .eq("tenant_id", profile.tenant_id)
+        .in("status", ACTIVE_STATUSES as any);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!profile?.tenant_id,
+    staleTime: 30_000,
+  });
 }
 
 interface AutocompleteSearchProps {
@@ -39,32 +74,35 @@ export function AutocompleteSearch({ value, onChange, placeholder, className }: 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { data: clients } = useClients();
+  const { data: bookings } = useActiveBookingSuggestions();
 
-  // Build searchable items from all clients
   const items = useMemo<SearchableItem[]>(() => {
-    if (!clients) return [];
+    if (!bookings) return [];
     const result: SearchableItem[] = [];
     const seen = new Set<string>();
-    for (const c of clients) {
-      const name = `${c.first_name} ${c.last_name}`;
-      if (!seen.has(`c:${name}`)) { seen.add(`c:${name}`); result.push({ label: name, value: name, type: "cliente" }); }
-      if (c.email && !seen.has(`e:${c.email}`)) { seen.add(`e:${c.email}`); result.push({ label: c.email, value: c.email, type: "email" }); }
-      if (c.phone && !seen.has(`p:${c.phone}`)) { seen.add(`p:${c.phone}`); result.push({ label: c.phone, value: c.phone, type: "telefono" }); }
-      const cats = (c as any).cats;
-      if (Array.isArray(cats)) {
-        for (const cat of cats) {
-          if (cat.name && !seen.has(`g:${cat.name}`)) { seen.add(`g:${cat.name}`); result.push({ label: cat.name, value: cat.name, type: "gatto" }); }
-        }
+    for (const b of bookings) {
+      const client = b.client as any;
+      if (client) {
+        const name = `${client.first_name} ${client.last_name}`;
+        if (!seen.has(`c:${name}`)) { seen.add(`c:${name}`); result.push({ label: name, value: name, type: "cliente" }); }
+        if (client.email && !seen.has(`e:${client.email}`)) { seen.add(`e:${client.email}`); result.push({ label: client.email, value: client.email, type: "email" }); }
+        if (client.phone && !seen.has(`p:${client.phone}`)) { seen.add(`p:${client.phone}`); result.push({ label: client.phone, value: client.phone, type: "telefono" }); }
+      }
+      for (const bc of (b.booking_cats ?? []) as any[]) {
+        const catName = bc.cat?.name;
+        if (catName && !seen.has(`g:${catName}`)) { seen.add(`g:${catName}`); result.push({ label: catName, value: catName, type: "gatto" }); }
+      }
+      if (b.booking_number && !seen.has(`b:${b.booking_number}`)) {
+        seen.add(`b:${b.booking_number}`);
+        result.push({ label: b.booking_number, value: b.booking_number, type: "prenotazione" });
       }
     }
     return result;
-  }, [clients]);
+  }, [bookings]);
 
   const suggestions = useMemo(() => {
     if (!value.trim() || value.trim().length < 2) return [];
     const q = value.toLowerCase();
-    // Deduplicate by value+type
     const seen = new Set<string>();
     return items.filter((item) => {
       const key = `${item.type}:${item.value}`;
@@ -80,7 +118,6 @@ export function AutocompleteSearch({ value, onChange, placeholder, className }: 
     setFocusIndex(-1);
   }, [suggestions, value]);
 
-  // Close on click outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
