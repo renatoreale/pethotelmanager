@@ -84,13 +84,15 @@ export function useCreatePreventivo() {
       if (!profile?.tenant_id) throw new Error("Tenant non configurato");
       const { cat_ids, ...booking } = input;
 
+      const bookingNumber = await getNextBookingNumber(profile.tenant_id);
+
       // Insert booking
       const { data: newBooking, error: bookingError } = await supabase
         .from("bookings")
         .insert({
           ...booking,
           tenant_id: profile.tenant_id,
-          booking_number: generateBookingNumber(),
+          booking_number: bookingNumber,
           status: "preventivo" as const,
           created_by: user?.id ?? null,
           units_occupied: booking.units_occupied ?? 1,
