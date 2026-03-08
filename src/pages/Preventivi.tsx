@@ -11,6 +11,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, Search, CheckCircle2, FileText } from "lucide-react";
+import { ConfirmPreventivoDialog } from "@/components/preventivi/ConfirmPreventivoDialog";
 import { toast } from "sonner";
 import { format, differenceInDays, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
@@ -67,14 +68,18 @@ export default function Preventivi() {
   const openNew = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (p: any) => { setEditing(p); setDialogOpen(true); };
 
-  const handleConfirm = async () => {
+  const handleConfirm = async (depositData: {
+    amount: number;
+    payment_date: string;
+    payment_method_id: string;
+    notes?: string;
+  }) => {
     if (!confirming) return;
-    try {
-      await confirmPreventivo.mutateAsync(confirming.id);
-      toast.success("Preventivo confermato → Prenotazione");
-    } catch (err: any) {
-      toast.error(err.message || "Errore");
-    }
+    await confirmPreventivo.mutateAsync({
+      id: confirming.id,
+      deposit: depositData,
+    });
+    toast.success("Preventivo confermato → Prenotazione con caparra registrata");
     setConfirming(null);
   };
 
@@ -194,20 +199,13 @@ export default function Preventivi() {
         countCheckoutDay={countCheckoutDay}
       />
 
-      <AlertDialog open={!!confirming} onOpenChange={() => setConfirming(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confermare il preventivo?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirming && `Il preventivo ${confirming.booking_number} diventerà una prenotazione confermata.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annulla</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>Conferma</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmPreventivoDialog
+        open={!!confirming}
+        onOpenChange={(v) => { if (!v) setConfirming(null); }}
+        preventivo={confirming}
+        onConfirm={handleConfirm}
+        isLoading={confirmPreventivo.isPending}
+      />
 
       <AlertDialog open={!!deleting} onOpenChange={() => setDeleting(null)}>
         <AlertDialogContent>

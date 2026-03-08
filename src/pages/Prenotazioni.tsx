@@ -16,9 +16,10 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, CalendarDays, MoreHorizontal, Pencil, CalendarClock } from "lucide-react";
+import { Search, CalendarDays, MoreHorizontal, Pencil, CalendarClock, CreditCard } from "lucide-react";
 import { AutocompleteSearch } from "@/components/AutocompleteSearch";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
+import { BookingPaymentsDialog } from "@/components/payments/BookingPaymentsDialog";
 import { PreventivoDialog } from "@/components/preventivi/PreventivoDialog";
 import { toast } from "sonner";
 import { format, parseISO, differenceInDays } from "date-fns";
@@ -76,6 +77,7 @@ export default function Prenotazioni() {
   const [transitioning, setTransitioning] = useState<{ id: string; bookingNumber: string; newStatus: string; label: string } | null>(null);
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
   const [editingBooking, setEditingBooking] = useState<any>(null);
+  const [paymentsBooking, setPaymentsBooking] = useState<any>(null);
 
   const { data: bookings, isLoading } = useBookings(statusFilter);
   const transitionBooking = useTransitionBooking();
@@ -220,6 +222,9 @@ export default function Prenotazioni() {
                             <Button variant="ghost" size="icon" onClick={() => setEditingBooking(b)} title="Modifica prenotazione">
                               <Pencil className="h-4 w-4" />
                             </Button>
+                            <Button variant="ghost" size="icon" onClick={() => setPaymentsBooking(b)} title="Pagamenti">
+                              <CreditCard className="h-4 w-4" />
+                            </Button>
                             {["appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato"].includes(b.status) && (
                               <Button variant="ghost" size="icon" onClick={() => setSchedulingBooking(b)} title="Modifica appuntamenti">
                                 <CalendarClock className="h-4 w-4" />
@@ -302,6 +307,12 @@ export default function Prenotazioni() {
         stayCalcType={stayCalcType}
         countCheckinDay={countCheckinDay}
         countCheckoutDay={countCheckoutDay}
+      />
+
+      <BookingPaymentsDialog
+        open={!!paymentsBooking}
+        onOpenChange={(v) => { if (!v) setPaymentsBooking(null); }}
+        booking={paymentsBooking}
       />
     </div>
   );

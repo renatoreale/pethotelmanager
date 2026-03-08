@@ -539,6 +539,41 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_methods: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_methods_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
@@ -549,6 +584,7 @@ export type Database = {
           method: string | null
           notes: string | null
           payment_date: string
+          payment_method_id: string | null
           payment_type: Database["public"]["Enums"]["payment_type"]
           tenant_id: string
         }
@@ -561,6 +597,7 @@ export type Database = {
           method?: string | null
           notes?: string | null
           payment_date?: string
+          payment_method_id?: string | null
           payment_type: Database["public"]["Enums"]["payment_type"]
           tenant_id: string
         }
@@ -573,6 +610,7 @@ export type Database = {
           method?: string | null
           notes?: string | null
           payment_date?: string
+          payment_method_id?: string | null
           payment_type?: Database["public"]["Enums"]["payment_type"]
           tenant_id?: string
         }
@@ -582,6 +620,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
             referencedColumns: ["id"]
           },
           {
