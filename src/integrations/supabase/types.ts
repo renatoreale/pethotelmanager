@@ -642,39 +642,54 @@ export type Database = {
       }
       price_lists: {
         Row: {
-          cage_pool_type: Database["public"]["Enums"]["cage_pool_type"]
+          cage_pool_type: Database["public"]["Enums"]["cage_pool_type"] | null
           created_at: string
           extra_cat_supplement: number | null
+          extra_km_cost: number | null
+          fixed_cost: number | null
           id: string
+          included_km: number | null
           is_active: boolean
           name: string
           price_per_day: number
+          season: string | null
+          tariff_type: Database["public"]["Enums"]["tariff_type"]
           tenant_id: string | null
           updated_at: string
           valid_from: string | null
           valid_to: string | null
         }
         Insert: {
-          cage_pool_type: Database["public"]["Enums"]["cage_pool_type"]
+          cage_pool_type?: Database["public"]["Enums"]["cage_pool_type"] | null
           created_at?: string
           extra_cat_supplement?: number | null
+          extra_km_cost?: number | null
+          fixed_cost?: number | null
           id?: string
+          included_km?: number | null
           is_active?: boolean
           name: string
-          price_per_day: number
+          price_per_day?: number
+          season?: string | null
+          tariff_type?: Database["public"]["Enums"]["tariff_type"]
           tenant_id?: string | null
           updated_at?: string
           valid_from?: string | null
           valid_to?: string | null
         }
         Update: {
-          cage_pool_type?: Database["public"]["Enums"]["cage_pool_type"]
+          cage_pool_type?: Database["public"]["Enums"]["cage_pool_type"] | null
           created_at?: string
           extra_cat_supplement?: number | null
+          extra_km_cost?: number | null
+          fixed_cost?: number | null
           id?: string
+          included_km?: number | null
           is_active?: boolean
           name?: string
           price_per_day?: number
+          season?: string | null
+          tariff_type?: Database["public"]["Enums"]["tariff_type"]
           tenant_id?: string | null
           updated_at?: string
           valid_from?: string | null
@@ -880,6 +895,11 @@ export type Database = {
       cage_pool_type: "singola" | "doppia"
       email_status: "queued" | "sent" | "failed"
       payment_type: "caparra" | "saldo" | "extra" | "rimborso"
+      tariff_type:
+        | "stagionale"
+        | "extra_giornaliero"
+        | "extra_km"
+        | "extra_una_tantum"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1024,6 +1044,12 @@ export const Constants = {
       cage_pool_type: ["singola", "doppia"],
       email_status: ["queued", "sent", "failed"],
       payment_type: ["caparra", "saldo", "extra", "rimborso"],
+      tariff_type: [
+        "stagionale",
+        "extra_giornaliero",
+        "extra_km",
+        "extra_una_tantum",
+      ],
     },
   },
 } as const
