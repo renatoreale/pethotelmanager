@@ -147,6 +147,41 @@ export function BookingDrillDown({ booking, defaultOpen = false }: BookingDrillD
             </div>
           </div>
 
+          {/* Season periods */}
+          {priceBreakdown?.seasonPeriods && Array.isArray(priceBreakdown.seasonPeriods) && priceBreakdown.seasonPeriods.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5" /> Periodi stagionali
+              </h4>
+              <div className="rounded-md bg-muted/50 p-3 text-sm space-y-2">
+                {priceBreakdown.seasonPeriods.map((sp: any, i: number) => (
+                  <div key={i} className="space-y-0.5">
+                    <div className="flex justify-between">
+                      <span className="font-medium">{sp.tariffName || sp.tariff_name || `Periodo ${i + 1}`}</span>
+                      <span className="font-medium">€ {Number(sp.total ?? 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>
+                        {sp.fromDate ? format(parseISO(sp.fromDate), "dd MMM", { locale: it }) : "?"} → {sp.toDate ? format(parseISO(sp.toDate), "dd MMM", { locale: it }) : "?"} · {sp.days} {stayLabel}
+                      </span>
+                      {sp.pricePerDay != null && <span>€ {Number(sp.pricePerDay).toFixed(2)}/{stayLabel === "notti" ? "notte" : "giorno"}</span>}
+                    </div>
+                    {i < priceBreakdown.seasonPeriods.length - 1 && <Separator className="mt-1.5" />}
+                  </div>
+                ))}
+                {priceBreakdown.seasonTotal != null && priceBreakdown.seasonPeriods.length > 1 && (
+                  <>
+                    <Separator />
+                    <div className="flex justify-between font-semibold">
+                      <span>Totale periodi</span>
+                      <span>€ {Number(priceBreakdown.seasonTotal).toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Extras */}
           {extras.length > 0 && (
             <div className="space-y-2">
