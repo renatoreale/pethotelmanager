@@ -100,7 +100,7 @@ export default function Gatti() {
                     <TableHead>Razza</TableHead>
                     <TableHead>Sesso</TableHead>
                     <TableHead>Peso</TableHead>
-                    <TableHead>Gabbia</TableHead>
+                    <TableHead>Casetta</TableHead>
                     <TableHead className="w-[100px]">Azioni</TableHead>
                   </TableRow>
                 </TableHeader>

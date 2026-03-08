@@ -93,7 +93,7 @@ export default function Index() {
       {/* Occupancy bar */}
       <Card className="border-none shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Occupazione gabbie</CardTitle>
+          <CardTitle className="text-base">Occupazione casette</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>

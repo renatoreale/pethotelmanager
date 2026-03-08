@@ -451,7 +451,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                           checked={cat.needs_double_cage}
                           onCheckedChange={(v) => updateCat(index, "needs_double_cage", v)}
                         />
-                        <Label className="text-xs">Gabbia doppia</Label>
+                        <Label className="text-xs">Casetta doppia</Label>
                       </div>
                     </div>
 
