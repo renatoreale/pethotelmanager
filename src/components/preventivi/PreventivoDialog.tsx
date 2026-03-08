@@ -263,18 +263,19 @@ export function PreventivoDialog({
   };
 
   // Recalculate all periods when cats change
+  const numSelectedCats = selectedCats.length;
   useEffect(() => {
-    if (seasonPeriods.length === 0) return;
+    if (seasonPeriods.length === 0 || !seasonalTariffs) return;
     setSeasonPeriods(prev => prev.map(p => {
       const tariff = seasonalTariffs.find((t: any) => t.id === p.tariffId);
       if (!tariff) return p;
       const days = calcPeriodDays(p.fromDate, p.toDate);
-      const extraCats = Math.max(0, selectedCats.length - 1);
+      const extraCats = Math.max(0, numSelectedCats - 1);
       const baseCost = Number(tariff.price_per_day) * days;
       const supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * days;
       return { ...p, days, baseCost, supplementCost, total: baseCost + supplementCost };
     }));
-  }, [selectedCats.length]);
+  }, [numSelectedCats, seasonalTariffs, calcPeriodDays]);
 
   const removePeriod = (idx: number) => {
     setSeasonPeriods(prev => prev.filter((_, i) => i !== idx));
