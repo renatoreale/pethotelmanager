@@ -236,6 +236,8 @@ export default function Pagamenti() {
       queryClient.invalidateQueries({ queryKey: ["bookings-with-payments"] });
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
       queryClient.invalidateQueries({ queryKey: ["preventivi"] });
+      queryClient.invalidateQueries({ queryKey: ["payments-all"] });
+      queryClient.invalidateQueries({ queryKey: ["booking-payments"] });
       setEditingTotal(null);
       toast.success("Totale aggiornato");
     } catch {
