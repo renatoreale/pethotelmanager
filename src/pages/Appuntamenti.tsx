@@ -92,6 +92,29 @@ export default function Appuntamenti() {
   const deleteAppointment = useDeleteAppointment();
   const updateAppointment = useUpdateAppointment();
 
+  // Build searchable items for autocomplete
+  const searchableItems = useMemo<SearchableItem[]>(() => {
+    if (!appointments) return [];
+    const items: SearchableItem[] = [];
+    const seen = new Set<string>();
+    for (const a of appointments) {
+      const client = a.booking?.client;
+      if (client) {
+        const name = `${client.first_name} ${client.last_name}`;
+        if (!seen.has(`c:${name}`)) { seen.add(`c:${name}`); items.push({ label: name, value: name, type: "cliente" }); }
+        if (client.email && !seen.has(`e:${client.email}`)) { seen.add(`e:${client.email}`); items.push({ label: client.email, value: client.email, type: "email" }); }
+        if (client.phone && !seen.has(`p:${client.phone}`)) { seen.add(`p:${client.phone}`); items.push({ label: client.phone, value: client.phone, type: "telefono" }); }
+      }
+      for (const bc of a.booking?.booking_cats ?? []) {
+        const catName = bc.cat?.name;
+        if (catName && !seen.has(`g:${catName}`)) { seen.add(`g:${catName}`); items.push({ label: catName, value: catName, type: "gatto" }); }
+      }
+      const bn = a.booking?.booking_number;
+      if (bn && !seen.has(`b:${bn}`)) { seen.add(`b:${bn}`); items.push({ label: bn, value: bn, type: "prenotazione" }); }
+    }
+    return items;
+  }, [appointments]);
+
   // Filter by search
   const filteredAppointments = useMemo(() => {
     if (!appointments) return [];
