@@ -77,6 +77,7 @@ export function useCreatePreventivo() {
       deposit_amount?: number;
       notes?: string;
       cat_ids: string[];
+      price_breakdown?: any;
     }) => {
       if (!profile?.tenant_id) throw new Error("Tenant non configurato");
       const { cat_ids, ...booking } = input;
