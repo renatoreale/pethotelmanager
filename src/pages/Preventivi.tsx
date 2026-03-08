@@ -27,7 +27,6 @@ export default function Preventivi() {
   const createPreventivo = useCreatePreventivo();
   const updatePreventivo = useUpdatePreventivo();
   const deletePreventivo = useDeletePreventivo();
-  const confirmPreventivo = useConfirmPreventivo();
   const { data: tenantConfig } = useTenantConfig();
 
   const [search, setSearch] = useState("");
