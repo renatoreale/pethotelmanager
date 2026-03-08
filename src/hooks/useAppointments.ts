@@ -185,6 +185,33 @@ export function useAppointmentsByDate(date: string | undefined) {
   });
 }
 
+// Fetch all appointments (no date filter) — used when searching across all dates
+export function useAllAppointments(enabled: boolean) {
+  const { profile } = useAuth();
+  return useQuery({
+    queryKey: ["appointments-all", profile?.tenant_id],
+    queryFn: async () => {
+      if (!profile?.tenant_id) return [];
+      const { data, error } = await supabase
+        .from("appointments")
+        .select(`
+          *,
+          booking:bookings(
+            id, booking_number, status,
+            client:clients(id, first_name, last_name, phone, email),
+            booking_cats(id, cat:cats(id, name))
+          )
+        `)
+        .eq("tenant_id", profile.tenant_id)
+        .order("scheduled_at");
+      if (error) throw error;
+      return data as unknown as AppointmentWithDetails[];
+    },
+    enabled: enabled && !!profile?.tenant_id,
+    staleTime: 30_000,
+  });
+}
+
 // Fetch all appointments for a date range with booking + client + cats
 export function useAppointmentsByDateRange(startDate: string | undefined, endDate: string | undefined) {
   const { profile } = useAuth();
