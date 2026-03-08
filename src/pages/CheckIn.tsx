@@ -199,8 +199,8 @@ export default function CheckIn() {
         }
 
         await Promise.all(
-          catDetails.map(cat =>
-            supabase
+          catDetails.map(async (cat) => {
+            const { error } = await supabase
               .from("cat_registry")
               .update({
                 microchip: cat.microchip || null,
@@ -208,8 +208,10 @@ export default function CheckIn() {
                 client_name: clientName,
               })
               .eq("booking_id", booking.id)
-              .eq("cat_id", cat.id)
-          )
+              .eq("cat_id", cat.id);
+
+            if (error) throw error;
+          })
         );
 
         queryClient.invalidateQueries({ queryKey: ["cat-registry"] });
