@@ -183,8 +183,25 @@ export default function Prenotazioni() {
                     const transitions = getTransitions(b.status);
 
                     return (
-                      <TableRow key={b.id}>
-                        <TableCell className="font-mono text-sm">{b.booking_number}</TableCell>
+                      <TableRow
++                        key={b.id}
+                        className="cursor-pointer"
+                        onClick={(e) => {
+                          // Don't toggle if clicking buttons/menus
+                          if ((e.target as HTMLElement).closest('button, [role="menuitem"]')) return;
+                          setExpandedRows(prev => {
+                            const next = new Set(prev);
+                            next.has(b.id) ? next.delete(b.id) : next.add(b.id);
+                            return next;
+                          });
+                        }}
+                      >
+                        <TableCell className="font-mono text-sm">
+                          <div className="flex items-center gap-1">
+                            <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${expandedRows.has(b.id) ? "rotate-180" : ""}`} />
+                            {b.booking_number}
+                          </div>
+                        </TableCell>
                         <TableCell className="font-medium">
                           {b.client ? `${b.client.first_name} ${b.client.last_name}` : "—"}
                         </TableCell>
@@ -273,6 +290,13 @@ export default function Prenotazioni() {
                           </div>
                         </TableCell>
                       </TableRow>
+                      {expandedRows.has(b.id) && (
+                        <TableRow key={`${b.id}-details`}>
+                          <TableCell colSpan={10} className="p-0 bg-muted/20">
+                            <BookingDrillDown booking={b} defaultOpen />
+                          </TableCell>
+                        </TableRow>
+                      )}
                     );
                   })}
                 </TableBody>
