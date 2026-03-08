@@ -366,7 +366,85 @@ export default function Pagamenti() {
         </div>
       )}
 
-      {/* Transaction Dialog */}
+      {/* Transactions List Modal */}
+      <Dialog open={!!selectedBooking} onOpenChange={open => !open && setSelectedBooking(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Transazioni — {selectedBooking?.booking_number}
+            </DialogTitle>
+          </DialogHeader>
+
+          {(() => {
+            if (!selectedBooking) return null;
+            const bPayments = selectedBooking.payments ?? [];
+            const bTotal = Number(selectedBooking.total_amount ?? 0);
+            const { net: bNet } = calcTotals(bPayments);
+            const bRemaining = bTotal - bNet;
+
+            return (
+              <>
+                <div className="grid grid-cols-3 gap-3">
+                  <MoneyBadge value={bTotal} variant="total" />
+                  <MoneyBadge value={bNet} variant="paid" />
+                  <MoneyBadge value={bRemaining} variant="remaining" />
+                </div>
+
+                {bPayments.length === 0 ? (
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    <CreditCard className="h-6 w-6 mx-auto mb-2 opacity-40" />
+                    Nessuna transazione registrata
+                  </div>
+                ) : (
+                  <div className="rounded-md border divide-y max-h-[300px] overflow-auto">
+                    {[...bPayments]
+                      .sort((a: any, b: any) => a.payment_date.localeCompare(b.payment_date))
+                      .map((tx: any) => {
+                        const isRimborso = tx.payment_type === "rimborso";
+                        return (
+                          <div key={tx.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/30 transition-colors group">
+                            <div className="text-xs text-muted-foreground w-24 shrink-0">
+                              {format(parseISO(tx.payment_date), "dd MMM yyyy", { locale: it })}
+                            </div>
+                            <Badge
+                              variant={isRimborso ? "destructive" : tx.payment_type === "caparra" ? "default" : "secondary"}
+                              className="text-[10px] h-5 shrink-0"
+                            >
+                              {TYPE_LABELS[tx.payment_type] ?? tx.payment_type}
+                            </Badge>
+                            <div className="text-xs text-muted-foreground flex-1 truncate">
+                              {tx.payment_method?.name ?? tx.method ?? "—"}
+                              {tx.notes && <span className="ml-2 italic opacity-60">— {tx.notes}</span>}
+                            </div>
+                            <div className={`font-mono text-sm font-semibold shrink-0 ${isRimborso ? "text-destructive" : ""}`}>
+                              {isRimborso ? "-" : "+"}€ {Number(tx.amount).toFixed(2)}
+                            </div>
+                            <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => openEditTx(selectedBooking.id, tx)}>
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                              <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => setDeleteId(tx.id)}>
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <Button size="sm" onClick={() => { openNewTx(selectedBooking.id); }}>
+                    <Plus className="h-4 w-4 mr-1" /> Nuova Transazione
+                  </Button>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={txDialogOpen} onOpenChange={setTxDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
