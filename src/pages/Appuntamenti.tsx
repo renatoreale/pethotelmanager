@@ -28,16 +28,8 @@ import {
   useAllAppointments,
   useConfirmAppointment,
   useDeleteAppointment,
-  useUpdateAppointment,
-  useSlotConfigsForDay,
-  useAppointmentCounts,
-  generateTimeSlots,
   type AppointmentWithDetails,
 } from "@/hooks/useAppointments";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { EditCheckoutDialog, type CheckoutBookingData } from "@/components/appointments/EditCheckoutDialog";
 
