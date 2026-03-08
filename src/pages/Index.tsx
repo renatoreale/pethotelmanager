@@ -49,7 +49,7 @@ const recentBookings = [
 ];
 
 const todayTasks = [
-  { task: "Pulizia gabbie zona A", assignee: "Sara", done: true },
+  { task: "Pulizia casette zona A", assignee: "Sara", done: true },
   { task: "Somministrazione farmaci — Luna", assignee: "Marco", done: false },
   { task: "Foto aggiornamento — Micio, Felix", assignee: "Sara", done: false },
   { task: "Pappa serale", assignee: "Tutti", done: false },
