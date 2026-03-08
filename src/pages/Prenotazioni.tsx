@@ -273,6 +273,17 @@ export default function Prenotazioni() {
         onOpenChange={(open) => { if (!open) setSchedulingBooking(null); }}
         booking={schedulingBooking}
       />
+
+      <PreventivoDialog
+        open={!!editingBooking}
+        onOpenChange={(open) => { if (!open) setEditingBooking(null); }}
+        editing={editingBooking}
+        onCreate={{ mutateAsync: async () => {} }}
+        onUpdate={updatePreventivo}
+        stayCalcType={stayCalcType}
+        countCheckinDay={countCheckinDay}
+        countCheckoutDay={countCheckoutDay}
+      />
     </div>
   );
 }
