@@ -102,9 +102,14 @@ export default function Appuntamenti() {
   // Filter by search
   const filteredAppointments = useMemo(() => {
     if (!appointments) return [];
-    if (!search.trim()) return appointments;
+    let result = appointments;
+    // Filter by booking status
+    if (statusFilter !== "tutti") {
+      result = result.filter((a) => a.booking?.status === statusFilter);
+    }
+    if (!search.trim()) return result;
     const q = search.toLowerCase();
-    return appointments.filter((a) => {
+    return result.filter((a) => {
       const client = a.booking?.client;
       const clientName = `${client?.first_name ?? ""} ${client?.last_name ?? ""}`.toLowerCase();
       const catNames = a.booking?.booking_cats?.map(bc => bc.cat?.name ?? "").join(" ").toLowerCase() ?? "";
@@ -113,7 +118,7 @@ export default function Appuntamenti() {
       const phone = (client?.phone ?? "").toLowerCase();
       return clientName.includes(q) || catNames.includes(q) || bookingNum.includes(q) || email.includes(q) || phone.includes(q);
     });
-  }, [appointments, search]);
+  }, [appointments, search, statusFilter]);
 
   const checkInAppts = useMemo(() => filteredAppointments.filter(a => a.appointment_type === "check_in"), [filteredAppointments]);
   const checkOutAppts = useMemo(() => filteredAppointments.filter(a => a.appointment_type === "check_out"), [filteredAppointments]);
