@@ -324,6 +324,16 @@ function SlotTab() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
+              <Label>Tipo appuntamento</Label>
+              <Select value={appointmentType} onValueChange={setAppointmentType}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="check_in">Check-in</SelectItem>
+                  <SelectItem value="check_out">Check-out</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label>Giorno della settimana</Label>
               <Select value={String(dayOfWeek)} onValueChange={(v) => setDayOfWeek(Number(v))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
