@@ -31,6 +31,11 @@ export interface Booking {
     cat_id: string;
     cat?: { id: string; name: string };
   }[];
+  appointments?: {
+    id: string;
+    appointment_type: "check_in" | "check_out";
+    scheduled_at: string;
+  }[];
 }
 
 const ACTIVE_STATUSES = [
