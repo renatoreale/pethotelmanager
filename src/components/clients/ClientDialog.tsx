@@ -84,7 +84,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         toast.success("Cliente aggiornato");
       } else {
         await createClient.mutateAsync({
-          ...values,
+          first_name: values.first_name,
+          last_name: values.last_name,
+          is_blacklisted: values.is_blacklisted,
           tenant_id: profile?.tenant_id!,
           email: values.email || null,
           phone: values.phone || null,

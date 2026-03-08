@@ -87,7 +87,10 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
   const onSubmit = async (values: CatFormValues) => {
     try {
       const payload = {
-        ...values,
+        name: values.name,
+        client_id: values.client_id,
+        is_neutered: values.is_neutered,
+        needs_double_cage: values.needs_double_cage,
         tenant_id: profile?.tenant_id!,
         breed: values.breed || null,
         color: values.color || null,
