@@ -1064,6 +1064,28 @@ export function PreventivoDialog({
         // After closing, the clients list will refetch automatically via react-query
       }}
     />
+
+    <AlertDialog open={!!appointmentSyncDialog} onOpenChange={(open) => { if (!open) { setAppointmentSyncDialog(null); onOpenChange(false); } }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Date modificate – Appuntamenti esistenti</AlertDialogTitle>
+          <AlertDialogDescription>
+            Le date di check-in/check-out sono cambiate. Ci sono appuntamenti già fissati per questa prenotazione. Cosa vuoi fare?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+          <AlertDialogCancel onClick={() => { setAppointmentSyncDialog(null); onOpenChange(false); }}>
+            Non fare nulla
+          </AlertDialogCancel>
+          <Button variant="outline" onClick={handleDeleteAppointments}>
+            Elimina appuntamenti
+          </Button>
+          <Button onClick={handleUpdateAppointments}>
+            Aggiorna alle nuove date
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     </>
   );
 }
