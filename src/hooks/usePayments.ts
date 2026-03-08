@@ -266,6 +266,7 @@ export function useAllBookingsWithPayments() {
           payments(id, amount, payment_type, payment_date, payment_method_id, notes, method, payment_method:payment_methods(id, name))
         `)
         .eq("tenant_id", profile.tenant_id)
+        .neq("status", "preventivo")
         .order("check_in_date", { ascending: false });
       if (error) throw error;
       return data;
