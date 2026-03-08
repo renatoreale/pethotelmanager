@@ -50,7 +50,7 @@ const registryNav = [
 ];
 
 const operationsNav = [
-  { title: "Planning", url: "/planning", icon: ClipboardList },
+  { title: "Planning", url: "/planning", icon: Calendar },
 ];
 
 const adminNav = [
