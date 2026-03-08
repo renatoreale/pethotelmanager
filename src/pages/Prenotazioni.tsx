@@ -80,10 +80,14 @@ export default function Prenotazioni() {
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
   const [editingBooking, setEditingBooking] = useState<any>(null);
   const [paymentsBooking, setPaymentsBooking] = useState<any>(null);
+  const [deletingBooking, setDeletingBooking] = useState<{ id: string; bookingNumber: string } | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
+  const { hasRole } = useAuth();
+  const isAdmin = hasRole("admin");
   const { data: bookings, isLoading } = useBookings(statusFilter);
   const transitionBooking = useTransitionBooking();
+  const deleteBooking = useDeleteBooking();
   const updatePreventivo = useUpdatePreventivo();
   const { data: tenantConfig } = useTenantConfig();
 

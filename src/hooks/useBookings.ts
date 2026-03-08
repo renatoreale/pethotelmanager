@@ -134,3 +134,32 @@ export function useTransitionBooking() {
     },
   });
 }
+
+export function useDeleteBooking() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (bookingId: string) => {
+      // Delete related data in order (respecting FK constraints), but NOT clients/cats
+      const delCatRegistry = supabase.from("cat_registry").delete().eq("booking_id", bookingId);
+      const delPayments = supabase.from("payments").delete().eq("booking_id", bookingId);
+      const delAppointments = supabase.from("appointments").delete().eq("booking_id", bookingId);
+      const delBookingCats = supabase.from("booking_cats").delete().eq("booking_id", bookingId);
+      const delDocuments = supabase.from("documents").delete().eq("booking_id", bookingId);
+
+      const results = await Promise.all([delCatRegistry, delPayments, delAppointments, delBookingCats, delDocuments]);
+      for (const r of results) {
+        if (r.error) throw r.error;
+      }
+
+      // Finally delete the booking itself
+      const { error } = await supabase.from("bookings").delete().eq("id", bookingId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["bookings"] });
+      qc.invalidateQueries({ queryKey: ["preventivi"] });
+      qc.invalidateQueries({ queryKey: ["appointments"] });
+      qc.invalidateQueries({ queryKey: ["payments"] });
+    },
+  });
+}
