@@ -95,6 +95,7 @@ function MoneyBadge({ value, variant }: { value: number; variant: "total" | "pai
 }
 
 export default function Pagamenti() {
+  const queryClient = useQueryClient();
   const { data: bookings, isLoading } = useAllBookingsWithPayments();
   const { data: paymentMethods } = usePaymentMethods();
   const createPayment = useCreatePayment();
