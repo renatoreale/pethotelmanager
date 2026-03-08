@@ -46,10 +46,11 @@ const mainNav = [
 const registryNav = [
   { title: "Clienti", url: "/clienti", icon: Users },
   { title: "Gatti", url: "/gatti", icon: Cat },
+  { title: "Registro Gatti", url: "/registro-gatti", icon: ClipboardList },
 ];
 
 const operationsNav = [
-  { title: "Planning", url: "/planning", icon: ClipboardList },
+  { title: "Planning", url: "/planning", icon: Calendar },
 ];
 
 const adminNav = [

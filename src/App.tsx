@@ -24,6 +24,7 @@ import Utenti from "./pages/Utenti";
 import TemplateEmail from "./pages/TemplateEmail";
 import Pensione from "./pages/Pensione";
 import NotFound from "./pages/NotFound";
+import RegistroGatti from "./pages/RegistroGatti";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ const App = () => (
               <Route path="/pagamenti" element={<Pagamenti />} />
               <Route path="/clienti" element={<Clienti />} />
               <Route path="/gatti" element={<Gatti />} />
+              <Route path="/registro-gatti" element={<RegistroGatti />} />
               <Route path="/planning" element={<Planning />} />
               <Route path="/utenti" element={<Utenti />} />
               <Route path="/template-email" element={<TemplateEmail />} />
