@@ -202,7 +202,7 @@ function SlotTab() {
 
   const openNew = () => {
     setEditing(null);
-    setDayOfWeek(0);
+    setDayOfWeek("all");
     setAppointmentType("check_in");
     setStartTime("09:00");
     setEndTime("12:00");
