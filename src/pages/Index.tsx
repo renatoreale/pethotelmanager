@@ -179,11 +179,37 @@ export default function Index() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Panoramica operativa — {tenantConfig?.name ?? "Pensione"}
-        </p>
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {isSelectedToday ? "Panoramica operativa" : `Dati del ${format(selectedDate, "dd MMMM yyyy", { locale: it })}`} — {tenantConfig?.name ?? "Pensione"}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {!isSelectedToday && (
+            <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date())}>
+              Oggi
+            </Button>
+          )}
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <CalendarIcon className="h-4 w-4" />
+                {format(selectedDate, "dd MMM yyyy", { locale: it })}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(d) => { if (d) { setSelectedDate(d); setCalendarOpen(false); } }}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       {/* KPI Cards */}
