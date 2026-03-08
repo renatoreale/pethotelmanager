@@ -854,16 +854,22 @@ export function PreventivoDialog({
                     <span>€ {seasonTotal.toFixed(2)}</span>
                   </div>
                 )}
+                {discountTotal > 0 && (
+                  <div className="text-sm flex justify-between text-destructive">
+                    <span>Sconto (sul soggiorno)</span>
+                    <span>-€ {discountTotal.toFixed(2)}</span>
+                  </div>
+                )}
+                {discountTotal > 0 && (
+                  <div className="text-sm flex justify-between font-medium">
+                    <span>Soggiorno scontato</span>
+                    <span>€ {discountedStay.toFixed(2)}</span>
+                  </div>
+                )}
                 {extrasTotal > 0 && (
                   <div className="text-sm flex justify-between">
                     <span>Servizi extra ({extraServices.length})</span>
                     <span>€ {extrasTotal.toFixed(2)}</span>
-                  </div>
-                )}
-                {discountTotal > 0 && (
-                  <div className="text-sm flex justify-between text-destructive">
-                    <span>Sconti</span>
-                    <span>-€ {discountTotal.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="text-sm font-bold flex justify-between border-t pt-1">
