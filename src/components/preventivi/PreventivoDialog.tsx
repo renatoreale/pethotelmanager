@@ -428,7 +428,8 @@ export function PreventivoDialog({
     return clients.filter((c: any) =>
       `${c.first_name} ${c.last_name}`.toLowerCase().includes(q) ||
       (c.email ?? "").toLowerCase().includes(q) ||
-      (c.phone ?? "").toLowerCase().includes(q)
+      (c.phone ?? "").toLowerCase().includes(q) ||
+      (c.cats ?? []).some((cat: any) => (cat.name ?? "").toLowerCase().includes(q))
     );
   }, [clients, clientSearch]);
 
