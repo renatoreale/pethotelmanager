@@ -143,7 +143,10 @@ export default function CheckIn() {
 
   const checkInBookings = useMemo(() => {
     if (!bookings) return [];
-    let filtered = bookings.filter(b => CHECKIN_STATUSES.includes(b.status));
+    const today = format(new Date(), "yyyy-MM-dd");
+    let filtered = bookings.filter(b =>
+      CHECKIN_STATUSES.includes(b.status) && b.check_in_date <= today
+    );
     if (search.trim()) {
       const q = search.toLowerCase();
       filtered = filtered.filter(b => {
