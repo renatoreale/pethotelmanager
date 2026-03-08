@@ -215,17 +215,31 @@ export function useDeleteAppointment() {
       // Check if any appointments remain for this booking
       const { data: remaining } = await supabase
         .from("appointments")
-        .select("id")
+        .select("id, appointment_type")
         .eq("booking_id", bookingId);
 
-      // If no appointments left, revert booking to confermata
-      if (!remaining?.length) {
-        await supabase
-          .from("bookings")
-          .update({ status: "confermata" as any })
-          .eq("id", bookingId)
-          .eq("status", "appuntamento_fissato" as any);
+      // Determine new status based on remaining appointments
+      const remainingTypes = (remaining ?? []).map((a: any) => a.appointment_type);
+      const hasIn = remainingTypes.includes("check_in");
+      const hasOut = remainingTypes.includes("check_out");
+
+      let newStatus: string;
+      if (!hasIn && !hasOut) {
+        newStatus = "confermata";
+      } else if (hasIn && hasOut) {
+        newStatus = "appuntamento_in_out_fissato";
+      } else if (hasIn) {
+        newStatus = "appuntamento_in_fissato";
+      } else {
+        newStatus = "appuntamento_out_fissato";
       }
+
+      // Update booking status
+      await supabase
+        .from("bookings")
+        .update({ status: newStatus as any })
+        .eq("id", bookingId)
+        .in("status", ["appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato"] as any);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["appointments-by-date"] });

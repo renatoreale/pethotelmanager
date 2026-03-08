@@ -79,7 +79,14 @@ const TRANSITIONS: Record<string, { next: string; label: string }[]> = {
     { next: "appuntamento_fissato", label: "Fissa Appuntamenti" },
     { next: "cancellata", label: "Cancella" },
   ],
-  appuntamento_fissato: [
+  appuntamento_in_fissato: [
+    { next: "check_in", label: "Avvia Check-in" },
+    { next: "cancellata", label: "Cancella" },
+  ],
+  appuntamento_out_fissato: [
+    { next: "cancellata", label: "Cancella" },
+  ],
+  appuntamento_in_out_fissato: [
     { next: "check_in", label: "Avvia Check-in" },
     { next: "cancellata", label: "Cancella" },
   ],

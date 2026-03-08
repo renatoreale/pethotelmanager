@@ -110,8 +110,16 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
         });
       }
 
-      // 3. Transition to appuntamento_fissato
-      await transitionBooking.mutateAsync({ id: booking.id, newStatus: "appuntamento_fissato" });
+      // 3. Transition based on which appointments were set
+      let newStatus: string;
+      if (checkInTime && checkOutTime) {
+        newStatus = "appuntamento_in_out_fissato";
+      } else if (checkInTime) {
+        newStatus = "appuntamento_in_fissato";
+      } else {
+        newStatus = "appuntamento_out_fissato";
+      }
+      await transitionBooking.mutateAsync({ id: booking.id, newStatus });
 
       toast.success("Appuntamenti fissati");
       setCheckInTime(null);
