@@ -67,6 +67,7 @@ export default function Pensione() {
         <TabsContent value="casette"><CasetteTab /></TabsContent>
         <TabsContent value="slot"><SlotTab /></TabsContent>
         <TabsContent value="listino"><ListinoTab /></TabsContent>
+        <TabsContent value="pagamenti"><PaymentMethodsTab /></TabsContent>
       </Tabs>
     </div>
   );
