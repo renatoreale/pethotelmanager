@@ -15,6 +15,10 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import { Plus, CalendarIcon, X, User, Cat, Home, Calendar as CalIcon, Sparkles, Percent, FileText, UserPlus } from "lucide-react";
 import { ClientDialog } from "@/components/clients/ClientDialog";
 import { toast } from "sonner";
@@ -24,6 +28,8 @@ import { cn } from "@/lib/utils";
 import { useClients } from "@/hooks/useClients";
 import { usePriceLists } from "@/hooks/usePensioneConfig";
 import { useClientCats } from "@/hooks/usePreventivi";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 // ── Types ──
 interface SeasonPeriod {
