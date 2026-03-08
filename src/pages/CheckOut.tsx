@@ -447,13 +447,23 @@ export default function CheckOut() {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Totale</span>
-                  <span className="font-bold">
-                    € {recalculated.newTotal.toFixed(2)}
-                    {recalculated.dateChanged && recalculated.newTotal !== recalculated.originalTotal && (
-                      <span className="text-muted-foreground font-normal ml-1 line-through">€ {recalculated.originalTotal.toFixed(2)}</span>
-                    )}
-                  </span>
+                  <span className="text-muted-foreground">Totale originale</span>
+                  <span>€ {recalculated.originalTotal.toFixed(2)}</span>
+                </div>
+                {recalculated.extraDays > 0 && (
+                  <div className="flex justify-between text-primary">
+                    <span>+ {recalculated.extraDays} {stayLabel} extra ({recalculated.extraTariffName})</span>
+                    <span className="font-medium">+ € {recalculated.extraCost.toFixed(2)}</span>
+                  </div>
+                )}
+                {recalculated.dateChanged && recalculated.newDays < recalculated.originalDays && (
+                  <div className="text-xs text-muted-foreground italic">
+                    Soggiorno ridotto di {recalculated.originalDays - recalculated.newDays} {stayLabel} — totale invariato
+                  </div>
+                )}
+                <div className="flex justify-between border-t pt-1.5">
+                  <span className="font-medium">Nuovo totale</span>
+                  <span className="font-bold">€ {recalculated.newTotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Pagato</span>
