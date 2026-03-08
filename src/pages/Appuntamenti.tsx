@@ -321,7 +321,9 @@ function StatusBadge({ status }: { status: string }) {
   };
   const labels: Record<string, string> = {
     confermata: "Confermata",
-    appuntamento_fissato: "Appt. fissato",
+    appuntamento_in_fissato: "Appt. IN fissato",
+    appuntamento_out_fissato: "Appt. OUT fissato",
+    appuntamento_in_out_fissato: "Appt. IN-OUT fissati",
     check_in: "Check-in",
     in_corso: "In corso",
     check_out: "Check-out",

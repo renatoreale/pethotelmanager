@@ -210,7 +210,7 @@ export default function Prenotazioni() {
                                   <DropdownMenuItem
                                     key={t.next}
                                     onClick={() => {
-                                      if (t.next === "appuntamento_fissato") {
+                                      if (t.next === "appuntamento_fissato" || t.next === "appuntamento_in_fissato" || t.next === "appuntamento_out_fissato" || t.next === "appuntamento_in_out_fissato") {
                                         setSchedulingBooking(b);
                                       } else {
                                         setTransitioning({
