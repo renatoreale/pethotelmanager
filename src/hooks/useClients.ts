@@ -27,7 +27,7 @@ export function useClients(search?: string) {
     queryFn: async () => {
       let query = supabase
         .from("clients")
-        .select("*")
+        .select("*, cats(id, name)")
         .order("last_name", { ascending: true });
 
       if (search && search.trim()) {
