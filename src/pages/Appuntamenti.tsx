@@ -468,6 +468,14 @@ export default function Appuntamenti() {
         onOpenChange={(open) => { if (!open) setSchedulingBooking(null); }}
         booking={schedulingBooking}
       />
+
+      {editingCheckout && (
+        <EditCheckoutDialog
+          open={!!editingCheckout}
+          onOpenChange={(open) => { if (!open) setEditingCheckout(null); }}
+          appointment={editingCheckout}
+        />
+      )}
     </div>
   );
 }
