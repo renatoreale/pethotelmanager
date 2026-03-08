@@ -60,7 +60,8 @@ export function useBookings(statusFilter?: string) {
         .select(`
           *,
           client:clients(id, first_name, last_name, email, phone),
-          booking_cats(id, cat_id, cat:cats(id, name))
+          booking_cats(id, cat_id, cat:cats(id, name)),
+          appointments(id, appointment_type, scheduled_at)
         `)
         .eq("tenant_id", profile.tenant_id)
         .neq("status", "preventivo")
