@@ -143,7 +143,8 @@ export function PreventivoDialog({
       setCheckInDate(editing.check_in_date ? parseISO(editing.check_in_date) : undefined);
       setCheckOutDate(editing.check_out_date ? parseISO(editing.check_out_date) : undefined);
       setSelectedCats(editing.booking_cats?.map((bc: any) => bc.cat_id) ?? []);
-      setNotes(editing.notes ?? "");
+      // Strip auto-generated breakdown lines from notes for display
+      setNotes((editing.notes ?? "").split("\n").filter((line: string) => !line.startsWith("[")).join("\n").trim());
       setTotalAmount(Number(editing.total_amount ?? 0));
       setDepositAmount(Number(editing.deposit_amount ?? 0));
 
@@ -471,13 +472,8 @@ export function PreventivoDialog({
       if (parts.length > 0) breakdownParts.push(`[Sconti: ${parts.join("; ")}]`);
     }
 
-    // Strip any previous breakdown lines (lines starting with "[") from saved notes
-    const userNotes = (editing?.notes ?? notes ?? "")
-      .split("\n")
-      .filter(line => !line.startsWith("["))
-      .join("\n")
-      .trim();
-    const fullNotes = [userNotes, ...breakdownParts].filter(Boolean).join("\n");
+    // notes state is already clean (no breakdown lines), just append breakdown
+    const fullNotes = [notes.trim(), ...breakdownParts].filter(Boolean).join("\n");
 
     try {
       if (editing) {
