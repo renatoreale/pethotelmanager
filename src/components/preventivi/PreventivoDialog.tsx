@@ -737,6 +737,7 @@ export function PreventivoDialog({
                     searchValue={clientSearch}
                     onSearchChange={setClientSearch}
                     onSelect={(id) => { setClientId(id); setSelectedCats([]); }}
+                    catsByClient={catsByClient}
                   />
                   <Button type="button" variant="outline" size="sm" onClick={() => setNewClientDialogOpen(true)}
                     className="shrink-0 gap-1 mt-0">
