@@ -59,6 +59,7 @@ export default function CheckIn() {
   // Cat details state
   const [catDetails, setCatDetails] = useState<CatDetails[]>([]);
   const [loadingCats, setLoadingCats] = useState(false);
+  const [bookingPaidAmount, setBookingPaidAmount] = useState(0);
 
   const checkInBookings = useMemo(() => {
     if (!bookings) return [];
@@ -90,6 +91,19 @@ export default function CheckIn() {
   const openConfirm = async (b: any) => {
     setConfirmBooking(b);
     resetForm();
+    setBookingPaidAmount(0);
+
+    // Load payments to calculate residuo
+    const { data: payments } = await supabase
+      .from("payments")
+      .select("amount, payment_type")
+      .eq("booking_id", b.id);
+
+    if (payments) {
+      const paid = payments.filter(p => p.payment_type !== "rimborso").reduce((s, p) => s + Number(p.amount), 0);
+      const refunded = payments.filter(p => p.payment_type === "rimborso").reduce((s, p) => s + Number(p.amount), 0);
+      setBookingPaidAmount(paid - refunded);
+    }
 
     // Load full cat details
     const cats = (b.booking_cats ?? []).map((bc: any) => bc.cat).filter(Boolean);
@@ -287,12 +301,20 @@ export default function CheckIn() {
                     {format(parseISO(confirmBooking.check_in_date), "dd MMM yyyy", { locale: it })} → {format(parseISO(confirmBooking.check_out_date), "dd MMM yyyy", { locale: it })}
                   </span>
                 </div>
-                {confirmBooking.total_amount != null && (
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span>Totale: <strong>€ {Number(confirmBooking.total_amount).toFixed(2)}</strong></span>
-                  </div>
-                )}
+                {confirmBooking.total_amount != null && (() => {
+                  const total = Number(confirmBooking.total_amount);
+                  const residuo = total - bookingPaidAmount;
+                  return (
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span>
+                        Totale: <strong>€ {total.toFixed(2)}</strong>
+                        {" · "}Pagato: <strong className="text-accent">€ {bookingPaidAmount.toFixed(2)}</strong>
+                        {" · "}Residuo: <strong className={residuo > 0 ? "text-warning-foreground" : "text-accent"}>€ {residuo.toFixed(2)}</strong>
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Cat details section */}
