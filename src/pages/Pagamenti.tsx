@@ -229,7 +229,20 @@ export default function Pagamenti() {
     setDeleteId(null);
   };
 
-  // Global totals
+  const saveBookingTotal = async (newTotal: number) => {
+    if (!selectedBooking) return;
+    try {
+      await supabase.from("bookings").update({ total_amount: newTotal }).eq("id", selectedBooking.id);
+      queryClient.invalidateQueries({ queryKey: ["bookings-with-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["preventivi"] });
+      setEditingTotal(null);
+      toast.success("Totale aggiornato");
+    } catch {
+      toast.error("Errore nell'aggiornamento del totale");
+    }
+  };
+
   const globalTotals = useMemo(() => {
     if (!clientGroups.length) return { total: 0, paid: 0, remaining: 0 };
     let total = 0, paid = 0;
