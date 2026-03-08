@@ -235,11 +235,11 @@ export default function Index() {
           <CardTitle className="text-base">Prenotazioni recenti</CardTitle>
         </CardHeader>
         <CardContent>
-          {s.recentBookings.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Nessuna prenotazione</p>
+          {s.dayBookings.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Nessuna prenotazione per questa data</p>
           ) : (
             <div className="space-y-3">
-              {s.recentBookings.map((b: any) => {
+              {s.dayBookings.map((b: any) => {
                 const clientName = b.client ? `${b.client.first_name} ${b.client.last_name}` : "—";
                 const catNames = (b.booking_cats ?? []).map((bc: any) => bc.cat?.name).filter(Boolean).join(", ") || "—";
                 return (
