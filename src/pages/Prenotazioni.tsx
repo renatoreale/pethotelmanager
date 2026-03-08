@@ -219,9 +219,11 @@ export default function Prenotazioni() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => setEditingBooking(b)} title="Modifica prenotazione">
-                              <Pencil className="h-4 w-4" />
-                            </Button>
+                            {!["check_in", "in_corso", "check_out", "chiusa", "cancellata", "rimborsata"].includes(b.status) && (
+                              <Button variant="ghost" size="icon" onClick={() => setEditingBooking(b)} title="Modifica prenotazione">
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            )}
                             <Button variant="ghost" size="icon" onClick={() => setPaymentsBooking(b)} title="Pagamenti">
                               <CreditCard className="h-4 w-4" />
                             </Button>
