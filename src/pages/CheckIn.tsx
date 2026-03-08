@@ -74,6 +74,7 @@ export default function CheckIn() {
   const [catDetails, setCatDetails] = useState<CatDetails[]>([]);
   const [loadingCats, setLoadingCats] = useState(false);
   const [bookingPaidAmount, setBookingPaidAmount] = useState(0);
+  const [manualExtraCost, setManualExtraCost] = useState<string | null>(null);
 
   const stayCalcType = tenantConfig?.stay_calc_type ?? "notti";
   const countCheckinDay = tenantConfig?.count_checkin_day ?? true;
