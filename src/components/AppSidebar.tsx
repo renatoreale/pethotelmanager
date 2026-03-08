@@ -14,6 +14,7 @@ import {
   Building2,
   ChevronDown,
   Power,
+  Grid3X3,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -51,6 +52,7 @@ const registryNav = [
 
 const operationsNav = [
   { title: "Planning", url: "/planning", icon: Calendar },
+  { title: "Occupazione Casette", url: "/occupazione", icon: Grid3X3 },
 ];
 
 const adminNav = [
