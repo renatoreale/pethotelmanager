@@ -32,6 +32,9 @@ export function useUpdateTenantConfig() {
       email?: string | null;
       phone?: string | null;
       address?: string | null;
+      stay_calc_type?: string;
+      count_checkin_day?: boolean;
+      count_checkout_day?: boolean;
     }) => {
       const { id, ...rest } = updates;
       const { data, error } = await supabase
