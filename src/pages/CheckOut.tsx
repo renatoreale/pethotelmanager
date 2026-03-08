@@ -136,10 +136,11 @@ export default function CheckOut() {
     const effectiveExtraCost = manualExtraCost !== null ? Math.max(0, parseFloat(manualExtraCost) || 0) : extraCost;
 
     // If fewer days: keep original total. If more days: add extra cost.
-    const newTotal = newDays <= originalDays ? originalTotal : Math.round((originalTotal + effectiveExtraCost) * 100) / 100;
+    const calculatedTotal = newDays <= originalDays ? originalTotal : Math.round((originalTotal + effectiveExtraCost) * 100) / 100;
+    const newTotal = manualTotal !== null ? Math.max(0, parseFloat(manualTotal) || 0) : calculatedTotal;
 
-    return { newCoStr, originalDays, newDays, newTotal, dateChanged, originalTotal, extraDays, extraCost, extraTariffName, effectiveExtraCost };
-  }, [confirmBooking, actualCheckOutDate, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs, manualExtraCost]);
+    return { newCoStr, originalDays, newDays, newTotal, calculatedTotal, dateChanged, originalTotal, extraDays, extraCost, extraTariffName, effectiveExtraCost };
+  }, [confirmBooking, actualCheckOutDate, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs, manualExtraCost, manualTotal]);
 
   const checkOutBookings = useMemo(() => {
     if (!bookings) return [];
