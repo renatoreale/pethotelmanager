@@ -183,8 +183,8 @@ export default function Prenotazioni() {
                     const transitions = getTransitions(b.status);
 
                     return (
+                      <Fragment key={b.id}>
                       <TableRow
-+                        key={b.id}
                         className="cursor-pointer"
                         onClick={(e) => {
                           // Don't toggle if clicking buttons/menus
