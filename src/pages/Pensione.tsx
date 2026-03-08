@@ -231,6 +231,7 @@ function SlotTab() {
         id: editing?.id,
         tenant_id: profile.tenant_id,
         day_of_week: dayOfWeek,
+        appointment_type: appointmentType,
         start_time: startTime,
         end_time: endTime,
         slot_duration_minutes: duration,

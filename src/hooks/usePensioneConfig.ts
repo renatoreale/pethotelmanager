@@ -82,14 +82,15 @@ export function useUpsertSlotConfig() {
       slot_duration_minutes?: number;
       max_appointments?: number;
       is_active?: boolean;
+      appointment_type?: string;
     }) => {
       if (slot.id) {
         const { id, ...rest } = slot;
-        const { data, error } = await supabase.from("slot_configs").update(rest).eq("id", id).select().single();
+        const { data, error } = await supabase.from("slot_configs").update(rest as any).eq("id", id).select().single();
         if (error) throw error;
         return data;
       } else {
-        const { data, error } = await supabase.from("slot_configs").insert(slot).select().single();
+        const { data, error } = await supabase.from("slot_configs").insert(slot as any).select().single();
         if (error) throw error;
         return data;
       }
