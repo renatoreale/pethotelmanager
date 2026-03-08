@@ -100,6 +100,7 @@ export default function Pagamenti() {
   const [expandedClients, setExpandedClients] = useState<Set<string>>(new Set());
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [search, setSearch] = useState("");
+  const [filterResiduo, setFilterResiduo] = useState(false);
 
   const [txDialogOpen, setTxDialogOpen] = useState(false);
   const [txEditId, setTxEditId] = useState<string | null>(null);
@@ -140,9 +141,19 @@ export default function Pagamenti() {
         g => g.clientName.toLowerCase().includes(q) || g.catNames.toLowerCase().includes(q)
       );
     }
+    if (filterResiduo) {
+      groups = groups.map(g => ({
+        ...g,
+        bookings: g.bookings.filter((b: any) => {
+          const bTotal = Number(b.total_amount ?? 0);
+          const { net } = calcTotals(b.payments ?? []);
+          return bTotal - net > 0;
+        }),
+      })).filter(g => g.bookings.length > 0);
+    }
     groups.sort((a, b) => a.clientName.localeCompare(b.clientName));
     return groups;
-  }, [bookings, search]);
+  }, [bookings, search, filterResiduo]);
 
   const toggleClient = (id: string) => {
     setExpandedClients(prev => {
@@ -242,14 +253,17 @@ export default function Pagamenti() {
           <div className="text-xs font-medium uppercase tracking-wider" style={{ color: "hsl(var(--accent))" }}>Incassato</div>
           <div className="text-2xl font-bold font-mono mt-1" style={{ color: "hsl(var(--accent))" }}>€ {globalTotals.paid.toFixed(2)}</div>
         </div>
-        <div className="rounded-xl border bg-card p-4">
+        <button
+          onClick={() => setFilterResiduo(f => !f)}
+          className={`rounded-xl border bg-card p-4 text-left transition-all cursor-pointer hover:ring-2 hover:ring-primary/30 ${filterResiduo ? "ring-2 ring-primary" : ""}`}
+        >
           <div className={`text-xs font-medium uppercase tracking-wider ${globalTotals.remaining > 0 ? "text-warning-foreground" : ""}`} style={globalTotals.remaining <= 0 ? { color: "hsl(var(--accent))" } : {}}>
-            Residuo
+            Residuo {filterResiduo && "✓"}
           </div>
           <div className={`text-2xl font-bold font-mono mt-1 ${globalTotals.remaining > 0 ? "text-warning-foreground" : ""}`} style={globalTotals.remaining <= 0 ? { color: "hsl(var(--accent))" } : {}}>
             € {globalTotals.remaining.toFixed(2)}
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Search */}
