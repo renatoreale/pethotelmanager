@@ -180,6 +180,93 @@ export function useCreatePayment() {
       qc.invalidateQueries({ queryKey: ["booking-payments"] });
       qc.invalidateQueries({ queryKey: ["bookings"] });
       qc.invalidateQueries({ queryKey: ["preventivi"] });
+      qc.invalidateQueries({ queryKey: ["payments-all"] });
     },
+  });
+}
+
+export function useUpdatePayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: {
+      id: string;
+      amount?: number;
+      payment_type?: "caparra" | "saldo" | "extra" | "rimborso";
+      payment_date?: string;
+      payment_method_id?: string | null;
+      notes?: string | null;
+    }) => {
+      const { error } = await supabase
+        .from("payments")
+        .update(updates)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["booking-payments"] });
+      qc.invalidateQueries({ queryKey: ["bookings"] });
+      qc.invalidateQueries({ queryKey: ["preventivi"] });
+      qc.invalidateQueries({ queryKey: ["payments-all"] });
+    },
+  });
+}
+
+export function useDeletePayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("payments")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["booking-payments"] });
+      qc.invalidateQueries({ queryKey: ["bookings"] });
+      qc.invalidateQueries({ queryKey: ["preventivi"] });
+      qc.invalidateQueries({ queryKey: ["payments-all"] });
+    },
+  });
+}
+
+export function useAllPayments() {
+  const { profile } = useAuth();
+  return useQuery({
+    queryKey: ["payments-all", profile?.tenant_id],
+    queryFn: async () => {
+      if (!profile?.tenant_id) return [];
+      const { data, error } = await supabase
+        .from("payments")
+        .select("*, payment_method:payment_methods(id, name)")
+        .eq("tenant_id", profile.tenant_id)
+        .order("payment_date", { ascending: false });
+      if (error) throw error;
+      return data as unknown as Payment[];
+    },
+    enabled: !!profile?.tenant_id,
+  });
+}
+
+export function useAllBookingsWithPayments() {
+  const { profile } = useAuth();
+  return useQuery({
+    queryKey: ["bookings-with-payments", profile?.tenant_id],
+    queryFn: async () => {
+      if (!profile?.tenant_id) return [];
+      const { data, error } = await supabase
+        .from("bookings")
+        .select(`
+          *,
+          client:clients(id, first_name, last_name),
+          booking_cats(id, cat:cats(id, name)),
+          payments(id, amount, payment_type, payment_date, payment_method_id, notes, method, payment_method:payment_methods(id, name))
+        `)
+        .eq("tenant_id", profile.tenant_id)
+        .order("check_in_date", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile?.tenant_id,
   });
 }
