@@ -509,11 +509,12 @@ export default function Appuntamenti() {
         booking={schedulingBooking}
       />
 
-      {editingCheckout && (
+      {(editingCheckout || creatingCheckout) && (
         <EditCheckoutDialog
-          open={!!editingCheckout}
-          onOpenChange={(open) => { if (!open) setEditingCheckout(null); }}
+          open={!!(editingCheckout || creatingCheckout)}
+          onOpenChange={(open) => { if (!open) { setEditingCheckout(null); setCreatingCheckout(null); } }}
           appointment={editingCheckout}
+          bookingData={creatingCheckout}
         />
       )}
     </div>
