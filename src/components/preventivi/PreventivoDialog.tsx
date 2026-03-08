@@ -1163,6 +1163,7 @@ export function PreventivoDialog({
             rangeStart={occupancyRangeStart}
             rangeEnd={occupancyRangeEnd}
             excludeBookingId={editing?.id}
+            highlightDate={checkInDate}
             compact
           />
         )}

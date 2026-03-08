@@ -262,9 +262,11 @@ export function OccupancyGrid({
                 const freeS = Math.max(0, totalSingole - (dailyTotals[dateStr]?.singole ?? 0));
                 const freeD = Math.max(0, totalDoppie - (dailyTotals[dateStr]?.doppie ?? 0));
                 const total = freeS + freeD;
+                const isHighlight = highlightDate === dateStr;
                 return (
                   <td key={dateStr} className={cn("text-center font-bold border-r py-1 text-[10px]",
-                    total === 0 && "bg-destructive/20 text-destructive"
+                    total === 0 && "bg-destructive/20 text-destructive",
+                    isHighlight && "ring-2 ring-inset ring-destructive/50"
                   )}>{total}</td>
                 );
               })}
