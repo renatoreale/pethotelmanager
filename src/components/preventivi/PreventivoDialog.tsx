@@ -193,13 +193,6 @@ export function PreventivoDialog({
     });
   }, [unitsOccupied]);
 
-  // Auto-update deposit when total changes (50% default)
-  useEffect(() => {
-    if (!depositManuallySet && totalAmount > 0) {
-      setDepositAmount(Math.round(totalAmount * 50) / 100);
-    }
-  }, [totalAmount, depositManuallySet]);
-
   // ── Seasonal tariffs ──
   const seasonalTariffs = useMemo(() => {
     if (!priceLists) return [];
