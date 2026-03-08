@@ -17,13 +17,17 @@ import {
 import {
   Tabs, TabsContent, TabsList, TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { CalendarIcon, CheckCircle2, XCircle, Clock, LogIn, LogOut, Trash2, Pencil, Search } from "lucide-react";
-import { format, addDays, subDays } from "date-fns";
+import { format, addDays, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addWeeks, subWeeks, addMonths, subMonths, parseISO, getDay } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
   useAppointmentsByDate,
+  useAppointmentsByDateRange,
   useConfirmAppointment,
   useDeleteAppointment,
   useUpdateAppointment,
@@ -36,24 +40,62 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { getDay, parseISO } from "date-fns";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 
+type ViewMode = "giorno" | "settimana" | "mese" | "personalizzato";
+
 export default function Appuntamenti() {
+  const [viewMode, setViewMode] = useState<ViewMode>("giorno");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [rangeFrom, setRangeFrom] = useState<Date>(new Date());
+  const [rangeTo, setRangeTo] = useState<Date>(addDays(new Date(), 7));
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarFromOpen, setCalendarFromOpen] = useState(false);
+  const [calendarToOpen, setCalendarToOpen] = useState(false);
   const [deleting, setDeleting] = useState<AppointmentWithDetails | null>(null);
   const [editing, setEditing] = useState<AppointmentWithDetails | null>(null);
   const [search, setSearch] = useState("");
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
 
-  const dateStr = format(selectedDate, "yyyy-MM-dd");
-  const { data: appointments, isLoading } = useAppointmentsByDate(dateStr);
+  // Compute date range based on view mode
+  const { startDate, endDate } = useMemo(() => {
+    if (viewMode === "giorno") {
+      const d = format(selectedDate, "yyyy-MM-dd");
+      return { startDate: d, endDate: d };
+    }
+    if (viewMode === "settimana") {
+      const s = startOfWeek(selectedDate, { weekStartsOn: 1 });
+      const e = endOfWeek(selectedDate, { weekStartsOn: 1 });
+      return { startDate: format(s, "yyyy-MM-dd"), endDate: format(e, "yyyy-MM-dd") };
+    }
+    if (viewMode === "mese") {
+      const s = startOfMonth(selectedDate);
+      const e = endOfMonth(selectedDate);
+      return { startDate: format(s, "yyyy-MM-dd"), endDate: format(e, "yyyy-MM-dd") };
+    }
+    // personalizzato
+    return { startDate: format(rangeFrom, "yyyy-MM-dd"), endDate: format(rangeTo, "yyyy-MM-dd") };
+  }, [viewMode, selectedDate, rangeFrom, rangeTo]);
+
+  const isRange = viewMode !== "giorno";
+
+  // Use single-day hook for "giorno", range hook for others
+  const { data: dayAppointments, isLoading: dayLoading } = useAppointmentsByDate(
+    !isRange ? startDate : undefined
+  );
+  const { data: rangeAppointments, isLoading: rangeLoading } = useAppointmentsByDateRange(
+    isRange ? startDate : undefined,
+    isRange ? endDate : undefined
+  );
+
+  const appointments = isRange ? rangeAppointments : dayAppointments;
+  const isLoading = isRange ? rangeLoading : dayLoading;
+
   const confirmAppointment = useConfirmAppointment();
   const deleteAppointment = useDeleteAppointment();
   const updateAppointment = useUpdateAppointment();
 
-  // Filter appointments by search
+  // Filter by search
   const filteredAppointments = useMemo(() => {
     if (!appointments) return [];
     if (!search.trim()) return appointments;
@@ -69,14 +111,19 @@ export default function Appuntamenti() {
     });
   }, [appointments, search]);
 
-  const checkInAppts = useMemo(() =>
-    filteredAppointments.filter(a => a.appointment_type === "check_in"),
-    [filteredAppointments]
-  );
-  const checkOutAppts = useMemo(() =>
-    filteredAppointments.filter(a => a.appointment_type === "check_out"),
-    [filteredAppointments]
-  );
+  const checkInAppts = useMemo(() => filteredAppointments.filter(a => a.appointment_type === "check_in"), [filteredAppointments]);
+  const checkOutAppts = useMemo(() => filteredAppointments.filter(a => a.appointment_type === "check_out"), [filteredAppointments]);
+
+  // Group by date for range views
+  const groupByDate = (appts: AppointmentWithDetails[]) => {
+    const groups: Record<string, AppointmentWithDetails[]> = {};
+    for (const a of appts) {
+      const d = a.scheduled_at.slice(0, 10);
+      if (!groups[d]) groups[d] = [];
+      groups[d].push(a);
+    }
+    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+  };
 
   const handleConfirmToggle = async (appt: AppointmentWithDetails) => {
     try {
@@ -103,12 +150,123 @@ export default function Appuntamenti() {
     return tIndex >= 0 ? isoStr.slice(tIndex + 1, tIndex + 6) : "--:--";
   };
 
+  const navigatePrev = () => {
+    if (viewMode === "giorno") setSelectedDate(d => subDays(d, 1));
+    else if (viewMode === "settimana") setSelectedDate(d => subWeeks(d, 1));
+    else if (viewMode === "mese") setSelectedDate(d => subMonths(d, 1));
+  };
+
+  const navigateNext = () => {
+    if (viewMode === "giorno") setSelectedDate(d => addDays(d, 1));
+    else if (viewMode === "settimana") setSelectedDate(d => addWeeks(d, 1));
+    else if (viewMode === "mese") setSelectedDate(d => addMonths(d, 1));
+  };
+
+  const prevLabel = viewMode === "giorno" ? "← Ieri" : "← Prec.";
+  const nextLabel = viewMode === "giorno" ? "Domani →" : "Succ. →";
+
+  const dateLabel = useMemo(() => {
+    if (viewMode === "giorno") return format(selectedDate, "EEEE dd MMMM yyyy", { locale: it });
+    if (viewMode === "settimana") {
+      const s = startOfWeek(selectedDate, { weekStartsOn: 1 });
+      const e = endOfWeek(selectedDate, { weekStartsOn: 1 });
+      return `${format(s, "dd MMM", { locale: it })} – ${format(e, "dd MMM yyyy", { locale: it })}`;
+    }
+    if (viewMode === "mese") return format(selectedDate, "MMMM yyyy", { locale: it });
+    return `${format(rangeFrom, "dd/MM/yyyy")} – ${format(rangeTo, "dd/MM/yyyy")}`;
+  }, [viewMode, selectedDate, rangeFrom, rangeTo]);
+
+  const renderApptRow = (appt: AppointmentWithDetails, showDate: boolean) => {
+    const time = extractTime(appt.scheduled_at);
+    const client = appt.booking?.client;
+    const cats = appt.booking?.booking_cats?.map(bc => bc.cat?.name).filter(Boolean).join(", ") || "—";
+    const bookingStatus = appt.booking?.status ?? "";
+
+    return (
+      <TableRow key={appt.id} className={appt.confirmed ? "bg-green-50/50 dark:bg-green-950/20" : ""}>
+        {showDate && (
+          <TableCell className="text-sm font-medium">
+            {format(parseISO(appt.scheduled_at.slice(0, 10)), "dd/MM", { locale: it })}
+          </TableCell>
+        )}
+        <TableCell className="font-mono text-base font-semibold">{time}</TableCell>
+        <TableCell className="font-medium">
+          {client ? `${client.first_name} ${client.last_name}` : "—"}
+          {client?.phone && (
+            <span className="block text-xs text-muted-foreground">{client.phone}</span>
+          )}
+        </TableCell>
+        <TableCell className="text-sm">{cats}</TableCell>
+        <TableCell className="font-mono text-sm">{appt.booking?.booking_number ?? "—"}</TableCell>
+        <TableCell><StatusBadge status={bookingStatus} /></TableCell>
+        <TableCell>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleConfirmToggle(appt)}
+            className={cn(
+              "gap-1",
+              appt.confirmed
+                ? "text-green-600 hover:text-green-700"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {appt.confirmed ? <><CheckCircle2 className="h-4 w-4" /> Sì</> : <><XCircle className="h-4 w-4" /> No</>}
+          </Button>
+        </TableCell>
+        <TableCell className="text-sm text-muted-foreground max-w-[150px] truncate">{appt.notes || "—"}</TableCell>
+        <TableCell>
+          <div className="flex gap-1">
+            <Button variant="ghost" size="icon" onClick={() => setEditing(appt)}><Pencil className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => setDeleting(appt)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+          </div>
+        </TableCell>
+      </TableRow>
+    );
+  };
+
   const renderTable = (appts: AppointmentWithDetails[], type: "check_in" | "check_out") => {
     if (!appts.length) {
       return (
         <div className="py-12 text-center text-muted-foreground">
           <Clock className="mx-auto h-10 w-10 mb-3 opacity-30" />
-          Nessun appuntamento {type === "check_in" ? "check-in" : "check-out"} per questa data
+          Nessun appuntamento {type === "check_in" ? "check-in" : "check-out"}
+        </div>
+      );
+    }
+
+    const showDate = isRange;
+
+    if (showDate) {
+      const grouped = groupByDate(appts);
+      return (
+        <div className="space-y-4">
+          {grouped.map(([date, dayAppts]) => (
+            <div key={date}>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-2 capitalize">
+                {format(parseISO(date), "EEEE dd MMMM", { locale: it })}
+              </h4>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[80px]">Orario</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Gatti</TableHead>
+                      <TableHead>N° Prenotazione</TableHead>
+                      <TableHead>Stato</TableHead>
+                      <TableHead className="w-[100px]">Confermato</TableHead>
+                      <TableHead>Note</TableHead>
+                      <TableHead className="w-[80px]">Azioni</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {dayAppts.map((appt) => renderApptRow(appt, false))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          ))}
         </div>
       );
     }
@@ -122,68 +280,14 @@ export default function Appuntamenti() {
               <TableHead>Cliente</TableHead>
               <TableHead>Gatti</TableHead>
               <TableHead>N° Prenotazione</TableHead>
-              <TableHead>Stato Prenotazione</TableHead>
+              <TableHead>Stato</TableHead>
               <TableHead className="w-[100px]">Confermato</TableHead>
               <TableHead>Note</TableHead>
               <TableHead className="w-[80px]">Azioni</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {appts.map((appt) => {
-              const time = extractTime(appt.scheduled_at);
-              const client = appt.booking?.client;
-              const cats = appt.booking?.booking_cats?.map(bc => bc.cat?.name).filter(Boolean).join(", ") || "—";
-              const bookingStatus = appt.booking?.status ?? "";
-
-              return (
-                <TableRow key={appt.id} className={appt.confirmed ? "bg-green-50/50 dark:bg-green-950/20" : ""}>
-                  <TableCell className="font-mono text-base font-semibold">{time}</TableCell>
-                  <TableCell className="font-medium">
-                    {client ? `${client.first_name} ${client.last_name}` : "—"}
-                    {client?.phone && (
-                      <span className="block text-xs text-muted-foreground">{client.phone}</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm">{cats}</TableCell>
-                  <TableCell className="font-mono text-sm">{appt.booking?.booking_number ?? "—"}</TableCell>
-                  <TableCell>
-                    <StatusBadge status={bookingStatus} />
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleConfirmToggle(appt)}
-                      className={cn(
-                        "gap-1",
-                        appt.confirmed
-                          ? "text-green-600 hover:text-green-700"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      {appt.confirmed ? (
-                        <><CheckCircle2 className="h-4 w-4" /> Sì</>
-                      ) : (
-                        <><XCircle className="h-4 w-4" /> No</>
-                      )}
-                    </Button>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground max-w-[150px] truncate">
-                    {appt.notes || "—"}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => setEditing(appt)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleting(appt)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {appts.map((appt) => renderApptRow(appt, false))}
           </TableBody>
         </Table>
       </div>
@@ -198,39 +302,82 @@ export default function Appuntamenti() {
           <p className="text-muted-foreground text-sm mt-1">Gestisci gli appuntamenti di check-in e check-out</p>
         </div>
 
-        {/* Date navigation */}
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setSelectedDate(d => subDays(d, 1))}>
-            ← Ieri
-          </Button>
+        {/* View mode selector */}
+        <Select value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="giorno">Giorno</SelectItem>
+            <SelectItem value="settimana">Settimana</SelectItem>
+            <SelectItem value="mese">Mese</SelectItem>
+            <SelectItem value="personalizzato">Dal – Al</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Date navigation */}
+      {viewMode !== "personalizzato" ? (
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={navigatePrev}>{prevLabel}</Button>
           <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="min-w-[200px] justify-start gap-2">
+              <Button variant="outline" className="min-w-[220px] justify-start gap-2 capitalize">
                 <CalendarIcon className="h-4 w-4" />
-                {format(selectedDate, "EEEE dd MMMM yyyy", { locale: it })}
+                {dateLabel}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={selectedDate}
-                onSelect={(d) => {
-                  if (d) setSelectedDate(d);
-                  setCalendarOpen(false);
-                }}
+                onSelect={(d) => { if (d) setSelectedDate(d); setCalendarOpen(false); }}
                 initialFocus
                 className={cn("p-3 pointer-events-auto")}
               />
             </PopoverContent>
           </Popover>
-          <Button variant="outline" size="sm" onClick={() => setSelectedDate(d => addDays(d, 1))}>
-            Domani →
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => setSelectedDate(new Date())}>
-            Oggi
-          </Button>
+          <Button variant="outline" size="sm" onClick={navigateNext}>{nextLabel}</Button>
+          <Button variant="ghost" size="sm" onClick={() => setSelectedDate(new Date())}>Oggi</Button>
         </div>
-      </div>
+      ) : (
+        <div className="flex items-center gap-2 flex-wrap">
+          <Popover open={calendarFromOpen} onOpenChange={setCalendarFromOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="min-w-[160px] justify-start gap-2">
+                <CalendarIcon className="h-4 w-4" />
+                Dal: {format(rangeFrom, "dd/MM/yyyy")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={rangeFrom}
+                onSelect={(d) => { if (d) setRangeFrom(d); setCalendarFromOpen(false); }}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+          <Popover open={calendarToOpen} onOpenChange={setCalendarToOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="min-w-[160px] justify-start gap-2">
+                <CalendarIcon className="h-4 w-4" />
+                Al: {format(rangeTo, "dd/MM/yyyy")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={rangeTo}
+                onSelect={(d) => { if (d) setRangeTo(d); setCalendarToOpen(false); }}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      )}
 
       {/* Search bar */}
       <div className="relative max-w-sm">
@@ -278,11 +425,13 @@ export default function Appuntamenti() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Appuntamenti Check-in</CardTitle>
-                <CardDescription>Arrivi previsti per {format(selectedDate, "dd MMMM yyyy", { locale: it })}</CardDescription>
+                <CardDescription className="capitalize">
+                  {viewMode === "giorno"
+                    ? `Arrivi previsti per ${format(selectedDate, "dd MMMM yyyy", { locale: it })}`
+                    : `Arrivi dal ${format(parseISO(startDate), "dd MMM", { locale: it })} al ${format(parseISO(endDate), "dd MMM yyyy", { locale: it })}`}
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                {renderTable(checkInAppts, "check_in")}
-              </CardContent>
+              <CardContent>{renderTable(checkInAppts, "check_in")}</CardContent>
             </Card>
           </TabsContent>
 
@@ -290,11 +439,13 @@ export default function Appuntamenti() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Appuntamenti Check-out</CardTitle>
-                <CardDescription>Partenze previste per {format(selectedDate, "dd MMMM yyyy", { locale: it })}</CardDescription>
+                <CardDescription className="capitalize">
+                  {viewMode === "giorno"
+                    ? `Partenze previste per ${format(selectedDate, "dd MMMM yyyy", { locale: it })}`
+                    : `Partenze dal ${format(parseISO(startDate), "dd MMM", { locale: it })} al ${format(parseISO(endDate), "dd MMM yyyy", { locale: it })}`}
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                {renderTable(checkOutAppts, "check_out")}
-              </CardContent>
+              <CardContent>{renderTable(checkOutAppts, "check_out")}</CardContent>
             </Card>
           </TabsContent>
         </Tabs>
@@ -375,7 +526,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// Edit appointment dialog — shows available slots for the appointment's date
+// Edit appointment dialog
 function EditAppointmentDialog({
   appointment,
   open,
@@ -408,7 +559,6 @@ function EditAppointmentDialog({
       const times = generateTimeSlots(config);
       for (const time of times) {
         let used = counts?.[time] ?? 0;
-        // Don't count the current appointment as "used"
         if (time === currentTime) used = Math.max(0, used - 1);
         slots.push({ time, available: config.max_appointments - used, maxAppts: config.max_appointments });
       }
