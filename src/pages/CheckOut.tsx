@@ -640,16 +640,30 @@ export default function CheckOut() {
             </div>
           )}
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmBooking(null)}>Annulla</Button>
-            <Button
-              variant="destructive"
-              onClick={handleCheckOut}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Elaborazione..." : "Conferma Check-out"}
-            </Button>
-          </DialogFooter>
+          {recalculated && (() => {
+            const pendingPayment = addPayment ? Math.max(0, parseFloat(txAmount) || 0) : 0;
+            const remaining = recalculated.newTotal - bookingPaidAmount - pendingPayment;
+            const hasBalance = remaining > 0.01;
+            return (
+              <DialogFooter className="flex-col gap-2 sm:flex-col">
+                {hasBalance && (
+                  <p className="text-sm text-destructive text-center w-full">
+                    Residuo di € {remaining.toFixed(2)} — registra un pagamento per procedere
+                  </p>
+                )}
+                <div className="flex gap-2 justify-end w-full">
+                  <Button variant="outline" onClick={() => setConfirmBooking(null)}>Annulla</Button>
+                  <Button
+                    variant="destructive"
+                    onClick={handleCheckOut}
+                    disabled={isSubmitting || hasBalance}
+                  >
+                    {isSubmitting ? "Elaborazione..." : "Conferma Check-out"}
+                  </Button>
+                </div>
+              </DialogFooter>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
