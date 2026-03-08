@@ -75,6 +75,7 @@ export default function Appuntamenti() {
     return { startDate: format(rangeFrom, "yyyy-MM-dd"), endDate: format(rangeTo, "yyyy-MM-dd") };
   }, [viewMode, selectedDate, rangeFrom, rangeTo]);
 
+  const isRange = viewMode !== "giorno";
   const hasSearch = search.trim().length >= 2;
 
   // Use single-day hook for "giorno", range hook for others
