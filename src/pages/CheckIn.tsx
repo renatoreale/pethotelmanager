@@ -24,6 +24,7 @@ import { useInsertCatRegistry } from "@/hooks/useCatRegistry";
 import { useCreatePayment, usePaymentMethods } from "@/hooks/usePayments";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CHECKIN_STATUSES = ["check_in", "appuntamento_in_fissato", "appuntamento_in_out_fissato"];
 
@@ -38,6 +39,7 @@ interface CatDetails {
 }
 
 export default function CheckIn() {
+  const queryClient = useQueryClient();
   const { profile } = useAuth();
   const { data: bookings, isLoading } = useBookings();
   const { data: paymentMethods } = usePaymentMethods();
@@ -160,6 +162,8 @@ export default function CheckIn() {
           await supabase.from("cats").update(updates).eq("id", cat.id);
         }
       }
+      // Invalidate cats query so Gatti page refreshes
+      queryClient.invalidateQueries({ queryKey: ["cats"] });
 
       // 2. Transition booking
       await transitionBooking.mutateAsync({ id: booking.id, newStatus: "in_corso" });
