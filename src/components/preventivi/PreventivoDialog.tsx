@@ -142,6 +142,7 @@ function ClientAutocomplete({ clients, value, searchValue, onSearchChange, onSel
         <div className="absolute z-50 top-full mt-1 w-full rounded-md border bg-popover shadow-md overflow-hidden max-h-[240px] overflow-y-auto">
           {suggestions.map((c: any, i: number) => {
             const name = `${c.first_name} ${c.last_name}`;
+            const catNames = catsByClient.get(c.id) ?? [];
             return (
               <button
                 key={c.id}
@@ -159,6 +160,17 @@ function ClientAutocomplete({ clients, value, searchValue, onSearchChange, onSel
                   </span>
                 </div>
                 <div className="flex items-center gap-3 pl-5 text-xs text-muted-foreground flex-wrap">
+                  {catNames.length > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Cat className="h-3 w-3 shrink-0" />
+                      {catNames.map((cn, ci) => (
+                        <span key={ci}>
+                          <HighlightMatch text={cn} query={searchValue} />
+                          {ci < catNames.length - 1 && ", "}
+                        </span>
+                      ))}
+                    </span>
+                  )}
                   {c.phone && (
                     <span className="flex items-center gap-1">
                       <Phone className="h-3 w-3 shrink-0" />
