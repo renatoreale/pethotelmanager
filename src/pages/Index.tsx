@@ -157,9 +157,9 @@ export default function Index() {
       bg: "bg-accent/10",
     },
     {
-      title: "Check-in oggi",
+      title: isSelectedToday ? "Check-in oggi" : "Check-in",
       value: String(s.checkInsToday),
-      subtitle: `${s.checkOutsToday} check-out oggi`,
+      subtitle: `${s.checkOutsToday} check-out`,
       icon: LogIn,
       color: "text-success",
       bg: "bg-success/10",
@@ -167,7 +167,7 @@ export default function Index() {
     {
       title: "Incasso mese",
       value: `€ ${s.monthRevenue.toFixed(0)}`,
-      subtitle: format(new Date(), "MMMM yyyy", { locale: it }),
+      subtitle: format(selectedDate, "MMMM yyyy", { locale: it }),
       icon: CreditCard,
       color: "text-warning",
       bg: "bg-warning/10",
