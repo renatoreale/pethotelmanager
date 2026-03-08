@@ -53,7 +53,7 @@ export default function Pensione() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Configurazione Pensione</h1>
-        <p className="text-muted-foreground text-sm mt-1">Casette, slot appuntamenti e listino prezzi</p>
+        <p className="text-muted-foreground text-sm mt-1">Casette, slot appuntamenti, listino prezzi e modalità di pagamento</p>
       </div>
 
       <Tabs defaultValue="casette" className="space-y-4">
