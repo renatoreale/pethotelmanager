@@ -51,13 +51,6 @@ interface Props {
   bookingData?: CheckoutBookingData | null;
 }
 
-// Statuses that are considered "before check-in"
-const PRE_CHECKIN_STATUSES = [
-  "preventivo", "confermata",
-  "appuntamento_fissato", "appuntamento_in_fissato",
-  "appuntamento_out_fissato", "appuntamento_in_out_fissato",
-];
-
 export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingData }: Props) {
   const queryClient = useQueryClient();
   const updateAppointment = useUpdateAppointment();
@@ -67,19 +60,11 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
 
   const isCreateMode = !appointment;
   const booking = appointment?.booking ?? bookingData;
-  const appointmentType = appointment?.appointment_type ?? "check_out";
-  const isCheckIn = appointmentType === "check_in";
-
-  const originalCiDate = (booking as any)?.check_in_date;
   const originalCoDate = (booking as any)?.check_out_date;
-  const bookingStatus = (booking as any)?.status ?? "";
-  const isPreCheckIn = PRE_CHECKIN_STATUSES.includes(bookingStatus);
-
-  // The date we're editing: check_in_date for check-in appts, check_out_date for check-out
-  const originalDateStr = isCheckIn ? originalCiDate : originalCoDate;
+  const checkInDate = (booking as any)?.check_in_date;
 
   const [newDate, setNewDate] = useState<Date>(
-    originalDateStr ? parseISO(originalDateStr) : new Date()
+    originalCoDate ? parseISO(originalCoDate) : new Date()
   );
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [selectedTime, setSelectedTime] = useState<string>("");
@@ -96,20 +81,20 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
   // Init state when dialog opens
   useEffect(() => {
     if (open) {
-      setNewDate(originalDateStr ? parseISO(originalDateStr) : new Date());
+      setNewDate(originalCoDate ? parseISO(originalCoDate) : new Date());
       setSelectedTime(isCreateMode ? "" : currentTime);
       setManualExtraCost(null);
     }
-  }, [open, originalDateStr, currentTime, isCreateMode]);
+  }, [open, originalCoDate, currentTime, isCreateMode]);
 
   const newDateStr = format(newDate, "yyyy-MM-dd");
-  const dateChanged = newDateStr !== originalDateStr;
+  const dateChanged = newDateStr !== originalCoDate;
 
   // Slot configs for the new date
   const jsDay = getDay(newDate);
   const dow = jsDay === 0 ? 6 : jsDay - 1;
-  const { data: slotConfigs } = useSlotConfigsForDay(appointmentType, dow);
-  const { data: counts } = useAppointmentCounts(newDateStr, appointmentType);
+  const { data: slotConfigs } = useSlotConfigsForDay("check_out", dow);
+  const { data: counts } = useAppointmentCounts(newDateStr, "check_out");
 
   const availableSlots = useMemo(() => {
     if (!slotConfigs?.length) return [];
@@ -118,6 +103,7 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
       const times = generateTimeSlots(config);
       for (const time of times) {
         let used = counts?.[time] ?? 0;
+        // Don't count current appointment as used if same date (edit mode)
         if (!isCreateMode && !dateChanged && time === currentTime) used = Math.max(0, used - 1);
         slots.push({
           time,
@@ -178,24 +164,19 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
   };
 
   const recalculated = useMemo(() => {
-    if (!booking || !originalCiDate || !originalCoDate) return null;
+    if (!booking || !checkInDate || !originalCoDate) return null;
 
-    // Compute effective check-in/check-out dates based on what we're editing
-    const effectiveCi = isCheckIn ? newDateStr : originalCiDate;
-    const effectiveCo = isCheckIn ? originalCoDate : newDateStr;
-
-    const originalDays = calcDuration(originalCiDate, originalCoDate);
-    const newDays = calcDuration(effectiveCi, effectiveCo);
+    const originalDays = calcDuration(checkInDate, originalCoDate);
+    const newDays = calcDuration(checkInDate, newDateStr);
     const originalTotal = Number((booking as any).total_amount ?? 0);
 
     const extraDays = Math.max(0, newDays - originalDays);
-    const reducedDays = Math.max(0, originalDays - newDays);
     let extraCost = 0;
     let extraTariffName = "";
 
     if (extraDays > 0) {
       const numCats = ((booking as any).booking_cats ?? []).length;
-      const tariff = findSeasonalTariff(effectiveCo > originalCoDate ? originalCoDate : effectiveCi);
+      const tariff = findSeasonalTariff(newDateStr > originalCoDate ? originalCoDate : checkInDate);
       if (tariff) {
         extraTariffName = tariff.name;
         const baseCost = Number(tariff.price_per_day) * extraDays * numCats;
@@ -206,53 +187,16 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
     }
 
     const effectiveExtraCost = manualExtraCost !== null ? Math.max(0, parseFloat(manualExtraCost) || 0) : extraCost;
+    const newTotal = newDays <= originalDays ? originalTotal : Math.round((originalTotal + effectiveExtraCost) * 100) / 100;
 
-    let newTotal: number;
-    if (isPreCheckIn) {
-      // Pre check-in: recalculate in both directions
-      if (extraDays > 0) {
-        newTotal = Math.round((originalTotal + effectiveExtraCost) * 100) / 100;
-      } else if (reducedDays > 0) {
-        // Reduce: recalculate from scratch based on new days
-        const numCats = ((booking as any).booking_cats ?? []).length;
-        const tariff = findSeasonalTariff(effectiveCi);
-        if (tariff) {
-          const baseCost = Number(tariff.price_per_day) * newDays * numCats;
-          const extraCats = Math.max(0, numCats - 1);
-          const supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * newDays;
-          newTotal = Math.round((baseCost + supplementCost) * 100) / 100;
-        } else {
-          newTotal = originalTotal;
-        }
-      } else {
-        newTotal = originalTotal;
-      }
-    } else {
-      // Post check-in: only increase, never decrease
-      newTotal = extraDays > 0
-        ? Math.round((originalTotal + effectiveExtraCost) * 100) / 100
-        : originalTotal;
-    }
-
-    return { originalDays, newDays, newTotal, originalTotal, extraDays, reducedDays, extraCost, extraTariffName, effectiveExtraCost };
-  }, [booking, originalCiDate, originalCoDate, newDateStr, isCheckIn, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs, manualExtraCost, isPreCheckIn]);
+    return { originalDays, newDays, newTotal, originalTotal, extraDays, extraCost, extraTariffName, effectiveExtraCost };
+  }, [booking, checkInDate, originalCoDate, newDateStr, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs, manualExtraCost]);
 
   const stayLabel = stayCalcType === "notti" ? "notti" : "giorni";
 
-  // Date constraints for the calendar
-  const calendarDisabled = (d: Date) => {
-    if (isCheckIn) {
-      // Check-in can't be after check-out
-      return originalCoDate ? d > parseISO(originalCoDate) : false;
-    } else {
-      // Check-out can't be before check-in
-      return originalCiDate ? d < parseISO(originalCiDate) : false;
-    }
-  };
-
   const handleSave = async () => {
     if (!selectedTime) {
-      toast.error(`Seleziona un orario per il ${isCheckIn ? "check-in" : "check-out"}`);
+      toast.error("Seleziona un orario per il check-out");
       return;
     }
     if (!booking) return;
@@ -261,38 +205,30 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
       const bookingId = (booking as any).id;
 
       if (isCreateMode) {
+        // Create new checkout appointment
         const selectedSlot = availableSlots.find(s => s.time === selectedTime);
         await createAppointment.mutateAsync({
           booking_id: bookingId,
-          appointment_type: appointmentType,
+          appointment_type: "check_out",
           scheduled_at: `${newDateStr}T${selectedTime}:00`,
           duration_minutes: selectedSlot?.duration ?? 30,
         });
       } else {
+        // Update existing appointment
         await updateAppointment.mutateAsync({
           id: appointment!.id,
           scheduled_at: `${newDateStr}T${selectedTime}:00`,
         });
       }
 
-      // Update booking dates and total if date changed
+      // Update booking check_out_date and total if date changed
       if (dateChanged && recalculated) {
         const existingBreakdown = (booking as any).price_breakdown ?? {};
-        const bookingUpdates: any = {};
-
-        if (isCheckIn) {
-          bookingUpdates.check_in_date = newDateStr;
-        } else {
-          bookingUpdates.check_out_date = newDateStr;
-        }
-
-        // Update total amount
-        if (recalculated.newTotal !== recalculated.originalTotal) {
-          bookingUpdates.total_amount = recalculated.newTotal;
-        }
-
-        // Add extra days info if days increased (post check-in only adds extras)
-        if (recalculated.extraDays > 0 && !isPreCheckIn) {
+        const bookingUpdates: any = {
+          check_out_date: newDateStr,
+          total_amount: recalculated.newTotal,
+        };
+        if (recalculated.extraDays > 0) {
           bookingUpdates.price_breakdown = {
             ...existingBreakdown,
             extra_days_info: {
@@ -300,33 +236,22 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
               num_cats: ((booking as any).booking_cats ?? []).length,
               tariff_name: recalculated.extraTariffName,
               extra_cost: recalculated.effectiveExtraCost,
-              reason: isCheckIn ? "check_in_anticipato" : "check_out_posticipato",
+              reason: "check_out_posticipato",
             },
           };
-        } else if (isPreCheckIn && recalculated.newTotal !== recalculated.originalTotal) {
-          // Pre check-in: clean up extra_days_info if any, since we recalculate from scratch
-          const { extra_days_info, ...restBreakdown } = existingBreakdown;
-          bookingUpdates.price_breakdown = restBreakdown;
         }
-
-        if (Object.keys(bookingUpdates).length > 0) {
-          const { error: bookingError } = await supabase.from("bookings").update(bookingUpdates).eq("id", bookingId);
-          if (bookingError) throw bookingError;
-        }
+        await supabase.from("bookings").update(bookingUpdates).eq("id", bookingId);
       }
 
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["bookings"] }),
-        queryClient.invalidateQueries({ queryKey: ["preventivi"] }),
-        queryClient.invalidateQueries({ queryKey: ["appointments-by-date"] }),
-        queryClient.invalidateQueries({ queryKey: ["appointments-by-range"] }),
-        queryClient.invalidateQueries({ queryKey: ["appointments-all"] }),
-        queryClient.invalidateQueries({ queryKey: ["appointment-counts"] }),
-        queryClient.invalidateQueries({ queryKey: ["booking-appointments"] }),
-      ]);
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["preventivi"] });
+      queryClient.invalidateQueries({ queryKey: ["appointments-by-date"] });
+      queryClient.invalidateQueries({ queryKey: ["appointments-by-range"] });
+      queryClient.invalidateQueries({ queryKey: ["appointments-all"] });
+      queryClient.invalidateQueries({ queryKey: ["appointment-counts"] });
+      queryClient.invalidateQueries({ queryKey: ["booking-appointments"] });
 
-      const typeLabel = isCheckIn ? "check-in" : "check-out";
-      toast.success(isCreateMode ? `Appuntamento ${typeLabel} creato` : `Appuntamento ${typeLabel} aggiornato`);
+      toast.success(isCreateMode ? "Appuntamento check-out creato" : "Appuntamento check-out aggiornato");
       onOpenChange(false);
     } catch (err: any) {
       toast.error(err.message || "Errore durante il salvataggio");
@@ -336,13 +261,12 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
   };
 
   const noChanges = !isCreateMode && !dateChanged && selectedTime === currentTime;
-  const typeLabel = isCheckIn ? "Check-in" : "Check-out";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isCreateMode ? `Fissa ${typeLabel}` : `Modifica ${typeLabel}`}</DialogTitle>
+          <DialogTitle>{isCreateMode ? "Fissa Check-out" : "Modifica Check-out"}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
@@ -350,16 +274,13 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
           <div className="rounded-md bg-muted p-3 space-y-1 text-sm">
             <p><span className="text-muted-foreground">Cliente:</span> {(booking as any)?.client?.first_name} {(booking as any)?.client?.last_name}</p>
             <p><span className="text-muted-foreground">Prenotazione:</span> <span className="font-mono">{(booking as any)?.booking_number}</span></p>
-            <p><span className="text-muted-foreground">Check-in {isCheckIn ? (isCreateMode ? "previsto" : "originale") : ""}:</span> {originalCiDate ? format(parseISO(originalCiDate), "dd MMM yyyy", { locale: it }) : "—"}</p>
-            <p><span className="text-muted-foreground">Check-out {!isCheckIn ? (isCreateMode ? "previsto" : "originale") : ""}:</span> {originalCoDate ? format(parseISO(originalCoDate), "dd MMM yyyy", { locale: it }) : "—"}</p>
-            <p><span className="text-muted-foreground">Stato:</span> {bookingStatus}</p>
+            <p><span className="text-muted-foreground">Check-in:</span> {checkInDate ? format(parseISO(checkInDate), "dd MMM yyyy", { locale: it }) : "—"}</p>
+            <p><span className="text-muted-foreground">Check-out {isCreateMode ? "previsto" : "originale"}:</span> {originalCoDate ? format(parseISO(originalCoDate), "dd MMM yyyy", { locale: it }) : "—"}</p>
           </div>
 
           {/* Date picker */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              {isCreateMode ? `Data di ${typeLabel.toLowerCase()}` : `Nuova data di ${typeLabel.toLowerCase()}`}
-            </Label>
+            <Label className="text-sm font-medium">{isCreateMode ? "Data di check-out" : "Nuova data di check-out"}</Label>
             <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -378,7 +299,7 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
                   mode="single"
                   selected={newDate}
                   onSelect={(d) => { if (d) { setNewDate(d); setDatePickerOpen(false); } }}
-                  disabled={calendarDisabled}
+                  disabled={(d) => checkInDate ? d < parseISO(checkInDate) : false}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
                 />
@@ -388,7 +309,7 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
 
           {/* Time slot selection */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Orario {typeLabel.toLowerCase()}</Label>
+            <Label className="text-sm font-medium">Orario check-out</Label>
             {!availableSlots.length ? (
               <p className="text-sm text-muted-foreground">Nessuno slot configurato per questo giorno.</p>
             ) : (
@@ -462,14 +383,9 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
                   </div>
                 </div>
               )}
-              {recalculated.reducedDays > 0 && isPreCheckIn && (
-                <div className="text-xs text-amber-600 dark:text-amber-400">
-                  Soggiorno ridotto di {recalculated.reducedDays} {stayLabel} — totale ricalcolato
-                </div>
-              )}
-              {recalculated.reducedDays > 0 && !isPreCheckIn && (
+              {recalculated.newDays < recalculated.originalDays && (
                 <div className="text-xs text-muted-foreground italic">
-                  Soggiorno ridotto di {recalculated.reducedDays} {stayLabel} — totale invariato (check-in già effettuato)
+                  Soggiorno ridotto di {recalculated.originalDays - recalculated.newDays} {stayLabel} — totale invariato
                 </div>
               )}
               <div className="flex justify-between border-t pt-1.5">
@@ -483,7 +399,7 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annulla</Button>
           <Button onClick={handleSave} disabled={saving || noChanges || !selectedTime}>
-            {saving ? "Salvataggio..." : isCreateMode ? `Fissa ${typeLabel}` : "Salva Modifiche"}
+            {saving ? "Salvataggio..." : isCreateMode ? "Fissa Check-out" : "Salva Modifiche"}
           </Button>
         </DialogFooter>
       </DialogContent>

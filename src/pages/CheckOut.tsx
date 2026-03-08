@@ -33,7 +33,7 @@ import { useTenantConfig, usePriceLists } from "@/hooks/usePensioneConfig";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
-const CHECKOUT_STATUSES = ["in_corso"];
+const CHECKOUT_STATUSES = ["check_out", "in_corso", "appuntamento_out_fissato", "appuntamento_in_out_fissato"];
 
 interface CatInfo {
   id: string;
@@ -434,7 +434,6 @@ export default function CheckOut() {
                           setDatePickerOpen(false);
                         }
                       }}
-                      disabled={(date) => date > new Date()}
                       initialFocus
                       className={cn("p-3 pointer-events-auto")}
                     />

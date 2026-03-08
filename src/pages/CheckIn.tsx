@@ -66,7 +66,7 @@ export default function CheckIn() {
   // Payment form state
   const [addPayment, setAddPayment] = useState(false);
   const [txAmount, setTxAmount] = useState("");
-  const [txType, setTxType] = useState<"caparra" | "saldo" | "extra" | "rimborso">("caparra");
+  const [txType, setTxType] = useState<"caparra" | "saldo" | "extra" | "rimborso">("saldo");
   const [txMethodId, setTxMethodId] = useState("");
   const [txNotes, setTxNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -143,10 +143,7 @@ export default function CheckIn() {
 
   const checkInBookings = useMemo(() => {
     if (!bookings) return [];
-    const today = format(new Date(), "yyyy-MM-dd");
-    let filtered = bookings.filter(b =>
-      CHECKIN_STATUSES.includes(b.status) && b.check_in_date <= today
-    );
+    let filtered = bookings.filter(b => CHECKIN_STATUSES.includes(b.status));
     if (search.trim()) {
       const q = search.toLowerCase();
       filtered = filtered.filter(b => {
@@ -165,7 +162,7 @@ export default function CheckIn() {
   const resetForm = () => {
     setAddPayment(false);
     setTxAmount("");
-    setTxType("caparra");
+    setTxType("saldo");
     setTxMethodId("");
     setTxNotes("");
     setCatDetails([]);
@@ -462,7 +459,6 @@ export default function CheckIn() {
                           setDatePickerOpen(false);
                         }
                       }}
-                      disabled={(date) => date > new Date()}
                       initialFocus
                       className={cn("p-3 pointer-events-auto")}
                     />
