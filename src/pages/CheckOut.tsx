@@ -75,6 +75,7 @@ export default function CheckOut() {
   const [catDetails, setCatDetails] = useState<CatInfo[]>([]);
   const [bookingPaidAmount, setBookingPaidAmount] = useState(0);
   const [manualExtraCost, setManualExtraCost] = useState<string | null>(null);
+  const [manualTotal, setManualTotal] = useState<string | null>(null);
 
   const stayCalcType = tenantConfig?.stay_calc_type ?? "notti";
   const countCheckinDay = tenantConfig?.count_checkin_day ?? true;
@@ -135,10 +136,11 @@ export default function CheckOut() {
     const effectiveExtraCost = manualExtraCost !== null ? Math.max(0, parseFloat(manualExtraCost) || 0) : extraCost;
 
     // If fewer days: keep original total. If more days: add extra cost.
-    const newTotal = newDays <= originalDays ? originalTotal : Math.round((originalTotal + effectiveExtraCost) * 100) / 100;
+    const calculatedTotal = newDays <= originalDays ? originalTotal : Math.round((originalTotal + effectiveExtraCost) * 100) / 100;
+    const newTotal = manualTotal !== null ? Math.max(0, parseFloat(manualTotal) || 0) : calculatedTotal;
 
-    return { newCoStr, originalDays, newDays, newTotal, dateChanged, originalTotal, extraDays, extraCost, extraTariffName, effectiveExtraCost };
-  }, [confirmBooking, actualCheckOutDate, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs, manualExtraCost]);
+    return { newCoStr, originalDays, newDays, newTotal, calculatedTotal, dateChanged, originalTotal, extraDays, extraCost, extraTariffName, effectiveExtraCost };
+  }, [confirmBooking, actualCheckOutDate, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs, manualExtraCost, manualTotal]);
 
   const checkOutBookings = useMemo(() => {
     if (!bookings) return [];
@@ -166,6 +168,7 @@ export default function CheckOut() {
     setTxNotes("");
     setCatDetails([]);
     setManualExtraCost(null);
+    setManualTotal(null);
   };
 
   const openConfirm = async (b: any) => {
@@ -502,9 +505,28 @@ export default function CheckOut() {
                     Soggiorno ridotto di {recalculated.originalDays - recalculated.newDays} {stayLabel} — totale invariato
                   </div>
                 )}
-                <div className="flex justify-between border-t pt-1.5">
-                  <span className="font-medium">Nuovo totale</span>
-                  <span className="font-bold">€ {recalculated.newTotal.toFixed(2)}</span>
+                <div className="flex justify-between items-center border-t pt-1.5">
+                  <span className="font-medium">Totale</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">€</span>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      className="h-7 w-28 text-sm font-bold text-right"
+                      value={manualTotal !== null ? manualTotal : recalculated.calculatedTotal.toFixed(2)}
+                      onChange={e => setManualTotal(e.target.value)}
+                    />
+                    {manualTotal !== null && (
+                      <button
+                        type="button"
+                        className="text-xs text-muted-foreground underline hover:text-foreground"
+                        onClick={() => setManualTotal(null)}
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Pagato</span>
