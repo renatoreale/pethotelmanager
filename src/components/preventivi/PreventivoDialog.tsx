@@ -533,24 +533,19 @@ export function PreventivoDialog({
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Cliente *</Label>
-                <div className="flex gap-2">
-                  <Input placeholder="Cerca cliente per nome o email..." value={clientSearch}
-                    onChange={(e) => setClientSearch(e.target.value)} className="flex-1" />
+                <div className="flex gap-2 items-start">
+                  <ClientAutocomplete
+                    clients={clients ?? []}
+                    value={clientId}
+                    searchValue={clientSearch}
+                    onSearchChange={setClientSearch}
+                    onSelect={(id) => { setClientId(id); setSelectedCats([]); }}
+                  />
                   <Button type="button" variant="outline" size="sm" onClick={() => setNewClientDialogOpen(true)}
-                    className="shrink-0 gap-1">
+                    className="shrink-0 gap-1 mt-0">
                     <UserPlus className="h-4 w-4" /> Nuovo
                   </Button>
                 </div>
-                <Select value={clientId} onValueChange={(v) => { setClientId(v); setSelectedCats([]); }}>
-                  <SelectTrigger><SelectValue placeholder="Seleziona cliente" /></SelectTrigger>
-                  <SelectContent>
-                    {filteredClients.map((c: any) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.first_name} {c.last_name} {c.email ? `(${c.email})` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
 
               {clientId && (
