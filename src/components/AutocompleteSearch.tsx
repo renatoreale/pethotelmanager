@@ -1,7 +1,8 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, User, Cat, Mail, Phone, Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useClients } from "@/hooks/useClients";
 
 export interface SearchableItem {
   label: string;
