@@ -15,7 +15,8 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, CalendarIcon, X, User, Cat, Home, Calendar as CalIcon, Sparkles, Percent, FileText } from "lucide-react";
+import { Plus, CalendarIcon, X, User, Cat, Home, Calendar as CalIcon, Sparkles, Percent, FileText, UserPlus } from "lucide-react";
+import { ClientDialog } from "@/components/clients/ClientDialog";
 import { toast } from "sonner";
 import { format, differenceInDays, parseISO, startOfDay } from "date-fns";
 import { it } from "date-fns/locale";
