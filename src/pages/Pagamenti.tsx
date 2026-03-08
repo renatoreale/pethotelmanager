@@ -100,6 +100,7 @@ export default function Pagamenti() {
   const [expandedClients, setExpandedClients] = useState<Set<string>>(new Set());
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [search, setSearch] = useState("");
+  const [filterResiduo, setFilterResiduo] = useState(false);
 
   const [txDialogOpen, setTxDialogOpen] = useState(false);
   const [txEditId, setTxEditId] = useState<string | null>(null);
