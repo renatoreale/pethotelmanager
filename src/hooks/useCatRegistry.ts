@@ -10,7 +10,7 @@ export function useCatRegistry() {
       if (!profile?.tenant_id) return [];
       const { data, error } = await supabase
         .from("cat_registry" as any)
-        .select("*")
+        .select("*, cats:cat_id(breed, gender)")
         .eq("tenant_id", profile.tenant_id)
         .order("check_in_date", { ascending: false });
       if (error) throw error;
