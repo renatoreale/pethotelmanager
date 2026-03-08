@@ -84,7 +84,7 @@ function MoneyBadge({ value, variant }: { value: number; variant: "total" | "pai
   };
   const labels = { total: "Totale", paid: "Pagato", remaining: "Residuo" };
   return (
-    <div className={`rounded-lg px-3 py-1.5 text-center ${colors[variant]}`}>
+    <div className={`rounded-lg px-3 py-1.5 text-center min-w-[90px] ${colors[variant]}`}>
       <div className="text-[10px] uppercase tracking-wider font-medium opacity-70">{labels[variant]}</div>
       <div className="font-mono text-sm font-semibold">€ {value.toFixed(2)}</div>
     </div>
