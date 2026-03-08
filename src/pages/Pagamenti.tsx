@@ -141,9 +141,19 @@ export default function Pagamenti() {
         g => g.clientName.toLowerCase().includes(q) || g.catNames.toLowerCase().includes(q)
       );
     }
+    if (filterResiduo) {
+      groups = groups.map(g => ({
+        ...g,
+        bookings: g.bookings.filter((b: any) => {
+          const bTotal = Number(b.total_amount ?? 0);
+          const { net } = calcTotals(b.payments ?? []);
+          return bTotal - net > 0;
+        }),
+      })).filter(g => g.bookings.length > 0);
+    }
     groups.sort((a, b) => a.clientName.localeCompare(b.clientName));
     return groups;
-  }, [bookings, search]);
+  }, [bookings, search, filterResiduo]);
 
   const toggleClient = (id: string) => {
     setExpandedClients(prev => {
