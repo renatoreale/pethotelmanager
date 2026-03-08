@@ -85,6 +85,23 @@ export function useTogglePaymentMethod() {
   });
 }
 
+export function useUpdatePaymentMethod() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const { error } = await supabase
+        .from("payment_methods")
+        .update({ name })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["payment-methods"] });
+      qc.invalidateQueries({ queryKey: ["payment-methods-all"] });
+    },
+  });
+}
+
 export function useDeletePaymentMethod() {
   const qc = useQueryClient();
   return useMutation({

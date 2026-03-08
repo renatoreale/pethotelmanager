@@ -716,9 +716,12 @@ function PaymentMethodsTab() {
   const createMethod = useCreatePaymentMethod();
   const toggleMethod = useTogglePaymentMethod();
   const deleteMethod = useDeletePaymentMethod();
+  const updateMethod = useUpdatePaymentMethod();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [deleting, setDeleting] = useState<any>(null);
+  const [editing, setEditing] = useState<any>(null);
+  const [editName, setEditName] = useState("");
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
@@ -730,6 +733,17 @@ function PaymentMethodsTab() {
       toast.success("Modalità di pagamento creata");
       setNewName("");
       setDialogOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || "Errore");
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!editing || !editName.trim()) return;
+    try {
+      await updateMethod.mutateAsync({ id: editing.id, name: editName.trim() });
+      toast.success("Modalità aggiornata");
+      setEditing(null);
     } catch (err: any) {
       toast.error(err.message || "Errore");
     }
