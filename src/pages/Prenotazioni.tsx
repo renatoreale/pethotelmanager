@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, Fragment } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,8 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, CalendarDays, MoreHorizontal, Pencil, CalendarClock, CreditCard } from "lucide-react";
+import { Search, CalendarDays, MoreHorizontal, Pencil, CalendarClock, CreditCard, ChevronDown } from "lucide-react";
+import { BookingDrillDown } from "@/components/BookingDrillDown";
 import { AutocompleteSearch } from "@/components/AutocompleteSearch";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { BookingPaymentsDialog } from "@/components/payments/BookingPaymentsDialog";
@@ -78,6 +79,7 @@ export default function Prenotazioni() {
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
   const [editingBooking, setEditingBooking] = useState<any>(null);
   const [paymentsBooking, setPaymentsBooking] = useState<any>(null);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const { data: bookings, isLoading } = useBookings(statusFilter);
   const transitionBooking = useTransitionBooking();
@@ -181,8 +183,25 @@ export default function Prenotazioni() {
                     const transitions = getTransitions(b.status);
 
                     return (
-                      <TableRow key={b.id}>
-                        <TableCell className="font-mono text-sm">{b.booking_number}</TableCell>
+                      <Fragment key={b.id}>
+                      <TableRow
+                        className="cursor-pointer"
+                        onClick={(e) => {
+                          // Don't toggle if clicking buttons/menus
+                          if ((e.target as HTMLElement).closest('button, [role="menuitem"]')) return;
+                          setExpandedRows(prev => {
+                            const next = new Set(prev);
+                            next.has(b.id) ? next.delete(b.id) : next.add(b.id);
+                            return next;
+                          });
+                        }}
+                      >
+                        <TableCell className="font-mono text-sm">
+                          <div className="flex items-center gap-1">
+                            <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${expandedRows.has(b.id) ? "rotate-180" : ""}`} />
+                            {b.booking_number}
+                          </div>
+                        </TableCell>
                         <TableCell className="font-medium">
                           {b.client ? `${b.client.first_name} ${b.client.last_name}` : "—"}
                         </TableCell>
@@ -271,6 +290,14 @@ export default function Prenotazioni() {
                           </div>
                         </TableCell>
                       </TableRow>
+                      {expandedRows.has(b.id) && (
+                        <TableRow>
+                          <TableCell colSpan={10} className="p-0 bg-muted/20">
+                            <BookingDrillDown booking={b} defaultOpen />
+                          </TableCell>
+                        </TableRow>
+                      )}
+                      </Fragment>
                     );
                   })}
                 </TableBody>

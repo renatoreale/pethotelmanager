@@ -31,10 +31,11 @@ const TYPE_COLORS: Record<string, string> = {
 
 interface BookingDrillDownProps {
   booking: any;
+  defaultOpen?: boolean;
 }
 
-export function BookingDrillDown({ booking }: BookingDrillDownProps) {
-  const [open, setOpen] = useState(false);
+export function BookingDrillDown({ booking, defaultOpen = false }: BookingDrillDownProps) {
+  const [open, setOpen] = useState(defaultOpen);
   const { data: payments, isLoading: paymentsLoading } = useBookingPayments(open ? booking.id : undefined);
   const { data: tenantConfig } = useTenantConfig();
 
