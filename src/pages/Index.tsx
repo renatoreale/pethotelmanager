@@ -136,7 +136,7 @@ export default function Index() {
   const s = stats ?? {
     catsInStructure: 0, singoleOccupied: 0, doppieOccupied: 0,
     activeBookings: 0, checkInsToday: 0, checkOutsToday: 0,
-    monthRevenue: 0, recentBookings: [], expiringPreventivi: 0,
+    monthRevenue: 0, dayBookings: [], expiringPreventivi: 0,
   };
 
   const kpis = [
