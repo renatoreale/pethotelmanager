@@ -499,6 +499,7 @@ export default function Pagamenti() {
                     <SelectItem value="saldo">Saldo</SelectItem>
                     <SelectItem value="extra">Extra</SelectItem>
                     <SelectItem value="rimborso">Rimborso</SelectItem>
+                    <SelectItem value="manuale">Manuale</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
