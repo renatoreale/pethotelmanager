@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,6 +91,7 @@ export function PreventivoDialog({
   const [depositAmount, setDepositAmount] = useState(0);
   const [depositManuallySet, setDepositManuallySet] = useState(false);
   const [clientSearch, setClientSearch] = useState("");
+  const [clientDropdownOpen, setClientDropdownOpen] = useState(false);
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
   const [newClientDialogOpen, setNewClientDialogOpen] = useState(false);
@@ -134,7 +135,8 @@ export function PreventivoDialog({
   const resetForm = () => {
     if (editing) {
       setClientId(editing.client_id);
-      setUnitsOccupied(editing.units_occupied);
+      const editClient = clients?.find((c: any) => c.id === editing.client_id);
+      setClientSearch(editClient ? `${editClient.first_name} ${editClient.last_name}` : "");
       const arr: ("singola" | "doppia")[] = [];
       for (let i = 0; i < editing.units_occupied; i++) {
         arr.push(i === 0 ? editing.cage_pool_type : "singola");
@@ -177,7 +179,20 @@ export function PreventivoDialog({
       setDepositManuallySet(false);
     }
     setClientSearch("");
+    setClientDropdownOpen(false);
   };
+
+  // Close client dropdown on click outside
+  const clientSearchRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (clientSearchRef.current && !clientSearchRef.current.contains(e.target as Node)) {
+        setClientDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   useEffect(() => { if (open) resetForm(); }, [open, editing]);
 
@@ -412,7 +427,8 @@ export function PreventivoDialog({
     const q = clientSearch.toLowerCase();
     return clients.filter((c: any) =>
       `${c.first_name} ${c.last_name}`.toLowerCase().includes(q) ||
-      (c.email ?? "").toLowerCase().includes(q)
+      (c.email ?? "").toLowerCase().includes(q) ||
+      (c.phone ?? "").toLowerCase().includes(q)
     );
   }, [clients, clientSearch]);
 
@@ -534,23 +550,62 @@ export function PreventivoDialog({
               <div className="space-y-2">
                 <Label>Cliente *</Label>
                 <div className="flex gap-2">
-                  <Input placeholder="Cerca cliente per nome o email..." value={clientSearch}
-                    onChange={(e) => setClientSearch(e.target.value)} className="flex-1" />
+                  <div ref={clientSearchRef} className="relative flex-1">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Cerca cliente per nome, email o telefono..."
+                      value={clientSearch}
+                      onChange={(e) => { setClientSearch(e.target.value); setClientDropdownOpen(true); }}
+                      onFocus={() => { if (clientSearch.trim().length >= 1 || !clientId) setClientDropdownOpen(true); }}
+                      className="pl-10"
+                    />
+                    {clientDropdownOpen && filteredClients.length > 0 && (
+                      <div className="absolute z-50 top-full mt-1 w-full rounded-md border bg-popover shadow-md overflow-hidden max-h-60 overflow-y-auto">
+                        {filteredClients.slice(0, 10).map((c: any) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            className={cn(
+                              "flex flex-col gap-0.5 w-full px-3 py-2 text-sm text-left hover:bg-accent transition-colors",
+                              clientId === c.id && "bg-accent"
+                            )}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setClientId(c.id);
+                              setSelectedCats([]);
+                              setClientSearch(`${c.first_name} ${c.last_name}`);
+                              setClientDropdownOpen(false);
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{c.first_name} {c.last_name}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                              {c.phone && <span>📞 {c.phone}</span>}
+                              {c.email && <span>✉️ {c.email}</span>}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <Button type="button" variant="outline" size="sm" onClick={() => setNewClientDialogOpen(true)}
                     className="shrink-0 gap-1">
                     <UserPlus className="h-4 w-4" /> Nuovo
                   </Button>
                 </div>
-                <Select value={clientId} onValueChange={(v) => { setClientId(v); setSelectedCats([]); }}>
-                  <SelectTrigger><SelectValue placeholder="Seleziona cliente" /></SelectTrigger>
-                  <SelectContent>
-                    {filteredClients.map((c: any) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.first_name} {c.last_name} {c.email ? `(${c.email})` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {clientId && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="gap-1">
+                      <User className="h-3 w-3" />
+                      {clients?.find((c: any) => c.id === clientId)?.first_name}{" "}
+                      {clients?.find((c: any) => c.id === clientId)?.last_name}
+                      <button type="button" className="ml-1 hover:text-destructive" onClick={() => { setClientId(""); setClientSearch(""); setSelectedCats([]); }}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  </div>
+                )}
               </div>
 
               {clientId && (
