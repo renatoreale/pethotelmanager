@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { usePriceLists } from "@/hooks/usePensioneConfig";
 import { Separator } from "@/components/ui/separator";
 import { Calendar, CreditCard, Receipt, Tag, ChevronDown } from "lucide-react";
 import { useBookingPayments } from "@/hooks/usePayments";
@@ -38,6 +39,7 @@ export function BookingDrillDown({ booking, defaultOpen = false }: BookingDrillD
   const [open, setOpen] = useState(defaultOpen);
   const { data: payments, isLoading: paymentsLoading } = useBookingPayments(open ? booking.id : undefined);
   const { data: tenantConfig } = useTenantConfig();
+  const { data: priceLists } = usePriceLists();
 
   const stayCalcType = tenantConfig?.stay_calc_type ?? "notti";
   const countCheckinDay = tenantConfig?.count_checkin_day ?? true;
@@ -151,32 +153,52 @@ export function BookingDrillDown({ booking, defaultOpen = false }: BookingDrillD
           {priceBreakdown?.seasonPeriods && Array.isArray(priceBreakdown.seasonPeriods) && priceBreakdown.seasonPeriods.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5" /> Periodi stagionali
+                <Calendar className="h-3.5 w-3.5" /> Periodi stagionali ({priceBreakdown.seasonPeriods.length})
               </h4>
-              <div className="rounded-md bg-muted/50 p-3 text-sm space-y-2">
-                {priceBreakdown.seasonPeriods.map((sp: any, i: number) => (
-                  <div key={i} className="space-y-0.5">
-                    <div className="flex justify-between">
-                      <span className="font-medium">{sp.tariffName || sp.tariff_name || `Periodo ${i + 1}`}</span>
-                      <span className="font-medium">€ {Number(sp.total ?? 0).toFixed(2)}</span>
+              <div className="space-y-2">
+                {priceBreakdown.seasonPeriods.map((sp: any, i: number) => {
+                  const tariff = priceLists?.find((pl: any) => pl.id === sp.tariffId);
+                  const tariffName = tariff?.name || sp.tariffName || sp.tariff_name || `Periodo ${i + 1}`;
+                  const season = tariff?.season || sp.season || "";
+                  const isAlta = /alta/i.test(season) || /alta/i.test(tariffName);
+                  const isBassa = /bassa/i.test(season) || /bassa/i.test(tariffName);
+
+                  return (
+                    <div
+                      key={i}
+                      className={cn(
+                        "rounded-md border p-3 text-sm space-y-1",
+                        isAlta && "border-orange-300 bg-orange-50 dark:border-orange-700 dark:bg-orange-950/30",
+                        isBassa && "border-sky-300 bg-sky-50 dark:border-sky-700 dark:bg-sky-950/30",
+                        !isAlta && !isBassa && "border-border bg-muted/50"
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">{tariffName}</span>
+                          {isAlta && (
+                            <Badge variant="outline" className="text-[10px] h-4 border-orange-400 text-orange-700 dark:text-orange-300">Alta stagione</Badge>
+                          )}
+                          {isBassa && (
+                            <Badge variant="outline" className="text-[10px] h-4 border-sky-400 text-sky-700 dark:text-sky-300">Bassa stagione</Badge>
+                          )}
+                        </div>
+                        <span className="font-semibold">€ {Number(sp.total ?? 0).toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>
+                          {sp.fromDate ? format(parseISO(sp.fromDate), "dd MMM yyyy", { locale: it }) : "?"} → {sp.toDate ? format(parseISO(sp.toDate), "dd MMM yyyy", { locale: it }) : "?"}
+                        </span>
+                        <span className="font-medium">{sp.days} {stayLabel}</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>
-                        {sp.fromDate ? format(parseISO(sp.fromDate), "dd MMM", { locale: it }) : "?"} → {sp.toDate ? format(parseISO(sp.toDate), "dd MMM", { locale: it }) : "?"} · {sp.days} {stayLabel}
-                      </span>
-                      {sp.pricePerDay != null && <span>€ {Number(sp.pricePerDay).toFixed(2)}/{stayLabel === "notti" ? "notte" : "giorno"}</span>}
-                    </div>
-                    {i < priceBreakdown.seasonPeriods.length - 1 && <Separator className="mt-1.5" />}
-                  </div>
-                ))}
+                  );
+                })}
                 {priceBreakdown.seasonTotal != null && priceBreakdown.seasonPeriods.length > 1 && (
-                  <>
-                    <Separator />
-                    <div className="flex justify-between font-semibold">
-                      <span>Totale periodi</span>
-                      <span>€ {Number(priceBreakdown.seasonTotal).toFixed(2)}</span>
-                    </div>
-                  </>
+                  <div className="flex justify-between font-semibold text-sm px-1">
+                    <span>Totale periodi</span>
+                    <span>€ {Number(priceBreakdown.seasonTotal).toFixed(2)}</span>
+                  </div>
                 )}
               </div>
             </div>
