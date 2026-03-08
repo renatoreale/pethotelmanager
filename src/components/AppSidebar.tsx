@@ -15,6 +15,7 @@ import {
   ChevronDown,
   Power,
   Grid3X3,
+  Settings2,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
