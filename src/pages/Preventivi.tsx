@@ -185,20 +185,11 @@ export default function Preventivi() {
         countCheckoutDay={countCheckoutDay}
       />
 
-      <AlertDialog open={!!confirming} onOpenChange={() => setConfirming(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confermare il preventivo?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirming && `Il preventivo ${confirming.booking_number} diventerà una prenotazione confermata.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annulla</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>Conferma</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <AppointmentScheduleDialog
+        open={!!confirming}
+        onOpenChange={(open) => { if (!open) setConfirming(null); }}
+        booking={confirming}
+      />
 
       <AlertDialog open={!!deleting} onOpenChange={() => setDeleting(null)}>
         <AlertDialogContent>
