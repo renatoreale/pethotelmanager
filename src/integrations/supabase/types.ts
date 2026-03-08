@@ -796,6 +796,8 @@ export type Database = {
       tenants: {
         Row: {
           address: string | null
+          count_checkin_day: boolean
+          count_checkout_day: boolean
           created_at: string
           email: string | null
           id: string
@@ -805,10 +807,13 @@ export type Database = {
           occupancy_rule_days: number
           phone: string | null
           slug: string
+          stay_calc_type: string
           updated_at: string
         }
         Insert: {
           address?: string | null
+          count_checkin_day?: boolean
+          count_checkout_day?: boolean
           created_at?: string
           email?: string | null
           id?: string
@@ -818,10 +823,13 @@ export type Database = {
           occupancy_rule_days?: number
           phone?: string | null
           slug: string
+          stay_calc_type?: string
           updated_at?: string
         }
         Update: {
           address?: string | null
+          count_checkin_day?: boolean
+          count_checkout_day?: boolean
           created_at?: string
           email?: string | null
           id?: string
@@ -831,6 +839,7 @@ export type Database = {
           occupancy_rule_days?: number
           phone?: string | null
           slug?: string
+          stay_calc_type?: string
           updated_at?: string
         }
         Relationships: []

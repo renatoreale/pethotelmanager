@@ -74,10 +74,16 @@ function CasetteTab() {
   const [singole, setSingole] = useState<number | null>(null);
   const [doppie, setDoppie] = useState<number | null>(null);
   const [ruleDays, setRuleDays] = useState<number | null>(null);
+  const [stayCalcType, setStayCalcType] = useState<string | null>(null);
+  const [countCheckinDay, setCountCheckinDay] = useState<boolean | null>(null);
+  const [countCheckoutDay, setCountCheckoutDay] = useState<boolean | null>(null);
 
   const s = singole ?? config?.num_singole ?? 0;
   const d = doppie ?? config?.num_doppie ?? 0;
   const r = ruleDays ?? config?.occupancy_rule_days ?? 4;
+  const sct = stayCalcType ?? (config as any)?.stay_calc_type ?? "notti";
+  const cid = countCheckinDay ?? (config as any)?.count_checkin_day ?? false;
+  const cod = countCheckoutDay ?? (config as any)?.count_checkout_day ?? false;
 
   const handleSave = async () => {
     if (!config) return;
@@ -87,11 +93,17 @@ function CasetteTab() {
         num_singole: s,
         num_doppie: d,
         occupancy_rule_days: r,
+        stay_calc_type: sct,
+        count_checkin_day: cid,
+        count_checkout_day: cod,
       });
       toast.success("Configurazione casette salvata");
       setSingole(null);
       setDoppie(null);
       setRuleDays(null);
+      setStayCalcType(null);
+      setCountCheckinDay(null);
+      setCountCheckoutDay(null);
     } catch (err: any) {
       toast.error(err.message || "Errore nel salvataggio");
     }
@@ -123,6 +135,45 @@ function CasetteTab() {
             <p className="text-xs text-muted-foreground">Check-in occupa per N giorni</p>
           </div>
         </div>
+
+        {/* Stay calculation config */}
+        <div className="space-y-4 border-t pt-4">
+          <Label className="text-base font-semibold">Calcolo durata soggiorno</Label>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label>Tipologia calcolo</Label>
+              <Select value={sct} onValueChange={(v) => setStayCalcType(v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="notti">Per notti</SelectItem>
+                  <SelectItem value="giorni">Per giorni</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {sct === "notti" ? "Conta le notti tra check-in e check-out" : "Conta i giorni, configurando check-in/out"}
+              </p>
+            </div>
+            {sct === "giorni" && (
+              <>
+                <div className="flex items-center gap-3 pt-6">
+                  <Switch checked={cid} onCheckedChange={(v) => setCountCheckinDay(v)} />
+                  <div>
+                    <Label>Conta giorno check-in</Label>
+                    <p className="text-xs text-muted-foreground">Include la giornata di arrivo</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 pt-6">
+                  <Switch checked={cod} onCheckedChange={(v) => setCountCheckoutDay(v)} />
+                  <div>
+                    <Label>Conta giorno check-out</Label>
+                    <p className="text-xs text-muted-foreground">Include la giornata di partenza</p>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
         <Button onClick={handleSave} disabled={updateConfig.isPending}>
           <Save className="mr-2 h-4 w-4" /> Salva Configurazione
         </Button>
