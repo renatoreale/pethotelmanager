@@ -188,6 +188,7 @@ export default function Index() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <AvailabilityCheckDialog />
           {!isSelectedToday && (
             <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date())}>
               Oggi
