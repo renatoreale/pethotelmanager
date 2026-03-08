@@ -141,6 +141,9 @@ export interface AppointmentWithDetails {
     id: string;
     booking_number: string;
     status: string;
+    check_in_date: string;
+    check_out_date: string;
+    total_amount: number | null;
     client?: {
       id: string;
       first_name: string;
