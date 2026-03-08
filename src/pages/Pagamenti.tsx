@@ -109,6 +109,7 @@ export default function Pagamenti() {
   const [txBookingId, setTxBookingId] = useState<string>("");
   const [txForm, setTxForm] = useState<TransactionFormData>(emptyForm);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editingTotal, setEditingTotal] = useState<string | null>(null);
 
   // Keep selectedBooking in sync with fresh data from the query cache
   useEffect(() => {
