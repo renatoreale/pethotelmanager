@@ -373,6 +373,7 @@ export default function Prenotazioni() {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
+      </AlertDialog>
 
       <AppointmentScheduleDialog
         open={!!schedulingBooking}
