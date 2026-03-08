@@ -200,7 +200,7 @@ export function useAllAppointments(enabled: boolean) {
         .select(`
           *,
           booking:bookings(
-            id, booking_number, status,
+            id, booking_number, status, check_in_date, check_out_date, total_amount,
             client:clients(id, first_name, last_name, phone, email),
             booking_cats(id, cat:cats(id, name))
           )
