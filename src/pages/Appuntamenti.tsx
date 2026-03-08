@@ -70,7 +70,7 @@ export default function Appuntamenti() {
   const handleDelete = async () => {
     if (!deleting) return;
     try {
-      await deleteAppointment.mutateAsync(deleting.id);
+      await deleteAppointment.mutateAsync({ id: deleting.id, bookingId: deleting.booking_id });
       toast.success("Appuntamento eliminato");
     } catch (err: any) {
       toast.error(err.message || "Errore");
