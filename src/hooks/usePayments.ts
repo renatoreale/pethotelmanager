@@ -208,6 +208,7 @@ export function useUpdatePayment() {
       qc.invalidateQueries({ queryKey: ["bookings"] });
       qc.invalidateQueries({ queryKey: ["preventivi"] });
       qc.invalidateQueries({ queryKey: ["payments-all"] });
+      qc.invalidateQueries({ queryKey: ["bookings-with-payments"] });
     },
   });
 }
