@@ -55,9 +55,13 @@ export default function Index() {
     const inCorsoBookings = bookings.filter(b => b.status === "in_corso");
     const catsInStructure = inCorsoBookings.reduce((sum, b) => sum + (b.booking_cats?.length ?? 0), 0);
 
-    // Occupancy by cage type
-    const singoleOccupied = inCorsoBookings.filter(b => b.cage_pool_type === "singola").reduce((s, b) => s + b.units_occupied, 0);
-    const doppieOccupied = inCorsoBookings.filter(b => b.cage_pool_type === "doppia").reduce((s, b) => s + b.units_occupied, 0);
+    // Occupancy by cage type: include all accepted bookings overlapping today
+    const occupancyStatuses = ["confermata", "appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato", "check_in", "in_corso"];
+    const occupyingBookings = bookings.filter(b =>
+      occupancyStatuses.includes(b.status) && b.check_in_date <= today && b.check_out_date >= today
+    );
+    const singoleOccupied = occupyingBookings.filter(b => b.cage_pool_type === "singola").reduce((s, b) => s + b.units_occupied, 0);
+    const doppieOccupied = occupyingBookings.filter(b => b.cage_pool_type === "doppia").reduce((s, b) => s + b.units_occupied, 0);
 
     // Active bookings (confermata, appuntamento*, in_corso)
     const activeStatuses = ["confermata", "appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato", "check_in", "in_corso"];
