@@ -289,15 +289,13 @@ export default function Prenotazioni() {
                                       {t.label}
                                     </DropdownMenuItem>
                                   ))}
-                                  {true && (
-                                    <DropdownMenuItem
-                                      className="text-destructive focus:text-destructive"
-                                      onClick={() => setDeleting({ id: b.id, bookingNumber: b.booking_number })}
-                                    >
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                      Elimina
-                                    </DropdownMenuItem>
-                                  )}
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => setDeleting({ id: b.id, bookingNumber: b.booking_number })}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Elimina
+                                  </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             ) : (
