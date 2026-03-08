@@ -168,6 +168,7 @@ export default function CheckOut() {
     setTxNotes("");
     setCatDetails([]);
     setManualExtraCost(null);
+    setManualTotal(null);
   };
 
   const openConfirm = async (b: any) => {
