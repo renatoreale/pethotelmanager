@@ -75,19 +75,20 @@ export default function Appuntamenti() {
     return { startDate: format(rangeFrom, "yyyy-MM-dd"), endDate: format(rangeTo, "yyyy-MM-dd") };
   }, [viewMode, selectedDate, rangeFrom, rangeTo]);
 
-  const isRange = viewMode !== "giorno";
+  const hasSearch = search.trim().length >= 2;
 
   // Use single-day hook for "giorno", range hook for others
   const { data: dayAppointments, isLoading: dayLoading } = useAppointmentsByDate(
-    !isRange ? startDate : undefined
+    !isRange && !hasSearch ? startDate : undefined
   );
   const { data: rangeAppointments, isLoading: rangeLoading } = useAppointmentsByDateRange(
-    isRange ? startDate : undefined,
-    isRange ? endDate : undefined
+    isRange && !hasSearch ? startDate : undefined,
+    isRange && !hasSearch ? endDate : undefined
   );
+  const { data: allAppointments, isLoading: allLoading } = useAllAppointments(hasSearch);
 
-  const appointments = isRange ? rangeAppointments : dayAppointments;
-  const isLoading = isRange ? rangeLoading : dayLoading;
+  const appointments = hasSearch ? allAppointments : (isRange ? rangeAppointments : dayAppointments);
+  const isLoading = hasSearch ? allLoading : (isRange ? rangeLoading : dayLoading);
 
   const confirmAppointment = useConfirmAppointment();
   const deleteAppointment = useDeleteAppointment();
