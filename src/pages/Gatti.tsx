@@ -117,6 +117,9 @@ export default function Gatti() {
                       <TableCell className="text-muted-foreground">
                         {cat.clients ? `${cat.clients.last_name} ${cat.clients.first_name}` : "—"}
                       </TableCell>
+                      <TableCell className="font-mono text-xs text-muted-foreground">
+                        {cat.microchip ?? "—"}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">{cat.breed ?? "—"}</TableCell>
                       <TableCell className="text-muted-foreground">
                         {cat.gender === "M" ? "Maschio" : cat.gender === "F" ? "Femmina" : "—"}
