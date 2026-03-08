@@ -52,6 +52,7 @@ const registryNav = [
 
 const operationsNav = [
   { title: "Planning", url: "/planning", icon: Calendar },
+  { title: "Occupazione Casette", url: "/occupazione", icon: Grid3X3 },
 ];
 
 const adminNav = [
