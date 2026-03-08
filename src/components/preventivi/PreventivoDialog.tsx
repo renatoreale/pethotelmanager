@@ -200,15 +200,23 @@ export function PreventivoDialog({
   // ── Season period helpers ──
   const addSeasonPeriod = () => {
     const defaultTariff = seasonalTariffs[0];
+    const days = calcPeriodDays(checkIn, checkOut);
+    const extraCats = Math.max(0, selectedCats.length - 1);
+    let baseCost = 0, supplementCost = 0, total = 0;
+    if (defaultTariff) {
+      baseCost = Number(defaultTariff.price_per_day) * days;
+      supplementCost = extraCats * Number(defaultTariff.extra_cat_supplement ?? 0) * days;
+      total = baseCost + supplementCost;
+    }
     setSeasonPeriods(prev => [...prev, {
       id: genId(),
       fromDate: checkIn,
       toDate: checkOut,
       tariffId: defaultTariff?.id ?? "",
-      days: 0,
-      baseCost: 0,
-      supplementCost: 0,
-      total: 0,
+      days,
+      baseCost,
+      supplementCost,
+      total,
     }]);
   };
 
