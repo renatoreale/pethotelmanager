@@ -282,7 +282,7 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
                     <FormControl>
                       <Switch checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
-                    <Label className="text-sm">Richiede gabbia doppia</Label>
+                    <Label className="text-sm">Richiede casetta doppia</Label>
                   </FormItem>
                 )}
               />
