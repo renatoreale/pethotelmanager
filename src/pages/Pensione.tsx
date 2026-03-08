@@ -192,7 +192,7 @@ function SlotTab() {
   const [editing, setEditing] = useState<any>(null);
   const [deleting, setDeleting] = useState<any>(null);
 
-  const [dayOfWeek, setDayOfWeek] = useState(0);
+  const [dayOfWeek, setDayOfWeek] = useState<number | "all">(0);
   const [appointmentType, setAppointmentType] = useState("check_in");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("12:00");
@@ -202,7 +202,7 @@ function SlotTab() {
 
   const openNew = () => {
     setEditing(null);
-    setDayOfWeek(0);
+    setDayOfWeek("all");
     setAppointmentType("check_in");
     setStartTime("09:00");
     setEndTime("12:00");
@@ -227,18 +227,24 @@ function SlotTab() {
   const handleSave = async () => {
     if (!profile?.tenant_id) return;
     try {
-      await upsertSlot.mutateAsync({
-        id: editing?.id,
-        tenant_id: profile.tenant_id,
-        day_of_week: dayOfWeek,
-        appointment_type: appointmentType,
-        start_time: startTime,
-        end_time: endTime,
-        slot_duration_minutes: duration,
-        max_appointments: maxAppts,
-        is_active: isActive,
-      });
-      toast.success(editing ? "Slot aggiornato" : "Slot creato");
+      const daysToSave = dayOfWeek === "all" && !editing
+        ? [0, 1, 2, 3, 4, 5, 6]
+        : [typeof dayOfWeek === "number" ? dayOfWeek : 0];
+
+      for (const dow of daysToSave) {
+        await upsertSlot.mutateAsync({
+          id: editing?.id,
+          tenant_id: profile.tenant_id,
+          day_of_week: dow,
+          appointment_type: appointmentType,
+          start_time: startTime,
+          end_time: endTime,
+          slot_duration_minutes: duration,
+          max_appointments: maxAppts,
+          is_active: isActive,
+        });
+      }
+      toast.success(editing ? "Slot aggiornato" : daysToSave.length > 1 ? "Slot creati per tutti i giorni" : "Slot creato");
       setDialogOpen(false);
     } catch (err: any) {
       toast.error(err.message || "Errore");
@@ -335,9 +341,10 @@ function SlotTab() {
             </div>
             <div className="space-y-2">
               <Label>Giorno della settimana</Label>
-              <Select value={String(dayOfWeek)} onValueChange={(v) => setDayOfWeek(Number(v))}>
+              <Select value={String(dayOfWeek)} onValueChange={(v) => setDayOfWeek(v === "all" ? "all" : Number(v))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
+                  {!editing && <SelectItem value="all">Tutti i giorni</SelectItem>}
                   {DAYS.map((d, i) => <SelectItem key={i} value={String(i)}>{d}</SelectItem>)}
                 </SelectContent>
               </Select>
