@@ -19,17 +19,20 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Plus, CalendarIcon, X, User, Cat, Home, Calendar as CalIcon, Sparkles, Percent, FileText, UserPlus } from "lucide-react";
+import { Plus, CalendarIcon, X, User, Cat, Home, Calendar as CalIcon, Sparkles, Percent, FileText, UserPlus, AlertTriangle } from "lucide-react";
 import { ClientDialog } from "@/components/clients/ClientDialog";
 import { toast } from "sonner";
-import { format, differenceInDays, parseISO, startOfDay } from "date-fns";
+import { format, differenceInDays, parseISO, startOfDay, addDays, subDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useClients } from "@/hooks/useClients";
-import { usePriceLists } from "@/hooks/usePensioneConfig";
+import { usePriceLists, useTenantConfig } from "@/hooks/usePensioneConfig";
 import { useClientCats } from "@/hooks/usePreventivi";
+import { useBookings } from "@/hooks/useBookings";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { OccupancyGrid, useOccupancyData, checkAvailability } from "@/components/OccupancyGrid";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // ── Types ──
 interface SeasonPeriod {
