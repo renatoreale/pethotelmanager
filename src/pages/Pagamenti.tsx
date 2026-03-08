@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   useAllBookingsWithPayments,
   useCreatePayment,
@@ -106,6 +106,16 @@ export default function Pagamenti() {
   const [txBookingId, setTxBookingId] = useState<string>("");
   const [txForm, setTxForm] = useState<TransactionFormData>(emptyForm);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  // Keep selectedBooking in sync with fresh data from the query cache
+  useEffect(() => {
+    if (selectedBooking && bookings) {
+      const fresh = bookings.find((b: any) => b.id === selectedBooking.id);
+      if (fresh) {
+        setSelectedBooking(fresh);
+      }
+    }
+  }, [bookings]);
 
   const clientGroups = useMemo(() => {
     if (!bookings) return [];
