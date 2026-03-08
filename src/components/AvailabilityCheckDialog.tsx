@@ -104,6 +104,15 @@ export function AvailabilityCheckDialog() {
           </div>
         </div>
 
+        <AvailabilityAlert
+          bookings={allBookings ?? []}
+          occupancyDays={occupancyDays}
+          checkInDate={highlightDate}
+          cageType={cageType}
+          totalSingole={totalSingole}
+          totalDoppie={totalDoppie}
+        />
+
         <OccupancyGrid
           bookings={allBookings ?? []}
           occupancyDays={occupancyDays}
