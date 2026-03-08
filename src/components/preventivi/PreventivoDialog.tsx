@@ -886,46 +886,31 @@ export function PreventivoDialog({
               <CardTitle className="text-base">💰 Totale Preventivo</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {(seasonPeriods.length > 0 || extraServices.length > 0) && (
-                <div className="rounded-md bg-muted/50 p-3 space-y-1">
-                  {discountedStay > 0 && (
-                    <div className="text-sm flex justify-between">
-                      <span className="text-muted-foreground">Soggiorno{discountTotal > 0 ? " (scontato)" : ""}</span>
-                      <span>€ {discountedStay.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {extrasTotal > 0 && (
-                    <div className="text-sm flex justify-between">
-                      <span className="text-muted-foreground">Servizi extra</span>
-                      <span>€ {extrasTotal.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="text-base font-bold flex justify-between border-t border-border pt-1">
-                    <span>Totale</span>
-                    <span>€ {grandTotal.toFixed(2)}</span>
+              {/* Riepilogo */}
+              <div className="rounded-md bg-muted/50 p-3 space-y-1">
+                {discountedStay > 0 && (
+                  <div className="text-sm flex justify-between">
+                    <span className="text-muted-foreground">Soggiorno{discountTotal > 0 ? " (scontato)" : ""}</span>
+                    <span>€ {discountedStay.toFixed(2)}</span>
                   </div>
-                  <div className="text-sm flex justify-between text-muted-foreground">
-                    <span>Caparra suggerita (50%)</span>
-                    <span>€ {(Math.round(grandTotal * 50) / 100).toFixed(2)}</span>
+                )}
+                {extrasTotal > 0 && (
+                  <div className="text-sm flex justify-between">
+                    <span className="text-muted-foreground">Servizi extra</span>
+                    <span>€ {extrasTotal.toFixed(2)}</span>
                   </div>
-                  <Button variant="outline" size="sm" className="mt-2 w-full" onClick={applyCalculation}>
-                    Applica al preventivo
-                  </Button>
+                )}
+                <div className="text-base font-bold flex justify-between border-t border-border pt-1">
+                  <span>Totale preventivo</span>
+                  <span>€ {totalAmount.toFixed(2)}</span>
                 </div>
-              )}
+              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label>Totale (€)</Label>
-                  <Input type="number" min={0} step={0.5} value={totalAmount}
-                    onChange={(e) => { setTotalAmount(Number(e.target.value)); setDepositManuallySet(false); }} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Caparra (€)</Label>
-                  <Input type="number" min={0} step={0.5} value={depositAmount}
-                    onChange={(e) => { setDepositAmount(Number(e.target.value)); setDepositManuallySet(true); }} />
-                  <p className="text-xs text-muted-foreground">Default: 50% del totale</p>
-                </div>
+              <div className="space-y-1">
+                <Label>Caparra richiesta (€)</Label>
+                <Input type="number" min={0} step={0.5} value={depositAmount}
+                  onChange={(e) => { setDepositAmount(Number(e.target.value)); setDepositManuallySet(true); }} />
+                <p className="text-xs text-muted-foreground">Default: 50% del totale</p>
               </div>
             </CardContent>
           </Card>
