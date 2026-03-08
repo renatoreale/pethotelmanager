@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
-import { EditCheckoutDialog } from "@/components/appointments/EditCheckoutDialog";
+import { EditCheckoutDialog, type CheckoutBookingData } from "@/components/appointments/EditCheckoutDialog";
 
 type ViewMode = "giorno" | "settimana" | "mese" | "personalizzato";
 
@@ -54,6 +54,7 @@ export default function Appuntamenti() {
   const [deleting, setDeleting] = useState<AppointmentWithDetails | null>(null);
   const [editing, setEditing] = useState<AppointmentWithDetails | null>(null);
   const [editingCheckout, setEditingCheckout] = useState<AppointmentWithDetails | null>(null);
+  const [creatingCheckout, setCreatingCheckout] = useState<CheckoutBookingData | null>(null);
   const [search, setSearch] = useState("");
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
 
@@ -185,6 +186,13 @@ export default function Appuntamenti() {
     const bookingStatus = appt.booking?.status ?? "";
     const isIn = appt.appointment_type === "check_in";
     const isLocked = ["chiusa", "cancellata", "rimborsata"].includes(bookingStatus);
+    const isInCorso = bookingStatus === "in_corso";
+
+    // Check if this in_corso booking already has a check_out appointment
+    const hasCheckoutAppt = isInCorso && isIn
+      ? (filteredAppointments ?? []).some(a => a.booking_id === appt.booking_id && a.appointment_type === "check_out")
+        || (appointments ?? []).some(a => a.booking_id === appt.booking_id && a.appointment_type === "check_out")
+      : false;
 
     return (
       <TableRow key={appt.id} className={appt.confirmed ? "bg-green-50/50 dark:bg-green-950/20" : ""}>
@@ -227,13 +235,37 @@ export default function Appuntamenti() {
           {!isLocked ? (
             <div className="flex gap-1">
               <Button variant="ghost" size="icon" onClick={() => {
-                if (appt.appointment_type === "check_out" && appt.booking?.status === "in_corso") {
+                if (appt.appointment_type === "check_out" && isInCorso) {
                   setEditingCheckout(appt);
                 } else {
                   setEditing(appt);
                 }
               }}><Pencil className="h-4 w-4" /></Button>
               <Button variant="ghost" size="icon" onClick={() => setDeleting(appt)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              {isInCorso && isIn && !hasCheckoutAppt && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1 text-xs"
+                  onClick={() => {
+                    if (appt.booking) {
+                      setCreatingCheckout({
+                        id: appt.booking.id,
+                        booking_number: appt.booking.booking_number,
+                        status: appt.booking.status,
+                        check_in_date: appt.booking.check_in_date,
+                        check_out_date: appt.booking.check_out_date,
+                        total_amount: appt.booking.total_amount,
+                        client: appt.booking.client ? { first_name: appt.booking.client.first_name, last_name: appt.booking.client.last_name } : undefined,
+                        booking_cats: appt.booking.booking_cats,
+                      });
+                    }
+                  }}
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  Fissa OUT
+                </Button>
+              )}
             </div>
           ) : (
             <div className="w-[68px] shrink-0" />
@@ -477,11 +509,12 @@ export default function Appuntamenti() {
         booking={schedulingBooking}
       />
 
-      {editingCheckout && (
+      {(editingCheckout || creatingCheckout) && (
         <EditCheckoutDialog
-          open={!!editingCheckout}
-          onOpenChange={(open) => { if (!open) setEditingCheckout(null); }}
+          open={!!(editingCheckout || creatingCheckout)}
+          onOpenChange={(open) => { if (!open) { setEditingCheckout(null); setCreatingCheckout(null); } }}
           appointment={editingCheckout}
+          bookingData={creatingCheckout}
         />
       )}
     </div>
