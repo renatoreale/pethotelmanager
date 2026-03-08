@@ -142,12 +142,8 @@ export default function Pagamenti() {
     });
   };
 
-  const toggleBooking = (id: string) => {
-    setExpandedBookings(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+  const openBookingTransactions = (booking: any) => {
+    setSelectedBooking(booking);
   };
 
   const openNewTx = (bookingId: string) => {
