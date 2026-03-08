@@ -260,6 +260,8 @@ export function useConfirmAppointment() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["appointments-by-date"] });
+      qc.invalidateQueries({ queryKey: ["appointments-by-range"] });
+      qc.invalidateQueries({ queryKey: ["appointments-all"] });
       qc.invalidateQueries({ queryKey: ["booking-appointments"] });
     },
   });
@@ -333,6 +335,8 @@ export function useUpdateAppointment() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["appointments-by-date"] });
+      qc.invalidateQueries({ queryKey: ["appointments-by-range"] });
+      qc.invalidateQueries({ queryKey: ["appointments-all"] });
       qc.invalidateQueries({ queryKey: ["appointment-counts"] });
       qc.invalidateQueries({ queryKey: ["booking-appointments"] });
     },
