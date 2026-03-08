@@ -56,7 +56,6 @@ export default function Appuntamenti() {
   const [editingCheckout, setEditingCheckout] = useState<AppointmentWithDetails | null>(null);
   const [creatingCheckout, setCreatingCheckout] = useState<CheckoutBookingData | null>(null);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("tutti");
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
 
   // Compute date range based on view mode
