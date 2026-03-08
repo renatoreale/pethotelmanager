@@ -192,8 +192,24 @@ export default function Prenotazioni() {
                             {b.cage_pool_type === "singola" ? "Singola" : "Doppia"} ×{b.units_occupied}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm">{format(parseISO(b.check_in_date), "dd MMM yyyy", { locale: it })}</TableCell>
-                        <TableCell className="text-sm">{format(parseISO(b.check_out_date), "dd MMM yyyy", { locale: it })}</TableCell>
+                        <TableCell className="text-sm">
+                          <div>{format(parseISO(b.check_in_date), "dd MMM yyyy", { locale: it })}</div>
+                          {(() => {
+                            const apt = b.appointments?.find(a => a.appointment_type === "check_in");
+                            if (!apt) return null;
+                            const time = apt.scheduled_at.includes("T") ? apt.scheduled_at.split("T")[1]?.substring(0, 5) : "";
+                            return time ? <div className="text-xs text-muted-foreground">🕐 {time}</div> : null;
+                          })()}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          <div>{format(parseISO(b.check_out_date), "dd MMM yyyy", { locale: it })}</div>
+                          {(() => {
+                            const apt = b.appointments?.find(a => a.appointment_type === "check_out");
+                            if (!apt) return null;
+                            const time = apt.scheduled_at.includes("T") ? apt.scheduled_at.split("T")[1]?.substring(0, 5) : "";
+                            return time ? <div className="text-xs text-muted-foreground">🕐 {time}</div> : null;
+                          })()}
+                        </TableCell>
                         <TableCell>{duration}</TableCell>
                         <TableCell className="font-medium">€ {Number(b.total_amount ?? 0).toFixed(2)}</TableCell>
                         <TableCell>
