@@ -26,6 +26,7 @@ import Pensione from "./pages/Pensione";
 import NotFound from "./pages/NotFound";
 import RegistroGatti from "./pages/RegistroGatti";
 import OccupazioneCasette from "./pages/OccupazioneCasette";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/template-email" element={<TemplateEmail />} />
               <Route path="/pensione" element={<Pensione />} />
               <Route path="/occupazione" element={<OccupazioneCasette />} />
+              <Route path="/admin" element={<Admin />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

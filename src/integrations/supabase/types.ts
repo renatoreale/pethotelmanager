@@ -890,6 +890,50 @@ export type Database = {
           },
         ]
       }
+      role_permissions: {
+        Row: {
+          can_delete: boolean
+          can_read: boolean
+          can_write: boolean
+          created_at: string | null
+          id: string
+          resource: string
+          role: Database["public"]["Enums"]["app_role"]
+          tenant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          can_delete?: boolean
+          can_read?: boolean
+          can_write?: boolean
+          created_at?: string | null
+          id?: string
+          resource: string
+          role: Database["public"]["Enums"]["app_role"]
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          can_delete?: boolean
+          can_read?: boolean
+          can_write?: boolean
+          created_at?: string | null
+          id?: string
+          resource?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       slot_configs: {
         Row: {
           appointment_type: string

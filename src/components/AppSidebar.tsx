@@ -15,6 +15,7 @@ import {
   ChevronDown,
   Power,
   Grid3X3,
+  Settings2,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -59,6 +60,7 @@ const adminNav = [
   { title: "Utenti & Ruoli", url: "/utenti", icon: Shield },
   { title: "Template Email", url: "/template-email", icon: Mail },
   { title: "Pensione", url: "/pensione", icon: Building2 },
+  { title: "Admin Sistema", url: "/admin", icon: Settings2 },
 ];
 
 function NavGroup({
