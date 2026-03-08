@@ -27,6 +27,7 @@ import { useBookings, useTransitionBooking, getTransitions } from "@/hooks/useBo
 const STATUS_OPTIONS = [
   { value: "tutti", label: "Tutti gli stati" },
   { value: "confermata", label: "Confermata" },
+  { value: "appuntamento_fissato", label: "Appuntamento fissato" },
   { value: "check_in", label: "Check-in" },
   { value: "in_corso", label: "In corso" },
   { value: "check_out", label: "Check-out" },
