@@ -447,14 +447,18 @@ export default function Pagamenti() {
                             <div className={`font-mono text-sm font-semibold shrink-0 ${isRimborso ? "text-destructive" : ""}`}>
                               {isRimborso ? "-" : "+"}€ {Number(tx.amount).toFixed(2)}
                             </div>
-                            <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => openEditTx(selectedBooking.id, tx)}>
-                                <Pencil className="h-3 w-3" />
-                              </Button>
-                              <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => setDeleteId(tx.id)}>
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
+                            {!["check_in", "in_corso", "check_out", "chiusa", "cancellata", "rimborsata"].includes(selectedBooking.status) ? (
+                              <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => openEditTx(selectedBooking.id, tx)}>
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                                <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => setDeleteId(tx.id)}>
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="w-[52px] shrink-0" />
+                            )}
                           </div>
                         );
                       })}
