@@ -5,11 +5,7 @@ import {
   useUpdatePayment,
   useDeletePayment,
   usePaymentMethods,
-  Payment,
 } from "@/hooks/usePayments";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -24,7 +20,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  ChevronDown, ChevronRight, Plus, Pencil, Trash2, Search,
+  ChevronDown, ChevronRight, Plus, Pencil, Trash2, Search, User, Cat, Calendar, CreditCard,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
@@ -37,20 +33,13 @@ const TYPE_LABELS: Record<string, string> = {
   rimborso: "Rimborso",
 };
 
-const TYPE_COLORS: Record<string, string> = {
-  caparra: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-  saldo: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-  extra: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
-  rimborso: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-};
-
 const STATUS_LABELS: Record<string, string> = {
   preventivo: "Preventivo",
   confermata: "Confermata",
   appuntamento_fissato: "App. Fissato",
   appuntamento_in_fissato: "App. IN Fissato",
   appuntamento_out_fissato: "App. OUT Fissato",
-  appuntamento_in_out_fissato: "App. IN/OUT Fissato",
+  appuntamento_in_out_fissato: "App. IN/OUT",
   check_in: "Check-in",
   in_corso: "In Corso",
   check_out: "Check-out",
@@ -86,6 +75,21 @@ const emptyForm: TransactionFormData = {
   notes: "",
 };
 
+function MoneyBadge({ value, variant }: { value: number; variant: "total" | "paid" | "remaining" }) {
+  const colors = {
+    total: "bg-secondary text-secondary-foreground",
+    paid: "bg-accent/10 text-accent",
+    remaining: value > 0 ? "bg-warning/10 text-warning-foreground" : "bg-accent/10 text-accent",
+  };
+  const labels = { total: "Totale", paid: "Pagato", remaining: "Residuo" };
+  return (
+    <div className={`rounded-lg px-3 py-1.5 text-center ${colors[variant]}`}>
+      <div className="text-[10px] uppercase tracking-wider font-medium opacity-70">{labels[variant]}</div>
+      <div className="font-mono text-sm font-semibold">€ {value.toFixed(2)}</div>
+    </div>
+  );
+}
+
 export default function Pagamenti() {
   const { data: bookings, isLoading } = useAllBookingsWithPayments();
   const { data: paymentMethods } = usePaymentMethods();
@@ -97,30 +101,22 @@ export default function Pagamenti() {
   const [expandedBookings, setExpandedBookings] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
 
-  // Transaction dialog
   const [txDialogOpen, setTxDialogOpen] = useState(false);
   const [txEditId, setTxEditId] = useState<string | null>(null);
   const [txBookingId, setTxBookingId] = useState<string>("");
   const [txForm, setTxForm] = useState<TransactionFormData>(emptyForm);
-
-  // Delete confirm
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  // Group bookings by client
   const clientGroups = useMemo(() => {
     if (!bookings) return [];
     const map = new Map<string, { clientId: string; clientName: string; catNames: string; bookings: any[] }>();
     for (const b of bookings) {
       const cid = b.client_id;
       if (!map.has(cid)) {
-        const cName = b.client
-          ? `${b.client.last_name} ${b.client.first_name}`
-          : "—";
-        const cats = (b.booking_cats ?? []).map((bc: any) => bc.cat?.name).filter(Boolean).join(", ");
-        map.set(cid, { clientId: cid, clientName: cName, catNames: cats, bookings: [] });
+        const cName = b.client ? `${b.client.last_name} ${b.client.first_name}` : "—";
+        map.set(cid, { clientId: cid, clientName: cName, catNames: "", bookings: [] });
       }
       const group = map.get(cid)!;
-      // Update cat names to include all cats from all bookings
       const newCats = (b.booking_cats ?? []).map((bc: any) => bc.cat?.name).filter(Boolean);
       const existingCats = new Set(group.catNames.split(", ").filter(Boolean));
       newCats.forEach((c: string) => existingCats.add(c));
@@ -176,32 +172,20 @@ export default function Pagamenti() {
 
   const saveTx = async () => {
     const amount = parseFloat(txForm.amount);
-    if (!amount || amount <= 0) {
-      toast.error("Inserisci un importo valido");
-      return;
-    }
-    if (!txForm.payment_method_id) {
-      toast.error("Seleziona una modalità di pagamento");
-      return;
-    }
+    if (!amount || amount <= 0) { toast.error("Inserisci un importo valido"); return; }
+    if (!txForm.payment_method_id) { toast.error("Seleziona una modalità di pagamento"); return; }
     try {
       if (txEditId) {
         await updatePayment.mutateAsync({
-          id: txEditId,
-          amount,
-          payment_type: txForm.payment_type,
-          payment_date: txForm.payment_date,
-          payment_method_id: txForm.payment_method_id,
+          id: txEditId, amount, payment_type: txForm.payment_type,
+          payment_date: txForm.payment_date, payment_method_id: txForm.payment_method_id,
           notes: txForm.notes || null,
         });
         toast.success("Transazione aggiornata");
       } else {
         await createPayment.mutateAsync({
-          booking_id: txBookingId,
-          amount,
-          payment_type: txForm.payment_type,
-          payment_date: txForm.payment_date,
-          payment_method_id: txForm.payment_method_id,
+          booking_id: txBookingId, amount, payment_type: txForm.payment_type,
+          payment_date: txForm.payment_date, payment_method_id: txForm.payment_method_id,
           notes: txForm.notes || undefined,
         });
         toast.success("Transazione registrata");
@@ -217,122 +201,163 @@ export default function Pagamenti() {
     try {
       await deletePayment.mutateAsync(deleteId);
       toast.success("Transazione eliminata");
-    } catch {
-      toast.error("Errore nell'eliminazione");
-    }
+    } catch { toast.error("Errore nell'eliminazione"); }
     setDeleteId(null);
   };
 
-  return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold tracking-tight">Pagamenti</h1>
-      <p className="text-muted-foreground text-sm">Caparre, saldi, extra e rimborsi per cliente e prenotazione.</p>
+  // Global totals
+  const globalTotals = useMemo(() => {
+    if (!clientGroups.length) return { total: 0, paid: 0, remaining: 0 };
+    let total = 0, paid = 0;
+    clientGroups.forEach(g => {
+      g.bookings.forEach((b: any) => {
+        total += Number(b.total_amount ?? 0);
+        const { net } = calcTotals(b.payments ?? []);
+        paid += net;
+      });
+    });
+    return { total, paid, remaining: total - paid };
+  }, [clientGroups]);
 
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Pagamenti</h1>
+        <p className="text-muted-foreground text-sm mt-1">Gestione caparre, saldi, extra e rimborsi.</p>
+      </div>
+
+      {/* Global summary cards */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-xl border bg-card p-4">
+          <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Totale dovuto</div>
+          <div className="text-2xl font-bold font-mono mt-1">€ {globalTotals.total.toFixed(2)}</div>
+        </div>
+        <div className="rounded-xl border bg-card p-4">
+          <div className="text-xs font-medium uppercase tracking-wider" style={{ color: "hsl(var(--accent))" }}>Incassato</div>
+          <div className="text-2xl font-bold font-mono mt-1" style={{ color: "hsl(var(--accent))" }}>€ {globalTotals.paid.toFixed(2)}</div>
+        </div>
+        <div className="rounded-xl border bg-card p-4">
+          <div className={`text-xs font-medium uppercase tracking-wider ${globalTotals.remaining > 0 ? "text-warning-foreground" : ""}`} style={globalTotals.remaining <= 0 ? { color: "hsl(var(--accent))" } : {}}>
+            Residuo
+          </div>
+          <div className={`text-2xl font-bold font-mono mt-1 ${globalTotals.remaining > 0 ? "text-warning-foreground" : ""}`} style={globalTotals.remaining <= 0 ? { color: "hsl(var(--accent))" } : {}}>
+            € {globalTotals.remaining.toFixed(2)}
+          </div>
+        </div>
+      </div>
+
+      {/* Search */}
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Cerca cliente o gatto..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="pl-9"
-        />
+        <Input placeholder="Cerca cliente o gatto..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
       </div>
 
       {isLoading ? (
         <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
       ) : !clientGroups.length ? (
-        <div className="rounded-lg border border-dashed p-12 text-center text-muted-foreground">
-          Nessun risultato
-        </div>
+        <div className="rounded-lg border border-dashed p-12 text-center text-muted-foreground">Nessun risultato</div>
       ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-8" />
-                <TableHead>Cliente / Gatti</TableHead>
-                <TableHead>Prenotazione</TableHead>
-                <TableHead>Stato</TableHead>
-                <TableHead className="text-right">Totale</TableHead>
-                <TableHead className="text-right">Pagato</TableHead>
-                <TableHead className="text-right">Residuo</TableHead>
-                <TableHead className="w-10" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {clientGroups.map(group => {
-                const clientExpanded = expandedClients.has(group.clientId);
-                // Client-level totals
-                const clientTotal = group.bookings.reduce((s, b) => s + Number(b.total_amount ?? 0), 0);
-                const clientPayments = group.bookings.flatMap((b: any) => b.payments ?? []);
-                const { net: clientNet } = calcTotals(clientPayments);
-                const clientRemaining = clientTotal - clientNet;
+        <div className="space-y-3">
+          {clientGroups.map(group => {
+            const clientExpanded = expandedClients.has(group.clientId);
+            const clientTotal = group.bookings.reduce((s: number, b: any) => s + Number(b.total_amount ?? 0), 0);
+            const clientPayments = group.bookings.flatMap((b: any) => b.payments ?? []);
+            const { net: clientNet } = calcTotals(clientPayments);
+            const clientRemaining = clientTotal - clientNet;
 
-                return (
-                  <>
-                    <TableRow
-                      key={group.clientId}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => toggleClient(group.clientId)}
-                    >
-                      <TableCell className="w-8">
-                        {clientExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {group.clientName}
-                        {group.catNames && (
-                          <span className="ml-2 text-xs text-muted-foreground">({group.catNames})</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {group.bookings.length} prenotazion{group.bookings.length === 1 ? "e" : "i"}
-                      </TableCell>
-                      <TableCell />
-                      <TableCell className="text-right font-mono text-sm">€ {clientTotal.toFixed(2)}</TableCell>
-                      <TableCell className="text-right font-mono text-sm text-green-600">€ {clientNet.toFixed(2)}</TableCell>
-                      <TableCell className={`text-right font-mono text-sm ${clientRemaining > 0 ? "text-amber-600" : "text-green-600"}`}>
-                        € {clientRemaining.toFixed(2)}
-                      </TableCell>
-                      <TableCell />
-                    </TableRow>
-                    {clientExpanded && group.bookings.map((b: any) => {
+            return (
+              <div key={group.clientId} className="rounded-xl border bg-card overflow-hidden">
+                {/* Client header */}
+                <button
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 transition-colors"
+                  onClick={() => toggleClient(group.clientId)}
+                >
+                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary/10 text-primary shrink-0">
+                    <User className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm">{group.clientName}</div>
+                    {group.catNames && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+                        <Cat className="h-3 w-3" />
+                        {group.catNames}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant="secondary" className="text-xs font-normal">
+                      {group.bookings.length} pren.
+                    </Badge>
+                    <div className="hidden sm:flex items-center gap-2">
+                      <MoneyBadge value={clientTotal} variant="total" />
+                      <MoneyBadge value={clientNet} variant="paid" />
+                      <MoneyBadge value={clientRemaining} variant="remaining" />
+                    </div>
+                    {clientExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                  </div>
+                </button>
+
+                {/* Mobile totals when collapsed */}
+                <div className="flex sm:hidden items-center gap-2 px-4 pb-3 -mt-1">
+                  <MoneyBadge value={clientTotal} variant="total" />
+                  <MoneyBadge value={clientNet} variant="paid" />
+                  <MoneyBadge value={clientRemaining} variant="remaining" />
+                </div>
+
+                {/* Expanded bookings */}
+                {clientExpanded && (
+                  <div className="border-t">
+                    {group.bookings.map((b: any) => {
                       const bookingExpanded = expandedBookings.has(b.id);
                       const bTotal = Number(b.total_amount ?? 0);
                       const bPayments = b.payments ?? [];
                       const { net: bNet } = calcTotals(bPayments);
                       const bRemaining = bTotal - bNet;
                       const catNames = (b.booking_cats ?? []).map((bc: any) => bc.cat?.name).filter(Boolean).join(", ");
+                      const paidPercent = bTotal > 0 ? Math.min(100, (bNet / bTotal) * 100) : 0;
 
                       return (
-                        <>
-                          <TableRow
-                            key={b.id}
-                            className="cursor-pointer bg-muted/20 hover:bg-muted/40"
+                        <div key={b.id} className="border-b last:border-b-0">
+                          {/* Booking row */}
+                          <button
+                            className="w-full flex items-center gap-3 px-4 py-3 pl-8 text-left hover:bg-muted/20 transition-colors"
                             onClick={() => toggleBooking(b.id)}
                           >
-                            <TableCell className="w-8 pl-6">
-                              {bookingExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                            </TableCell>
-                            <TableCell className="text-sm">
-                              {catNames || "—"}
-                            </TableCell>
-                            <TableCell className="text-sm font-medium">
-                              {b.booking_number}
-                              <span className="ml-2 text-xs text-muted-foreground">
-                                {format(parseISO(b.check_in_date), "dd/MM/yy")} → {format(parseISO(b.check_out_date), "dd/MM/yy")}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="text-xs">
-                                {STATUS_LABELS[b.status] ?? b.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right font-mono text-sm">€ {bTotal.toFixed(2)}</TableCell>
-                            <TableCell className="text-right font-mono text-sm text-green-600">€ {bNet.toFixed(2)}</TableCell>
-                            <TableCell className={`text-right font-mono text-sm ${bRemaining > 0 ? "text-amber-600" : "text-green-600"}`}>
-                              € {bRemaining.toFixed(2)}
-                            </TableCell>
-                            <TableCell>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-medium text-sm">{b.booking_number}</span>
+                                <Badge variant="outline" className="text-[10px] h-5">
+                                  {STATUS_LABELS[b.status] ?? b.status}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                                {catNames && (
+                                  <span className="flex items-center gap-1">
+                                    <Cat className="h-3 w-3" />{catNames}
+                                  </span>
+                                )}
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  {format(parseISO(b.check_in_date), "dd/MM/yy")} → {format(parseISO(b.check_out_date), "dd/MM/yy")}
+                                </span>
+                              </div>
+                              {/* Progress bar */}
+                              <div className="mt-2 flex items-center gap-3">
+                                <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full transition-all"
+                                    style={{
+                                      width: `${paidPercent}%`,
+                                      backgroundColor: paidPercent >= 100 ? "hsl(var(--accent))" : "hsl(var(--primary))",
+                                    }}
+                                  />
+                                </div>
+                                <span className="text-[10px] font-mono text-muted-foreground whitespace-nowrap">
+                                  € {bNet.toFixed(0)} / {bTotal.toFixed(0)}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
                               <Button
                                 size="icon"
                                 variant="ghost"
@@ -340,94 +365,87 @@ export default function Pagamenti() {
                                 onClick={e => { e.stopPropagation(); openNewTx(b.id); }}
                                 title="Nuova transazione"
                               >
-                                <Plus className="h-3.5 w-3.5" />
+                                <Plus className="h-4 w-4" />
                               </Button>
-                            </TableCell>
-                          </TableRow>
+                              {bookingExpanded
+                                ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                : <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                              }
+                            </div>
+                          </button>
+
+                          {/* Transactions */}
                           {bookingExpanded && (
-                            <>
-                              {/* Summary bar */}
-                              <TableRow className="bg-muted/10">
-                                <TableCell colSpan={8} className="py-2 pl-12">
-                                  <div className="flex items-center gap-6 text-xs">
-                                    <span>Totale: <strong>€ {bTotal.toFixed(2)}</strong></span>
-                                    <span className="text-green-600">Pagato: <strong>€ {bNet.toFixed(2)}</strong></span>
-                                    <span className={bRemaining > 0 ? "text-amber-600" : "text-green-600"}>
-                                      Residuo: <strong>€ {bRemaining.toFixed(2)}</strong>
-                                    </span>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-6 text-xs ml-auto"
-                                      onClick={() => openNewTx(b.id)}
-                                    >
-                                      <Plus className="h-3 w-3 mr-1" /> Nuova transazione
-                                    </Button>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
+                            <div className="bg-muted/20 border-t">
+                              {/* Booking totals strip */}
+                              <div className="flex items-center justify-between px-4 py-2 pl-12 border-b border-border/50">
+                                <div className="flex items-center gap-3">
+                                  <MoneyBadge value={bTotal} variant="total" />
+                                  <MoneyBadge value={bNet} variant="paid" />
+                                  <MoneyBadge value={bRemaining} variant="remaining" />
+                                </div>
+                                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openNewTx(b.id)}>
+                                  <Plus className="h-3 w-3 mr-1" /> Transazione
+                                </Button>
+                              </div>
+
                               {bPayments.length === 0 ? (
-                                <TableRow className="bg-muted/5">
-                                  <TableCell colSpan={8} className="py-3 pl-12 text-center text-sm text-muted-foreground">
-                                    Nessuna transazione registrata
-                                  </TableCell>
-                                </TableRow>
+                                <div className="py-6 text-center text-sm text-muted-foreground">
+                                  <CreditCard className="h-5 w-5 mx-auto mb-2 opacity-40" />
+                                  Nessuna transazione registrata
+                                </div>
                               ) : (
-                                bPayments
-                                  .sort((a: any, b: any) => a.payment_date.localeCompare(b.payment_date))
-                                  .map((tx: any) => (
-                                    <TableRow key={tx.id} className="bg-muted/5">
-                                      <TableCell />
-                                      <TableCell className="pl-12 text-sm">
-                                        {format(parseISO(tx.payment_date), "dd MMM yyyy", { locale: it })}
-                                      </TableCell>
-                                      <TableCell className="text-sm">
-                                        {tx.payment_method?.name ?? tx.method ?? "—"}
-                                      </TableCell>
-                                      <TableCell>
-                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${TYPE_COLORS[tx.payment_type] ?? "bg-muted"}`}>
-                                          {TYPE_LABELS[tx.payment_type] ?? tx.payment_type}
-                                        </span>
-                                      </TableCell>
-                                      <TableCell className="text-right font-mono text-sm" colSpan={2}>
-                                        {tx.payment_type === "rimborso" ? "-" : ""}€ {Number(tx.amount).toFixed(2)}
-                                      </TableCell>
-                                      <TableCell className="text-sm text-muted-foreground truncate max-w-[120px]">
-                                        {tx.notes ?? ""}
-                                      </TableCell>
-                                      <TableCell>
-                                        <div className="flex gap-1">
-                                          <Button
-                                            size="icon"
-                                            variant="ghost"
-                                            className="h-6 w-6"
-                                            onClick={() => openEditTx(b.id, tx)}
+                                <div className="divide-y divide-border/50">
+                                  {[...bPayments]
+                                    .sort((a: any, b: any) => a.payment_date.localeCompare(b.payment_date))
+                                    .map((tx: any) => {
+                                      const isRimborso = tx.payment_type === "rimborso";
+                                      return (
+                                        <div key={tx.id} className="flex items-center gap-3 px-4 py-2.5 pl-12 hover:bg-muted/30 transition-colors group">
+                                          {/* Date */}
+                                          <div className="text-xs text-muted-foreground w-24 shrink-0">
+                                            {format(parseISO(tx.payment_date), "dd MMM yyyy", { locale: it })}
+                                          </div>
+                                          {/* Type badge */}
+                                          <Badge
+                                            variant={isRimborso ? "destructive" : tx.payment_type === "caparra" ? "default" : "secondary"}
+                                            className="text-[10px] h-5 shrink-0"
                                           >
-                                            <Pencil className="h-3 w-3" />
-                                          </Button>
-                                          <Button
-                                            size="icon"
-                                            variant="ghost"
-                                            className="h-6 w-6 text-destructive"
-                                            onClick={() => setDeleteId(tx.id)}
-                                          >
-                                            <Trash2 className="h-3 w-3" />
-                                          </Button>
+                                            {TYPE_LABELS[tx.payment_type] ?? tx.payment_type}
+                                          </Badge>
+                                          {/* Method */}
+                                          <div className="text-xs text-muted-foreground flex-1 truncate">
+                                            {tx.payment_method?.name ?? tx.method ?? "—"}
+                                            {tx.notes && <span className="ml-2 italic opacity-60">— {tx.notes}</span>}
+                                          </div>
+                                          {/* Amount */}
+                                          <div className={`font-mono text-sm font-semibold shrink-0 ${isRimborso ? "text-destructive" : ""}`}>
+                                            {isRimborso ? "-" : "+"}€ {Number(tx.amount).toFixed(2)}
+                                          </div>
+                                          {/* Actions */}
+                                          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => openEditTx(b.id, tx)}>
+                                              <Pencil className="h-3 w-3" />
+                                            </Button>
+                                            <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => setDeleteId(tx.id)}>
+                                              <Trash2 className="h-3 w-3" />
+                                            </Button>
+                                          </div>
                                         </div>
-                                      </TableCell>
-                                    </TableRow>
-                                  ))
+                                      );
+                                    })}
+                                </div>
                               )}
-                            </>
+                            </div>
                           )}
-                        </>
+                        </div>
                       );
                     })}
-                  </>
-                );
-              })}
-            </TableBody>
-          </Table>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -441,20 +459,11 @@ export default function Pagamenti() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Importo (€)</label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={txForm.amount}
-                  onChange={e => setTxForm(f => ({ ...f, amount: e.target.value }))}
-                />
+                <Input type="number" step="0.01" min="0" value={txForm.amount} onChange={e => setTxForm(f => ({ ...f, amount: e.target.value }))} />
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Tipo</label>
-                <Select
-                  value={txForm.payment_type}
-                  onValueChange={v => setTxForm(f => ({ ...f, payment_type: v as any }))}
-                >
+                <Select value={txForm.payment_type} onValueChange={v => setTxForm(f => ({ ...f, payment_type: v as any }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="caparra">Caparra</SelectItem>
@@ -468,18 +477,11 @@ export default function Pagamenti() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Data</label>
-                <Input
-                  type="date"
-                  value={txForm.payment_date}
-                  onChange={e => setTxForm(f => ({ ...f, payment_date: e.target.value }))}
-                />
+                <Input type="date" value={txForm.payment_date} onChange={e => setTxForm(f => ({ ...f, payment_date: e.target.value }))} />
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Modalità</label>
-                <Select
-                  value={txForm.payment_method_id}
-                  onValueChange={v => setTxForm(f => ({ ...f, payment_method_id: v }))}
-                >
+                <Select value={txForm.payment_method_id} onValueChange={v => setTxForm(f => ({ ...f, payment_method_id: v }))}>
                   <SelectTrigger><SelectValue placeholder="Seleziona..." /></SelectTrigger>
                   <SelectContent>
                     {(paymentMethods ?? []).map(pm => (
@@ -491,11 +493,7 @@ export default function Pagamenti() {
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Note</label>
-              <Input
-                value={txForm.notes}
-                onChange={e => setTxForm(f => ({ ...f, notes: e.target.value }))}
-                placeholder="Opzionale"
-              />
+              <Input value={txForm.notes} onChange={e => setTxForm(f => ({ ...f, notes: e.target.value }))} placeholder="Opzionale" />
             </div>
           </div>
           <DialogFooter>
