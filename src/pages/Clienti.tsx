@@ -98,13 +98,13 @@ export default function Clienti() {
                     <TableHead>Nome</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Telefono</TableHead>
-                    <TableHead>Codice Fiscale</TableHead>
+                    <TableHead>Gatti</TableHead>
                     <TableHead>Stato</TableHead>
                     <TableHead className="w-[100px]">Azioni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {clients.map((client) => (
+                  {clients.map((client: any) => (
                     <TableRow key={client.id} className={client.is_blacklisted ? "bg-destructive/5" : ""}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
@@ -116,7 +116,11 @@ export default function Clienti() {
                       </TableCell>
                       <TableCell className="text-muted-foreground">{client.email ?? "—"}</TableCell>
                       <TableCell className="text-muted-foreground">{client.phone ?? "—"}</TableCell>
-                      <TableCell className="text-muted-foreground">{client.fiscal_code ?? "—"}</TableCell>
+                      <TableCell className="text-muted-foreground text-xs">
+                        {client.cats?.length
+                          ? client.cats.map((c: any) => c.name).join(", ")
+                          : "—"}
+                      </TableCell>
                       <TableCell>
                         {client.is_blacklisted ? (
                           <Badge variant="destructive" className="text-xs">Blacklist</Badge>
