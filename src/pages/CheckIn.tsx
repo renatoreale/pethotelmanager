@@ -28,7 +28,7 @@ import { useBookings, useTransitionBooking } from "@/hooks/useBookings";
 import { useInsertCatRegistry } from "@/hooks/useCatRegistry";
 import { useCreatePayment, usePaymentMethods } from "@/hooks/usePayments";
 import { useAuth } from "@/hooks/useAuth";
-import { useTenantConfig } from "@/hooks/usePensioneConfig";
+import { useTenantConfig, usePriceLists } from "@/hooks/usePensioneConfig";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
