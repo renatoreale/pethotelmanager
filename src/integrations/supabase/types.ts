@@ -160,6 +160,7 @@ export type Database = {
           deposit_amount: number | null
           id: string
           notes: string | null
+          price_breakdown: Json | null
           status: Database["public"]["Enums"]["booking_status"]
           tenant_id: string
           total_amount: number | null
@@ -177,6 +178,7 @@ export type Database = {
           deposit_amount?: number | null
           id?: string
           notes?: string | null
+          price_breakdown?: Json | null
           status?: Database["public"]["Enums"]["booking_status"]
           tenant_id: string
           total_amount?: number | null
@@ -194,6 +196,7 @@ export type Database = {
           deposit_amount?: number | null
           id?: string
           notes?: string | null
+          price_breakdown?: Json | null
           status?: Database["public"]["Enums"]["booking_status"]
           tenant_id?: string
           total_amount?: number | null
