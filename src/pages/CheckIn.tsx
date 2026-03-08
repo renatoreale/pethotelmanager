@@ -162,6 +162,8 @@ export default function CheckIn() {
           await supabase.from("cats").update(updates).eq("id", cat.id);
         }
       }
+      // Invalidate cats query so Gatti page refreshes
+      queryClient.invalidateQueries({ queryKey: ["cats"] });
 
       // 2. Transition booking
       await transitionBooking.mutateAsync({ id: booking.id, newStatus: "in_corso" });
