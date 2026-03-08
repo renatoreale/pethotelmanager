@@ -156,7 +156,7 @@ export function PreventivoDialog({
         setExtraServices([]);
         setDiscounts([]);
       }
-      setDepositManuallySet(true); // keep saved deposit
+      setDepositManuallySet(false);
     } else {
       setClientId("");
       setUnitsOccupied(1);
@@ -412,7 +412,7 @@ export function PreventivoDialog({
 
   // Auto-apply deposit (50%) when total changes and not manually set
   useEffect(() => {
-    if (!depositManuallySet && totalAmount > 0) {
+    if (!depositManuallySet) {
       setDepositAmount(Math.round(totalAmount * 50) / 100);
     }
   }, [totalAmount, depositManuallySet]);
