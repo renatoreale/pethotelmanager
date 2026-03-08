@@ -48,9 +48,13 @@ export default function Index() {
   const { data: tenantConfig } = useTenantConfig();
   const { data: allPayments } = useAllPayments();
 
-  const today = format(new Date(), "yyyy-MM-dd");
-  const monthStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
-  const monthEnd = format(endOfMonth(new Date()), "yyyy-MM-dd");
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
+  const isSelectedToday = isTodayFn(selectedDate);
+  const monthStart = format(startOfMonth(selectedDate), "yyyy-MM-dd");
+  const monthEnd = format(endOfMonth(selectedDate), "yyyy-MM-dd");
 
   const stats = useMemo(() => {
     if (!bookings) return null;
