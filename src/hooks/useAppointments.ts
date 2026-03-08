@@ -170,7 +170,7 @@ export function useAppointmentsByDate(date: string | undefined) {
           *,
           booking:bookings(
             id, booking_number, status,
-            client:clients(id, first_name, last_name, phone),
+            client:clients(id, first_name, last_name, phone, email),
             booking_cats(id, cat:cats(id, name))
           )
         `)
