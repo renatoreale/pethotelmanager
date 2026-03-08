@@ -40,6 +40,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { EditCheckoutDialog, type CheckoutBookingData } from "@/components/appointments/EditCheckoutDialog";
+import { useBookings } from "@/hooks/useBookings";
 
 type ViewMode = "giorno" | "settimana" | "mese" | "personalizzato";
 
