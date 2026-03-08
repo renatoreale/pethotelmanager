@@ -291,13 +291,18 @@ export function useUpsertRolePermission() {
       tenant_id?: string | null;
     }) => {
       // Check if exists
-      const { data: existing } = await supabase
+      let query = supabase
         .from("role_permissions")
         .select("id")
         .eq("role", permission.role)
-        .eq("resource", permission.resource)
-        .is("tenant_id", permission.tenant_id ?? null)
-        .maybeSingle();
+        .eq("resource", permission.resource);
+      
+      if (permission.tenant_id) {
+        query = query.eq("tenant_id", permission.tenant_id);
+      } else {
+        query = query.is("tenant_id", null);
+      }
+      const { data: existing } = await query.maybeSingle();
 
       if (existing) {
         const { error } = await supabase
