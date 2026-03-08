@@ -215,6 +215,7 @@ function SlotTab() {
   const openEdit = (slot: any) => {
     setEditing(slot);
     setDayOfWeek(slot.day_of_week);
+    setAppointmentType(slot.appointment_type ?? "check_in");
     setStartTime(slot.start_time.slice(0, 5));
     setEndTime(slot.end_time.slice(0, 5));
     setDuration(slot.slot_duration_minutes);
