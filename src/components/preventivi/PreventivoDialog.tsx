@@ -1129,6 +1129,48 @@ export function PreventivoDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    {/* Occupancy modal */}
+    <Dialog open={occupancyModalOpen} onOpenChange={setOccupancyModalOpen}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+            Occupazione casette
+          </DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground mb-2">
+          Periodo: {checkInDate ? format(occupancyRangeStart, "dd MMM yyyy", { locale: it }) : "—"} → {checkInDate ? format(occupancyRangeEnd, "dd MMM yyyy", { locale: it }) : "—"}
+          {" "}· Regola occupazione: {occupancyDays} giorni dal check-in
+        </p>
+        <div className="flex items-center gap-4 text-xs text-muted-foreground mb-2">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-sm bg-primary/70" />
+            <span>Occupa capacità</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-sm bg-primary/20" />
+            <span>Soggiorno</span>
+          </div>
+          <span>Singole: {totalSingole} · Doppie: {totalDoppie}</span>
+        </div>
+        {allBookings && (
+          <OccupancyGrid
+            bookings={allBookings}
+            occupancyDays={occupancyDays}
+            totalSingole={totalSingole}
+            totalDoppie={totalDoppie}
+            rangeStart={occupancyRangeStart}
+            rangeEnd={occupancyRangeEnd}
+            excludeBookingId={editing?.id}
+            compact
+          />
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOccupancyModalOpen(false)}>Chiudi</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </>
   );
 }
