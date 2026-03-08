@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -12,6 +12,9 @@ import {
   useSlotConfigsForDay,
   useAppointmentCounts,
   useCreateAppointment,
+  useUpdateAppointment,
+  useDeleteAppointment,
+  useBookingAppointments,
   generateTimeSlots,
 } from "@/hooks/useAppointments";
 import { useTransitionBooking } from "@/hooks/useBookings";
@@ -19,7 +22,7 @@ import { useTransitionBooking } from "@/hooks/useBookings";
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  booking: any; // the preventivo being confirmed
+  booking: any;
 }
 
 export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props) {
@@ -29,15 +32,44 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
 
   const transitionBooking = useTransitionBooking();
   const createAppointment = useCreateAppointment();
+  const updateAppointment = useUpdateAppointment();
+  const deleteAppointment = useDeleteAppointment();
+
+  const bookingId = booking?.id;
+  const { data: existingAppointments } = useBookingAppointments(open ? bookingId : undefined);
 
   const checkInDate = booking?.check_in_date;
   const checkOutDate = booking?.check_out_date;
 
-  // Convert date to day_of_week (0=Monday...6=Sunday for our DAYS array)
+  // Extract existing appointment times
+  const existingCheckIn = useMemo(() => {
+    const appt = (existingAppointments ?? []).find((a: any) => a.appointment_type === "check_in");
+    if (!appt) return null;
+    const tIndex = appt.scheduled_at.indexOf("T");
+    return { id: appt.id, time: tIndex >= 0 ? appt.scheduled_at.slice(tIndex + 1, tIndex + 6) : null };
+  }, [existingAppointments]);
+
+  const existingCheckOut = useMemo(() => {
+    const appt = (existingAppointments ?? []).find((a: any) => a.appointment_type === "check_out");
+    if (!appt) return null;
+    const tIndex = appt.scheduled_at.indexOf("T");
+    return { id: appt.id, time: tIndex >= 0 ? appt.scheduled_at.slice(tIndex + 1, tIndex + 6) : null };
+  }, [existingAppointments]);
+
+  const isEditMode = !!(existingCheckIn || existingCheckOut);
+
+  // Pre-select existing times when dialog opens
+  useEffect(() => {
+    if (open) {
+      setCheckInTime(existingCheckIn?.time ?? null);
+      setCheckOutTime(existingCheckOut?.time ?? null);
+    }
+  }, [open, existingCheckIn?.time, existingCheckOut?.time]);
+
   const checkInDow = useMemo(() => {
     if (!checkInDate) return undefined;
-    const jsDay = getDay(parseISO(checkInDate)); // 0=Sun, 1=Mon...
-    return jsDay === 0 ? 6 : jsDay - 1; // Convert to 0=Mon...6=Sun
+    const jsDay = getDay(parseISO(checkInDate));
+    return jsDay === 0 ? 6 : jsDay - 1;
   }, [checkInDate]);
 
   const checkOutDow = useMemo(() => {
@@ -51,20 +83,20 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
   const { data: checkInCounts } = useAppointmentCounts(checkInDate, "check_in");
   const { data: checkOutCounts } = useAppointmentCounts(checkOutDate, "check_out");
 
-  // Generate available slots
   const checkInSlots = useMemo(() => {
     if (!checkInSlotConfigs?.length) return [];
     const slots: { time: string; available: number; maxAppts: number; duration: number }[] = [];
     for (const config of checkInSlotConfigs) {
       const times = generateTimeSlots(config);
       for (const time of times) {
-        const used = checkInCounts?.[time] ?? 0;
-        const avail = config.max_appointments - used;
-        slots.push({ time, available: avail, maxAppts: config.max_appointments, duration: config.slot_duration_minutes });
+        let used = checkInCounts?.[time] ?? 0;
+        // Don't count existing appointment as "used"
+        if (existingCheckIn?.time === time) used = Math.max(0, used - 1);
+        slots.push({ time, available: config.max_appointments - used, maxAppts: config.max_appointments, duration: config.slot_duration_minutes });
       }
     }
     return slots;
-  }, [checkInSlotConfigs, checkInCounts]);
+  }, [checkInSlotConfigs, checkInCounts, existingCheckIn?.time]);
 
   const checkOutSlots = useMemo(() => {
     if (!checkOutSlotConfigs?.length) return [];
@@ -72,13 +104,13 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
     for (const config of checkOutSlotConfigs) {
       const times = generateTimeSlots(config);
       for (const time of times) {
-        const used = checkOutCounts?.[time] ?? 0;
-        const avail = config.max_appointments - used;
-        slots.push({ time, available: avail, maxAppts: config.max_appointments, duration: config.slot_duration_minutes });
+        let used = checkOutCounts?.[time] ?? 0;
+        if (existingCheckOut?.time === time) used = Math.max(0, used - 1);
+        slots.push({ time, available: config.max_appointments - used, maxAppts: config.max_appointments, duration: config.slot_duration_minutes });
       }
     }
     return slots;
-  }, [checkOutSlotConfigs, checkOutCounts]);
+  }, [checkOutSlotConfigs, checkOutCounts, existingCheckOut?.time]);
 
   const handleConfirm = async () => {
     if (!booking) return;
@@ -88,42 +120,65 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
     }
     setSaving(true);
     try {
-      // 1. Create check-in appointment if slot selected
+      // Handle check-in
       if (checkInTime && checkInDate) {
-        const selectedSlot = checkInSlots.find(s => s.time === checkInTime);
-        await createAppointment.mutateAsync({
-          booking_id: booking.id,
-          appointment_type: "check_in",
-          scheduled_at: `${checkInDate}T${checkInTime}:00`,
-          duration_minutes: selectedSlot?.duration ?? 30,
-        });
+        if (existingCheckIn && checkInTime !== existingCheckIn.time) {
+          // Update existing
+          await updateAppointment.mutateAsync({
+            id: existingCheckIn.id,
+            scheduled_at: `${checkInDate}T${checkInTime}:00`,
+          });
+        } else if (!existingCheckIn) {
+          // Create new
+          const selectedSlot = checkInSlots.find(s => s.time === checkInTime);
+          await createAppointment.mutateAsync({
+            booking_id: booking.id,
+            appointment_type: "check_in",
+            scheduled_at: `${checkInDate}T${checkInTime}:00`,
+            duration_minutes: selectedSlot?.duration ?? 30,
+          });
+        }
+      } else if (!checkInTime && existingCheckIn) {
+        // Remove existing check-in
+        await deleteAppointment.mutateAsync({ id: existingCheckIn.id, bookingId: booking.id });
       }
 
-      // 2. Create check-out appointment if slot selected
+      // Handle check-out
       if (checkOutTime && checkOutDate) {
-        const selectedSlot = checkOutSlots.find(s => s.time === checkOutTime);
-        await createAppointment.mutateAsync({
-          booking_id: booking.id,
-          appointment_type: "check_out",
-          scheduled_at: `${checkOutDate}T${checkOutTime}:00`,
-          duration_minutes: selectedSlot?.duration ?? 30,
-        });
+        if (existingCheckOut && checkOutTime !== existingCheckOut.time) {
+          await updateAppointment.mutateAsync({
+            id: existingCheckOut.id,
+            scheduled_at: `${checkOutDate}T${checkOutTime}:00`,
+          });
+        } else if (!existingCheckOut) {
+          const selectedSlot = checkOutSlots.find(s => s.time === checkOutTime);
+          await createAppointment.mutateAsync({
+            booking_id: booking.id,
+            appointment_type: "check_out",
+            scheduled_at: `${checkOutDate}T${checkOutTime}:00`,
+            duration_minutes: selectedSlot?.duration ?? 30,
+          });
+        }
+      } else if (!checkOutTime && existingCheckOut) {
+        await deleteAppointment.mutateAsync({ id: existingCheckOut.id, bookingId: booking.id });
       }
 
-      // 3. Transition based on which appointments were set
+      // Update booking status based on final state
+      const hasIn = !!checkInTime;
+      const hasOut = !!checkOutTime;
       let newStatus: string;
-      if (checkInTime && checkOutTime) {
+      if (hasIn && hasOut) {
         newStatus = "appuntamento_in_out_fissato";
-      } else if (checkInTime) {
+      } else if (hasIn) {
         newStatus = "appuntamento_in_fissato";
-      } else {
+      } else if (hasOut) {
         newStatus = "appuntamento_out_fissato";
+      } else {
+        newStatus = "confermata";
       }
       await transitionBooking.mutateAsync({ id: booking.id, newStatus });
 
-      toast.success("Appuntamenti fissati");
-      setCheckInTime(null);
-      setCheckOutTime(null);
+      toast.success(isEditMode ? "Appuntamenti aggiornati" : "Appuntamenti fissati");
       onOpenChange(false);
     } catch (err: any) {
       toast.error(err.message || "Errore");
@@ -132,13 +187,43 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
     }
   };
 
-  const DAYS_LABEL = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+  const renderSlotButton = (
+    slot: { time: string; available: number; maxAppts: number },
+    selectedTime: string | null,
+    setTime: (t: string | null) => void,
+    currentTime: string | null,
+  ) => {
+    const isSelected = selectedTime === slot.time;
+    const isCurrent = currentTime === slot.time;
+
+    return (
+      <Button
+        key={slot.time}
+        variant={isSelected ? "default" : "outline"}
+        size="sm"
+        disabled={slot.available <= 0 && !isCurrent}
+        onClick={() => setTime(isSelected ? null : slot.time)}
+        className="relative gap-1.5"
+      >
+        {slot.time}
+        {isCurrent && (
+          <Badge variant="secondary" className="text-xs px-1.5 py-0">attuale</Badge>
+        )}
+        {!isCurrent && slot.available <= 0 && (
+          <span className="ml-1 text-xs">(pieno)</span>
+        )}
+        {!isCurrent && slot.available > 0 && slot.available < slot.maxAppts && (
+          <Badge variant="secondary" className="text-xs px-1 py-0">{slot.available}</Badge>
+        )}
+      </Button>
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Fissa Appuntamenti</DialogTitle>
+          <DialogTitle>{isEditMode ? "Modifica Appuntamenti" : "Fissa Appuntamenti"}</DialogTitle>
         </DialogHeader>
 
         {booking && (
@@ -156,27 +241,10 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
               Appuntamento Check-in — {checkInDate ? format(parseISO(checkInDate), "EEEE dd MMM yyyy", { locale: it }) : ""}
             </Label>
             {!checkInSlots.length ? (
-              <p className="text-sm text-muted-foreground">Nessuno slot configurato per questo giorno. Puoi confermare senza appuntamento.</p>
+              <p className="text-sm text-muted-foreground">Nessuno slot configurato per questo giorno.</p>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {checkInSlots.map((slot) => (
-                  <Button
-                    key={slot.time}
-                    variant={checkInTime === slot.time ? "default" : "outline"}
-                    size="sm"
-                    disabled={slot.available <= 0}
-                    onClick={() => setCheckInTime(checkInTime === slot.time ? null : slot.time)}
-                    className="relative"
-                  >
-                    {slot.time}
-                    {slot.available <= 0 && (
-                      <span className="ml-1 text-xs">(pieno)</span>
-                    )}
-                    {slot.available > 0 && slot.available < slot.maxAppts && (
-                      <Badge variant="secondary" className="ml-1 text-xs px-1 py-0">{slot.available}</Badge>
-                    )}
-                  </Button>
-                ))}
+                {checkInSlots.map((slot) => renderSlotButton(slot, checkInTime, setCheckInTime, existingCheckIn?.time ?? null))}
               </div>
             )}
           </div>
@@ -187,27 +255,10 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
               Appuntamento Check-out — {checkOutDate ? format(parseISO(checkOutDate), "EEEE dd MMM yyyy", { locale: it }) : ""}
             </Label>
             {!checkOutSlots.length ? (
-              <p className="text-sm text-muted-foreground">Nessuno slot configurato per questo giorno. Puoi confermare senza appuntamento.</p>
+              <p className="text-sm text-muted-foreground">Nessuno slot configurato per questo giorno.</p>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {checkOutSlots.map((slot) => (
-                  <Button
-                    key={slot.time}
-                    variant={checkOutTime === slot.time ? "default" : "outline"}
-                    size="sm"
-                    disabled={slot.available <= 0}
-                    onClick={() => setCheckOutTime(checkOutTime === slot.time ? null : slot.time)}
-                    className="relative"
-                  >
-                    {slot.time}
-                    {slot.available <= 0 && (
-                      <span className="ml-1 text-xs">(pieno)</span>
-                    )}
-                    {slot.available > 0 && slot.available < slot.maxAppts && (
-                      <Badge variant="secondary" className="ml-1 text-xs px-1 py-0">{slot.available}</Badge>
-                    )}
-                  </Button>
-                ))}
+                {checkOutSlots.map((slot) => renderSlotButton(slot, checkOutTime, setCheckOutTime, existingCheckOut?.time ?? null))}
               </div>
             )}
           </div>
@@ -216,7 +267,7 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annulla</Button>
           <Button onClick={handleConfirm} disabled={saving}>
-            {saving ? "Salvataggio..." : "Fissa Appuntamenti"}
+            {saving ? "Salvataggio..." : isEditMode ? "Aggiorna Appuntamenti" : "Fissa Appuntamenti"}
           </Button>
         </DialogFooter>
       </DialogContent>
