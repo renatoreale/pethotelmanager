@@ -202,36 +202,41 @@ export default function Prenotazioni() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          {transitions.length > 0 && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                {transitions.map((t) => (
-                                  <DropdownMenuItem
-                                    key={t.next}
-                                    onClick={() => {
-                                      if (t.next === "appuntamento_fissato" || t.next === "appuntamento_in_fissato" || t.next === "appuntamento_out_fissato" || t.next === "appuntamento_in_out_fissato") {
-                                        setSchedulingBooking(b);
-                                      } else {
-                                        setTransitioning({
-                                          id: b.id,
-                                          bookingNumber: b.booking_number,
-                                          newStatus: t.next,
-                                          label: t.label,
-                                        });
-                                      }
-                                    }}
-                                  >
-                                    {t.label}
-                                  </DropdownMenuItem>
-                                ))}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => setEditingBooking(b)} title="Modifica">
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            {transitions.length > 0 && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  {transitions.map((t) => (
+                                    <DropdownMenuItem
+                                      key={t.next}
+                                      onClick={() => {
+                                        if (t.next === "appuntamento_fissato" || t.next === "appuntamento_in_fissato" || t.next === "appuntamento_out_fissato" || t.next === "appuntamento_in_out_fissato") {
+                                          setSchedulingBooking(b);
+                                        } else {
+                                          setTransitioning({
+                                            id: b.id,
+                                            bookingNumber: b.booking_number,
+                                            newStatus: t.next,
+                                            label: t.label,
+                                          });
+                                        }
+                                      }}
+                                    >
+                                      {t.label}
+                                    </DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
