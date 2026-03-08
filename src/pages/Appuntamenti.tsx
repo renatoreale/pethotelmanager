@@ -473,7 +473,75 @@ export default function Appuntamenti() {
           <CheckCircle2 className="h-3.5 w-3.5" />
           {filteredAppointments.filter(a => a.confirmed).length} Confermati
         </Badge>
+        {confirmedBookings.length > 0 && (
+          <Badge variant="outline" className="gap-1 text-sm py-1 px-3 border-blue-300 text-blue-700 dark:border-blue-700 dark:text-blue-300">
+            <CalendarPlus className="h-3.5 w-3.5" />
+            {confirmedBookings.length} Da programmare
+          </Badge>
+        )}
       </div>
+
+      {/* Confirmed bookings without appointments */}
+      {confirmedBookings.length > 0 && (
+        <Card className="border-blue-200 dark:border-blue-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <CalendarPlus className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              Prenotazioni confermate — da programmare
+            </CardTitle>
+            <CardDescription>
+              Prenotazioni confermate che non hanno ancora un appuntamento di check-in o check-out fissato
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Gatti</TableHead>
+                    <TableHead>N° Prenotazione</TableHead>
+                    <TableHead>Check-in</TableHead>
+                    <TableHead>Check-out</TableHead>
+                    <TableHead>Stato</TableHead>
+                    <TableHead className="w-[120px]">Azioni</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {confirmedBookings.map((b: any) => {
+                    const clientName = b.client ? `${b.client.first_name} ${b.client.last_name}` : "—";
+                    const cats = (b.booking_cats ?? []).map((bc: any) => bc.cat?.name).filter(Boolean).join(", ") || "—";
+                    return (
+                      <TableRow key={b.id}>
+                        <TableCell className="font-medium">
+                          {clientName}
+                          {b.client?.phone && <span className="block text-xs text-muted-foreground">{b.client.phone}</span>}
+                        </TableCell>
+                        <TableCell className="text-sm">{cats}</TableCell>
+                        <TableCell className="font-mono text-sm">{b.booking_number}</TableCell>
+                        <TableCell className="text-sm">{format(parseISO(b.check_in_date), "dd/MM/yyyy")}</TableCell>
+                        <TableCell className="text-sm">{format(parseISO(b.check_out_date), "dd/MM/yyyy")}</TableCell>
+                        <TableCell><StatusBadge status={b.status} /></TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1 text-xs"
+                            onClick={() => setSchedulingBooking(b)}
+                          >
+                            <CalendarPlus className="h-3.5 w-3.5" />
+                            Fissa appuntamento
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {isLoading ? (
         <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
