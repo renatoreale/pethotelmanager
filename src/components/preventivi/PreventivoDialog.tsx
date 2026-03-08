@@ -530,8 +530,14 @@ export function PreventivoDialog({
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Cliente *</Label>
-                <Input placeholder="Cerca cliente per nome o email..." value={clientSearch}
-                  onChange={(e) => setClientSearch(e.target.value)} className="mb-1" />
+                <div className="flex gap-2">
+                  <Input placeholder="Cerca cliente per nome o email..." value={clientSearch}
+                    onChange={(e) => setClientSearch(e.target.value)} className="flex-1" />
+                  <Button type="button" variant="outline" size="sm" onClick={() => setNewClientDialogOpen(true)}
+                    className="shrink-0 gap-1">
+                    <UserPlus className="h-4 w-4" /> Nuovo
+                  </Button>
+                </div>
                 <Select value={clientId} onValueChange={(v) => { setClientId(v); setSelectedCats([]); }}>
                   <SelectTrigger><SelectValue placeholder="Seleziona cliente" /></SelectTrigger>
                   <SelectContent>
