@@ -59,6 +59,7 @@ export default function CheckIn() {
   // Cat details state
   const [catDetails, setCatDetails] = useState<CatDetails[]>([]);
   const [loadingCats, setLoadingCats] = useState(false);
+  const [bookingPaidAmount, setBookingPaidAmount] = useState(0);
 
   const checkInBookings = useMemo(() => {
     if (!bookings) return [];
