@@ -102,10 +102,12 @@ export default function RegistroGatti() {
         <div className="rounded-md border overflow-auto">
           <Table>
             <TableHeader>
-              <TableRow>
+             <TableRow>
                 <TableHead>Gatto</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Microchip</TableHead>
+                <TableHead>Razza</TableHead>
+                <TableHead>Sesso</TableHead>
                 <TableHead>Check-in</TableHead>
                 <TableHead>Check-out</TableHead>
                 <TableHead>Stato</TableHead>
@@ -124,6 +126,12 @@ export default function RegistroGatti() {
                   <TableCell>{entry.client_name}</TableCell>
                   <TableCell className="font-mono text-xs">
                     {entry.microchip ?? <span className="text-muted-foreground">—</span>}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {entry.breed ?? <span className="text-muted-foreground">—</span>}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {entry.gender ?? <span className="text-muted-foreground">—</span>}
                   </TableCell>
                   <TableCell>
                     {format(parseISO(entry.check_in_date), "dd MMM yyyy", { locale: it })}
