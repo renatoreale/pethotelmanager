@@ -90,6 +90,10 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
   });
 
   const onSubmit = async (values: CatFormValues) => {
+    if (pet.petType === "entrambi" && !values.pet_type) {
+      toast.error("Seleziona il tipo di animale");
+      return;
+    }
     try {
       const payload = {
         name: values.name,
@@ -107,6 +111,7 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
         dietary_notes: values.dietary_notes || null,
         behavioral_notes: values.behavioral_notes || null,
         sibling_group_id: cat?.sibling_group_id ?? null,
+        pet_type: (values.pet_type as PetType) || defaultPetType || null,
       };
 
       if (isEditing && cat) {
