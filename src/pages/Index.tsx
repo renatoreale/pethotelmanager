@@ -134,7 +134,7 @@ export default function Index() {
       dayBookings,
       expiringPreventivi: expiringPreventivi.length,
     };
-  }, [bookings, allPayments, selectedDateStr, monthStart, monthEnd, todayStr, tomorrowStr]);
+  }, [bookings, allPayments, bookingOccupancy, selectedDateStr, monthStart, monthEnd, todayStr, tomorrowStr]);
 
   const numSingole = tenantConfig?.num_singole ?? 0;
   const numDoppie = tenantConfig?.num_doppie ?? 0;
