@@ -181,10 +181,19 @@ export default function Index() {
     {
       title: isSelectedToday ? "Check-in oggi" : "Check-in",
       value: String(s.checkInsToday),
-      subtitle: `${s.checkOutsToday} check-out`,
+      subtitle: isSelectedToday ? "previsti per oggi" : `previsti per il ${format(selectedDate, "dd MMM", { locale: it })}`,
       icon: LogIn,
       color: "text-success",
       bg: "bg-success/10",
+      show: true,
+    },
+    {
+      title: isSelectedToday ? "Check-out oggi" : "Check-out",
+      value: String(s.checkOutsToday),
+      subtitle: isSelectedToday ? "previsti per oggi" : `previsti per il ${format(selectedDate, "dd MMM", { locale: it })}`,
+      icon: LogOut,
+      color: "text-orange-600 dark:text-orange-400",
+      bg: "bg-orange-100 dark:bg-orange-900/30",
       show: true,
     },
     {
