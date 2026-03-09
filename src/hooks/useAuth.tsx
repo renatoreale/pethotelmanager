@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [userTenants, setUserTenants] = useState<UserTenant[]>([]);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
