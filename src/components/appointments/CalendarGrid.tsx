@@ -232,6 +232,8 @@ function AppointmentChip({
   expanded?: boolean;
 }) {
   const isIn = appt.appointment_type === "check_in";
+  const isInCorso = appt.booking?.status === "in_corso";
+  const isDoneCheckin = isIn && isInCorso;
   const time = (() => {
     const tIndex = appt.scheduled_at.indexOf("T");
     return tIndex >= 0 ? appt.scheduled_at.slice(tIndex + 1, tIndex + 6) : "";
@@ -244,9 +246,11 @@ function AppointmentChip({
     <button
       className={cn(
         "w-full text-left rounded px-1.5 py-0.5 text-xs font-medium truncate flex items-center gap-1 transition-colors",
-        isIn
-          ? "bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:hover:bg-blue-900/60"
-          : "bg-orange-100 text-orange-800 hover:bg-orange-200 dark:bg-orange-900/40 dark:text-orange-300 dark:hover:bg-orange-900/60",
+        isDoneCheckin
+          ? "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/40 dark:text-green-300 dark:hover:bg-green-900/60"
+          : isIn
+            ? "bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:hover:bg-blue-900/60"
+            : "bg-orange-100 text-orange-800 hover:bg-orange-200 dark:bg-orange-900/40 dark:text-orange-300 dark:hover:bg-orange-900/60",
         appt.confirmed && "ring-1 ring-green-500/40",
         compact && "text-[10px] py-0 leading-4"
       )}
