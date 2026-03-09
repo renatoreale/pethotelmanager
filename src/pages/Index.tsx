@@ -10,7 +10,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useBookings } from "@/hooks/useBookings";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import { useAllPayments } from "@/hooks/usePayments";
-import { format, parseISO, startOfMonth, endOfMonth, isToday as isTodayFn } from "date-fns";
+import { usePermissions } from "@/hooks/usePermissions";
+import { format, parseISO, startOfMonth, endOfMonth, isToday as isTodayFn, addDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +49,9 @@ export default function Index() {
   const { data: bookings, isLoading: loadingBookings } = useBookings();
   const { data: tenantConfig } = useTenantConfig();
   const { data: allPayments } = useAllPayments();
+  const { canRead, isOperatoreRestricted } = usePermissions();
+
+  const canSeeRevenue = canRead("dashboard_revenue");
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -56,6 +60,10 @@ export default function Index() {
   const isSelectedToday = isTodayFn(selectedDate);
   const monthStart = format(startOfMonth(selectedDate), "yyyy-MM-dd");
   const monthEnd = format(endOfMonth(selectedDate), "yyyy-MM-dd");
+
+  // For operatore: restrict to today and tomorrow only
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  const tomorrowStr = format(addDays(new Date(), 1), "yyyy-MM-dd");
 
   const stats = useMemo(() => {
     if (!bookings) return null;
@@ -76,11 +84,13 @@ export default function Index() {
     const activeStatuses = ["confermata", "appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato", "check_in", "in_corso"];
     const activeBookings = bookings.filter(b => activeStatuses.includes(b.status) && b.check_in_date <= selectedDateStr && b.check_out_date >= selectedDateStr);
 
-    // Check-ins on selected date
-    const checkInsToday = bookings.filter(b => b.check_in_date === selectedDateStr && !["preventivo", "cancellata", "rimborsata", "scaduto"].includes(b.status));
+    // Check-ins on selected date (or today/tomorrow for operatore)
+    let checkInsToday = bookings.filter(b => b.check_in_date === selectedDateStr && !["preventivo", "cancellata", "rimborsata", "scaduto"].includes(b.status));
+    let checkOutsToday = bookings.filter(b => b.check_out_date === selectedDateStr && !["preventivo", "cancellata", "rimborsata", "scaduto"].includes(b.status));
 
-    // Check-outs on selected date
-    const checkOutsToday = bookings.filter(b => b.check_out_date === selectedDateStr && !["preventivo", "cancellata", "rimborsata", "scaduto"].includes(b.status));
+    // For operatore, also get tomorrow's data
+    const checkInsTomorrow = bookings.filter(b => b.check_in_date === tomorrowStr && !["preventivo", "cancellata", "rimborsata", "scaduto"].includes(b.status));
+    const checkOutsTomorrow = bookings.filter(b => b.check_out_date === tomorrowStr && !["preventivo", "cancellata", "rimborsata", "scaduto"].includes(b.status));
 
     // Monthly revenue (month of selected date)
     const monthPayments = (allPayments ?? []).filter(p => {
@@ -113,11 +123,13 @@ export default function Index() {
       activeBookings: activeBookings.length,
       checkInsToday: checkInsToday.length,
       checkOutsToday: checkOutsToday.length,
+      checkInsTomorrow: checkInsTomorrow.length,
+      checkOutsTomorrow: checkOutsTomorrow.length,
       monthRevenue,
       dayBookings,
       expiringPreventivi: expiringPreventivi.length,
     };
-  }, [bookings, allPayments, selectedDateStr, monthStart, monthEnd]);
+  }, [bookings, allPayments, selectedDateStr, monthStart, monthEnd, todayStr, tomorrowStr]);
 
   const numSingole = tenantConfig?.num_singole ?? 0;
   const numDoppie = tenantConfig?.num_doppie ?? 0;
@@ -137,9 +149,11 @@ export default function Index() {
   const s = stats ?? {
     catsInStructure: 0, singoleOccupied: 0, doppieOccupied: 0,
     activeBookings: 0, checkInsToday: 0, checkOutsToday: 0,
+    checkInsTomorrow: 0, checkOutsTomorrow: 0,
     monthRevenue: 0, dayBookings: [], expiringPreventivi: 0,
   };
 
+  // Build KPI cards based on permissions
   const kpis = [
     {
       title: "Gatti in struttura",
@@ -148,6 +162,7 @@ export default function Index() {
       icon: Cat,
       color: "text-primary",
       bg: "bg-primary/10",
+      show: true,
     },
     {
       title: "Prenotazioni attive",
@@ -156,6 +171,7 @@ export default function Index() {
       icon: CalendarCheck,
       color: "text-accent",
       bg: "bg-accent/10",
+      show: !isOperatoreRestricted,
     },
     {
       title: isSelectedToday ? "Check-in oggi" : "Check-in",
@@ -164,6 +180,7 @@ export default function Index() {
       icon: LogIn,
       color: "text-success",
       bg: "bg-success/10",
+      show: true,
     },
     {
       title: "Incasso mese",
@@ -172,8 +189,9 @@ export default function Index() {
       icon: CreditCard,
       color: "text-warning",
       bg: "bg-warning/10",
+      show: canSeeRevenue,
     },
-  ];
+  ].filter(k => k.show);
 
   const singolePct = numSingole > 0 ? Math.round((s.singoleOccupied / numSingole) * 100) : 0;
   const doppiePct = numDoppie > 0 ? Math.round((s.doppieOccupied / numDoppie) * 100) : 0;
@@ -188,34 +206,36 @@ export default function Index() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <AvailabilityCheckDialog />
-          {!isSelectedToday && (
+          {!isOperatoreRestricted && <AvailabilityCheckDialog />}
+          {!isSelectedToday && !isOperatoreRestricted && (
             <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date())}>
               Oggi
             </Button>
           )}
-          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <CalendarIcon className="h-4 w-4" />
-                {format(selectedDate, "dd MMM yyyy", { locale: it })}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(d) => { if (d) { setSelectedDate(d); setCalendarOpen(false); } }}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
+          {!isOperatoreRestricted && (
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  {format(selectedDate, "dd MMM yyyy", { locale: it })}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(d) => { if (d) { setSelectedDate(d); setCalendarOpen(false); } }}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className={cn("grid gap-4 sm:grid-cols-2", kpis.length >= 4 ? "lg:grid-cols-4" : kpis.length === 3 ? "lg:grid-cols-3" : "")}>
         {kpis.map((stat) => (
           <Card key={stat.title} className="border-none shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -234,63 +254,98 @@ export default function Index() {
         ))}
       </div>
 
-      {/* Occupancy bar */}
-      <Card className="border-none shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base">Occupazione casette</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <div className="flex justify-between text-sm mb-1.5">
-              <span className="text-muted-foreground">Singole</span>
-              <span className="font-medium">{s.singoleOccupied} / {numSingole}</span>
+      {/* Operatore: Show tomorrow's check-in/out */}
+      {isOperatoreRestricted && (
+        <Card className="border-none shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base">Domani</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
+                  <LogIn className="h-5 w-5 text-success" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{s.checkInsTomorrow}</p>
+                  <p className="text-xs text-muted-foreground">Check-in</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                  <LogOut className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{s.checkOutsTomorrow}</p>
+                  <p className="text-xs text-muted-foreground">Check-out</p>
+                </div>
+              </div>
             </div>
-            <Progress value={singolePct} className="h-2" />
-          </div>
-          <div>
-            <div className="flex justify-between text-sm mb-1.5">
-              <span className="text-muted-foreground">Doppie</span>
-              <span className="font-medium">{s.doppieOccupied} / {numDoppie}</span>
-            </div>
-            <Progress value={doppiePct} className="h-2" />
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Recent Bookings */}
-      <Card className="border-none shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base">
-            {isSelectedToday ? "Prenotazioni del giorno" : `Prenotazioni — ${format(selectedDate, "dd MMM yyyy", { locale: it })}`}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {s.dayBookings.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Nessuna prenotazione per questa data</p>
-          ) : (
-            <div className="space-y-3">
-              {s.dayBookings.map((b: any) => {
-                const clientName = b.client ? `${b.client.first_name} ${b.client.last_name}` : "—";
-                const catNames = (b.booking_cats ?? []).map((bc: any) => bc.cat?.name).filter(Boolean).join(", ") || "—";
-                return (
-                  <div key={b.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                    <div>
-                      <p className="text-sm font-medium">{clientName}</p>
-                      <p className="text-xs text-muted-foreground">{catNames} · {b.booking_number}</p>
+      {/* Occupancy bar - hide for operatore */}
+      {!isOperatoreRestricted && (
+        <Card className="border-none shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base">Occupazione casette</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <div className="flex justify-between text-sm mb-1.5">
+                <span className="text-muted-foreground">Singole</span>
+                <span className="font-medium">{s.singoleOccupied} / {numSingole}</span>
+              </div>
+              <Progress value={singolePct} className="h-2" />
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-1.5">
+                <span className="text-muted-foreground">Doppie</span>
+                <span className="font-medium">{s.doppieOccupied} / {numDoppie}</span>
+              </div>
+              <Progress value={doppiePct} className="h-2" />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Recent Bookings - hide for operatore */}
+      {!isOperatoreRestricted && (
+        <Card className="border-none shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base">
+              {isSelectedToday ? "Prenotazioni del giorno" : `Prenotazioni — ${format(selectedDate, "dd MMM yyyy", { locale: it })}`}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {s.dayBookings.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Nessuna prenotazione per questa data</p>
+            ) : (
+              <div className="space-y-3">
+                {s.dayBookings.map((b: any) => {
+                  const clientName = b.client ? `${b.client.first_name} ${b.client.last_name}` : "—";
+                  const catNames = (b.booking_cats ?? []).map((bc: any) => bc.cat?.name).filter(Boolean).join(", ") || "—";
+                  return (
+                    <div key={b.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                      <div>
+                        <p className="text-sm font-medium">{clientName}</p>
+                        <p className="text-xs text-muted-foreground">{catNames} · {b.booking_number}</p>
+                      </div>
+                      <Badge variant="outline" className={`text-xs ${STATUS_COLORS[b.status] ?? ""}`}>
+                        {STATUS_LABELS[b.status] ?? b.status}
+                      </Badge>
                     </div>
-                    <Badge variant="outline" className={`text-xs ${STATUS_COLORS[b.status] ?? ""}`}>
-                      {STATUS_LABELS[b.status] ?? b.status}
-                    </Badge>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Alerts */}
-      {s.expiringPreventivi > 0 && (
+      {/* Alerts - hide for operatore */}
+      {!isOperatoreRestricted && s.expiringPreventivi > 0 && (
         <Card className="border-none shadow-sm border-l-4 border-l-warning">
           <CardContent className="flex items-center gap-3 py-4">
             <AlertTriangle className="h-5 w-5 text-warning shrink-0" />

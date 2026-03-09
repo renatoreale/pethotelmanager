@@ -1,8 +1,31 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions, Resource } from "@/hooks/usePermissions";
+
+// Map routes to resources
+const ROUTE_RESOURCE_MAP: Record<string, Resource> = {
+  "/": "dashboard",
+  "/preventivi": "preventivi",
+  "/prenotazioni": "prenotazioni",
+  "/appuntamenti": "appuntamenti",
+  "/check-in": "check-in",
+  "/check-out": "check-out",
+  "/pagamenti": "pagamenti",
+  "/clienti": "clienti",
+  "/gatti": "gatti",
+  "/registro-gatti": "registro-gatti",
+  "/planning": "planning",
+  "/occupazione": "occupazione",
+  "/utenti": "utenti",
+  "/template-email": "template-email",
+  "/pensione": "pensione",
+  "/admin": "admin",
+};
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const { canRead } = usePermissions();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -17,6 +40,13 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Check page-level permissions
+  const resource = ROUTE_RESOURCE_MAP[location.pathname];
+  if (resource && !canRead(resource)) {
+    // Redirect to dashboard if user doesn't have permission
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

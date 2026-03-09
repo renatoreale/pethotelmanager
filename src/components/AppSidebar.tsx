@@ -20,6 +20,7 @@ import {
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions, Resource } from "@/hooks/usePermissions";
 
 import {
   Sidebar,
@@ -35,32 +36,39 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const mainNav = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Preventivi", url: "/preventivi", icon: FileText },
-  { title: "Prenotazioni", url: "/prenotazioni", icon: CalendarCheck },
-  { title: "Appuntamenti", url: "/appuntamenti", icon: Calendar },
-  { title: "Check-in", url: "/check-in", icon: LogIn },
-  { title: "Check-out", url: "/check-out", icon: LogOut },
-  { title: "Pagamenti", url: "/pagamenti", icon: CreditCard },
+interface NavItem {
+  title: string;
+  url: string;
+  icon: any;
+  resource: Resource;
+}
+
+const mainNav: NavItem[] = [
+  { title: "Dashboard", url: "/", icon: LayoutDashboard, resource: "dashboard" },
+  { title: "Preventivi", url: "/preventivi", icon: FileText, resource: "preventivi" },
+  { title: "Prenotazioni", url: "/prenotazioni", icon: CalendarCheck, resource: "prenotazioni" },
+  { title: "Appuntamenti", url: "/appuntamenti", icon: Calendar, resource: "appuntamenti" },
+  { title: "Check-in", url: "/check-in", icon: LogIn, resource: "check-in" },
+  { title: "Check-out", url: "/check-out", icon: LogOut, resource: "check-out" },
+  { title: "Pagamenti", url: "/pagamenti", icon: CreditCard, resource: "pagamenti" },
 ];
 
-const registryNav = [
-  { title: "Clienti", url: "/clienti", icon: Users },
-  { title: "Gatti", url: "/gatti", icon: Cat },
-  { title: "Registro Gatti", url: "/registro-gatti", icon: ClipboardList },
+const registryNav: NavItem[] = [
+  { title: "Clienti", url: "/clienti", icon: Users, resource: "clienti" },
+  { title: "Gatti", url: "/gatti", icon: Cat, resource: "gatti" },
+  { title: "Registro Gatti", url: "/registro-gatti", icon: ClipboardList, resource: "registro-gatti" },
 ];
 
-const operationsNav = [
-  { title: "Planning", url: "/planning", icon: Calendar },
-  { title: "Occupazione Casette", url: "/occupazione", icon: Grid3X3 },
+const operationsNav: NavItem[] = [
+  { title: "Planning", url: "/planning", icon: Calendar, resource: "planning" },
+  { title: "Occupazione Casette", url: "/occupazione", icon: Grid3X3, resource: "occupazione" },
 ];
 
-const adminNav = [
-  { title: "Utenti & Ruoli", url: "/utenti", icon: Shield },
-  { title: "Template Email", url: "/template-email", icon: Mail },
-  { title: "Pensione", url: "/pensione", icon: Building2 },
-  { title: "Admin Sistema", url: "/admin", icon: Settings2 },
+const adminNav: NavItem[] = [
+  { title: "Utenti & Ruoli", url: "/utenti", icon: Shield, resource: "utenti" },
+  { title: "Template Email", url: "/template-email", icon: Mail, resource: "template-email" },
+  { title: "Pensione", url: "/pensione", icon: Building2, resource: "pensione" },
+  { title: "Admin Sistema", url: "/admin", icon: Settings2, resource: "admin" },
 ];
 
 function NavGroup({
@@ -69,12 +77,19 @@ function NavGroup({
   collapsed,
 }: {
   label: string;
-  items: typeof mainNav;
+  items: NavItem[];
   collapsed: boolean;
 }) {
   const location = useLocation();
+  const { canRead } = usePermissions();
+  
   const isActive = (path: string) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
+
+  // Filter items based on permissions
+  const visibleItems = items.filter(item => canRead(item.resource));
+
+  if (visibleItems.length === 0) return null;
 
   return (
     <SidebarGroup>
@@ -85,7 +100,7 @@ function NavGroup({
       )}
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map((item) => (
+          {visibleItems.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 asChild
@@ -113,6 +128,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { profile, roles, signOut, user } = useAuth();
+  const { primaryRole } = usePermissions();
 
   const initials = profile?.full_name
     ? profile.full_name
@@ -122,6 +138,10 @@ export function AppSidebar() {
         .toUpperCase()
         .slice(0, 2)
     : user?.email?.slice(0, 2).toUpperCase() ?? "??";
+
+  const roleLabel = primaryRole 
+    ? { admin: "Amministratore", ceo: "CEO", titolare: "Titolare", manager: "Manager", operatore: "Operatore" }[primaryRole] 
+    : "Utente";
 
   return (
     <Sidebar collapsible="icon">
@@ -161,8 +181,8 @@ export function AppSidebar() {
               <p className="text-xs font-medium text-sidebar-foreground truncate">
                 {profile?.full_name ?? user?.email}
               </p>
-              <p className="text-[10px] text-sidebar-foreground/50 capitalize">
-                {roles[0] ?? "utente"}
+              <p className="text-[10px] text-sidebar-foreground/50">
+                {roleLabel}
               </p>
             </div>
           )}
