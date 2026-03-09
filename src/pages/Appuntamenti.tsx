@@ -259,6 +259,8 @@ export default function Appuntamenti() {
               <Button variant="ghost" size="icon" onClick={() => {
                 if (appt.appointment_type === "check_out" && isInCorso) {
                   setEditingCheckout(appt);
+                } else if (appt.appointment_type === "check_in" && isFutureCheckin(appt)) {
+                  setEditingCheckin(appt);
                 } else {
                   setEditing(appt);
                 }
