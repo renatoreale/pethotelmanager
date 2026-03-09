@@ -859,7 +859,8 @@ function PaymentMethodsTab() {
     if (!profile?.tenant_id) return;
     setResetting(true);
     try {
-      await supabase.rpc("reset_tenant_payment_methods" as any, { _tenant_id: profile.tenant_id });
+      const { error } = await supabase.rpc("reset_tenant_payment_methods" as any, { _tenant_id: profile.tenant_id });
+      if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["payment-methods"] });
       toast.success("Metodi di pagamento ripristinati ai valori predefiniti");
     } catch (err: any) {
