@@ -170,6 +170,14 @@ export default function Appuntamenti() {
     setDeleting(null);
   };
 
+  // Check if a check-in appointment is in the future (date > today)
+  const isFutureCheckin = (appt: AppointmentWithDetails) => {
+    if (appt.appointment_type !== "check_in") return false;
+    const apptDate = appt.scheduled_at.slice(0, 10);
+    const todayStr = format(new Date(), "yyyy-MM-dd");
+    return apptDate >= todayStr;
+  };
+
   const extractTime = (isoStr: string) => {
     const tIndex = isoStr.indexOf("T");
     return tIndex >= 0 ? isoStr.slice(tIndex + 1, tIndex + 6) : "--:--";
