@@ -85,7 +85,7 @@ export default function Presenze() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Presenze in Pensione</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Visualizza i gatti presenti nella struttura alla data selezionata.
+          Visualizza {pet.articlePlural} presenti nella struttura alla data selezionata.
         </p>
       </div>
 
