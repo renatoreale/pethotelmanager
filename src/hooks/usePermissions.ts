@@ -15,6 +15,7 @@ export type Resource =
   | "pagamenti"
   | "clienti"
   | "gatti"
+  | "presenze"
   | "registro-gatti"
   | "planning"
   | "occupazione"
