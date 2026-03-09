@@ -125,11 +125,13 @@ export function PreventivoDialog({
   const occupancyDays = tenantConfig?.occupancy_rule_days ?? 3;
   const totalSingole = tenantConfig?.num_singole ?? 0;
   const totalDoppie = tenantConfig?.num_doppie ?? 0;
+  const petType = tenantConfig?.pet_type as "gatti" | "cani" | "entrambi" | undefined;
 
   const { bookingOccupancy } = useOccupancyData(
     allBookings ?? [],
     occupancyDays,
     editing?.id,
+    petType,
   );
 
   const availabilityResult = useMemo(() => {
