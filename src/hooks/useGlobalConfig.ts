@@ -112,7 +112,7 @@ export function useUpsertGlobalPriceList() {
       } else {
         const { data, error } = await supabase
           .from("price_lists")
-          .insert({ ...price, tenant_id: null })
+          .insert({ ...price, tenant_id: null } as any)
           .select()
           .single();
         if (error) throw error;
