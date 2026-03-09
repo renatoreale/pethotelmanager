@@ -65,10 +65,11 @@ interface InlineCat {
   medical_notes: string;
   dietary_notes: string;
   behavioral_notes: string;
+  pet_type?: PetType;
   _deleted?: boolean; // mark for deletion
 }
 
-const emptyCat = (): InlineCat => ({
+const emptyCat = (defaultPetType?: PetType): InlineCat => ({
   name: "",
   breed: "",
   color: "",
@@ -81,6 +82,7 @@ const emptyCat = (): InlineCat => ({
   medical_notes: "",
   dietary_notes: "",
   behavioral_notes: "",
+  pet_type: defaultPetType,
 });
 
 interface ClientDialogProps {
