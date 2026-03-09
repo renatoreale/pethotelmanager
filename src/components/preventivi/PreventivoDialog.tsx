@@ -257,17 +257,26 @@ export function PreventivoDialog({
     });
   }, [unitsOccupied]);
 
-  // ── Seasonal tariffs ──
+  // ── Seasonal tariffs (filtered by tenant pet_type) ──
+  const tenantPetType = tenantConfig?.pet_type as "gatti" | "cani" | "entrambi" | undefined;
   const seasonalTariffs = useMemo(() => {
     if (!priceLists) return [];
-    return priceLists.filter((pl: any) => pl.tariff_type === "stagionale" && pl.is_active);
-  }, [priceLists]);
+    return priceLists.filter((pl: any) => {
+      if (pl.tariff_type !== "stagionale" || !pl.is_active) return false;
+      if (!pl.pet_type || !tenantPetType || tenantPetType === "entrambi") return true;
+      return pl.pet_type === tenantPetType;
+    });
+  }, [priceLists, tenantPetType]);
 
   // ── Extra service tariffs ──
   const availableExtras = useMemo(() => {
     if (!priceLists) return [];
-    return priceLists.filter((pl: any) => pl.tariff_type !== "stagionale" && pl.is_active);
-  }, [priceLists]);
+    return priceLists.filter((pl: any) => {
+      if (pl.tariff_type === "stagionale" || !pl.is_active) return false;
+      if (!pl.pet_type || !tenantPetType || tenantPetType === "entrambi") return true;
+      return pl.pet_type === tenantPetType;
+    });
+  }, [priceLists, tenantPetType]);
 
   // ── Period cost calculation helper ──
   const calcPeriodCost = useCallback((days: number, tariff: any, numCats: number) => {
