@@ -258,6 +258,17 @@ export default function Index() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {!isOperatoreRestricted && s.missingAppointment.length > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              className="gap-2 animate-pulse"
+              onClick={() => missingApptRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+            >
+              <AlertTriangle className="h-4 w-4" />
+              {s.missingAppointment.length} senza appuntamento
+            </Button>
+          )}
           {!isOperatoreRestricted && <AvailabilityCheckDialog />}
           {!isSelectedToday && !isOperatoreRestricted && (
             <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date())}>
