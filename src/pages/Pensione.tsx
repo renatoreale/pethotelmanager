@@ -674,6 +674,7 @@ function SlotTab() {
 function ListinoTab() {
   const { profile } = useAuth();
   const { data: prices, isLoading } = usePriceLists();
+  const { data: tenantConfig } = useTenantConfig();
   const upsertPrice = useUpsertPriceList();
   const deletePrice = useDeletePriceList();
   const queryClient = useQueryClient();
@@ -682,6 +683,8 @@ function ListinoTab() {
   const [deleting, setDeleting] = useState<any>(null);
   const [resetConfirm, setResetConfirm] = useState(false);
   const [resetting, setResetting] = useState(false);
+
+  const tenantPetType = tenantConfig?.pet_type as "gatti" | "cani" | "entrambi" | undefined;
 
   // Form state
   const [name, setName] = useState("");
@@ -695,6 +698,7 @@ function ListinoTab() {
   const [validFrom, setValidFrom] = useState("");
   const [validTo, setValidTo] = useState("");
   const [active, setActive] = useState(true);
+  const [petType, setPetType] = useState<"gatti" | "cani">("gatti");
 
   const openNew = () => {
     setEditing(null);
