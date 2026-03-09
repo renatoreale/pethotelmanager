@@ -61,6 +61,7 @@ export default function Index() {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [appointmentBooking, setAppointmentBooking] = useState<any>(null);
   const missingApptRef = useRef<HTMLDivElement>(null);
+  const missingCheckOutRef = useRef<HTMLDivElement>(null);
 
   const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
   const isSelectedToday = isTodayFn(selectedDate);
@@ -146,6 +147,15 @@ export default function Index() {
       return !hasCheckInAppt;
     });
 
+    // Active bookings with check-out in next 4 days but no appointment OUT scheduled
+    const activeOutStatuses = ["confermata", "appuntamento_in_fissato", "check_in", "in_corso"];
+    const missingCheckOutAppt = bookings.filter(b => {
+      if (!activeOutStatuses.includes(b.status)) return false;
+      if (b.check_out_date < todayStr || b.check_out_date > soon4Date) return false;
+      const hasCheckOutAppt = (b.appointments ?? []).some((a: any) => a.appointment_type === "check_out");
+      return !hasCheckOutAppt;
+    });
+
     return {
       catsInStructure,
       singoleOccupied,
@@ -160,6 +170,7 @@ export default function Index() {
       dayBookings,
       expiringPreventivi: expiringPreventivi.length,
       missingAppointment,
+      missingCheckOutAppt,
     };
   }, [bookings, allPayments, bookingOccupancy, selectedDateStr, monthStart, monthEnd, yearStart, yearEnd, todayStr, tomorrowStr]);
 
@@ -182,7 +193,7 @@ export default function Index() {
     catsInStructure: 0, singoleOccupied: 0, doppieOccupied: 0,
     activeBookings: 0, checkInsToday: 0, checkOutsToday: 0,
     checkInsTomorrow: 0, checkOutsTomorrow: 0,
-    monthRevenue: 0, yearRevenue: 0, dayBookings: [], expiringPreventivi: 0, missingAppointment: [] as any[],
+    monthRevenue: 0, yearRevenue: 0, dayBookings: [], expiringPreventivi: 0, missingAppointment: [] as any[], missingCheckOutAppt: [] as any[],
   };
 
   // Build KPI cards based on permissions
@@ -265,8 +276,19 @@ export default function Index() {
               className="gap-2 animate-pulse"
               onClick={() => missingApptRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
             >
-              <AlertTriangle className="h-4 w-4" />
-              {s.missingAppointment.length} senza appuntamento
+              <LogIn className="h-4 w-4" />
+              {s.missingAppointment.length} IN senza app.
+            </Button>
+          )}
+          {!isOperatoreRestricted && s.missingCheckOutAppt.length > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              className="gap-2 animate-pulse"
+              onClick={() => missingCheckOutRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+            >
+              <LogOut className="h-4 w-4" />
+              {s.missingCheckOutAppt.length} OUT senza app.
             </Button>
           )}
           {!isOperatoreRestricted && <AvailabilityCheckDialog />}
@@ -460,7 +482,51 @@ export default function Index() {
         </div>
       )}
 
-      {/* Appointment scheduling dialog */}
+      {/* Missing check-out appointment alert */}
+      {!isOperatoreRestricted && s.missingCheckOutAppt.length > 0 && (
+        <div ref={missingCheckOutRef}>
+          <Card className="border-none shadow-sm border-l-4 border-l-[hsl(25,90%,50%)]">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2 text-[hsl(25,90%,40%)]">
+                <LogOut className="h-5 w-5" />
+                Check-out senza appuntamento — {s.missingCheckOutAppt.length} prenotazion{s.missingCheckOutAppt.length === 1 ? "e" : "i"}
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Check-out previsto tra oggi e i prossimi 4 giorni senza appuntamento fissato
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {s.missingCheckOutAppt.map((b: any) => {
+                const clientName = b.client ? `${b.client.first_name} ${b.client.last_name}` : "—";
+                const catNames = (b.booking_cats ?? []).map((bc: any) => bc.cat?.name).filter(Boolean).join(", ") || "—";
+                return (
+                  <div key={b.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                    <div>
+                      <p className="text-sm font-medium">{clientName}</p>
+                      <p className="text-xs text-muted-foreground">{catNames} · {b.booking_number}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground">
+                        Check-out: {format(new Date(b.check_out_date + "T00:00:00"), "dd MMM", { locale: it })}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5 text-xs"
+                        onClick={() => setAppointmentBooking(b)}
+                      >
+                        <CalendarIconAlt className="h-3.5 w-3.5" />
+                        Fissa appuntamento
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <AppointmentScheduleDialog
         open={!!appointmentBooking}
         onOpenChange={(open) => { if (!open) setAppointmentBooking(null); }}
