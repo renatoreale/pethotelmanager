@@ -176,6 +176,7 @@ export default function Index() {
 
   const numSingole = tenantConfig?.num_singole ?? 0;
   const numDoppie = tenantConfig?.num_doppie ?? 0;
+  const maxCats = (tenantConfig as any)?.max_cats ?? 0;
   const totalSlots = numSingole + numDoppie;
 
   if (loadingBookings) {
@@ -201,7 +202,7 @@ export default function Index() {
     {
       title: "Gatti in struttura",
       value: String(s.catsInStructure),
-      subtitle: `su ${totalSlots} posti totali`,
+      subtitle: maxCats > 0 ? `su ${maxCats} posti in struttura` : `su ${totalSlots} posti totali`,
       icon: Cat,
       color: "text-primary",
       bg: "bg-primary/10",
