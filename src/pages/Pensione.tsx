@@ -277,7 +277,8 @@ function SlotTab() {
     if (!profile?.tenant_id) return;
     setResetting(true);
     try {
-      await supabase.rpc("reset_tenant_slot_configs" as any, { _tenant_id: profile.tenant_id });
+      const { error } = await supabase.rpc("reset_tenant_slot_configs" as any, { _tenant_id: profile.tenant_id });
+      if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["slot-configs"] });
       toast.success("Slot ripristinati ai valori predefiniti");
     } catch (err: any) {
