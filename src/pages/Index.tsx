@@ -487,7 +487,7 @@ export default function Index() {
 
           {/* Missing check-out appointment */}
           <div ref={missingCheckOutRef}>
-            <Card className={cn("border-none shadow-sm h-full", s.missingCheckOutAppt.length > 0 && "border-l-4 border-l-[hsl(25,90%,50%)]")}>
+            <Card className={cn("border shadow-sm h-full", s.missingCheckOutAppt.length > 0 && "border-l-4 border-l-[hsl(25,90%,50%)]")}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2 text-[hsl(25,90%,40%)]">
                   <LogOut className="h-5 w-5" />
