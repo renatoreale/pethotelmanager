@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
 
@@ -109,14 +108,19 @@ export function useDeleteTenant() {
 }
 
 // ── ALL USERS (Admin only - cross-tenant) ──
+export interface TenantRole {
+  id: string;
+  tenant_id: string;
+  tenant_name: string;
+  role: AppRole;
+}
+
 export interface UserWithProfile {
   id: string;
   user_id: string;
   full_name: string | null;
-  tenant_id: string | null;
-  role: AppRole | null;
-  role_id: string | null;
-  tenant_name?: string | null;
+  active_tenant_id: string | null;
+  tenant_roles: TenantRole[];
 }
 
 export function useAllUsers() {
@@ -133,7 +137,7 @@ export function useAllUsers() {
 
       const userIds = profiles.map((p) => p.user_id);
 
-      // Get roles
+      // Get all roles for these users
       const { data: roles, error: rolesError } = await supabase
         .from("user_roles")
         .select("*")
@@ -142,25 +146,79 @@ export function useAllUsers() {
 
       // Get tenants for names
       const { data: tenants } = await supabase.from("tenants").select("id, name");
+      const tenantMap = new Map(tenants?.map((t) => [t.id, t.name]) || []);
 
       return profiles.map((p) => {
-        const userRole = roles?.find((r) => r.user_id === p.user_id);
-        const tenant = tenants?.find((t) => t.id === p.tenant_id);
+        const userRoles = roles?.filter((r) => r.user_id === p.user_id) || [];
         return {
           id: p.id,
           user_id: p.user_id,
           full_name: p.full_name,
-          tenant_id: p.tenant_id,
-          role: userRole?.role || null,
-          role_id: userRole?.id || null,
-          tenant_name: tenant?.name || null,
+          active_tenant_id: p.tenant_id,
+          tenant_roles: userRoles.map((r) => ({
+            id: r.id,
+            tenant_id: r.tenant_id || "",
+            tenant_name: tenantMap.get(r.tenant_id || "") || "Globale",
+            role: r.role as AppRole,
+          })),
         } as UserWithProfile;
       });
     },
   });
 }
 
-export function useAssignUserToTenant() {
+// ── ADD TENANT-ROLE ASSOCIATION ──
+export function useAddTenantRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      tenantId,
+      role,
+    }: {
+      userId: string;
+      tenantId: string;
+      role: AppRole;
+    }) => {
+      const { error } = await supabase.from("user_roles").insert({
+        user_id: userId,
+        tenant_id: tenantId,
+        role,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-all-users"] });
+      qc.invalidateQueries({ queryKey: ["users"] });
+      toast.success("Associazione aggiunta");
+    },
+    onError: (error: any) => {
+      toast.error("Errore: " + error.message);
+    },
+  });
+}
+
+// ── REMOVE TENANT-ROLE ASSOCIATION ──
+export function useRemoveTenantRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (roleId: string) => {
+      const { error } = await supabase.from("user_roles").delete().eq("id", roleId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-all-users"] });
+      qc.invalidateQueries({ queryKey: ["users"] });
+      toast.success("Associazione rimossa");
+    },
+    onError: (error: any) => {
+      toast.error("Errore: " + error.message);
+    },
+  });
+}
+
+// ── SET ACTIVE TENANT ──
+export function useSetActiveTenant() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({
@@ -179,45 +237,7 @@ export function useAssignUserToTenant() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-all-users"] });
       qc.invalidateQueries({ queryKey: ["users"] });
-      toast.success("Utente assegnato con successo");
-    },
-    onError: (error: any) => {
-      toast.error("Errore: " + error.message);
-    },
-  });
-}
-
-export function useAssignRole() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({
-      userId,
-      role,
-      tenantId,
-      existingRoleId,
-    }: {
-      userId: string;
-      role: AppRole;
-      tenantId: string | null;
-      existingRoleId: string | null;
-    }) => {
-      if (existingRoleId) {
-        const { error } = await supabase
-          .from("user_roles")
-          .update({ role, tenant_id: tenantId })
-          .eq("id", existingRoleId);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("user_roles")
-          .insert({ user_id: userId, role, tenant_id: tenantId });
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin-all-users"] });
-      qc.invalidateQueries({ queryKey: ["users"] });
-      toast.success("Ruolo aggiornato con successo");
+      toast.success("Pensione attiva aggiornata");
     },
     onError: (error: any) => {
       toast.error("Errore: " + error.message);
@@ -290,7 +310,6 @@ export function useUpsertRolePermission() {
       can_delete: boolean;
       tenant_id?: string | null;
     }) => {
-      // Check if exists
       let query = supabase
         .from("role_permissions")
         .select("id")

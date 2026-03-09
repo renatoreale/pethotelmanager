@@ -1,21 +1,30 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 
 type UserRole = "admin" | "ceo" | "titolare" | "manager" | "operatore";
+
+interface UserTenant {
+  id: string;
+  name: string;
+  roles: UserRole[];
+}
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
   profile: {
+    id: string;
     full_name: string | null;
     tenant_id: string | null;
     avatar_url: string | null;
   } | null;
   roles: UserRole[];
+  userTenants: UserTenant[];
+  activeTenant: UserTenant | null;
   hasRole: (role: UserRole) => boolean;
+  switchTenant: (tenantId: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -27,28 +36,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [roles, setRoles] = useState<UserRole[]>([]);
+  const [userTenants, setUserTenants] = useState<UserTenant[]>([]);
 
   useEffect(() => {
-    // Set up auth listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Defer profile/role fetch to avoid Supabase deadlock
           setTimeout(async () => {
             await fetchProfileAndRoles(session.user.id);
           }, 0);
         } else {
           setProfile(null);
           setRoles([]);
+          setUserTenants([]);
         }
         setLoading(false);
       }
     );
 
-    // THEN check existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -62,20 +70,77 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function fetchProfileAndRoles(userId: string) {
-    const [profileRes, rolesRes] = await Promise.all([
-      supabase.from("profiles").select("full_name, tenant_id, avatar_url").eq("user_id", userId).single(),
-      supabase.from("user_roles").select("role").eq("user_id", userId),
+    const [profileRes, rolesRes, tenantsRes] = await Promise.all([
+      supabase.from("profiles").select("id, full_name, tenant_id, avatar_url").eq("user_id", userId).single(),
+      supabase.from("user_roles").select("role, tenant_id").eq("user_id", userId),
+      supabase.from("tenants").select("id, name"),
     ]);
 
     if (profileRes.data) {
       setProfile(profileRes.data);
     }
+
+    // Build userTenants with roles per tenant
+    const tenantMap = new Map<string, UserTenant>();
+    const globalRoles: UserRole[] = [];
+
     if (rolesRes.data) {
-      setRoles(rolesRes.data.map((r) => r.role as UserRole));
+      const tenantLookup = new Map(tenantsRes.data?.map((t) => [t.id, t.name]) || []);
+      
+      for (const r of rolesRes.data) {
+        const role = r.role as UserRole;
+        if (r.tenant_id) {
+          const existing = tenantMap.get(r.tenant_id);
+          if (existing) {
+            existing.roles.push(role);
+          } else {
+            tenantMap.set(r.tenant_id, {
+              id: r.tenant_id,
+              name: tenantLookup.get(r.tenant_id) || "Pensione",
+              roles: [role],
+            });
+          }
+        } else {
+          globalRoles.push(role);
+        }
+      }
+    }
+
+    const userTenantsArray = Array.from(tenantMap.values());
+    setUserTenants(userTenantsArray);
+
+    // Set roles for the active tenant
+    const activeTenantId = profileRes.data?.tenant_id;
+    if (activeTenantId) {
+      const activeTenantRoles = tenantMap.get(activeTenantId)?.roles || [];
+      setRoles([...globalRoles, ...activeTenantRoles]);
+    } else {
+      setRoles(globalRoles);
     }
   }
 
+  const switchTenant = async (tenantId: string) => {
+    if (!profile) return;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ tenant_id: tenantId })
+      .eq("id", profile.id);
+
+    if (error) {
+      console.error("Error switching tenant:", error);
+      return;
+    }
+
+    // Refetch profile and roles
+    if (user) {
+      await fetchProfileAndRoles(user.id);
+    }
+  };
+
   const hasRole = (role: UserRole) => roles.includes(role);
+
+  const activeTenant = userTenants.find((t) => t.id === profile?.tenant_id) || null;
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -83,10 +148,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setProfile(null);
     setRoles([]);
+    setUserTenants([]);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, profile, roles, hasRole, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      loading, 
+      profile, 
+      roles, 
+      userTenants,
+      activeTenant,
+      hasRole, 
+      switchTenant,
+      signOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );
