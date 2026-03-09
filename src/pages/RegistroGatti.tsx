@@ -12,6 +12,7 @@ import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 import { useCatRegistry } from "@/hooks/useCatRegistry";
 import { usePetLabels } from "@/hooks/usePetLabels";
+import { useTenantConfig } from "@/hooks/usePensioneConfig";
 
 export default function RegistroGatti() {
   const { data: entries, isLoading } = useCatRegistry();
