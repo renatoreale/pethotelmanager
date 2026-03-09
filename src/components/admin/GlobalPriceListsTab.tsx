@@ -75,6 +75,7 @@ export function GlobalPriceListsTab() {
     setIncludedKm(0);
     setExtraKmCost(0);
     setIsActive(true);
+    setPetType("gatti");
     setDialogOpen(true);
   };
 
