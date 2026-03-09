@@ -897,6 +897,7 @@ export type Database = {
           can_write: boolean
           created_at: string | null
           id: string
+          is_visible: boolean
           resource: string
           role: Database["public"]["Enums"]["app_role"]
           tenant_id: string | null
@@ -908,6 +909,7 @@ export type Database = {
           can_write?: boolean
           created_at?: string | null
           id?: string
+          is_visible?: boolean
           resource: string
           role: Database["public"]["Enums"]["app_role"]
           tenant_id?: string | null
@@ -919,6 +921,7 @@ export type Database = {
           can_write?: boolean
           created_at?: string | null
           id?: string
+          is_visible?: boolean
           resource?: string
           role?: Database["public"]["Enums"]["app_role"]
           tenant_id?: string | null
