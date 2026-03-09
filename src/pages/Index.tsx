@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOccupancyData } from "@/components/OccupancyGrid";
 import { Button } from "@/components/ui/button";
