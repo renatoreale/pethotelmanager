@@ -30,6 +30,7 @@ export function useCancellationPolicy() {
         .maybeSingle();
       if (error) throw error;
       if (!policy) return null;
+      const policyObj = policy as any;
 
       const { data: rules, error: rulesErr } = await supabase
         .from("cancellation_policy_rules" as any)
