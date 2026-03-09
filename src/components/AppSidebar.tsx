@@ -34,6 +34,7 @@ const mainNav: NavItem[] = [
 const registryNav: NavItem[] = [
   { title: "Clienti", url: "/clienti", icon: Users, resource: "clienti" },
   { title: "Gatti", url: "/gatti", icon: Cat, resource: "gatti" },
+  { title: "Presenze", url: "/presenze", icon: PawPrint, resource: "presenze" },
   { title: "Registro Gatti", url: "/registro-gatti", icon: ClipboardList, resource: "registro-gatti" },
 ];
 
