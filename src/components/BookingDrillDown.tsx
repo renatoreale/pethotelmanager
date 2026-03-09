@@ -130,7 +130,7 @@ export function BookingDrillDown({ booking, defaultOpen = false }: BookingDrillD
               </div>
               {catNames && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Gatti ({numCats})</span>
+                  <span className="text-muted-foreground">Pets ({numCats})</span>
                   <span className="font-medium">{catNames}</span>
                 </div>
               )}
