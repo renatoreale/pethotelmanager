@@ -142,7 +142,13 @@ export default function Prenotazioni() {
             .eq("tenant_id", profile.tenant_id)
             .maybeSingle();
 
-          if (policy && totalPaid > 0) {
+          if (totalPaid <= 0) {
+            console.log("[Cancellazione] Nessun pagamento registrato, niente rimborso da calcolare");
+            toast.info("Nessun pagamento registrato per questa prenotazione, niente rimborso da calcolare.");
+          } else if (!policy) {
+            console.log("[Cancellazione] Nessuna policy di cancellazione trovata per tenant:", profile.tenant_id);
+            toast.warning("Nessuna politica di cancellazione configurata per questa pensione. Nessun rimborso automatico generato.");
+          } else {
             const policyObj = policy as any;
             const adminFee = Number(policyObj.admin_fee) || 0;
 
@@ -159,6 +165,8 @@ export default function Prenotazioni() {
             const checkInDate = parseISO(booking.check_in_date);
             const daysBefore = differenceInDays(checkInDate, today);
 
+            console.log("[Cancellazione] totalPaid:", totalPaid, "daysBefore:", daysBefore, "rules:", rules);
+
             // 5. Find applicable refund percentage (first rule where daysBefore >= days_before_checkin)
             let refundPercentage = 0;
             if (rules && rules.length > 0) {
@@ -170,6 +178,8 @@ export default function Prenotazioni() {
                 }
               }
             }
+
+            console.log("[Cancellazione] refundPercentage:", refundPercentage, "adminFee:", adminFee);
 
             // 6. Calculate amounts
             const grossRefund = totalPaid * (refundPercentage / 100);
@@ -205,22 +215,20 @@ export default function Prenotazioni() {
             }
 
             if (paymentRecords.length > 0) {
+              console.log("[Cancellazione] Inserimento pagamenti:", paymentRecords);
               const { error: payErr } = await supabase
                 .from("payments")
                 .insert(paymentRecords);
               if (payErr) throw payErr;
             }
 
-            if (totalPaid > 0) {
-              const refundInfo = refundPercentage > 0
-                ? `Rimborso: €${netRefund.toFixed(2)} (${refundPercentage}%)${actualAdminFee > 0 ? ` | Gestione pratica: €${actualAdminFee.toFixed(2)}` : ""}`
-                : `Nessun rimborso previsto${actualAdminFee > 0 ? ` | Gestione pratica: €${actualAdminFee.toFixed(2)}` : ""}`;
-              toast.info(refundInfo, { duration: 8000 });
-            }
+            const refundInfo = refundPercentage > 0
+              ? `Rimborso: €${netRefund.toFixed(2)} (${refundPercentage}%)${actualAdminFee > 0 ? ` | Gestione pratica: €${actualAdminFee.toFixed(2)}` : ""}`
+              : `Nessun rimborso previsto${actualAdminFee > 0 ? ` | Gestione pratica: €${actualAdminFee.toFixed(2)}` : ""}`;
+            toast.info(refundInfo, { duration: 8000 });
           }
         }
       }
-
       await transitionBooking.mutateAsync({ id: transitioning.id, newStatus: transitioning.newStatus });
       toast.success(`Prenotazione ${transitioning.bookingNumber}: ${transitioning.label}`);
     } catch (err: any) {
