@@ -642,7 +642,7 @@ export type Database = {
           is_active: boolean
           name: string
           sort_order: number
-          tenant_id: string
+          tenant_id: string | null
         }
         Insert: {
           created_at?: string
@@ -650,7 +650,7 @@ export type Database = {
           is_active?: boolean
           name: string
           sort_order?: number
-          tenant_id: string
+          tenant_id?: string | null
         }
         Update: {
           created_at?: string
@@ -658,7 +658,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           sort_order?: number
-          tenant_id?: string
+          tenant_id?: string | null
         }
         Relationships: [
           {
@@ -948,7 +948,7 @@ export type Database = {
           max_appointments: number
           slot_duration_minutes: number
           start_time: string
-          tenant_id: string
+          tenant_id: string | null
           updated_at: string
         }
         Insert: {
@@ -961,7 +961,7 @@ export type Database = {
           max_appointments?: number
           slot_duration_minutes?: number
           start_time: string
-          tenant_id: string
+          tenant_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -974,7 +974,7 @@ export type Database = {
           max_appointments?: number
           slot_duration_minutes?: number
           start_time?: string
-          tenant_id?: string
+          tenant_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1072,6 +1072,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      copy_global_templates_to_tenant: {
+        Args: { _tenant_id: string }
+        Returns: undefined
+      }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
