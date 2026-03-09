@@ -30,11 +30,27 @@ export default function OccupazioneCasette() {
 
   const isLoading = loadingBookings || loadingConfig;
 
-  // Per-type totals for "entrambi" facilities
   const singoleGatti = tenantConfig?.num_singole_gatti ?? 0;
   const doppieGatti = tenantConfig?.num_doppie_gatti ?? 0;
   const singoleCani = tenantConfig?.num_singole_cani ?? 0;
   const doppieCani = tenantConfig?.num_doppie_cani ?? 0;
+
+  // For "entrambi" facilities, include mixed bookings in both pools
+  const bookingsForGatti = useMemo(() => {
+    if (!bookings) return [];
+    return bookings.filter(b => {
+      const bpt = (b as any).pet_type;
+      return bpt === "gatti" || bpt === "entrambi";
+    });
+  }, [bookings]);
+
+  const bookingsForCani = useMemo(() => {
+    if (!bookings) return [];
+    return bookings.filter(b => {
+      const bpt = (b as any).pet_type;
+      return bpt === "cani" || bpt === "entrambi";
+    });
+  }, [bookings]);
 
   return (
     <div className="space-y-4">
@@ -98,7 +114,7 @@ export default function OccupazioneCasette() {
             </div>
           </div>
           <OccupancyGrid
-            bookings={(bookings ?? []).filter(b => (b as any).pet_type === "gatti")}
+            bookings={bookingsForGatti}
             occupancyDays={occupancyDays}
             totalSingole={singoleGatti}
             totalDoppie={doppieGatti}
@@ -118,7 +134,7 @@ export default function OccupazioneCasette() {
             </div>
           </div>
           <OccupancyGrid
-            bookings={(bookings ?? []).filter(b => (b as any).pet_type === "cani")}
+            bookings={bookingsForCani}
             occupancyDays={occupancyDays}
             totalSingole={singoleCani}
             totalDoppie={doppieCani}

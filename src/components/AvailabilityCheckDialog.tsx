@@ -10,7 +10,7 @@ import { Search, CalendarIcon, CheckCircle2, XCircle } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { OccupancyGrid, useOccupancyData } from "@/components/OccupancyGrid";
+import { OccupancyGrid, useOccupancyData, usePoolOccupancyData } from "@/components/OccupancyGrid";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -52,7 +52,6 @@ export function AvailabilityCheckDialog() {
   const totalDoppie = tenantConfig?.num_doppie ?? 0;
   const petType = tenantConfig?.pet_type as "gatti" | "cani" | "entrambi" | undefined;
   
-  // Per-type totals for "entrambi" facilities
   const singoleGatti = (tenantConfig as any)?.num_singole_gatti ?? 0;
   const doppieGatti = (tenantConfig as any)?.num_doppie_gatti ?? 0;
   const singoleCani = (tenantConfig as any)?.num_singole_cani ?? 0;
@@ -61,6 +60,23 @@ export function AvailabilityCheckDialog() {
   const rangeStart = useMemo(() => subDays(checkInDate, 5), [checkInDate]);
   const rangeEnd = useMemo(() => addDays(checkInDate, 5), [checkInDate]);
   const highlightDate = format(checkInDate, "yyyy-MM-dd");
+
+  // For "entrambi", include mixed bookings in both pool views
+  const bookingsForGatti = useMemo(() => {
+    if (!allBookings) return [];
+    return allBookings.filter(b => {
+      const bpt = (b as any).pet_type;
+      return bpt === "gatti" || bpt === "entrambi" || !bpt;
+    });
+  }, [allBookings]);
+
+  const bookingsForCani = useMemo(() => {
+    if (!allBookings) return [];
+    return allBookings.filter(b => {
+      const bpt = (b as any).pet_type;
+      return bpt === "cani" || bpt === "entrambi" || !bpt;
+    });
+  }, [allBookings]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -114,57 +130,83 @@ export function AvailabilityCheckDialog() {
         {petType === "entrambi" ? (
           <>
             <AvailabilityAlert
-              bookings={allBookings ?? []}
+              bookings={bookingsForGatti}
               occupancyDays={occupancyDays}
               checkInDate={highlightDate}
               cageType={cageType}
               totalSingole={singoleGatti}
               totalDoppie={doppieGatti}
               petType="gatti"
-              filterPetType="gatti"
               label="🐱 Gatti"
             />
             <AvailabilityAlert
-              bookings={allBookings ?? []}
+              bookings={bookingsForCani}
               occupancyDays={occupancyDays}
               checkInDate={highlightDate}
               cageType={cageType}
               totalSingole={singoleCani}
               totalDoppie={doppieCani}
               petType="cani"
-              filterPetType="cani"
               label="🐶 Cani"
             />
+
+            <div className="space-y-1 mt-2">
+              <h3 className="text-sm font-semibold">🐱 Casette Gatti</h3>
+              <OccupancyGrid
+                bookings={bookingsForGatti}
+                occupancyDays={occupancyDays}
+                totalSingole={singoleGatti}
+                totalDoppie={doppieGatti}
+                rangeStart={rangeStart}
+                rangeEnd={rangeEnd}
+                highlightDate={highlightDate}
+                petType="gatti"
+              />
+            </div>
+            <div className="space-y-1 mt-4">
+              <h3 className="text-sm font-semibold">🐶 Casette Cani</h3>
+              <OccupancyGrid
+                bookings={bookingsForCani}
+                occupancyDays={occupancyDays}
+                totalSingole={singoleCani}
+                totalDoppie={doppieCani}
+                rangeStart={rangeStart}
+                rangeEnd={rangeEnd}
+                highlightDate={highlightDate}
+                petType="cani"
+              />
+            </div>
           </>
         ) : (
-          <AvailabilityAlert
-            bookings={allBookings ?? []}
-            occupancyDays={occupancyDays}
-            checkInDate={highlightDate}
-            cageType={cageType}
-            totalSingole={totalSingole}
-            totalDoppie={totalDoppie}
-            petType={petType}
-          />
+          <>
+            <AvailabilityAlert
+              bookings={allBookings ?? []}
+              occupancyDays={occupancyDays}
+              checkInDate={highlightDate}
+              cageType={cageType}
+              totalSingole={totalSingole}
+              totalDoppie={totalDoppie}
+              petType={petType}
+            />
+            <OccupancyGrid
+              bookings={allBookings ?? []}
+              occupancyDays={occupancyDays}
+              totalSingole={totalSingole}
+              totalDoppie={totalDoppie}
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
+              highlightDate={highlightDate}
+              petType={petType}
+            />
+          </>
         )}
-
-        <OccupancyGrid
-          bookings={allBookings ?? []}
-          occupancyDays={occupancyDays}
-          totalSingole={totalSingole}
-          totalDoppie={totalDoppie}
-          rangeStart={rangeStart}
-          rangeEnd={rangeEnd}
-          highlightDate={highlightDate}
-          petType={petType}
-        />
       </DialogContent>
     </Dialog>
   );
 }
 
 function AvailabilityAlert({
-  bookings, occupancyDays, checkInDate, cageType, totalSingole, totalDoppie, petType, filterPetType, label,
+  bookings, occupancyDays, checkInDate, cageType, totalSingole, totalDoppie, petType, label,
 }: {
   bookings: Booking[];
   occupancyDays: number;
@@ -173,10 +215,16 @@ function AvailabilityAlert({
   totalSingole: number;
   totalDoppie: number;
   petType?: "gatti" | "cani" | "entrambi";
-  filterPetType?: "gatti" | "cani";
   label?: string;
 }) {
-  const { bookingOccupancy } = useOccupancyData(bookings, occupancyDays, undefined, petType);
+  // Use pool-specific occupancy for gatti/cani to handle mixed bookings correctly
+  const isPoolView = petType === "gatti" || petType === "cani";
+  const { bookingOccupancy: genericOccupancy } = useOccupancyData(bookings, occupancyDays, undefined, petType);
+  const { bookingOccupancy: poolOccupancy } = usePoolOccupancyData(
+    bookings, occupancyDays, (petType as "gatti" | "cani") || "gatti", undefined
+  );
+  
+  const bookingOccupancy = isPoolView ? poolOccupancy : genericOccupancy;
 
   const availability = useMemo(() => {
     const checkIn = new Date(checkInDate);
@@ -187,8 +235,6 @@ function AvailabilityAlert({
       const dateStr = format(addDays(checkIn, i), "yyyy-MM-dd");
       let occupied = 0;
       for (const bo of bookingOccupancy) {
-        // Filter by pet type if specified
-        if (filterPetType && (bo.booking as any).pet_type !== filterPetType) continue;
         if (bo.occupiedDates.has(dateStr) && bo.booking.cage_pool_type === cageType) {
           occupied += bo.booking.units_occupied;
         }
@@ -198,7 +244,7 @@ function AvailabilityAlert({
 
     const free = Math.max(0, total - maxOccupied);
     return { free, total, maxOccupied };
-  }, [bookingOccupancy, checkInDate, cageType, totalSingole, totalDoppie, occupancyDays, filterPetType]);
+  }, [bookingOccupancy, checkInDate, cageType, totalSingole, totalDoppie, occupancyDays]);
 
   const isAvailable = availability.free > 0;
 
