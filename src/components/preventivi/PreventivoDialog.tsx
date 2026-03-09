@@ -725,9 +725,9 @@ export function PreventivoDialog({
 
               {clientId && (
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-1"><Cat className="h-3.5 w-3.5" /> Gatti *</Label>
+                  <Label className="flex items-center gap-1"><Cat className="h-3.5 w-3.5" /> Pets *</Label>
                   {!clientCats?.length ? (
-                    <p className="text-sm text-muted-foreground">Nessun gatto registrato</p>
+                    <p className="text-sm text-muted-foreground">Nessun pet registrato</p>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
                       {clientCats.map((cat: any) => (
