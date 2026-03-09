@@ -196,9 +196,12 @@ function SlotTab() {
   const { data: slots, isLoading } = useSlotConfigs();
   const upsertSlot = useUpsertSlotConfig();
   const deleteSlot = useDeleteSlotConfig();
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [deleting, setDeleting] = useState<any>(null);
+  const [resetConfirm, setResetConfirm] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const [dayOfWeek, setDayOfWeek] = useState<number | "all">(0);
   const [appointmentType, setAppointmentType] = useState("check_in");
