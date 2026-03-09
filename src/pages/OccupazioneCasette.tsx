@@ -36,7 +36,7 @@ export default function OccupazioneCasette() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Occupazione Casette</h1>
           <p className="text-sm text-muted-foreground">
-            Visualizza l'occupazione per periodo · Regola occupazione: {occupancyDays} giorni
+            Visualizza l'occupazione per periodo{petType !== "cani" ? ` · Regola occupazione: ${occupancyDays} giorni` : " · Occupazione per intero soggiorno"}
           </p>
         </div>
 
