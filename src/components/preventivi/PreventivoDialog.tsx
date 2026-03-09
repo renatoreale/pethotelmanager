@@ -174,7 +174,7 @@ export function PreventivoDialog({
   const occupancyRangeStart = useMemo(() => checkInDate ? subDays(checkInDate, 5) : new Date(), [checkInDate]);
   const occupancyRangeEnd = useMemo(() => checkInDate ? addDays(checkInDate, occupancyDays + 5) : new Date(), [checkInDate, occupancyDays]);
 
-  const { data: clientCats } = useClientCats(clientId || undefined);
+  // clientCats already declared above
   const today = startOfDay(new Date());
 
   const checkIn = checkInDate ? format(checkInDate, "yyyy-MM-dd") : "";
