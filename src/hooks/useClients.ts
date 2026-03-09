@@ -22,12 +22,15 @@ export type ClientInsert = Omit<Client, "id" | "created_at" | "updated_at">;
 export type ClientUpdate = Partial<ClientInsert>;
 
 export function useClients(search?: string) {
+  const { profile } = useAuth();
   return useQuery({
-    queryKey: ["clients", search],
+    queryKey: ["clients", profile?.tenant_id, search],
     queryFn: async () => {
+      if (!profile?.tenant_id) return [];
       let query = supabase
         .from("clients")
         .select("*, cats(id, name)")
+        .eq("tenant_id", profile.tenant_id)
         .order("last_name", { ascending: true });
 
       if (search && search.trim()) {
@@ -40,6 +43,7 @@ export function useClients(search?: string) {
       if (error) throw error;
       return data as Client[];
     },
+    enabled: !!profile?.tenant_id,
   });
 }
 

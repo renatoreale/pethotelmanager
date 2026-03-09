@@ -1,3 +1,4 @@
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -26,10 +27,16 @@ export type CatInsert = Omit<Cat, "id" | "created_at" | "updated_at">;
 export type CatUpdate = Partial<CatInsert>;
 
 export function useCats(clientId?: string, search?: string) {
+  const { profile } = useAuth();
   return useQuery({
-    queryKey: ["cats", clientId, search],
+    queryKey: ["cats", profile?.tenant_id, clientId, search],
     queryFn: async () => {
-      let query = supabase.from("cats").select("*, clients(first_name, last_name)").order("name");
+      if (!profile?.tenant_id) return [];
+      let query = supabase
+        .from("cats")
+        .select("*, clients(first_name, last_name)")
+        .eq("tenant_id", profile.tenant_id)
+        .order("name");
 
       if (clientId) {
         query = query.eq("client_id", clientId);
@@ -44,6 +51,7 @@ export function useCats(clientId?: string, search?: string) {
       if (error) throw error;
       return data;
     },
+    enabled: !!profile?.tenant_id,
   });
 }
 
