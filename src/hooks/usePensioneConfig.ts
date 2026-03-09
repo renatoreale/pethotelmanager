@@ -11,7 +11,7 @@ export function useTenantConfig() {
       if (!profile?.tenant_id) return null;
       const { data, error } = await supabase
         .from("tenants")
-        .select("id, name, num_singole, num_doppie, occupancy_rule_days, email, phone, address, stay_calc_type, count_checkin_day, count_checkout_day")
+        .select("id, name, slug, num_singole, num_doppie, occupancy_rule_days, email, phone, address, stay_calc_type, count_checkin_day, count_checkout_day, partita_iva, pec, titolare_name, logo_url")
         .eq("id", profile.tenant_id)
         .single();
       if (error) throw error;
@@ -35,6 +35,10 @@ export function useUpdateTenantConfig() {
       stay_calc_type?: string;
       count_checkin_day?: boolean;
       count_checkout_day?: boolean;
+      partita_iva?: string | null;
+      pec?: string | null;
+      titolare_name?: string | null;
+      logo_url?: string | null;
     }) => {
       const { id, ...rest } = updates;
       const { data, error } = await supabase
