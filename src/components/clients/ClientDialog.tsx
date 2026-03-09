@@ -103,7 +103,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
   const { data: existingCats } = useCats(client?.id);
 
-  const [cats, setCats] = useState<InlineCat[]>([emptyCat()]);
+  const defaultAnimalType: PetType | undefined = pet.petType === "entrambi" ? undefined : pet.petType;
+  const [cats, setCats] = useState<InlineCat[]>([emptyCat(defaultAnimalType)]);
   const [saving, setSaving] = useState(false);
 
   // Load existing cats when editing
