@@ -305,6 +305,7 @@ function UtentiTab() {
   const { data: tenants } = useAllTenants();
   const assignTenant = useAssignUserToTenant();
   const assignRole = useAssignRole();
+  const createUser = useCreateUser();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({
@@ -318,34 +319,29 @@ function UtentiTab() {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const handleCreateUser = async () => {
-    if (!form.email || !form.password || !form.full_name) return;
+    if (!form.email || !form.password || !form.full_name) {
+      toast.error("Compila tutti i campi obbligatori");
+      return;
+    }
     if (!emailRegex.test(form.email)) {
+      toast.error("Formato email non valido");
       return;
     }
     if (form.password.length < 6) {
+      toast.error("La password deve avere almeno 6 caratteri");
       return;
     }
     
-    const { data, error } = await import("@/integrations/supabase/client").then(m => 
-      m.supabase.functions.invoke("admin-create-user", {
-        body: {
-          email: form.email,
-          password: form.password,
-          full_name: form.full_name,
-          tenant_id: form.tenant_id || null,
-          role: form.role,
-        },
-      })
-    );
-    
-    if (error || data?.error) {
-      return;
-    }
+    await createUser.mutateAsync({
+      email: form.email,
+      password: form.password,
+      full_name: form.full_name,
+      tenant_id: form.tenant_id || null,
+      role: form.role,
+    });
     
     setDialogOpen(false);
     setForm({ email: "", password: "", full_name: "", tenant_id: "", role: "operatore" });
-    // Refresh users list
-    window.location.reload();
   };
 
   return (
