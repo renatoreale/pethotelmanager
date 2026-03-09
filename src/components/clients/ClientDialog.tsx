@@ -98,6 +98,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   const createCat = useCreateCat();
   const updateCatMut = useUpdateCat();
   const deleteCatMut = useDeleteCat();
+  const pet = usePetLabels();
   const isEditing = !!client;
 
   const { data: existingCats } = useCats(client?.id);
