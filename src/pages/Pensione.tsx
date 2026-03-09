@@ -157,7 +157,7 @@ function AnagraficaTab() {
       toast.success("Anagrafica salvata");
       setName(null); setEmail(null); setPhone(null); setAddress(null);
       setCap(null); setCity(null);
-      setPartitaIva(null); setPec(null); setTitolareName(null);
+      setPartitaIva(null); setPec(null); setTitolareName(null); setPetType(null);
     } catch (err: any) {
       toast.error(err.message || "Errore nel salvataggio");
     }
