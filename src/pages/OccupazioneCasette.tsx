@@ -30,13 +30,19 @@ export default function OccupazioneCasette() {
 
   const isLoading = loadingBookings || loadingConfig;
 
+  // Per-type totals for "entrambi" facilities
+  const singoleGatti = tenantConfig?.num_singole_gatti ?? 0;
+  const doppieGatti = tenantConfig?.num_doppie_gatti ?? 0;
+  const singoleCani = tenantConfig?.num_singole_cani ?? 0;
+  const doppieCani = tenantConfig?.num_doppie_cani ?? 0;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Occupazione Casette</h1>
           <p className="text-sm text-muted-foreground">
-            Visualizza l'occupazione per periodo{petType !== "cani" ? ` · Regola occupazione: ${occupancyDays} giorni` : " · Occupazione per intero soggiorno"}
+            Visualizza l'occupazione per periodo
           </p>
         </div>
 
@@ -73,33 +79,79 @@ export default function OccupazioneCasette() {
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm bg-primary/70" />
-          <span>{petType === "cani" ? "Occupazione (intero soggiorno)" : `Occupazione (regola ${occupancyDays}gg)`}</span>
-        </div>
-        {petType !== "cani" && (
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm bg-primary/20" />
-            <span>Soggiorno (non occupa)</span>
-          </div>
-        )}
-        <span>Singole: {totalSingole} · Doppie: {totalDoppie}</span>
-      </div>
-
       {isLoading ? (
         <div className="text-center py-12 text-muted-foreground">Caricamento…</div>
+      ) : petType === "entrambi" ? (
+        <>
+          <div className="space-y-1">
+            <h2 className="text-base font-semibold">🐱 Casette Gatti</h2>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-sm bg-primary/70" />
+                <span>Occupazione (regola {occupancyDays}gg)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-sm bg-primary/20" />
+                <span>Soggiorno (non occupa)</span>
+              </div>
+              <span>Singole: {singoleGatti} · Doppie: {doppieGatti}</span>
+            </div>
+          </div>
+          <OccupancyGrid
+            bookings={(bookings ?? []).filter(b => (b as any).pet_type === "gatti")}
+            occupancyDays={occupancyDays}
+            totalSingole={singoleGatti}
+            totalDoppie={doppieGatti}
+            rangeStart={rangeStart}
+            rangeEnd={rangeEnd}
+            petType="gatti"
+          />
+
+          <div className="space-y-1 mt-6">
+            <h2 className="text-base font-semibold">🐶 Casette Cani</h2>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-sm bg-primary/70" />
+                <span>Occupazione (intero soggiorno)</span>
+              </div>
+              <span>Singole: {singoleCani} · Doppie: {doppieCani}</span>
+            </div>
+          </div>
+          <OccupancyGrid
+            bookings={(bookings ?? []).filter(b => (b as any).pet_type === "cani")}
+            occupancyDays={occupancyDays}
+            totalSingole={singoleCani}
+            totalDoppie={doppieCani}
+            rangeStart={rangeStart}
+            rangeEnd={rangeEnd}
+            petType="cani"
+          />
+        </>
       ) : (
-        <OccupancyGrid
-          bookings={bookings ?? []}
-          occupancyDays={occupancyDays}
-          totalSingole={totalSingole}
-          totalDoppie={totalDoppie}
-          rangeStart={rangeStart}
-          rangeEnd={rangeEnd}
-          petType={petType}
-        />
+        <>
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-sm bg-primary/70" />
+              <span>{petType === "cani" ? "Occupazione (intero soggiorno)" : `Occupazione (regola ${occupancyDays}gg)`}</span>
+            </div>
+            {petType !== "cani" && (
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-sm bg-primary/20" />
+                <span>Soggiorno (non occupa)</span>
+              </div>
+            )}
+            <span>Singole: {totalSingole} · Doppie: {totalDoppie}</span>
+          </div>
+          <OccupancyGrid
+            bookings={bookings ?? []}
+            occupancyDays={occupancyDays}
+            totalSingole={totalSingole}
+            totalDoppie={totalDoppie}
+            rangeStart={rangeStart}
+            rangeEnd={rangeEnd}
+            petType={petType}
+          />
+        </>
       )}
     </div>
   );
