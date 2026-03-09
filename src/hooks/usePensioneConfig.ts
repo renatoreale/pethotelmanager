@@ -42,6 +42,7 @@ export function useUpdateTenantConfig() {
       pec?: string | null;
       titolare_name?: string | null;
       logo_url?: string | null;
+      pet_type?: string;
     }) => {
       const { id, ...rest } = updates;
       const { data, error } = await supabase
