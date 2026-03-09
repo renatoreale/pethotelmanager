@@ -367,10 +367,23 @@ function UtentiTab() {
 
   const handleSaveEdit = async () => {
     if (!editingUser || !editName.trim()) return;
+    
+    // Update profile fields
     await updateProfile.mutateAsync({
       profileId: editingUser.id,
       full_name: editName.trim(),
+      phone: editPhone.trim() || null,
     });
+    
+    // Update active tenant if changed
+    if (editActiveTenant !== (editingUser.active_tenant_id || "")) {
+      const setActiveTenantFn = supabase
+        .from("profiles")
+        .update({ tenant_id: editActiveTenant || null })
+        .eq("id", editingUser.id);
+      await setActiveTenantFn;
+    }
+    
     setEditingUser(null);
   };
 
