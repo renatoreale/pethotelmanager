@@ -104,7 +104,7 @@ export function checkAvailability(
 
 export function OccupancyGrid({
   bookings, occupancyDays, totalSingole, totalDoppie,
-  rangeStart, rangeEnd, excludeBookingId, compact, highlightDate,
+  rangeStart, rangeEnd, excludeBookingId, compact, highlightDate, petType,
 }: Props) {
   const today = new Date();
 
@@ -113,7 +113,7 @@ export function OccupancyGrid({
     return eachDayOfInterval({ start: rangeStart, end: rangeEnd });
   }, [rangeStart, rangeEnd]);
 
-  const { bookingOccupancy } = useOccupancyData(bookings, occupancyDays, excludeBookingId);
+  const { bookingOccupancy } = useOccupancyData(bookings, occupancyDays, excludeBookingId, petType);
 
   const dailyTotals = useMemo(() => {
     const totals: Record<string, { singole: number; doppie: number }> = {};
