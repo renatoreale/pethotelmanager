@@ -652,6 +652,14 @@ export default function Appuntamenti() {
           bookingData={creatingCheckout}
         />
       )}
+
+      {editingCheckin && (
+        <EditCheckinDialog
+          open={!!editingCheckin}
+          onOpenChange={(open) => { if (!open) setEditingCheckin(null); }}
+          appointment={editingCheckin}
+        />
+      )}
     </div>
   );
 }
