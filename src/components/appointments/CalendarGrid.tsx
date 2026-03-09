@@ -247,11 +247,11 @@ function AppointmentChip({
       className={cn(
         "w-full text-left rounded px-1.5 py-0.5 text-xs font-medium truncate flex items-center gap-1 transition-colors",
         isDoneCheckin
-          ? "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/40 dark:text-green-300 dark:hover:bg-green-900/60"
+          ? "bg-[hsl(var(--checkin-done))] text-[hsl(var(--checkin-done-foreground))] hover:brightness-95"
           : isIn
-            ? "bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:hover:bg-blue-900/60"
-            : "bg-orange-100 text-orange-800 hover:bg-orange-200 dark:bg-orange-900/40 dark:text-orange-300 dark:hover:bg-orange-900/60",
-        appt.confirmed && "ring-1 ring-green-500/40",
+            ? "bg-[hsl(var(--checkin-pending))] text-[hsl(var(--checkin-pending-foreground))] hover:brightness-95"
+            : "bg-[hsl(var(--checkout-pending))] text-[hsl(var(--checkout-pending-foreground))] hover:brightness-95",
+        appt.confirmed && "ring-1 ring-[hsl(var(--confirmed-ring)/0.4)]",
         compact && "text-[10px] py-0 leading-4"
       )}
       onClick={(e) => {
@@ -264,7 +264,7 @@ function AppointmentChip({
       <span className="font-mono mr-0.5">{time}</span>
       {!compact && <span className="truncate">{clientName}</span>}
       {compact && <span className="truncate">{appt.booking?.client?.last_name ?? ""}</span>}
-      {appt.confirmed && <CheckCircle2 className="h-2.5 w-2.5 shrink-0 text-green-600 dark:text-green-400 ml-auto" />}
+      {appt.confirmed && <CheckCircle2 className="h-2.5 w-2.5 shrink-0 text-[hsl(var(--confirmed-ring))] ml-auto" />}
     </button>
   );
 }

@@ -104,6 +104,15 @@
     --sidebar-accent-foreground: 35 20% 85%;
     --sidebar-border: 20 15% 16%;
     --sidebar-ring: 25 75% 52%;
+
+    /* Semantic appointment colors */
+    --checkin-pending: 217 50% 20%;
+    --checkin-pending-foreground: 217 60% 70%;
+    --checkin-done: 142 40% 18%;
+    --checkin-done-foreground: 142 50% 65%;
+    --checkout-pending: 30 50% 18%;
+    --checkout-pending-foreground: 25 55% 65%;
+    --confirmed-ring: 142 60% 40%;
   }
 }
 
