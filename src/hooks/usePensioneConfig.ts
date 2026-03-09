@@ -11,7 +11,7 @@ export function useTenantConfig() {
       if (!profile?.tenant_id) return null;
       const { data, error } = await supabase
         .from("tenants")
-        .select("id, name, slug, num_singole, num_doppie, occupancy_rule_days, email, phone, address, stay_calc_type, count_checkin_day, count_checkout_day, partita_iva, pec, titolare_name, logo_url")
+        .select("id, name, slug, num_singole, num_doppie, occupancy_rule_days, email, phone, address, cap, city, stay_calc_type, count_checkin_day, count_checkout_day, partita_iva, pec, titolare_name, logo_url")
         .eq("id", profile.tenant_id)
         .single();
       if (error) throw error;
