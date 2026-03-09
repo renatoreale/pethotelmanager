@@ -209,7 +209,7 @@ export default function Prenotazioni() {
                 booking_id: booking.id,
                 tenant_id: profile.tenant_id,
                 amount: actualAdminFee,
-                payment_type: "manuale",
+                payment_type: "gestione_pratica",
                 payment_date: paymentDate,
                 notes: `Quota gestione pratica cancellazione`,
                 created_by: user?.id ?? null,
