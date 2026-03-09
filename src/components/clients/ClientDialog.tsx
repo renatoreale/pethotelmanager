@@ -352,11 +352,11 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold flex items-center gap-2">
-                  <Cat className="h-4 w-4 text-primary" />
-                  Gatti ({visibleCats.length})
+                  {pet.petType === "cani" ? <Dog className="h-4 w-4 text-primary" /> : pet.petType === "gatti" ? <Cat className="h-4 w-4 text-primary" /> : <PawPrint className="h-4 w-4 text-primary" />}
+                  {pet.pluralCap} ({visibleCats.length})
                 </h3>
                 <Button type="button" variant="outline" size="sm" onClick={addCat}>
-                  <Plus className="mr-1 h-3 w-3" /> Aggiungi gatto
+                  <Plus className="mr-1 h-3 w-3" /> Aggiungi {pet.singular}
                 </Button>
               </div>
 
