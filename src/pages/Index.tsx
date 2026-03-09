@@ -144,10 +144,11 @@ export default function Index() {
       checkInsTomorrow: checkInsTomorrow.length,
       checkOutsTomorrow: checkOutsTomorrow.length,
       monthRevenue,
+      yearRevenue,
       dayBookings,
       expiringPreventivi: expiringPreventivi.length,
     };
-  }, [bookings, allPayments, bookingOccupancy, selectedDateStr, monthStart, monthEnd, todayStr, tomorrowStr]);
+  }, [bookings, allPayments, bookingOccupancy, selectedDateStr, monthStart, monthEnd, yearStart, yearEnd, todayStr, tomorrowStr]);
 
   const numSingole = tenantConfig?.num_singole ?? 0;
   const numDoppie = tenantConfig?.num_doppie ?? 0;
