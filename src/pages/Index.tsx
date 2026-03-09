@@ -372,7 +372,7 @@ export default function Index() {
 
       {/* Occupancy bar - hide for operatore */}
       {!isOperatoreRestricted && (
-        <Card className="border-none shadow-sm">
+        <Card className="border shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">
               Occupazione casette {!isSelectedToday && `— ${format(selectedDate, "dd MMM yyyy", { locale: it })}`}
