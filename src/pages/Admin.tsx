@@ -379,14 +379,21 @@ function UtentiTab() {
       full_name: editName.trim(),
       phone: editPhone.trim() || null,
     });
+
+    // Update email if changed
+    if (editEmail.trim() && editEmail.trim() !== (editingUser.email || "")) {
+      await updateEmail.mutateAsync({
+        userId: editingUser.user_id,
+        email: editEmail.trim(),
+      });
+    }
     
     // Update active tenant if changed
     if (editActiveTenant !== (editingUser.active_tenant_id || "")) {
-      const setActiveTenantFn = supabase
+      await supabase
         .from("profiles")
         .update({ tenant_id: editActiveTenant || null })
         .eq("id", editingUser.id);
-      await setActiveTenantFn;
     }
     
     setEditingUser(null);
