@@ -331,17 +331,17 @@ function CasetteTab() {
           <div className="space-y-2">
             <Label htmlFor="singole">Casette Singole</Label>
             <Input id="singole" type="number" min={0} value={s} onChange={(e) => setSingole(Number(e.target.value))} />
-            <p className="text-xs text-muted-foreground">Per 1 gatto</p>
+            <p className="text-xs text-muted-foreground">Per 1 pet</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="doppie">Casette Doppie</Label>
             <Input id="doppie" type="number" min={0} value={d} onChange={(e) => setDoppie(Number(e.target.value))} />
-            <p className="text-xs text-muted-foreground">Per 2+ gatti fratelli</p>
+            <p className="text-xs text-muted-foreground">Per 2+ pets fratelli</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="maxCats">Capienza max gatti</Label>
+            <Label htmlFor="maxCats">Capienza max pets</Label>
             <Input id="maxCats" type="number" min={0} value={mc} onChange={(e) => setMaxCats(Number(e.target.value))} />
-            <p className="text-xs text-muted-foreground">Numero massimo di gatti ospitabili</p>
+            <p className="text-xs text-muted-foreground">Numero massimo di pets ospitabili</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="rule">Giorni occupazione minima</Label>
