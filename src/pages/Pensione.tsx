@@ -293,16 +293,32 @@ function AnagraficaTab() {
 function CasetteTab() {
   const { data: config, isLoading } = useTenantConfig();
   const updateConfig = useUpdateTenantConfig();
+  // Legacy fields (used for single-type facilities)
   const [singole, setSingole] = useState<number | null>(null);
   const [doppie, setDoppie] = useState<number | null>(null);
+  // Per-pet-type fields (used for "entrambi")
+  const [singoleGatti, setSingoleGatti] = useState<number | null>(null);
+  const [doppieGatti, setDoppieGatti] = useState<number | null>(null);
+  const [singoleCani, setSingoleCani] = useState<number | null>(null);
+  const [doppieCani, setDoppieCani] = useState<number | null>(null);
+
   const [maxCats, setMaxCats] = useState<number | null>(null);
   const [ruleDays, setRuleDays] = useState<number | null>(null);
   const [stayCalcType, setStayCalcType] = useState<string | null>(null);
   const [countCheckinDay, setCountCheckinDay] = useState<boolean | null>(null);
   const [countCheckoutDay, setCountCheckoutDay] = useState<boolean | null>(null);
 
+  const isEntrambi = config?.pet_type === "entrambi";
+
+  // Single-type values
   const s = singole ?? config?.num_singole ?? 0;
   const d = doppie ?? config?.num_doppie ?? 0;
+  // Per-type values
+  const sg = singoleGatti ?? (config as any)?.num_singole_gatti ?? 0;
+  const dg = doppieGatti ?? (config as any)?.num_doppie_gatti ?? 0;
+  const sc = singoleCani ?? (config as any)?.num_singole_cani ?? 0;
+  const dc = doppieCani ?? (config as any)?.num_doppie_cani ?? 0;
+
   const mc = maxCats ?? (config as any)?.max_cats ?? 0;
   const r = ruleDays ?? config?.occupancy_rule_days ?? 4;
   const sct = stayCalcType ?? (config as any)?.stay_calc_type ?? "notti";
@@ -312,24 +328,41 @@ function CasetteTab() {
   const handleSave = async () => {
     if (!config) return;
     try {
-      await updateConfig.mutateAsync({
+      const updates: any = {
         id: config.id,
-        num_singole: s,
-        num_doppie: d,
         max_cats: mc,
         occupancy_rule_days: r,
         stay_calc_type: sct,
         count_checkin_day: cid,
         count_checkout_day: cod,
-      });
+      };
+      if (isEntrambi) {
+        updates.num_singole_gatti = sg;
+        updates.num_doppie_gatti = dg;
+        updates.num_singole_cani = sc;
+        updates.num_doppie_cani = dc;
+        // Keep totals in sync
+        updates.num_singole = sg + sc;
+        updates.num_doppie = dg + dc;
+      } else {
+        updates.num_singole = s;
+        updates.num_doppie = d;
+        // For single-type, store in the relevant per-type columns too
+        if (config.pet_type === "gatti") {
+          updates.num_singole_gatti = s;
+          updates.num_doppie_gatti = d;
+        } else {
+          updates.num_singole_cani = s;
+          updates.num_doppie_cani = d;
+        }
+      }
+      await updateConfig.mutateAsync(updates);
       toast.success("Configurazione casette salvata");
-      setSingole(null);
-      setDoppie(null);
-      setMaxCats(null);
-      setRuleDays(null);
-      setStayCalcType(null);
-      setCountCheckinDay(null);
-      setCountCheckoutDay(null);
+      setSingole(null); setDoppie(null);
+      setSingoleGatti(null); setDoppieGatti(null);
+      setSingoleCani(null); setDoppieCani(null);
+      setMaxCats(null); setRuleDays(null);
+      setStayCalcType(null); setCountCheckinDay(null); setCountCheckoutDay(null);
     } catch (err: any) {
       toast.error(err.message || "Errore nel salvataggio");
     }
@@ -341,33 +374,98 @@ function CasetteTab() {
     <Card>
       <CardHeader>
         <CardTitle>Capacità Casette</CardTitle>
-        <CardDescription>Configura il numero di casette disponibili e la regola di occupazione</CardDescription>
+        <CardDescription>
+          {isEntrambi
+            ? "Configura casette separate per gatti e cani. Un gatto non può stare nella casetta di un cane e viceversa."
+            : "Configura il numero di casette disponibili e la regola di occupazione"}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid gap-6 sm:grid-cols-4">
-          <div className="space-y-2">
-            <Label htmlFor="singole">Casette Singole</Label>
-            <Input id="singole" type="number" min={0} value={s} onChange={(e) => setSingole(Number(e.target.value))} />
-            <p className="text-xs text-muted-foreground">Per 1 pet</p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="doppie">Casette Doppie</Label>
-            <Input id="doppie" type="number" min={0} value={d} onChange={(e) => setDoppie(Number(e.target.value))} />
-            <p className="text-xs text-muted-foreground">Per 2+ pets fratelli</p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="maxCats">Capienza max pets</Label>
-            <Input id="maxCats" type="number" min={0} value={mc} onChange={(e) => setMaxCats(Number(e.target.value))} />
-            <p className="text-xs text-muted-foreground">Numero massimo di pets ospitabili</p>
-          </div>
-          {config?.pet_type !== "cani" && (
-            <div className="space-y-2">
-              <Label htmlFor="rule">Giorni occupazione minima</Label>
-              <Input id="rule" type="number" min={1} max={30} value={r} onChange={(e) => setRuleDays(Number(e.target.value))} />
-              <p className="text-xs text-muted-foreground">Check-in occupa per N giorni (solo per gatti)</p>
+        {isEntrambi ? (
+          <>
+            {/* Gatti section */}
+            <div className="space-y-3">
+              <Label className="text-base font-semibold flex items-center gap-2">🐱 Casette Gatti</Label>
+              <div className="grid gap-6 sm:grid-cols-3">
+                <div className="space-y-2">
+                  <Label>Singole Gatti</Label>
+                  <Input type="number" min={0} value={sg} onChange={(e) => setSingoleGatti(Number(e.target.value))} />
+                  <p className="text-xs text-muted-foreground">Per 1 gatto</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Doppie Gatti</Label>
+                  <Input type="number" min={0} value={dg} onChange={(e) => setDoppieGatti(Number(e.target.value))} />
+                  <p className="text-xs text-muted-foreground">Per 2+ gatti fratelli</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="rule">Giorni occupazione minima</Label>
+                  <Input id="rule" type="number" min={1} max={30} value={r} onChange={(e) => setRuleDays(Number(e.target.value))} />
+                  <p className="text-xs text-muted-foreground">Check-in gatti occupa per N giorni</p>
+                </div>
+              </div>
             </div>
-          )}
-        </div>
+
+            <Separator />
+
+            {/* Cani section */}
+            <div className="space-y-3">
+              <Label className="text-base font-semibold flex items-center gap-2">🐶 Casette Cani</Label>
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Singole Cani</Label>
+                  <Input type="number" min={0} value={sc} onChange={(e) => setSingoleCani(Number(e.target.value))} />
+                  <p className="text-xs text-muted-foreground">Per 1 cane</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Doppie Cani</Label>
+                  <Input type="number" min={0} value={dc} onChange={(e) => setDoppieCani(Number(e.target.value))} />
+                  <p className="text-xs text-muted-foreground">Per 2+ cani fratelli</p>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Capienza max pets totale</Label>
+                <Input type="number" min={0} value={mc} onChange={(e) => setMaxCats(Number(e.target.value))} />
+                <p className="text-xs text-muted-foreground">Numero massimo di animali ospitabili complessivamente</p>
+              </div>
+              <div className="rounded-lg border bg-muted/30 p-4 space-y-1">
+                <p className="text-sm font-medium">Riepilogo casette</p>
+                <p className="text-xs text-muted-foreground">🐱 Gatti: {sg} singole + {dg} doppie = {sg + dg} casette</p>
+                <p className="text-xs text-muted-foreground">🐶 Cani: {sc} singole + {dc} doppie = {sc + dc} casette</p>
+                <p className="text-xs font-medium mt-1">Totale: {sg + dg + sc + dc} casette</p>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-4">
+            <div className="space-y-2">
+              <Label htmlFor="singole">Casette Singole</Label>
+              <Input id="singole" type="number" min={0} value={s} onChange={(e) => setSingole(Number(e.target.value))} />
+              <p className="text-xs text-muted-foreground">Per 1 pet</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="doppie">Casette Doppie</Label>
+              <Input id="doppie" type="number" min={0} value={d} onChange={(e) => setDoppie(Number(e.target.value))} />
+              <p className="text-xs text-muted-foreground">Per 2+ pets fratelli</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="maxCats">Capienza max pets</Label>
+              <Input id="maxCats" type="number" min={0} value={mc} onChange={(e) => setMaxCats(Number(e.target.value))} />
+              <p className="text-xs text-muted-foreground">Numero massimo di pets ospitabili</p>
+            </div>
+            {config?.pet_type !== "cani" && (
+              <div className="space-y-2">
+                <Label htmlFor="rule">Giorni occupazione minima</Label>
+                <Input id="rule" type="number" min={1} max={30} value={r} onChange={(e) => setRuleDays(Number(e.target.value))} />
+                <p className="text-xs text-muted-foreground">Check-in occupa per N giorni (solo per gatti)</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Stay calculation config */}
         <div className="space-y-4 border-t pt-4">
