@@ -154,7 +154,7 @@ export default function Pagamenti() {
         bookings: g.bookings.filter((b: any) => {
           const bTotal = Number(b.total_amount ?? 0);
           const { net } = calcTotals(b.payments ?? []);
-          return bTotal - net > 0;
+          return Math.max(0, bTotal - net) > 0;
         }),
       })).filter(g => g.bookings.length > 0);
     }
