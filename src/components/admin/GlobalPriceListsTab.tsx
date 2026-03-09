@@ -188,7 +188,19 @@ export function GlobalPriceListsTab() {
             <DialogTitle>{editing ? "Modifica Tariffa Globale" : "Nuova Tariffa Globale"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2"><Label>Nome *</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Es. Alta stagione singola" /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Nome *</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Es. Alta stagione singola" /></div>
+              <div className="space-y-2">
+                <Label>Tipo animale *</Label>
+                <Select value={petType} onValueChange={(v) => setPetType(v as "gatti" | "cani")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="gatti">🐱 Gatti</SelectItem>
+                    <SelectItem value="cani">🐶 Cani</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <div className="space-y-2">
               <Label>Tipo tariffa</Label>
               <Select value={tariffType} onValueChange={(v) => setTariffType(v as TariffType)}>
