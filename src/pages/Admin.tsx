@@ -86,6 +86,9 @@ export default function Admin() {
           <TabsTrigger value="pagamenti-globali" className="gap-2">
             <CreditCard className="h-4 w-4" /> Pagamenti Globali
           </TabsTrigger>
+          <TabsTrigger value="cancellazione-globale" className="gap-2">
+            <Ban className="h-4 w-4" /> Cancellazione
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pensioni"><PensioniTab /></TabsContent>
@@ -94,6 +97,7 @@ export default function Admin() {
         <TabsContent value="slot-globali"><GlobalSlotConfigsTab /></TabsContent>
         <TabsContent value="listino-globale"><GlobalPriceListsTab /></TabsContent>
         <TabsContent value="pagamenti-globali"><GlobalPaymentMethodsTab /></TabsContent>
+        <TabsContent value="cancellazione-globale"><GlobalCancellationPolicyTab /></TabsContent>
       </Tabs>
     </div>
   );
