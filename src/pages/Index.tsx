@@ -322,7 +322,7 @@ export default function Index() {
       {/* KPI Cards */}
       <div className={cn("grid gap-4 sm:grid-cols-2", kpis.length >= 4 ? "lg:grid-cols-4" : kpis.length === 3 ? "lg:grid-cols-3" : "")}>
         {kpis.map((stat) => (
-          <Card key={stat.title} className="border-none shadow-sm">
+          <Card key={stat.title} className="border shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {stat.title}
@@ -341,7 +341,7 @@ export default function Index() {
 
       {/* Operatore: Show tomorrow's check-in/out */}
       {isOperatoreRestricted && (
-        <Card className="border-none shadow-sm">
+        <Card className="border shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Domani</CardTitle>
           </CardHeader>
@@ -372,7 +372,7 @@ export default function Index() {
 
       {/* Occupancy bar - hide for operatore */}
       {!isOperatoreRestricted && (
-        <Card className="border-none shadow-sm">
+        <Card className="border shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">
               Occupazione casette {!isSelectedToday && `— ${format(selectedDate, "dd MMM yyyy", { locale: it })}`}
@@ -407,7 +407,7 @@ export default function Index() {
       {!isOperatoreRestricted && (
         <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
           {/* Prenotazioni del giorno */}
-          <Card className="border-none shadow-sm">
+          <Card className="border shadow-sm">
             <CardHeader>
               <CardTitle className="text-base">
                 {isSelectedToday ? "Prenotazioni del giorno" : `Prenotazioni — ${format(selectedDate, "dd MMM yyyy", { locale: it })}`}
@@ -440,7 +440,7 @@ export default function Index() {
 
           {/* Missing check-in appointment */}
           <div ref={missingApptRef}>
-            <Card className={cn("border-none shadow-sm h-full", s.missingAppointment.length > 0 && "border-l-4 border-l-destructive")}>
+            <Card className={cn("border shadow-sm h-full", s.missingAppointment.length > 0 && "border-l-4 border-l-destructive")}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2 text-destructive">
                   <LogIn className="h-5 w-5" />
@@ -487,7 +487,7 @@ export default function Index() {
 
           {/* Missing check-out appointment */}
           <div ref={missingCheckOutRef}>
-            <Card className={cn("border-none shadow-sm h-full", s.missingCheckOutAppt.length > 0 && "border-l-4 border-l-[hsl(25,90%,50%)]")}>
+            <Card className={cn("border shadow-sm h-full", s.missingCheckOutAppt.length > 0 && "border-l-4 border-l-[hsl(25,90%,50%)]")}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2 text-[hsl(25,90%,40%)]">
                   <LogOut className="h-5 w-5" />
@@ -542,7 +542,7 @@ export default function Index() {
 
       {/* Alerts - hide for operatore */}
       {!isOperatoreRestricted && s.expiringPreventivi > 0 && (
-        <Card className="border-none shadow-sm border-l-4 border-l-warning">
+        <Card className="border shadow-sm border-l-4 border-l-warning">
           <CardContent className="flex items-center gap-3 py-4">
             <AlertTriangle className="h-5 w-5 text-warning shrink-0" />
             <div>
