@@ -98,6 +98,7 @@ export function useUpsertGlobalPriceList() {
       valid_from?: string | null;
       valid_to?: string | null;
       is_active?: boolean;
+      pet_type?: "gatti" | "cani" | "entrambi" | null;
     }) => {
       if (price.id) {
         const { id, ...rest } = price;

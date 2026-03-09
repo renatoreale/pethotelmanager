@@ -92,10 +92,15 @@ export default function CheckOut() {
     return Math.max(0, days);
   };
 
+  const tenantPetType = tenantConfig?.pet_type as "gatti" | "cani" | "entrambi" | undefined;
   const seasonalTariffs = useMemo(() => {
     if (!priceLists) return [];
-    return priceLists.filter((pl: any) => pl.tariff_type === "stagionale" && pl.is_active);
-  }, [priceLists]);
+    return priceLists.filter((pl: any) => {
+      if (pl.tariff_type !== "stagionale" || !pl.is_active) return false;
+      if (!pl.pet_type || !tenantPetType || tenantPetType === "entrambi") return true;
+      return pl.pet_type === tenantPetType;
+    });
+  }, [priceLists, tenantPetType]);
 
   const findSeasonalTariff = (dateStr: string) => {
     return seasonalTariffs.find((t: any) => {

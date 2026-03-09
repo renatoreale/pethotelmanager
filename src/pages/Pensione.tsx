@@ -674,6 +674,7 @@ function SlotTab() {
 function ListinoTab() {
   const { profile } = useAuth();
   const { data: prices, isLoading } = usePriceLists();
+  const { data: tenantConfig } = useTenantConfig();
   const upsertPrice = useUpsertPriceList();
   const deletePrice = useDeletePriceList();
   const queryClient = useQueryClient();
@@ -682,6 +683,8 @@ function ListinoTab() {
   const [deleting, setDeleting] = useState<any>(null);
   const [resetConfirm, setResetConfirm] = useState(false);
   const [resetting, setResetting] = useState(false);
+
+  const tenantPetType = tenantConfig?.pet_type as "gatti" | "cani" | "entrambi" | undefined;
 
   // Form state
   const [name, setName] = useState("");
@@ -695,6 +698,7 @@ function ListinoTab() {
   const [validFrom, setValidFrom] = useState("");
   const [validTo, setValidTo] = useState("");
   const [active, setActive] = useState(true);
+  const [petType, setPetType] = useState<"gatti" | "cani">("gatti");
 
   const openNew = () => {
     setEditing(null);
@@ -709,6 +713,7 @@ function ListinoTab() {
     setValidFrom("");
     setValidTo("");
     setActive(true);
+    setPetType(tenantPetType === "cani" ? "cani" : "gatti");
     setDialogOpen(true);
   };
 
@@ -725,6 +730,7 @@ function ListinoTab() {
     setValidFrom(p.valid_from ?? "");
     setValidTo(p.valid_to ?? "");
     setActive(p.is_active);
+    setPetType(p.pet_type || "gatti");
     setDialogOpen(true);
   };
 
@@ -745,6 +751,7 @@ function ListinoTab() {
         valid_from: validFrom || null,
         valid_to: validTo || null,
         is_active: active,
+        pet_type: petType as any,
       });
       toast.success(editing ? "Tariffa aggiornata" : "Tariffa creata");
       setDialogOpen(false);
@@ -821,6 +828,7 @@ function ListinoTab() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
+                    {tenantPetType === "entrambi" && <TableHead>Animale</TableHead>}
                     <TableHead>Tipologia</TableHead>
                     <TableHead>Prezzo</TableHead>
                     <TableHead>Validità</TableHead>
@@ -839,6 +847,11 @@ function ListinoTab() {
                           </Badge>
                         )}
                       </TableCell>
+                      {tenantPetType === "entrambi" && (
+                        <TableCell>
+                          <Badge variant="outline">{p.pet_type === "cani" ? "🐶 Cani" : "🐱 Gatti"}</Badge>
+                        </TableCell>
+                      )}
                       <TableCell>
                         <Badge variant="secondary">
                           {TARIFF_TYPE_LABELS[p.tariff_type as TariffType] ?? p.tariff_type}
@@ -876,11 +889,23 @@ function ListinoTab() {
             <DialogTitle>{editing ? "Modifica Tariffa" : "Nuova Tariffa"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className={`grid ${tenantPetType === "entrambi" ? "grid-cols-3" : "grid-cols-2"} gap-4`}>
               <div className="space-y-2">
                 <Label>Nome tariffa</Label>
                 <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Es. Alta Stagione" />
               </div>
+              {tenantPetType === "entrambi" && (
+                <div className="space-y-2">
+                  <Label>Tipo animale</Label>
+                  <Select value={petType} onValueChange={(v) => setPetType(v as "gatti" | "cani")}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="gatti">🐱 Gatti</SelectItem>
+                      <SelectItem value="cani">🐶 Cani</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Tipologia</Label>
                 <Select value={tariffType} onValueChange={(v) => setTariffType(v as TariffType)}>

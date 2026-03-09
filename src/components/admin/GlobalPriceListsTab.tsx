@@ -39,6 +39,11 @@ const SEASON_OPTIONS = [
   { value: "bassa", label: "Bassa stagione" },
 ];
 
+const PET_TYPE_LABELS: Record<string, string> = {
+  gatti: "🐱 Gatti",
+  cani: "🐶 Cani",
+};
+
 export function GlobalPriceListsTab() {
   const { data: priceLists, isLoading } = useGlobalPriceLists();
   const upsert = useUpsertGlobalPriceList();
@@ -57,6 +62,7 @@ export function GlobalPriceListsTab() {
   const [includedKm, setIncludedKm] = useState(0);
   const [extraKmCost, setExtraKmCost] = useState(0);
   const [isActive, setIsActive] = useState(true);
+  const [petType, setPetType] = useState<"gatti" | "cani">("gatti");
 
   const openNew = () => {
     setEditing(null);
@@ -69,6 +75,7 @@ export function GlobalPriceListsTab() {
     setIncludedKm(0);
     setExtraKmCost(0);
     setIsActive(true);
+    setPetType("gatti");
     setDialogOpen(true);
   };
 
@@ -83,6 +90,7 @@ export function GlobalPriceListsTab() {
     setIncludedKm(p.included_km || 0);
     setExtraKmCost(p.extra_km_cost || 0);
     setIsActive(p.is_active);
+    setPetType(p.pet_type || "gatti");
     setDialogOpen(true);
   };
 
@@ -99,6 +107,7 @@ export function GlobalPriceListsTab() {
       included_km: includedKm,
       extra_km_cost: extraKmCost,
       is_active: isActive,
+      pet_type: petType,
     });
     toast.success(editing ? "Tariffa globale aggiornata" : "Tariffa globale creata");
     setDialogOpen(false);
@@ -135,6 +144,7 @@ export function GlobalPriceListsTab() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
+                    <TableHead>Animale</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Stagione</TableHead>
                     <TableHead>€/giorno</TableHead>
@@ -147,6 +157,7 @@ export function GlobalPriceListsTab() {
                   {priceLists.map((p) => (
                     <TableRow key={p.id}>
                       <TableCell className="font-medium">{p.name}</TableCell>
+                      <TableCell><Badge variant="outline">{PET_TYPE_LABELS[p.pet_type as string] ?? "—"}</Badge></TableCell>
                       <TableCell><Badge variant="outline">{TARIFF_TYPE_LABELS[p.tariff_type as TariffType] || p.tariff_type}</Badge></TableCell>
                       <TableCell>{p.season ? SEASON_OPTIONS.find(s => s.value === p.season)?.label || p.season : "-"}</TableCell>
                       <TableCell>€{p.price_per_day}</TableCell>
@@ -177,7 +188,19 @@ export function GlobalPriceListsTab() {
             <DialogTitle>{editing ? "Modifica Tariffa Globale" : "Nuova Tariffa Globale"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2"><Label>Nome *</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Es. Alta stagione singola" /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Nome *</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Es. Alta stagione singola" /></div>
+              <div className="space-y-2">
+                <Label>Tipo animale *</Label>
+                <Select value={petType} onValueChange={(v) => setPetType(v as "gatti" | "cani")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="gatti">🐱 Gatti</SelectItem>
+                    <SelectItem value="cani">🐶 Cani</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <div className="space-y-2">
               <Label>Tipo tariffa</Label>
               <Select value={tariffType} onValueChange={(v) => setTariffType(v as TariffType)}>
