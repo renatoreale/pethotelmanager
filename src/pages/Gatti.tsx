@@ -63,13 +63,13 @@ export default function Gatti() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Gatti</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{pet.pluralCap}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Anagrafica felini · {cats?.length ?? 0} registrati
+            {pet.registrySubtitle} · {cats?.length ?? 0} registrati
           </p>
         </div>
         <Button onClick={handleNew}>
-          <Plus className="mr-2 h-4 w-4" /> Nuovo Gatto
+          <Plus className="mr-2 h-4 w-4" /> Nuovo {pet.singularCap}
         </Button>
       </div>
 
