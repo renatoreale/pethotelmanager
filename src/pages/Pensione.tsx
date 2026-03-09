@@ -797,16 +797,20 @@ function ListinoTab() {
 
 // ── MODALITÀ PAGAMENTO TAB ──
 function PaymentMethodsTab() {
+  const { profile } = useAuth();
   const { data: methods, isLoading } = useAllPaymentMethods();
   const createMethod = useCreatePaymentMethod();
   const toggleMethod = useTogglePaymentMethod();
   const deleteMethod = useDeletePaymentMethod();
   const updateMethod = useUpdatePaymentMethod();
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [deleting, setDeleting] = useState<any>(null);
   const [editing, setEditing] = useState<any>(null);
   const [editName, setEditName] = useState("");
+  const [resetConfirm, setResetConfirm] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
