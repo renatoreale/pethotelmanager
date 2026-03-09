@@ -347,7 +347,7 @@ export default function CheckIn() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Check-in</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Accettazione gatti in struttura. Seleziona una prenotazione per effettuare il check-in.
+          Accettazione pets in struttura. Seleziona una prenotazione per effettuare il check-in.
         </p>
       </div>
 
