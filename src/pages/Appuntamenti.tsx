@@ -673,6 +673,14 @@ export default function Appuntamenti() {
           appointment={editingCheckin}
         />
       )}
+
+      {editingBookingDates && (
+        <EditBookingDatesDialog
+          open={!!editingBookingDates}
+          onOpenChange={(open) => { if (!open) setEditingBookingDates(null); }}
+          booking={editingBookingDates}
+        />
+      )}
     </div>
   );
 }
