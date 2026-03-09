@@ -66,7 +66,7 @@ function calcTotals(payments: any[]) {
 
 interface TransactionFormData {
   amount: string;
-  payment_type: "caparra" | "saldo" | "extra" | "rimborso" | "manuale";
+  payment_type: "caparra" | "saldo" | "extra" | "rimborso" | "manuale" | "gestione_pratica";
   payment_date: string;
   payment_method_id: string;
   notes: string;
