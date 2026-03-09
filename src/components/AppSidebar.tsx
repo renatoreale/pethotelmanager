@@ -16,11 +16,18 @@ import {
   Power,
   Grid3X3,
   Settings2,
+  Check,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions, Resource } from "@/hooks/usePermissions";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import {
   Sidebar,
@@ -86,7 +93,6 @@ function NavGroup({
   const isActive = (path: string) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
 
-  // Filter items based on permissions
   const visibleItems = items.filter(item => canRead(item.resource));
 
   if (visibleItems.length === 0) return null;
@@ -127,7 +133,7 @@ function NavGroup({
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { profile, roles, signOut, user } = useAuth();
+  const { profile, roles, signOut, user, userTenants, activeTenant, switchTenant } = useAuth();
   const { primaryRole } = usePermissions();
 
   const initials = profile?.full_name
@@ -143,6 +149,8 @@ export function AppSidebar() {
     ? { admin: "Amministratore", ceo: "CEO", titolare: "Titolare", manager: "Manager", operatore: "Operatore" }[primaryRole] 
     : "Utente";
 
+  const hasMultipleTenants = userTenants.length > 1;
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4">
@@ -155,10 +163,34 @@ export function AppSidebar() {
               <span className="font-serif font-bold text-sm text-sidebar-foreground">
                 CatHotel
               </span>
-              <button className="flex items-center gap-1 text-[11px] text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors">
-                Pensione Milano
-                <ChevronDown className="h-3 w-3" />
-              </button>
+              {hasMultipleTenants ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-1 text-[11px] text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors text-left">
+                      {activeTenant?.name || "Seleziona pensione"}
+                      <ChevronDown className="h-3 w-3" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56">
+                    {userTenants.map((tenant) => (
+                      <DropdownMenuItem
+                        key={tenant.id}
+                        onClick={() => switchTenant(tenant.id)}
+                        className="flex items-center justify-between"
+                      >
+                        <span>{tenant.name}</span>
+                        {tenant.id === activeTenant?.id && (
+                          <Check className="h-4 w-4 text-primary" />
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <span className="text-[11px] text-sidebar-foreground/60">
+                  {activeTenant?.name || "Pensione"}
+                </span>
+              )}
             </div>
           )}
         </div>
