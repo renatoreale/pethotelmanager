@@ -12,7 +12,7 @@ import { useBookings } from "@/hooks/useBookings";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import { useAllPayments } from "@/hooks/usePayments";
 import { usePermissions } from "@/hooks/usePermissions";
-import { format, parseISO, startOfMonth, endOfMonth, isToday as isTodayFn, addDays } from "date-fns";
+import { format, parseISO, startOfMonth, endOfMonth, startOfYear, endOfYear, isToday as isTodayFn, addDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
@@ -63,6 +63,8 @@ export default function Index() {
   const isSelectedToday = isTodayFn(selectedDate);
   const monthStart = format(startOfMonth(selectedDate), "yyyy-MM-dd");
   const monthEnd = format(endOfMonth(selectedDate), "yyyy-MM-dd");
+  const yearStart = format(startOfYear(selectedDate), "yyyy-MM-dd");
+  const yearEnd = format(endOfYear(selectedDate), "yyyy-MM-dd");
 
   // For operatore: restrict to today and tomorrow only
   const todayStr = format(new Date(), "yyyy-MM-dd");
@@ -108,6 +110,17 @@ export default function Index() {
     });
     const monthRevenue = monthPayments.reduce((s, p) => s + Number(p.amount), 0) - monthRefunds.reduce((s, p) => s + Number(p.amount), 0);
 
+    // Yearly revenue
+    const yearPayments = (allPayments ?? []).filter(p => {
+      const pDate = p.payment_date?.slice(0, 10);
+      return pDate >= yearStart && pDate <= yearEnd && p.payment_type !== "rimborso";
+    });
+    const yearRefunds = (allPayments ?? []).filter(p => {
+      const pDate = p.payment_date?.slice(0, 10);
+      return pDate >= yearStart && pDate <= yearEnd && p.payment_type === "rimborso";
+    });
+    const yearRevenue = yearPayments.reduce((s, p) => s + Number(p.amount), 0) - yearRefunds.reduce((s, p) => s + Number(p.amount), 0);
+
     // Bookings with activity on the selected date
     const dayBookings = bookings.filter(b =>
       !["cancellata", "rimborsata"].includes(b.status) &&
@@ -131,10 +144,11 @@ export default function Index() {
       checkInsTomorrow: checkInsTomorrow.length,
       checkOutsTomorrow: checkOutsTomorrow.length,
       monthRevenue,
+      yearRevenue,
       dayBookings,
       expiringPreventivi: expiringPreventivi.length,
     };
-  }, [bookings, allPayments, bookingOccupancy, selectedDateStr, monthStart, monthEnd, todayStr, tomorrowStr]);
+  }, [bookings, allPayments, bookingOccupancy, selectedDateStr, monthStart, monthEnd, yearStart, yearEnd, todayStr, tomorrowStr]);
 
   const numSingole = tenantConfig?.num_singole ?? 0;
   const numDoppie = tenantConfig?.num_doppie ?? 0;
@@ -155,7 +169,7 @@ export default function Index() {
     catsInStructure: 0, singoleOccupied: 0, doppieOccupied: 0,
     activeBookings: 0, checkInsToday: 0, checkOutsToday: 0,
     checkInsTomorrow: 0, checkOutsTomorrow: 0,
-    monthRevenue: 0, dayBookings: [], expiringPreventivi: 0,
+    monthRevenue: 0, yearRevenue: 0, dayBookings: [], expiringPreventivi: 0,
   };
 
   // Build KPI cards based on permissions
@@ -197,8 +211,17 @@ export default function Index() {
       show: true,
     },
     {
+      title: "Incasso anno",
+      value: `€ ${s.yearRevenue.toLocaleString("it-IT", { maximumFractionDigits: 0 })}`,
+      subtitle: format(selectedDate, "yyyy", { locale: it }),
+      icon: CreditCard,
+      color: "text-primary",
+      bg: "bg-primary/10",
+      show: canSeeRevenue,
+    },
+    {
       title: "Incasso mese",
-      value: `€ ${s.monthRevenue.toFixed(0)}`,
+      value: `€ ${s.monthRevenue.toLocaleString("it-IT", { maximumFractionDigits: 0 })}`,
       subtitle: format(selectedDate, "MMMM yyyy", { locale: it }),
       icon: CreditCard,
       color: "text-warning",
