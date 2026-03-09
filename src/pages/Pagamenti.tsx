@@ -430,7 +430,7 @@ export default function Pagamenti() {
             const bPayments = selectedBooking.payments ?? [];
             const bTotal = Number(selectedBooking.total_amount ?? 0);
             const { net: bNet } = calcTotals(bPayments);
-            const bRemaining = bTotal - bNet;
+            const bRemaining = Math.max(0, bTotal - bNet);
 
             return (
               <>
