@@ -889,7 +889,6 @@ function PaymentMethodsTab() {
               <Plus className="mr-2 h-4 w-4" /> Nuova Modalità
             </Button>
           </div>
-          </Button>
         </CardHeader>
         <CardContent>
           {isLoading ? (
