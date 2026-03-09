@@ -146,12 +146,15 @@ function AnagraficaTab() {
         email: currentEmail || null,
         phone: currentPhone || null,
         address: currentAddress || null,
+        cap: currentCap || null,
+        city: currentCity || null,
         partita_iva: currentPartitaIva || null,
         pec: currentPec || null,
         titolare_name: currentTitolareName || null,
       });
       toast.success("Anagrafica salvata");
       setName(null); setEmail(null); setPhone(null); setAddress(null);
+      setCap(null); setCity(null);
       setPartitaIva(null); setPec(null); setTitolareName(null);
     } catch (err: any) {
       toast.error(err.message || "Errore nel salvataggio");
