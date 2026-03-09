@@ -119,6 +119,108 @@ export default function Prenotazioni() {
   const handleTransition = async () => {
     if (!transitioning) return;
     try {
+      // If cancelling, automatically calculate refund and create payment records
+      if (transitioning.newStatus === "cancellata" && profile?.tenant_id) {
+        const booking = bookings?.find(b => b.id === transitioning.id);
+        if (booking) {
+          // 1. Fetch existing payments for this booking
+          const { data: existingPayments } = await supabase
+            .from("payments")
+            .select("amount, payment_type")
+            .eq("booking_id", booking.id);
+
+          const totalPaid = (existingPayments || [])
+            .reduce((sum, p) => {
+              const amt = Number(p.amount);
+              return p.payment_type === "rimborso" ? sum - amt : sum + amt;
+            }, 0);
+
+          // 2. Fetch tenant cancellation policy
+          const { data: policy } = await supabase
+            .from("cancellation_policies" as any)
+            .select("*")
+            .eq("tenant_id", profile.tenant_id)
+            .maybeSingle();
+
+          if (policy && totalPaid > 0) {
+            const policyObj = policy as any;
+            const adminFee = Number(policyObj.admin_fee) || 0;
+
+            // 3. Fetch cancellation rules
+            const { data: rules } = await supabase
+              .from("cancellation_policy_rules" as any)
+              .select("*")
+              .eq("policy_id", policyObj.id)
+              .order("days_before_checkin", { ascending: false });
+
+            // 4. Calculate days before check-in
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const checkInDate = parseISO(booking.check_in_date);
+            const daysBefore = differenceInDays(checkInDate, today);
+
+            // 5. Find applicable refund percentage (first rule where daysBefore >= days_before_checkin)
+            let refundPercentage = 0;
+            if (rules && rules.length > 0) {
+              const sortedRules = (rules as any[]).sort((a, b) => b.days_before_checkin - a.days_before_checkin);
+              for (const rule of sortedRules) {
+                if (daysBefore >= rule.days_before_checkin) {
+                  refundPercentage = Number(rule.refund_percentage);
+                  break;
+                }
+              }
+            }
+
+            // 6. Calculate amounts
+            const grossRefund = totalPaid * (refundPercentage / 100);
+            const netRefund = Math.max(0, grossRefund - adminFee);
+            const actualAdminFee = grossRefund > 0 ? Math.min(adminFee, grossRefund) : 0;
+            const paymentDate = new Date().toISOString();
+
+            // 7. Create payment records
+            const paymentRecords: any[] = [];
+
+            if (netRefund > 0) {
+              paymentRecords.push({
+                booking_id: booking.id,
+                tenant_id: profile.tenant_id,
+                amount: netRefund,
+                payment_type: "rimborso",
+                payment_date: paymentDate,
+                notes: `Rimborso cancellazione (${refundPercentage}% di €${totalPaid.toFixed(2)}, al netto spese gestione €${actualAdminFee.toFixed(2)})`,
+                created_by: user?.id ?? null,
+              });
+            }
+
+            if (actualAdminFee > 0) {
+              paymentRecords.push({
+                booking_id: booking.id,
+                tenant_id: profile.tenant_id,
+                amount: actualAdminFee,
+                payment_type: "manuale",
+                payment_date: paymentDate,
+                notes: `Quota gestione pratica cancellazione`,
+                created_by: user?.id ?? null,
+              });
+            }
+
+            if (paymentRecords.length > 0) {
+              const { error: payErr } = await supabase
+                .from("payments")
+                .insert(paymentRecords);
+              if (payErr) throw payErr;
+            }
+
+            if (totalPaid > 0) {
+              const refundInfo = refundPercentage > 0
+                ? `Rimborso: €${netRefund.toFixed(2)} (${refundPercentage}%)${actualAdminFee > 0 ? ` | Gestione pratica: €${actualAdminFee.toFixed(2)}` : ""}`
+                : `Nessun rimborso previsto${actualAdminFee > 0 ? ` | Gestione pratica: €${actualAdminFee.toFixed(2)}` : ""}`;
+              toast.info(refundInfo, { duration: 8000 });
+            }
+          }
+        }
+      }
+
       await transitionBooking.mutateAsync({ id: transitioning.id, newStatus: transitioning.newStatus });
       toast.success(`Prenotazione ${transitioning.bookingNumber}: ${transitioning.label}`);
     } catch (err: any) {
