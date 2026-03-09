@@ -51,8 +51,18 @@ export default function Utenti() {
 
   const canManageRoles = hasRole("admin") || hasRole("titolare");
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   const handleCreateUser = async () => {
     if (!form.email || !form.password || !form.full_name) return;
+    if (!emailRegex.test(form.email)) {
+      toast.error("Formato email non valido");
+      return;
+    }
+    if (form.password.length < 6) {
+      toast.error("La password deve avere almeno 6 caratteri");
+      return;
+    }
     await createUser.mutateAsync({
       ...form,
       tenant_id: form.tenant_id || null,
