@@ -50,6 +50,7 @@ export function AvailabilityCheckDialog() {
   const occupancyDays = tenantConfig?.occupancy_rule_days ?? 4;
   const totalSingole = tenantConfig?.num_singole ?? 0;
   const totalDoppie = tenantConfig?.num_doppie ?? 0;
+  const petType = tenantConfig?.pet_type as "gatti" | "cani" | "entrambi" | undefined;
 
   const rangeStart = useMemo(() => subDays(checkInDate, 5), [checkInDate]);
   const rangeEnd = useMemo(() => addDays(checkInDate, 5), [checkInDate]);
@@ -111,6 +112,7 @@ export function AvailabilityCheckDialog() {
           cageType={cageType}
           totalSingole={totalSingole}
           totalDoppie={totalDoppie}
+          petType={petType}
         />
 
         <OccupancyGrid
@@ -121,6 +123,7 @@ export function AvailabilityCheckDialog() {
           rangeStart={rangeStart}
           rangeEnd={rangeEnd}
           highlightDate={highlightDate}
+          petType={petType}
         />
       </DialogContent>
     </Dialog>
@@ -128,7 +131,7 @@ export function AvailabilityCheckDialog() {
 }
 
 function AvailabilityAlert({
-  bookings, occupancyDays, checkInDate, cageType, totalSingole, totalDoppie,
+  bookings, occupancyDays, checkInDate, cageType, totalSingole, totalDoppie, petType,
 }: {
   bookings: Booking[];
   occupancyDays: number;
@@ -136,8 +139,9 @@ function AvailabilityAlert({
   cageType: "singola" | "doppia";
   totalSingole: number;
   totalDoppie: number;
+  petType?: "gatti" | "cani" | "entrambi";
 }) {
-  const { bookingOccupancy } = useOccupancyData(bookings, occupancyDays);
+  const { bookingOccupancy } = useOccupancyData(bookings, occupancyDays, undefined, petType);
 
   const availability = useMemo(() => {
     const checkIn = new Date(checkInDate);

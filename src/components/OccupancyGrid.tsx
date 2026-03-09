@@ -25,6 +25,8 @@ interface Props {
   compact?: boolean;
   /** Date string (yyyy-MM-dd) to highlight as the check-in column */
   highlightDate?: string;
+  /** Tipo animale del tenant – per i cani l'occupazione copre tutto il soggiorno */
+  petType?: "gatti" | "cani" | "entrambi";
 }
 
 const ACTIVE_STATUSES = [
@@ -37,6 +39,7 @@ export function useOccupancyData(
   bookings: Booking[],
   occupancyDays: number,
   excludeBookingId?: string,
+  petType?: "gatti" | "cani" | "entrambi",
 ) {
   const relevantBookings = useMemo(() => {
     return bookings
@@ -49,14 +52,15 @@ export function useOccupancyData(
       const checkIn = parseISO(b.check_in_date);
       const checkOut = parseISO(b.check_out_date);
       const stayDays = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      const occDays = Math.min(occupancyDays, stayDays);
+      // Per i cani la casetta resta occupata per tutto il soggiorno
+      const occDays = petType === "cani" ? stayDays : Math.min(occupancyDays, stayDays);
       const occupiedDates = new Set<string>();
       for (let i = 0; i < occDays; i++) {
         occupiedDates.add(format(addDays(checkIn, i), "yyyy-MM-dd"));
       }
       return { booking: b, occupiedDates, stayStart: b.check_in_date, stayEnd: b.check_out_date };
     });
-  }, [relevantBookings, occupancyDays]);
+  }, [relevantBookings, occupancyDays, petType]);
 
   return { bookingOccupancy, relevantBookings };
 }
@@ -100,7 +104,7 @@ export function checkAvailability(
 
 export function OccupancyGrid({
   bookings, occupancyDays, totalSingole, totalDoppie,
-  rangeStart, rangeEnd, excludeBookingId, compact, highlightDate,
+  rangeStart, rangeEnd, excludeBookingId, compact, highlightDate, petType,
 }: Props) {
   const today = new Date();
 
@@ -109,7 +113,7 @@ export function OccupancyGrid({
     return eachDayOfInterval({ start: rangeStart, end: rangeEnd });
   }, [rangeStart, rangeEnd]);
 
-  const { bookingOccupancy } = useOccupancyData(bookings, occupancyDays, excludeBookingId);
+  const { bookingOccupancy } = useOccupancyData(bookings, occupancyDays, excludeBookingId, petType);
 
   const dailyTotals = useMemo(() => {
     const totals: Record<string, { singole: number; doppie: number }> = {};

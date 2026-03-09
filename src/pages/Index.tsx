@@ -55,7 +55,8 @@ export default function Index() {
   const { canRead, isOperatoreRestricted } = usePermissions();
   const pet = usePetLabels();
   const occupancyDays = tenantConfig?.occupancy_rule_days ?? 4;
-  const { bookingOccupancy } = useOccupancyData(bookings ?? [], occupancyDays);
+  const petType = tenantConfig?.pet_type as "gatti" | "cani" | "entrambi" | undefined;
+  const { bookingOccupancy } = useOccupancyData(bookings ?? [], occupancyDays, undefined, petType);
 
   const canSeeRevenue = canRead("dashboard_revenue");
 

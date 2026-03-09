@@ -19,6 +19,7 @@ export default function OccupazioneCasette() {
   const occupancyDays = tenantConfig?.occupancy_rule_days ?? 3;
   const totalSingole = tenantConfig?.num_singole ?? 0;
   const totalDoppie = tenantConfig?.num_doppie ?? 0;
+  const petType = tenantConfig?.pet_type as "gatti" | "cani" | "entrambi" | undefined;
 
   const setMonth = (offset: number) => {
     const newStart = new Date(rangeStart);
@@ -35,7 +36,7 @@ export default function OccupazioneCasette() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Occupazione Casette</h1>
           <p className="text-sm text-muted-foreground">
-            Visualizza l'occupazione per periodo · Regola occupazione: {occupancyDays} giorni
+            Visualizza l'occupazione per periodo{petType !== "cani" ? ` · Regola occupazione: ${occupancyDays} giorni` : " · Occupazione per intero soggiorno"}
           </p>
         </div>
 
@@ -76,12 +77,14 @@ export default function OccupazioneCasette() {
       <div className="flex items-center gap-4 text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-sm bg-primary/70" />
-          <span>Occupazione (regola {occupancyDays}gg)</span>
+          <span>{petType === "cani" ? "Occupazione (intero soggiorno)" : `Occupazione (regola ${occupancyDays}gg)`}</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm bg-primary/20" />
-          <span>Soggiorno (non occupa)</span>
-        </div>
+        {petType !== "cani" && (
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-sm bg-primary/20" />
+            <span>Soggiorno (non occupa)</span>
+          </div>
+        )}
         <span>Singole: {totalSingole} · Doppie: {totalDoppie}</span>
       </div>
 
@@ -95,6 +98,7 @@ export default function OccupazioneCasette() {
           totalDoppie={totalDoppie}
           rangeStart={rangeStart}
           rangeEnd={rangeEnd}
+          petType={petType}
         />
       )}
     </div>
