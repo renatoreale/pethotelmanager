@@ -90,6 +90,7 @@ export function GlobalPriceListsTab() {
     setIncludedKm(p.included_km || 0);
     setExtraKmCost(p.extra_km_cost || 0);
     setIsActive(p.is_active);
+    setPetType(p.pet_type || "gatti");
     setDialogOpen(true);
   };
 
