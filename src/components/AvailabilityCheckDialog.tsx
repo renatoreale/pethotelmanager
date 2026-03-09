@@ -215,6 +215,7 @@ function AvailabilityAlert({
         <XCircle className="h-4 w-4" />
       )}
       <AlertDescription className="ml-2 font-medium">
+        {label && <span className="mr-1">{label}:</span>}
         {isAvailable
           ? `Disponibile! ${availability.free} casett${availability.free === 1 ? "a" : "e"} ${cageType === "singola" ? "singol" + (availability.free === 1 ? "a" : "e") : "doppi" + (availability.free === 1 ? "a" : "e")} liber${availability.free === 1 ? "a" : "e"} nel periodo di occupazione.`
           : `Non disponibile. Tutte le ${availability.total} casette ${cageType === "singola" ? "singole" : "doppie"} sono occupate in almeno un giorno del periodo.`
