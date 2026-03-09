@@ -502,8 +502,8 @@ function UtentiTab() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleCreateUser} className="w-full mt-4">
-              Crea Utente
+            <Button onClick={handleCreateUser} className="w-full mt-4" disabled={createUser.isPending}>
+              {createUser.isPending ? "Creazione..." : "Crea Utente"}
             </Button>
           </div>
         </DialogContent>
