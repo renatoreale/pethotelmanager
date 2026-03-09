@@ -157,6 +157,9 @@ export function useAllUsers() {
           id: p.id,
           user_id: p.user_id,
           full_name: p.full_name,
+          phone: p.phone,
+          avatar_url: p.avatar_url,
+          email: null as string | null, // email not available from profiles
           active_tenant_id: p.tenant_id,
           tenant_roles: userRoles.map((r) => ({
             id: r.id,
