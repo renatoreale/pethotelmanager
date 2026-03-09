@@ -51,7 +51,7 @@ export function AppLayout() {
                       className="flex items-center justify-between"
                     >
                       <span>{tenant.name}</span>
-                      {tenant.id === activeTenant?.id && (
+                      {tenant.id === profile?.tenant_id && (
                         <Check className="h-4 w-4 text-primary" />
                       )}
                     </DropdownMenuItem>
