@@ -157,6 +157,7 @@ export function GlobalPriceListsTab() {
                   {priceLists.map((p) => (
                     <TableRow key={p.id}>
                       <TableCell className="font-medium">{p.name}</TableCell>
+                      <TableCell><Badge variant="outline">{PET_TYPE_LABELS[p.pet_type as string] ?? "—"}</Badge></TableCell>
                       <TableCell><Badge variant="outline">{TARIFF_TYPE_LABELS[p.tariff_type as TariffType] || p.tariff_type}</Badge></TableCell>
                       <TableCell>{p.season ? SEASON_OPTIONS.find(s => s.value === p.season)?.label || p.season : "-"}</TableCell>
                       <TableCell>€{p.price_per_day}</TableCell>
