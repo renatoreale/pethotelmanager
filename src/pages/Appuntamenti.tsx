@@ -58,6 +58,7 @@ export default function Appuntamenti() {
   const [editing, setEditing] = useState<AppointmentWithDetails | null>(null);
   const [editingCheckout, setEditingCheckout] = useState<AppointmentWithDetails | null>(null);
   const [creatingCheckout, setCreatingCheckout] = useState<CheckoutBookingData | null>(null);
+  const [editingCheckin, setEditingCheckin] = useState<AppointmentWithDetails | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("tutti");
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
