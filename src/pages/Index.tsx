@@ -110,6 +110,17 @@ export default function Index() {
     });
     const monthRevenue = monthPayments.reduce((s, p) => s + Number(p.amount), 0) - monthRefunds.reduce((s, p) => s + Number(p.amount), 0);
 
+    // Yearly revenue
+    const yearPayments = (allPayments ?? []).filter(p => {
+      const pDate = p.payment_date?.slice(0, 10);
+      return pDate >= yearStart && pDate <= yearEnd && p.payment_type !== "rimborso";
+    });
+    const yearRefunds = (allPayments ?? []).filter(p => {
+      const pDate = p.payment_date?.slice(0, 10);
+      return pDate >= yearStart && pDate <= yearEnd && p.payment_type === "rimborso";
+    });
+    const yearRevenue = yearPayments.reduce((s, p) => s + Number(p.amount), 0) - yearRefunds.reduce((s, p) => s + Number(p.amount), 0);
+
     // Bookings with activity on the selected date
     const dayBookings = bookings.filter(b =>
       !["cancellata", "rimborsata"].includes(b.status) &&
