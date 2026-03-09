@@ -664,7 +664,13 @@ function UtentiTab() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Telefono</Label>
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                placeholder="mario@example.com"
+              />
               <Input
                 value={editPhone}
                 onChange={(e) => setEditPhone(e.target.value)}
