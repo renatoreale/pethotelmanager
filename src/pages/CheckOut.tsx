@@ -142,9 +142,11 @@ export default function CheckOut() {
     return { newCoStr, originalDays, newDays, newTotal, calculatedTotal, dateChanged, originalTotal, extraDays, extraCost, extraTariffName, effectiveExtraCost };
   }, [confirmBooking, actualCheckOutDate, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs, manualExtraCost, manualTotal]);
 
+  const today = format(new Date(), "yyyy-MM-dd");
+
   const checkOutBookings = useMemo(() => {
     if (!bookings) return [];
-    let filtered = bookings.filter(b => CHECKOUT_STATUSES.includes(b.status));
+    let filtered = bookings.filter(b => CHECKOUT_STATUSES.includes(b.status) && b.check_out_date <= today);
     if (search.trim()) {
       const q = search.toLowerCase();
       filtered = filtered.filter(b => {
@@ -158,7 +160,7 @@ export default function CheckOut() {
       });
     }
     return filtered.sort((a, b) => a.check_out_date.localeCompare(b.check_out_date));
-  }, [bookings, search]);
+  }, [bookings, search, today]);
 
   const resetForm = () => {
     setAddPayment(false);
