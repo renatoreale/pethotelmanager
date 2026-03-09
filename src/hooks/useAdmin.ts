@@ -119,6 +119,9 @@ export interface UserWithProfile {
   id: string;
   user_id: string;
   full_name: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+  email: string | null;
   active_tenant_id: string | null;
   tenant_roles: TenantRole[];
 }
