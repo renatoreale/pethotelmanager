@@ -28,6 +28,7 @@ import {
   useAllTenants, useCreateTenant, useUpdateTenant, useDeleteTenant,
   useAllUsers, useCreateUser,
   useUpdateUserProfile, useUpdateUserEmail, useDeleteUser,
+  useAddTenantRole, useRemoveTenantRole,
   useRolePermissions, useBulkUpsertPermissions,
   RESOURCES, ROLES, type Tenant, type UserWithProfile, type RolePermission,
 } from "@/hooks/useAdmin";
@@ -235,6 +236,8 @@ function UtentiTab() {
   const updateProfile = useUpdateUserProfile();
   const updateEmail = useUpdateUserEmail();
   const deleteUser = useDeleteUser();
+  const addTenantRole = useAddTenantRole();
+  const removeTenantRole = useRemoveTenantRole();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserWithProfile | null>(null);
@@ -244,6 +247,7 @@ function UtentiTab() {
   const [editPhone, setEditPhone] = useState("");
   const [editActiveTenant, setEditActiveTenant] = useState("");
   const [editRole, setEditRole] = useState<AppRole>("operatore");
+  const [ceoTenantToAdd, setCeoTenantToAdd] = useState("");
 
   const [form, setForm] = useState({
     email: "", password: "", full_name: "", tenant_id: "", role: "operatore" as AppRole,
@@ -266,10 +270,12 @@ function UtentiTab() {
     setEditEmail(user.email || "");
     setEditPhone(user.phone || "");
     setEditActiveTenant(user.active_tenant_id || "");
-    // Get user's role from tenant_roles
     const primaryRole = user.tenant_roles[0]?.role || "operatore";
     setEditRole(primaryRole);
+    setCeoTenantToAdd("");
   };
+
+  const isCeoUser = editingUser && editingUser.tenant_roles.some(tr => tr.role === "ceo");
 
   const handleSaveEdit = async () => {
     if (!editingUser || !editName.trim()) return;
@@ -280,10 +286,21 @@ function UtentiTab() {
     if (editActiveTenant !== (editingUser.active_tenant_id || "")) {
       await supabase.from("profiles").update({ tenant_id: editActiveTenant || null }).eq("id", editingUser.id);
     }
-    // Update role if changed
-    if (editingUser.tenant_roles[0] && editRole !== editingUser.tenant_roles[0].role) {
+    if (!isCeoUser && editingUser.tenant_roles[0] && editRole !== editingUser.tenant_roles[0].role) {
       await supabase.from("user_roles").update({ role: editRole }).eq("id", editingUser.tenant_roles[0].id);
     }
+    setEditingUser(null);
+  };
+
+  const handleAddCeoTenant = async () => {
+    if (!editingUser || !ceoTenantToAdd) return;
+    await addTenantRole.mutateAsync({ userId: editingUser.user_id, tenantId: ceoTenantToAdd, role: "ceo" });
+    setCeoTenantToAdd("");
+    setEditingUser(null);
+  };
+
+  const handleRemoveCeoTenant = async (roleId: string) => {
+    await removeTenantRole.mutateAsync(roleId);
     setEditingUser(null);
   };
 
@@ -292,6 +309,10 @@ function UtentiTab() {
     await deleteUser.mutateAsync(deletingUser.user_id);
     setDeletingUser(null);
   };
+
+  const availableCeoTenants = tenants?.filter(t => 
+    !editingUser?.tenant_roles.some(tr => tr.tenant_id === t.id)
+  ) || [];
 
   return (
     <>
@@ -386,7 +407,7 @@ function UtentiTab() {
 
       {/* Dialog Modifica Utente */}
       <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Modifica Utente</DialogTitle>
             <DialogDescription>Modifica i dati dell'utente</DialogDescription>
@@ -395,20 +416,70 @@ function UtentiTab() {
             <div className="space-y-2"><Label>Nome Completo</Label><Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Mario Rossi" /></div>
             <div className="space-y-2"><Label>Email</Label><Input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} placeholder="mario@example.com" /></div>
             <div className="space-y-2"><Label>Telefono</Label><Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="+39 333 1234567" /></div>
-            <div className="space-y-2">
-              <Label>Pensione Attiva</Label>
-              <Select value={editActiveTenant} onValueChange={(val) => setEditActiveTenant(val)}>
-                <SelectTrigger><SelectValue placeholder="Nessuna pensione attiva" /></SelectTrigger>
-                <SelectContent>{tenants?.map((t) => (<SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>))}</SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Ruolo</Label>
-              <Select value={editRole} onValueChange={(val) => setEditRole(val as AppRole)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{ROLES.map((r) => (<SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>))}</SelectContent>
-              </Select>
-            </div>
+            
+            {!isCeoUser && (
+              <>
+                <div className="space-y-2">
+                  <Label>Pensione Attiva</Label>
+                  <Select value={editActiveTenant} onValueChange={(val) => setEditActiveTenant(val)}>
+                    <SelectTrigger><SelectValue placeholder="Nessuna pensione attiva" /></SelectTrigger>
+                    <SelectContent>{tenants?.map((t) => (<SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>))}</SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Ruolo</Label>
+                  <Select value={editRole} onValueChange={(val) => setEditRole(val as AppRole)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{ROLES.map((r) => (<SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>))}</SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
+
+            {/* CEO Multi-Tenant Management */}
+            {isCeoUser && (
+              <div className="space-y-3 border rounded-lg p-4 bg-muted/30">
+                <Label className="text-base font-semibold flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-primary" />
+                  Pensioni associate al CEO
+                </Label>
+                <div className="space-y-2">
+                  {editingUser?.tenant_roles.map((tr) => (
+                    <div key={tr.id} className="flex items-center justify-between bg-card rounded-md px-3 py-2 border">
+                      <span className="text-sm font-medium">{tr.tenant_name}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        disabled={editingUser.tenant_roles.length <= 1}
+                        onClick={() => handleRemoveCeoTenant(tr.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                  {editingUser?.tenant_roles.length === 0 && (
+                    <p className="text-sm text-muted-foreground italic">Nessuna pensione associata</p>
+                  )}
+                </div>
+                {availableCeoTenants.length > 0 && (
+                  <div className="flex gap-2 pt-1">
+                    <Select value={ceoTenantToAdd} onValueChange={setCeoTenantToAdd}>
+                      <SelectTrigger className="flex-1"><SelectValue placeholder="Aggiungi pensione..." /></SelectTrigger>
+                      <SelectContent>
+                        {availableCeoTenants.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button size="sm" onClick={handleAddCeoTenant} disabled={!ceoTenantToAdd || addTenantRole.isPending}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditingUser(null)}>Annulla</Button>
               <Button onClick={handleSaveEdit} disabled={updateProfile.isPending}>
