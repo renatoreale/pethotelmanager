@@ -89,6 +89,7 @@ export default function Prenotazioni() {
   const deleteBooking = useDeleteBooking();
   const updatePreventivo = useUpdatePreventivo();
   const { data: tenantConfig } = useTenantConfig();
+  const { user, profile } = useAuth();
 
   const stayCalcType = (tenantConfig as any)?.stay_calc_type ?? "notti";
   const countCheckinDay = (tenantConfig as any)?.count_checkin_day ?? true;
