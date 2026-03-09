@@ -85,6 +85,7 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
       dietary_notes: cat?.dietary_notes ?? "",
       behavioral_notes: cat?.behavioral_notes ?? "",
       needs_double_cage: cat?.needs_double_cage ?? false,
+      pet_type: cat?.pet_type ?? defaultPetType ?? "",
     },
   });
 
