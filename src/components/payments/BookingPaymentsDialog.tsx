@@ -38,7 +38,7 @@ export function BookingPaymentsDialog({ open, onOpenChange, booking }: BookingPa
   if (!booking) return null;
 
   const totalPaid = (payments ?? [])
-    .filter(p => p.payment_type !== "rimborso")
+    .filter(p => p.payment_type !== "rimborso" && p.payment_type !== "gestione_pratica")
     .reduce((s, p) => s + Number(p.amount), 0);
   const totalRefunded = (payments ?? [])
     .filter(p => p.payment_type === "rimborso")
