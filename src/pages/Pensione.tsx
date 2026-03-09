@@ -34,6 +34,7 @@ import {
   useAllPaymentMethods, useCreatePaymentMethod,
   useTogglePaymentMethod, useDeletePaymentMethod, useUpdatePaymentMethod,
 } from "@/hooks/usePayments";
+import { CancellationPolicyTab } from "@/components/pensione/CancellationPolicyTab";
 
 const DAYS = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
 
