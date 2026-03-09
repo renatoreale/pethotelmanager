@@ -19,7 +19,9 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Settings, Clock, Euro, CreditCard, Plus, Pencil, Trash2, Save } from "lucide-react";
+import { Settings, Clock, Euro, CreditCard, Plus, Pencil, Trash2, Save, RotateCcw } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -194,9 +196,12 @@ function SlotTab() {
   const { data: slots, isLoading } = useSlotConfigs();
   const upsertSlot = useUpsertSlotConfig();
   const deleteSlot = useDeleteSlotConfig();
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [deleting, setDeleting] = useState<any>(null);
+  const [resetConfirm, setResetConfirm] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const [dayOfWeek, setDayOfWeek] = useState<number | "all">(0);
   const [appointmentType, setAppointmentType] = useState("check_in");
@@ -268,6 +273,24 @@ function SlotTab() {
     setDeleting(null);
   };
 
+  const handleReset = async () => {
+    if (!profile?.tenant_id) return;
+    setResetting(true);
+    try {
+      // Delete all tenant slot configs
+      await supabase.from("slot_configs").delete().eq("tenant_id", profile.tenant_id);
+      // Copy global templates
+      await supabase.rpc("copy_global_templates_to_tenant", { _tenant_id: profile.tenant_id });
+      // Only invalidate slot-configs (the function copies all, but we only care about slots here)
+      queryClient.invalidateQueries({ queryKey: ["slot-configs"] });
+      toast.success("Slot ripristinati ai valori predefiniti");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nel ripristino");
+    }
+    setResetting(false);
+    setResetConfirm(false);
+  };
+
   return (
     <>
       <Card>
@@ -276,7 +299,12 @@ function SlotTab() {
             <CardTitle>Slot Appuntamenti</CardTitle>
             <CardDescription>Configura le fasce orarie per check-in e check-out</CardDescription>
           </div>
-          <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Nuovo Slot</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setResetConfirm(true)} disabled={resetting}>
+              <RotateCcw className="mr-2 h-4 w-4" /> Reset Predefiniti
+            </Button>
+            <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Nuovo Slot</Button>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -399,6 +427,23 @@ function SlotTab() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={resetConfirm} onOpenChange={setResetConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ripristinare gli slot predefiniti?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tutti gli slot attuali verranno eliminati e sostituiti con i valori predefiniti dal template globale. Questa azione non può essere annullata.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={handleReset} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Ripristina
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
@@ -409,9 +454,12 @@ function ListinoTab() {
   const { data: prices, isLoading } = usePriceLists();
   const upsertPrice = useUpsertPriceList();
   const deletePrice = useDeletePriceList();
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [deleting, setDeleting] = useState<any>(null);
+  const [resetConfirm, setResetConfirm] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   // Form state
   const [name, setName] = useState("");
@@ -510,6 +558,21 @@ function ListinoTab() {
     }
   };
 
+  const handleReset = async () => {
+    if (!profile?.tenant_id) return;
+    setResetting(true);
+    try {
+      await supabase.from("price_lists").delete().eq("tenant_id", profile.tenant_id);
+      await supabase.rpc("copy_global_templates_to_tenant", { _tenant_id: profile.tenant_id });
+      queryClient.invalidateQueries({ queryKey: ["price-lists"] });
+      toast.success("Listino ripristinato ai valori predefiniti");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nel ripristino");
+    }
+    setResetting(false);
+    setResetConfirm(false);
+  };
+
   return (
     <>
       <Card>
@@ -518,7 +581,12 @@ function ListinoTab() {
             <CardTitle>Listino Prezzi</CardTitle>
             <CardDescription>Gestisci tariffe stagionali e servizi extra</CardDescription>
           </div>
-          <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Nuova Tariffa</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setResetConfirm(true)} disabled={resetting}>
+              <RotateCcw className="mr-2 h-4 w-4" /> Reset Predefiniti
+            </Button>
+            <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Nuova Tariffa</Button>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -706,22 +774,43 @@ function ListinoTab() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={resetConfirm} onOpenChange={setResetConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ripristinare il listino predefinito?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tutte le tariffe attuali verranno eliminate e sostituite con i valori predefiniti dal template globale. Questa azione non può essere annullata.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={handleReset} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Ripristina
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
 
 // ── MODALITÀ PAGAMENTO TAB ──
 function PaymentMethodsTab() {
+  const { profile } = useAuth();
   const { data: methods, isLoading } = useAllPaymentMethods();
   const createMethod = useCreatePaymentMethod();
   const toggleMethod = useTogglePaymentMethod();
   const deleteMethod = useDeletePaymentMethod();
   const updateMethod = useUpdatePaymentMethod();
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [deleting, setDeleting] = useState<any>(null);
   const [editing, setEditing] = useState<any>(null);
   const [editName, setEditName] = useState("");
+  const [resetConfirm, setResetConfirm] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
@@ -769,6 +858,21 @@ function PaymentMethodsTab() {
     setDeleting(null);
   };
 
+  const handleReset = async () => {
+    if (!profile?.tenant_id) return;
+    setResetting(true);
+    try {
+      await supabase.from("payment_methods").delete().eq("tenant_id", profile.tenant_id);
+      await supabase.rpc("copy_global_templates_to_tenant", { _tenant_id: profile.tenant_id });
+      queryClient.invalidateQueries({ queryKey: ["payment-methods"] });
+      toast.success("Metodi di pagamento ripristinati ai valori predefiniti");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nel ripristino");
+    }
+    setResetting(false);
+    setResetConfirm(false);
+  };
+
   return (
     <>
       <Card>
@@ -777,9 +881,14 @@ function PaymentMethodsTab() {
             <CardTitle>Modalità di Pagamento</CardTitle>
             <CardDescription>Configura i metodi di pagamento accettati (es. Contanti, Bonifico, Carta)</CardDescription>
           </div>
-          <Button onClick={() => { setNewName(""); setDialogOpen(true); }}>
-            <Plus className="mr-2 h-4 w-4" /> Nuova Modalità
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setResetConfirm(true)} disabled={resetting}>
+              <RotateCcw className="mr-2 h-4 w-4" /> Reset Predefiniti
+            </Button>
+            <Button onClick={() => { setNewName(""); setDialogOpen(true); }}>
+              <Plus className="mr-2 h-4 w-4" /> Nuova Modalità
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -883,6 +992,23 @@ function PaymentMethodsTab() {
           <AlertDialogFooter>
             <AlertDialogCancel>Annulla</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Elimina</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={resetConfirm} onOpenChange={setResetConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ripristinare i metodi di pagamento predefiniti?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tutti i metodi attuali verranno eliminati e sostituiti con i valori predefiniti dal template globale. Questa azione non può essere annullata.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={handleReset} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Ripristina
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
