@@ -59,6 +59,8 @@ export default function Index() {
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [appointmentBooking, setAppointmentBooking] = useState<any>(null);
+  const missingApptRef = useRef<HTMLDivElement>(null);
 
   const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
   const isSelectedToday = isTodayFn(selectedDate);
