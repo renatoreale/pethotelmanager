@@ -62,6 +62,7 @@ export function GlobalPriceListsTab() {
   const [includedKm, setIncludedKm] = useState(0);
   const [extraKmCost, setExtraKmCost] = useState(0);
   const [isActive, setIsActive] = useState(true);
+  const [petType, setPetType] = useState<"gatti" | "cani">("gatti");
 
   const openNew = () => {
     setEditing(null);
