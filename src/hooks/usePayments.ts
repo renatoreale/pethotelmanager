@@ -89,11 +89,14 @@ export function useUpdatePaymentMethod() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("payment_methods")
         .update({ name })
-        .eq("id", id);
+        .eq("id", id)
+        .select()
+        .single();
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["payment-methods"] });
