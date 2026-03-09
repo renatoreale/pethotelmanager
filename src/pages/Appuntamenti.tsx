@@ -43,6 +43,7 @@ import { EditCheckoutDialog, type CheckoutBookingData } from "@/components/appoi
 import { EditCheckinDialog } from "@/components/appointments/EditCheckinDialog";
 import { EditBookingDatesDialog } from "@/components/appointments/EditBookingDatesDialog";
 import { CalendarGrid } from "@/components/appointments/CalendarGrid";
+import { CalendarLegend } from "@/components/appointments/CalendarLegend";
 import { useBookings } from "@/hooks/useBookings";
 
 type ViewMode = "giorno" | "settimana" | "mese" | "personalizzato";
@@ -332,16 +333,19 @@ export default function Appuntamenti() {
     // Calendar grid for week and month views (not during search)
     if ((viewMode === "settimana" || viewMode === "mese") && !hasSearch) {
       return (
-        <CalendarGrid
-          viewMode={viewMode}
-          selectedDate={selectedDate}
-          appointments={filteredAppointments}
-          onSelectDate={(d) => {
-            setSelectedDate(d);
-            setViewMode("giorno");
-          }}
-          onClickAppointment={handleCalendarApptClick}
-        />
+        <div className="space-y-3">
+          <CalendarLegend />
+          <CalendarGrid
+            viewMode={viewMode}
+            selectedDate={selectedDate}
+            appointments={filteredAppointments}
+            onSelectDate={(d) => {
+              setSelectedDate(d);
+              setViewMode("giorno");
+            }}
+            onClickAppointment={handleCalendarApptClick}
+          />
+        </div>
       );
     }
 
