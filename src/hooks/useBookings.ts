@@ -19,6 +19,7 @@ export interface Booking {
   updated_at: string;
   created_by: string | null;
   price_breakdown: any;
+  pet_type?: "gatti" | "cani" | "entrambi" | null;
   client?: {
     id: string;
     first_name: string;

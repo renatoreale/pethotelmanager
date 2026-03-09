@@ -43,6 +43,10 @@ export function useUpdateTenantConfig() {
       titolare_name?: string | null;
       logo_url?: string | null;
       pet_type?: "gatti" | "cani" | "entrambi";
+      num_singole_gatti?: number;
+      num_doppie_gatti?: number;
+      num_singole_cani?: number;
+      num_doppie_cani?: number;
     }) => {
       const { id, ...rest } = updates;
       const { data, error } = await supabase
