@@ -136,6 +136,9 @@ export function useTransitionBooking() {
       qc.invalidateQueries({ queryKey: ["appointments-all"] });
       qc.invalidateQueries({ queryKey: ["appointment-counts"] });
       qc.invalidateQueries({ queryKey: ["booking-appointments"] });
+      qc.invalidateQueries({ queryKey: ["booking-payments"] });
+      qc.invalidateQueries({ queryKey: ["payments-all"] });
+      qc.invalidateQueries({ queryKey: ["bookings-with-payments"] });
     },
   });
 }
