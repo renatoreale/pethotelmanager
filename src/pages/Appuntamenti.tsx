@@ -43,6 +43,7 @@ import { EditCheckoutDialog, type CheckoutBookingData } from "@/components/appoi
 import { EditCheckinDialog } from "@/components/appointments/EditCheckinDialog";
 import { EditBookingDatesDialog } from "@/components/appointments/EditBookingDatesDialog";
 import { CalendarGrid } from "@/components/appointments/CalendarGrid";
+import { CalendarLegend } from "@/components/appointments/CalendarLegend";
 import { useBookings } from "@/hooks/useBookings";
 
 type ViewMode = "giorno" | "settimana" | "mese" | "personalizzato";
