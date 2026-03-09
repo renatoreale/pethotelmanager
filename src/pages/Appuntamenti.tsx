@@ -63,6 +63,7 @@ export default function Appuntamenti() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("tutti");
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
+  const [editingBookingDates, setEditingBookingDates] = useState<any>(null);
 
   // Compute date range based on view mode
   const { startDate, endDate } = useMemo(() => {
