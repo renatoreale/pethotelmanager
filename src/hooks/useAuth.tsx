@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 type UserRole = "admin" | "ceo" | "titolare" | "manager" | "operatore";
 
@@ -36,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [userTenants, setUserTenants] = useState<UserTenant[]>([]);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -114,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const switchTenant = async (tenantId: string) => {
+  const switchTenant = useCallback(async (tenantId: string) => {
     if (!profile) return;
 
     const { error } = await supabase
@@ -128,9 +130,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setProfile({ ...profile, tenant_id: tenantId });
-    // Reload page to refresh all data for new tenant
-    window.location.reload();
-  };
+    // Invalidate all queries so they refetch with the new tenant context
+    queryClient.invalidateQueries();
+  }, [profile, queryClient]);
 
   const hasRole = (role: UserRole) => roles.includes(role);
 
