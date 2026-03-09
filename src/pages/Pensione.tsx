@@ -713,6 +713,7 @@ function ListinoTab() {
     setValidFrom("");
     setValidTo("");
     setActive(true);
+    setPetType(tenantPetType === "cani" ? "cani" : "gatti");
     setDialogOpen(true);
   };
 
