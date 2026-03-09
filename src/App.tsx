@@ -25,6 +25,7 @@ import TemplateEmail from "./pages/TemplateEmail";
 import Pensione from "./pages/Pensione";
 import NotFound from "./pages/NotFound";
 import RegistroGatti from "./pages/RegistroGatti";
+import Presenze from "./pages/Presenze";
 import OccupazioneCasette from "./pages/OccupazioneCasette";
 import Admin from "./pages/Admin";
 
