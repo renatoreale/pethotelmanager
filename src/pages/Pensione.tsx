@@ -278,6 +278,7 @@ function CasetteTab() {
   const updateConfig = useUpdateTenantConfig();
   const [singole, setSingole] = useState<number | null>(null);
   const [doppie, setDoppie] = useState<number | null>(null);
+  const [maxCats, setMaxCats] = useState<number | null>(null);
   const [ruleDays, setRuleDays] = useState<number | null>(null);
   const [stayCalcType, setStayCalcType] = useState<string | null>(null);
   const [countCheckinDay, setCountCheckinDay] = useState<boolean | null>(null);
@@ -285,6 +286,7 @@ function CasetteTab() {
 
   const s = singole ?? config?.num_singole ?? 0;
   const d = doppie ?? config?.num_doppie ?? 0;
+  const mc = maxCats ?? (config as any)?.max_cats ?? 0;
   const r = ruleDays ?? config?.occupancy_rule_days ?? 4;
   const sct = stayCalcType ?? (config as any)?.stay_calc_type ?? "notti";
   const cid = countCheckinDay ?? (config as any)?.count_checkin_day ?? false;
