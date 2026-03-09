@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, FileText, CalendarCheck, Calendar, LogIn, LogOut,
   CreditCard, Users, Cat, ClipboardList, Shield, Mail, Building2,
-  Power, Grid3X3, Settings2,
+  Power, Grid3X3, Settings2, PawPrint,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -34,6 +34,7 @@ const mainNav: NavItem[] = [
 const registryNav: NavItem[] = [
   { title: "Clienti", url: "/clienti", icon: Users, resource: "clienti" },
   { title: "Gatti", url: "/gatti", icon: Cat, resource: "gatti" },
+  { title: "Presenze", url: "/presenze", icon: PawPrint, resource: "presenze" },
   { title: "Registro Gatti", url: "/registro-gatti", icon: ClipboardList, resource: "registro-gatti" },
 ];
 

@@ -25,6 +25,7 @@ import TemplateEmail from "./pages/TemplateEmail";
 import Pensione from "./pages/Pensione";
 import NotFound from "./pages/NotFound";
 import RegistroGatti from "./pages/RegistroGatti";
+import Presenze from "./pages/Presenze";
 import OccupazioneCasette from "./pages/OccupazioneCasette";
 import Admin from "./pages/Admin";
 
@@ -62,6 +63,7 @@ const App = () => (
               <Route path="/clienti" element={<Clienti />} />
               <Route path="/gatti" element={<Gatti />} />
               <Route path="/registro-gatti" element={<RegistroGatti />} />
+              <Route path="/presenze" element={<Presenze />} />
               <Route path="/planning" element={<Planning />} />
               <Route path="/utenti" element={<Utenti />} />
               <Route path="/template-email" element={<TemplateEmail />} />
