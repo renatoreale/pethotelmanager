@@ -93,6 +93,7 @@ function AnagraficaTab() {
   const [partitaIva, setPartitaIva] = useState<string | null>(null);
   const [pec, setPec] = useState<string | null>(null);
   const [titolareName, setTitolareName] = useState<string | null>(null);
+  const [petType, setPetType] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
