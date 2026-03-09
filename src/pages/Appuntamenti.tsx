@@ -499,7 +499,7 @@ export default function Appuntamenti() {
       <AutocompleteSearch
         value={search}
         onChange={setSearch}
-        placeholder="Cerca per n° prenotazione, cliente, gatto, email, telefono..."
+        placeholder="Cerca per n° prenotazione, cliente, pet, email, telefono..."
         className="max-w-sm"
       />
 
