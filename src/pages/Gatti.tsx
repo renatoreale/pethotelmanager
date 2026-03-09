@@ -91,7 +91,7 @@ export default function Gatti() {
             <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
           ) : !cats?.length ? (
             <div className="py-12 text-center text-muted-foreground">
-              {search ? "Nessun risultato" : "Nessun gatto registrato"}
+              {search ? "Nessun risultato" : `Nessun ${pet.singular} registrato`}
             </div>
           ) : (
             <div className="rounded-md border">
