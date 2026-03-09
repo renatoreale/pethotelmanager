@@ -192,7 +192,7 @@ export default function Index() {
     catsInStructure: 0, singoleOccupied: 0, doppieOccupied: 0,
     activeBookings: 0, checkInsToday: 0, checkOutsToday: 0,
     checkInsTomorrow: 0, checkOutsTomorrow: 0,
-    monthRevenue: 0, yearRevenue: 0, dayBookings: [], expiringPreventivi: 0, missingAppointment: [] as any[],
+    monthRevenue: 0, yearRevenue: 0, dayBookings: [], expiringPreventivi: 0, missingAppointment: [] as any[], missingCheckOutAppt: [] as any[],
   };
 
   // Build KPI cards based on permissions
