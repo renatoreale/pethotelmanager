@@ -52,7 +52,7 @@ export default function Gatti() {
     if (!deletingCat) return;
     try {
       await deleteCat.mutateAsync(deletingCat.id);
-      toast.success("Gatto eliminato");
+      toast.success(`${pet.singularCap} eliminato`);
     } catch (err: any) {
       toast.error(err.message || "Errore nell'eliminazione");
     }
