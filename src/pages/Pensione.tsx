@@ -360,11 +360,13 @@ function CasetteTab() {
             <Input id="maxCats" type="number" min={0} value={mc} onChange={(e) => setMaxCats(Number(e.target.value))} />
             <p className="text-xs text-muted-foreground">Numero massimo di pets ospitabili</p>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="rule">Giorni occupazione minima</Label>
-            <Input id="rule" type="number" min={1} max={30} value={r} onChange={(e) => setRuleDays(Number(e.target.value))} />
-            <p className="text-xs text-muted-foreground">Check-in occupa per N giorni</p>
-          </div>
+          {config?.pet_type !== "cani" && (
+            <div className="space-y-2">
+              <Label htmlFor="rule">Giorni occupazione minima</Label>
+              <Input id="rule" type="number" min={1} max={30} value={r} onChange={(e) => setRuleDays(Number(e.target.value))} />
+              <p className="text-xs text-muted-foreground">Check-in occupa per N giorni (solo per gatti)</p>
+            </div>
+          )}
         </div>
 
         {/* Stay calculation config */}
