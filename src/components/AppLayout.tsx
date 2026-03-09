@@ -4,6 +4,7 @@ import { Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAllTenants } from "@/hooks/useAdmin";
+import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import { Building2, ChevronDown, Check } from "lucide-react";
 import {
   DropdownMenu,
@@ -25,6 +26,7 @@ export function AppLayout() {
   const { profile, activeTenant, userTenants, switchTenant } = useAuth();
   const { isAdmin, isManager, isTitolare } = usePermissions();
   const { data: allTenants } = useAllTenants();
+  const { data: tenantConfig } = useTenantConfig();
 
   const { isCeo } = usePermissions();
   const tenantOptions = isAdmin
@@ -35,9 +37,8 @@ export function AppLayout() {
   const showTenantSwitcher = tenantOptions.length > 1 && (isAdmin || isCeo || isTitolare);
   const currentTenant = tenantOptions.find(t => t.id === profile?.tenant_id) || activeTenant;
 
-  // For logo display, find full tenant data from allTenants if available
-  const currentTenantFull = allTenants?.find(t => t.id === profile?.tenant_id);
-  const currentLogoUrl = currentTenantFull?.logo_url || null;
+  // Use tenantConfig (available to all roles) as primary source, fallback to allTenants for admin
+  const currentLogoUrl = tenantConfig?.logo_url || allTenants?.find(t => t.id === profile?.tenant_id)?.logo_url || null;
 
   return (
     <SidebarProvider>
