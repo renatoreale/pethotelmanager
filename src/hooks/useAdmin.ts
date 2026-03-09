@@ -119,6 +119,9 @@ export interface UserWithProfile {
   id: string;
   user_id: string;
   full_name: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+  email: string | null;
   active_tenant_id: string | null;
   tenant_roles: TenantRole[];
 }
@@ -154,6 +157,9 @@ export function useAllUsers() {
           id: p.id,
           user_id: p.user_id,
           full_name: p.full_name,
+          phone: p.phone,
+          avatar_url: p.avatar_url,
+          email: null as string | null, // email not available from profiles
           active_tenant_id: p.tenant_id,
           tenant_roles: userRoles.map((r) => ({
             id: r.id,
@@ -437,10 +443,19 @@ export function useCreateUser() {
 export function useUpdateUserProfile() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ profileId, full_name }: { profileId: string; full_name: string }) => {
+    mutationFn: async ({ profileId, full_name, phone, avatar_url }: { 
+      profileId: string; 
+      full_name: string;
+      phone?: string | null;
+      avatar_url?: string | null;
+    }) => {
+      const updates: Record<string, any> = { full_name };
+      if (phone !== undefined) updates.phone = phone;
+      if (avatar_url !== undefined) updates.avatar_url = avatar_url;
+      
       const { error } = await supabase
         .from("profiles")
-        .update({ full_name })
+        .update(updates)
         .eq("id", profileId);
       if (error) throw error;
     },

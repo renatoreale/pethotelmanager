@@ -21,6 +21,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Building2, Users, ShieldCheck, Plus, Pencil, Trash2, Save } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Database } from "@/integrations/supabase/types";
 import {
@@ -314,6 +315,8 @@ function UtentiTab() {
   const [editingUser, setEditingUser] = useState<UserWithProfile | null>(null);
   const [deletingUser, setDeletingUser] = useState<UserWithProfile | null>(null);
   const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editActiveTenant, setEditActiveTenant] = useState("");
   const [addRoleOpen, setAddRoleOpen] = useState<UserWithProfile | null>(null);
   
   const [form, setForm] = useState({
@@ -360,14 +363,29 @@ function UtentiTab() {
   const openEdit = (user: UserWithProfile) => {
     setEditingUser(user);
     setEditName(user.full_name || "");
+    setEditPhone(user.phone || "");
+    setEditActiveTenant(user.active_tenant_id || "");
   };
 
   const handleSaveEdit = async () => {
     if (!editingUser || !editName.trim()) return;
+    
+    // Update profile fields
     await updateProfile.mutateAsync({
       profileId: editingUser.id,
       full_name: editName.trim(),
+      phone: editPhone.trim() || null,
     });
+    
+    // Update active tenant if changed
+    if (editActiveTenant !== (editingUser.active_tenant_id || "")) {
+      const setActiveTenantFn = supabase
+        .from("profiles")
+        .update({ tenant_id: editActiveTenant || null })
+        .eq("id", editingUser.id);
+      await setActiveTenantFn;
+    }
+    
     setEditingUser(null);
   };
 
@@ -614,13 +632,13 @@ function UtentiTab() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Modifica Nome Utente */}
+      {/* Dialog Modifica Utente */}
       <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Modifica Utente</DialogTitle>
             <DialogDescription>
-              Modifica il nome dell'utente
+              Modifica i dati dell'utente
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -631,6 +649,32 @@ function UtentiTab() {
                 onChange={(e) => setEditName(e.target.value)}
                 placeholder="Mario Rossi"
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Telefono</Label>
+              <Input
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                placeholder="+39 333 1234567"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Pensione Attiva</Label>
+              <Select
+                value={editActiveTenant}
+                onValueChange={(val) => setEditActiveTenant(val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Nessuna pensione attiva" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tenants?.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditingUser(null)}>Annulla</Button>

@@ -22,28 +22,29 @@ export function useUsers() {
   const { data: users, isLoading } = useQuery({
     queryKey: ["users", profile?.tenant_id],
     queryFn: async () => {
-      let query = supabase.from("profiles").select("*");
-      
-      if (profile?.tenant_id) {
-        query = query.eq("tenant_id", profile.tenant_id);
-      }
-      
-      const { data: profiles, error: profilesError } = await query;
-      if (profilesError) throw profilesError;
+      if (!profile?.tenant_id) return [];
 
-      if (!profiles || profiles.length === 0) return [];
-
-      const userIds = profiles.map(p => p.user_id);
-      
-      const { data: roles, error: rolesError } = await supabase
+      // First get user_ids that have a role for this tenant
+      const { data: tenantRoles, error: rolesError } = await supabase
         .from("user_roles")
         .select("*")
-        .in("user_id", userIds);
-        
+        .eq("tenant_id", profile.tenant_id);
       if (rolesError) throw rolesError;
 
-      return profiles.map(p => {
-        const userRole = roles?.find(r => r.user_id === p.user_id);
+      if (!tenantRoles || tenantRoles.length === 0) return [];
+
+      const userIds = [...new Set(tenantRoles.map(r => r.user_id))];
+
+      // Get profiles for these users
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("user_id", userIds);
+      if (profilesError) throw profilesError;
+
+      return (profiles || []).map(p => {
+        // Find the role for this tenant specifically
+        const userRole = tenantRoles.find(r => r.user_id === p.user_id);
         return {
           id: p.id,
           user_id: p.user_id,
@@ -54,7 +55,7 @@ export function useUsers() {
         } as UserWithRole;
       });
     },
-    enabled: !!profile,
+    enabled: !!profile?.tenant_id,
   });
 
   const assignRole = useMutation({
