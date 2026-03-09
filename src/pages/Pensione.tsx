@@ -153,6 +153,7 @@ function AnagraficaTab() {
         partita_iva: currentPartitaIva || null,
         pec: currentPec || null,
         titolare_name: currentTitolareName || null,
+        pet_type: currentPetType as "gatti" | "cani" | "entrambi",
       });
       toast.success("Anagrafica salvata");
       setName(null); setEmail(null); setPhone(null); setAddress(null);
