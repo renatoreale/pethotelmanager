@@ -134,6 +134,15 @@ export default function Index() {
     const soonStr = format(soonDate, "yyyy-MM-dd");
     const expiringPreventivi = bookings.filter(b => b.status === "preventivo" && b.check_in_date >= selectedDateStr && b.check_in_date <= soonStr);
 
+    // Confirmed bookings with check-in in next 4 days but no appointment IN scheduled
+    const soon4Date = format(addDays(new Date(), 4), "yyyy-MM-dd");
+    const missingAppointment = bookings.filter(b => {
+      if (b.status !== "confermata") return false;
+      if (b.check_in_date < todayStr || b.check_in_date > soon4Date) return false;
+      const hasCheckInAppt = (b.appointments ?? []).some((a: any) => a.appointment_type === "check_in");
+      return !hasCheckInAppt;
+    });
+
     return {
       catsInStructure,
       singoleOccupied,
@@ -147,6 +156,7 @@ export default function Index() {
       yearRevenue,
       dayBookings,
       expiringPreventivi: expiringPreventivi.length,
+      missingAppointment,
     };
   }, [bookings, allPayments, bookingOccupancy, selectedDateStr, monthStart, monthEnd, yearStart, yearEnd, todayStr, tomorrowStr]);
 
@@ -169,7 +179,7 @@ export default function Index() {
     catsInStructure: 0, singoleOccupied: 0, doppieOccupied: 0,
     activeBookings: 0, checkInsToday: 0, checkOutsToday: 0,
     checkInsTomorrow: 0, checkOutsTomorrow: 0,
-    monthRevenue: 0, yearRevenue: 0, dayBookings: [], expiringPreventivi: 0,
+    monthRevenue: 0, yearRevenue: 0, dayBookings: [], expiringPreventivi: 0, missingAppointment: [] as any[],
   };
 
   // Build KPI cards based on permissions
@@ -387,6 +397,38 @@ export default function Index() {
                 })}
               </div>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Missing appointment alert */}
+      {!isOperatoreRestricted && s.missingAppointment.length > 0 && (
+        <Card className="border-none shadow-sm border-l-4 border-l-destructive">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Appuntamento mancante — {s.missingAppointment.length} prenotazion{s.missingAppointment.length === 1 ? "e" : "i"}
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Check-in previsto tra oggi e i prossimi 4 giorni senza appuntamento fissato
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {s.missingAppointment.map((b: any) => {
+              const clientName = b.client ? `${b.client.first_name} ${b.client.last_name}` : "—";
+              const catNames = (b.booking_cats ?? []).map((bc: any) => bc.cat?.name).filter(Boolean).join(", ") || "—";
+              return (
+                <div key={b.id} className="flex items-center justify-between py-1.5 border-b last:border-0">
+                  <div>
+                    <p className="text-sm font-medium">{clientName}</p>
+                    <p className="text-xs text-muted-foreground">{catNames} · {b.booking_number}</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    Check-in: {format(new Date(b.check_in_date + "T00:00:00"), "dd MMM", { locale: it })}
+                  </span>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
       )}
