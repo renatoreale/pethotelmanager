@@ -1059,13 +1059,17 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          logo_url: string | null
           name: string
           num_doppie: number
           num_singole: number
           occupancy_rule_days: number
+          partita_iva: string | null
+          pec: string | null
           phone: string | null
           slug: string
           stay_calc_type: string
+          titolare_name: string | null
           updated_at: string
         }
         Insert: {
@@ -1075,13 +1079,17 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          logo_url?: string | null
           name: string
           num_doppie?: number
           num_singole?: number
           occupancy_rule_days?: number
+          partita_iva?: string | null
+          pec?: string | null
           phone?: string | null
           slug: string
           stay_calc_type?: string
+          titolare_name?: string | null
           updated_at?: string
         }
         Update: {
@@ -1091,13 +1099,17 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          logo_url?: string | null
           name?: string
           num_doppie?: number
           num_singole?: number
           occupancy_rule_days?: number
+          partita_iva?: string | null
+          pec?: string | null
           phone?: string | null
           slug?: string
           stay_calc_type?: string
+          titolare_name?: string | null
           updated_at?: string
         }
         Relationships: []
