@@ -131,7 +131,7 @@ export function AvailabilityCheckDialog() {
 }
 
 function AvailabilityAlert({
-  bookings, occupancyDays, checkInDate, cageType, totalSingole, totalDoppie,
+  bookings, occupancyDays, checkInDate, cageType, totalSingole, totalDoppie, petType,
 }: {
   bookings: Booking[];
   occupancyDays: number;
@@ -139,8 +139,9 @@ function AvailabilityAlert({
   cageType: "singola" | "doppia";
   totalSingole: number;
   totalDoppie: number;
+  petType?: "gatti" | "cani" | "entrambi";
 }) {
-  const { bookingOccupancy } = useOccupancyData(bookings, occupancyDays);
+  const { bookingOccupancy } = useOccupancyData(bookings, occupancyDays, undefined, petType);
 
   const availability = useMemo(() => {
     const checkIn = new Date(checkInDate);
