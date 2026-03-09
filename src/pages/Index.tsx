@@ -176,6 +176,7 @@ export default function Index() {
 
   const numSingole = tenantConfig?.num_singole ?? 0;
   const numDoppie = tenantConfig?.num_doppie ?? 0;
+  const maxCats = (tenantConfig as any)?.max_cats ?? 0;
   const totalSlots = numSingole + numDoppie;
 
   if (loadingBookings) {
