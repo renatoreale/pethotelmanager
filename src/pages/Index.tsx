@@ -341,7 +341,7 @@ export default function Index() {
 
       {/* Operatore: Show tomorrow's check-in/out */}
       {isOperatoreRestricted && (
-        <Card className="border-none shadow-sm">
+        <Card className="border shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Domani</CardTitle>
           </CardHeader>
