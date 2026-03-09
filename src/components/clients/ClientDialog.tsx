@@ -529,7 +529,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                 Annulla
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? "Salvataggio..." : "Salva Cliente & Gatti"}
+                {saving ? "Salvataggio..." : `Salva Cliente & ${pet.pluralCap}`}
               </Button>
             </div>
           </form>
