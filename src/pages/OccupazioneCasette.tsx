@@ -77,12 +77,14 @@ export default function OccupazioneCasette() {
       <div className="flex items-center gap-4 text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-sm bg-primary/70" />
-          <span>Occupazione (regola {occupancyDays}gg)</span>
+          <span>{petType === "cani" ? "Occupazione (intero soggiorno)" : `Occupazione (regola ${occupancyDays}gg)`}</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm bg-primary/20" />
-          <span>Soggiorno (non occupa)</span>
-        </div>
+        {petType !== "cani" && (
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-sm bg-primary/20" />
+            <span>Soggiorno (non occupa)</span>
+          </div>
+        )}
         <span>Singole: {totalSingole} · Doppie: {totalDoppie}</span>
       </div>
 
