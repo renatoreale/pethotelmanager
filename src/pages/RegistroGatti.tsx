@@ -109,6 +109,7 @@ export default function RegistroGatti() {
           <Table>
             <TableHeader>
              <TableRow>
+                {isEntrambi && <TableHead>Tipo</TableHead>}
                 <TableHead>{pet.singularCap}</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Microchip</TableHead>
