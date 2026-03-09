@@ -108,10 +108,10 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
 
       if (isEditing && cat) {
         await updateCat.mutateAsync({ id: cat.id, ...payload });
-        toast.success("Gatto aggiornato");
+        toast.success(`${pet.singularCap} aggiornato`);
       } else {
         await createCat.mutateAsync(payload);
-        toast.success("Gatto aggiunto");
+        toast.success(`${pet.singularCap} aggiunto`);
       }
       onOpenChange(false);
       form.reset();
