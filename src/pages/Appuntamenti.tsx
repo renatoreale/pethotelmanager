@@ -292,7 +292,7 @@ export default function Appuntamenti() {
         <TableHead className="w-[80px]">Orario</TableHead>
         <TableHead className="w-[80px]">Tipo</TableHead>
         <TableHead>Cliente</TableHead>
-        <TableHead>Gatti</TableHead>
+        <TableHead>Pets</TableHead>
         <TableHead>N° Prenotazione</TableHead>
         <TableHead>Stato</TableHead>
         <TableHead className="w-[100px]">Confermato</TableHead>
