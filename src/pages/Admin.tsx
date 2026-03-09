@@ -632,13 +632,13 @@ function UtentiTab() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Modifica Nome Utente */}
+      {/* Dialog Modifica Utente */}
       <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Modifica Utente</DialogTitle>
             <DialogDescription>
-              Modifica il nome dell'utente
+              Modifica i dati dell'utente
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -649,6 +649,32 @@ function UtentiTab() {
                 onChange={(e) => setEditName(e.target.value)}
                 placeholder="Mario Rossi"
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Telefono</Label>
+              <Input
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                placeholder="+39 333 1234567"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Pensione Attiva</Label>
+              <Select
+                value={editActiveTenant}
+                onValueChange={(val) => setEditActiveTenant(val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Nessuna pensione attiva" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tenants?.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditingUser(null)}>Annulla</Button>
