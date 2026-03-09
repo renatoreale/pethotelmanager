@@ -22,9 +22,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, Pencil, Trash2, Cat as CatIcon } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Cat as CatIcon, Dog, PawPrint } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { usePetLabels } from "@/hooks/usePetLabels";
 
 export default function Gatti() {
   const [search, setSearch] = useState("");
@@ -34,6 +35,8 @@ export default function Gatti() {
 
   const { data: cats, isLoading } = useCats(undefined, search);
   const deleteCat = useDeleteCat();
+  const pet = usePetLabels();
+  const PetIcon = pet.iconName === "Cat" ? CatIcon : pet.iconName === "Dog" ? Dog : PawPrint;
 
   const handleEdit = (cat: any) => {
     setEditingCat(cat);
@@ -49,7 +52,7 @@ export default function Gatti() {
     if (!deletingCat) return;
     try {
       await deleteCat.mutateAsync(deletingCat.id);
-      toast.success("Gatto eliminato");
+      toast.success(`${pet.singularCap} eliminato`);
     } catch (err: any) {
       toast.error(err.message || "Errore nell'eliminazione");
     }
@@ -60,13 +63,13 @@ export default function Gatti() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Gatti</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{pet.pluralCap}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Anagrafica felini · {cats?.length ?? 0} registrati
+            {pet.registrySubtitle} · {cats?.length ?? 0} registrati
           </p>
         </div>
         <Button onClick={handleNew}>
-          <Plus className="mr-2 h-4 w-4" /> Nuovo Gatto
+          <Plus className="mr-2 h-4 w-4" /> Nuovo {pet.singularCap}
         </Button>
       </div>
 
@@ -88,7 +91,7 @@ export default function Gatti() {
             <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
           ) : !cats?.length ? (
             <div className="py-12 text-center text-muted-foreground">
-              {search ? "Nessun risultato" : "Nessun gatto registrato"}
+              {search ? "Nessun risultato" : `Nessun ${pet.singular} registrato`}
             </div>
           ) : (
             <div className="rounded-md border">
@@ -110,7 +113,7 @@ export default function Gatti() {
                     <TableRow key={cat.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
-                          <CatIcon className="h-4 w-4 text-primary shrink-0" />
+                          <PetIcon className="h-4 w-4 text-primary shrink-0" />
                           {cat.name}
                         </div>
                       </TableCell>
@@ -165,7 +168,7 @@ export default function Gatti() {
       <AlertDialog open={!!deletingCat} onOpenChange={() => setDeletingCat(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminare il gatto?</AlertDialogTitle>
+            <AlertDialogTitle>Eliminare {pet.articleSingular}?</AlertDialogTitle>
             <AlertDialogDescription>
               {deletingCat && `Stai per eliminare ${deletingCat.name}. Questa azione non può essere annullata.`}
             </AlertDialogDescription>

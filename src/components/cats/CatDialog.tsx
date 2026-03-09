@@ -32,6 +32,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useCreateCat, useUpdateCat, type Cat } from "@/hooks/useCats";
 import { useClients } from "@/hooks/useClients";
+import { usePetLabels } from "@/hooks/usePetLabels";
 
 const catSchema = z.object({
   name: z.string().trim().min(1, "Nome obbligatorio").max(100),
@@ -63,6 +64,7 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
   const createCat = useCreateCat();
   const updateCat = useUpdateCat();
   const { data: clients } = useClients();
+  const pet = usePetLabels();
   const isEditing = !!cat;
 
   const form = useForm<CatFormValues>({
@@ -106,10 +108,10 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
 
       if (isEditing && cat) {
         await updateCat.mutateAsync({ id: cat.id, ...payload });
-        toast.success("Gatto aggiornato");
+        toast.success(`${pet.singularCap} aggiornato`);
       } else {
         await createCat.mutateAsync(payload);
-        toast.success("Gatto aggiunto");
+        toast.success(`${pet.singularCap} aggiunto`);
       }
       onOpenChange(false);
       form.reset();
@@ -123,7 +125,7 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif">
-            {isEditing ? "Modifica Gatto" : "Nuovo Gatto"}
+            {isEditing ? `Modifica ${pet.singularCap}` : `Nuovo ${pet.singularCap}`}
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>

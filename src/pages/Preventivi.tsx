@@ -134,7 +134,7 @@ export default function Preventivi() {
                   <TableRow>
                     <TableHead>N° Preventivo</TableHead>
                     <TableHead>Cliente</TableHead>
-                    <TableHead>Gatti</TableHead>
+                    <TableHead>Pets</TableHead>
                     <TableHead>Casetta</TableHead>
                     <TableHead>Check-in</TableHead>
                     <TableHead>Check-out</TableHead>

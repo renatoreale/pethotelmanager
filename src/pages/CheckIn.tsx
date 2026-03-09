@@ -347,14 +347,14 @@ export default function CheckIn() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Check-in</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Accettazione gatti in struttura. Seleziona una prenotazione per effettuare il check-in.
+          Accettazione pets in struttura. Seleziona una prenotazione per effettuare il check-in.
         </p>
       </div>
 
       <AutocompleteSearch
         value={search}
         onChange={setSearch}
-        placeholder="Cerca cliente, gatto o numero prenotazione..."
+        placeholder="Cerca cliente, pet o numero prenotazione..."
         className="max-w-sm"
       />
 
@@ -688,7 +688,7 @@ export default function CheckIn() {
               )}
 
               <p className="text-xs text-muted-foreground">
-                I gatti verranno automaticamente registrati nel Registro Gatti.
+                I pets verranno automaticamente registrati nel Registro Pets.
               </p>
             </div>
           )}

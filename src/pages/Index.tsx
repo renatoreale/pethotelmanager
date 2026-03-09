@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOccupancyData } from "@/components/OccupancyGrid";
 import { Button } from "@/components/ui/button";
-import { Cat, CalendarCheck, LogIn, LogOut, CreditCard, AlertTriangle, CalendarIcon, AlertCircle, Calendar as CalendarIconAlt } from "lucide-react";
+import { Cat, Dog, CalendarCheck, LogIn, LogOut, CreditCard, AlertTriangle, CalendarIcon, AlertCircle, Calendar as CalendarIconAlt, PawPrint } from "lucide-react";
 import { AvailabilityCheckDialog } from "@/components/AvailabilityCheckDialog";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { Progress } from "@/components/ui/progress";
@@ -16,6 +16,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { format, parseISO, startOfMonth, endOfMonth, startOfYear, endOfYear, isToday as isTodayFn, addDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { usePetLabels } from "@/hooks/usePetLabels";
 
 const STATUS_LABELS: Record<string, string> = {
   preventivo: "Preventivo",
@@ -52,6 +53,7 @@ export default function Index() {
   const { data: tenantConfig } = useTenantConfig();
   const { data: allPayments } = useAllPayments();
   const { canRead, isOperatoreRestricted } = usePermissions();
+  const pet = usePetLabels();
   const occupancyDays = tenantConfig?.occupancy_rule_days ?? 4;
   const { bookingOccupancy } = useOccupancyData(bookings ?? [], occupancyDays);
 
@@ -198,12 +200,13 @@ export default function Index() {
   };
 
   // Build KPI cards based on permissions
+  const PetIcon = pet.iconName === "Cat" ? Cat : pet.iconName === "Dog" ? Dog : PawPrint;
   const kpis = [
     {
-      title: "Gatti in struttura",
+      title: `${pet.pluralCap} in struttura`,
       value: String(s.catsInStructure),
       subtitle: maxCats > 0 ? `su ${maxCats} posti in struttura` : `su ${totalSlots} posti totali`,
-      icon: Cat,
+      icon: PetIcon,
       color: "text-primary",
       bg: "bg-primary/10",
       show: true,

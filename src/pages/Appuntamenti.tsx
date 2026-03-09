@@ -292,7 +292,7 @@ export default function Appuntamenti() {
         <TableHead className="w-[80px]">Orario</TableHead>
         <TableHead className="w-[80px]">Tipo</TableHead>
         <TableHead>Cliente</TableHead>
-        <TableHead>Gatti</TableHead>
+        <TableHead>Pets</TableHead>
         <TableHead>N° Prenotazione</TableHead>
         <TableHead>Stato</TableHead>
         <TableHead className="w-[100px]">Confermato</TableHead>
@@ -499,7 +499,7 @@ export default function Appuntamenti() {
       <AutocompleteSearch
         value={search}
         onChange={setSearch}
-        placeholder="Cerca per n° prenotazione, cliente, gatto, email, telefono..."
+        placeholder="Cerca per n° prenotazione, cliente, pet, email, telefono..."
         className="max-w-sm"
       />
 
@@ -562,7 +562,7 @@ export default function Appuntamenti() {
                   <TableRow>
                     <TableHead>N° Prenotazione</TableHead>
                     <TableHead>Cliente</TableHead>
-                    <TableHead>Gatti</TableHead>
+                    <TableHead>Pets</TableHead>
                     <TableHead>Check-in</TableHead>
                     <TableHead>Check-out</TableHead>
                     <TableHead>Stato</TableHead>

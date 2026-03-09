@@ -34,8 +34,8 @@ const mainNav: NavItem[] = [
 
 const registryNav: NavItem[] = [
   { title: "Clienti", url: "/clienti", icon: Users, resource: "clienti" },
-  { title: "Gatti", url: "/gatti", icon: Cat, resource: "gatti" },
-  { title: "Registro Gatti", url: "/registro-gatti", icon: ClipboardList, resource: "registro-gatti" },
+  { title: "Pets", url: "/gatti", icon: PawPrint, resource: "gatti" },
+  { title: "Registro Pets", url: "/registro-gatti", icon: ClipboardList, resource: "registro-gatti" },
 ];
 
 const operationsNav: NavItem[] = [

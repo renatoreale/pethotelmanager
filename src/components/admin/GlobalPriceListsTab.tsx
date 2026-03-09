@@ -138,7 +138,7 @@ export function GlobalPriceListsTab() {
                     <TableHead>Tipo</TableHead>
                     <TableHead>Stagione</TableHead>
                     <TableHead>€/giorno</TableHead>
-                    <TableHead>Suppl. gatto</TableHead>
+                    <TableHead>Suppl. pet extra</TableHead>
                     <TableHead>Stato</TableHead>
                     <TableHead className="w-[100px]">Azioni</TableHead>
                   </TableRow>
@@ -202,7 +202,7 @@ export function GlobalPriceListsTab() {
             )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>€/giorno</Label><Input type="number" min={0} step={0.01} value={pricePerDay} onChange={(e) => setPricePerDay(Number(e.target.value))} /></div>
-              <div className="space-y-2"><Label>Suppl. gatto extra €</Label><Input type="number" min={0} step={0.01} value={extraCatSupplement} onChange={(e) => setExtraCatSupplement(Number(e.target.value))} /></div>
+              <div className="space-y-2"><Label>Suppl. pet extra €</Label><Input type="number" min={0} step={0.01} value={extraCatSupplement} onChange={(e) => setExtraCatSupplement(Number(e.target.value))} /></div>
             </div>
             {tariffType === "extra_km" && (
               <div className="grid grid-cols-2 gap-4">

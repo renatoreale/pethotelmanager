@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { format, parseISO, differenceInCalendarDays } from "date-fns";
 import { it } from "date-fns/locale";
-import { Cat, CalendarIcon, Search } from "lucide-react";
+import { Cat, Dog, CalendarIcon, Search, PawPrint } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useCatRegistry } from "@/hooks/useCatRegistry";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
+import { usePetLabels } from "@/hooks/usePetLabels";
 
 function calcStayDays(
   checkIn: string,
@@ -34,6 +35,8 @@ function calcStayDays(
 export default function Presenze() {
   const { data: entries, isLoading } = useCatRegistry();
   const { data: tenantConfig } = useTenantConfig();
+  const pet = usePetLabels();
+  const PetIcon = pet.iconName === "Cat" ? Cat : pet.iconName === "Dog" ? Dog : PawPrint;
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [search, setSearch] = useState("");
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -82,7 +85,7 @@ export default function Presenze() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Presenze in Pensione</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Visualizza i gatti presenti nella struttura alla data selezionata.
+          Visualizza {pet.articlePlural} presenti nella struttura alla data selezionata.
         </p>
       </div>
 
@@ -124,7 +127,7 @@ export default function Presenze() {
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Cerca gatto, cliente o microchip..."
+            placeholder={`Cerca ${pet.singular}, cliente o microchip...`}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-9"
@@ -152,12 +155,12 @@ export default function Presenze() {
         <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
       ) : !catsPresent.length ? (
         <div className="rounded-lg border border-dashed p-12 text-center text-muted-foreground">
-          <Cat className="h-8 w-8 mx-auto mb-3 opacity-40" />
-          <p className="font-medium">Nessun gatto presente</p>
+          <PetIcon className="h-8 w-8 mx-auto mb-3 opacity-40" />
+          <p className="font-medium">Nessun {pet.singular} presente</p>
           <p className="text-sm mt-1">
             {isToday
-              ? "Non ci sono gatti in struttura oggi."
-              : `Non risultano gatti presenti il ${format(selectedDate, "dd/MM/yyyy")}.`}
+              ? `Non ci sono ${pet.plural} in struttura oggi.`
+              : `Non risultano ${pet.plural} presenti il ${format(selectedDate, "dd/MM/yyyy")}.`}
           </p>
         </div>
       ) : (
@@ -165,7 +168,7 @@ export default function Presenze() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Gatto</TableHead>
+                <TableHead>{pet.singularCap}</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Microchip</TableHead>
                 <TableHead>Razza</TableHead>
@@ -189,7 +192,7 @@ export default function Presenze() {
                   <TableRow key={entry.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
-                        <Cat className="h-4 w-4 text-muted-foreground" />
+                        <PetIcon className="h-4 w-4 text-muted-foreground" />
                         {entry.cat_name}
                       </div>
                     </TableCell>

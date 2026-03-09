@@ -1069,6 +1069,7 @@ export type Database = {
           occupancy_rule_days: number
           partita_iva: string | null
           pec: string | null
+          pet_type: Database["public"]["Enums"]["pet_type"]
           phone: string | null
           slug: string
           stay_calc_type: string
@@ -1092,6 +1093,7 @@ export type Database = {
           occupancy_rule_days?: number
           partita_iva?: string | null
           pec?: string | null
+          pet_type?: Database["public"]["Enums"]["pet_type"]
           phone?: string | null
           slug: string
           stay_calc_type?: string
@@ -1115,6 +1117,7 @@ export type Database = {
           occupancy_rule_days?: number
           partita_iva?: string | null
           pec?: string | null
+          pet_type?: Database["public"]["Enums"]["pet_type"]
           phone?: string | null
           slug?: string
           stay_calc_type?: string
@@ -1214,6 +1217,7 @@ export type Database = {
         | "rimborso"
         | "manuale"
         | "gestione_pratica"
+      pet_type: "gatti" | "cani" | "entrambi"
       tariff_type:
         | "stagionale"
         | "extra_giornaliero"
@@ -1374,6 +1378,7 @@ export const Constants = {
         "manuale",
         "gestione_pratica",
       ],
+      pet_type: ["gatti", "cani", "entrambi"],
       tariff_type: [
         "stagionale",
         "extra_giornaliero",

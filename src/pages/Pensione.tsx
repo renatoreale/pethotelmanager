@@ -93,6 +93,7 @@ function AnagraficaTab() {
   const [partitaIva, setPartitaIva] = useState<string | null>(null);
   const [pec, setPec] = useState<string | null>(null);
   const [titolareName, setTitolareName] = useState<string | null>(null);
+  const [petType, setPetType] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -105,6 +106,7 @@ function AnagraficaTab() {
   const currentPartitaIva = partitaIva ?? (config as any)?.partita_iva ?? "";
   const currentPec = pec ?? (config as any)?.pec ?? "";
   const currentTitolareName = titolareName ?? (config as any)?.titolare_name ?? "";
+  const currentPetType = petType ?? (config as any)?.pet_type ?? "gatti";
   const currentLogoUrl = (config as any)?.logo_url ?? null;
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -151,11 +153,12 @@ function AnagraficaTab() {
         partita_iva: currentPartitaIva || null,
         pec: currentPec || null,
         titolare_name: currentTitolareName || null,
+        pet_type: currentPetType as "gatti" | "cani" | "entrambi",
       });
       toast.success("Anagrafica salvata");
       setName(null); setEmail(null); setPhone(null); setAddress(null);
       setCap(null); setCity(null);
-      setPartitaIva(null); setPec(null); setTitolareName(null);
+      setPartitaIva(null); setPec(null); setTitolareName(null); setPetType(null);
     } catch (err: any) {
       toast.error(err.message || "Errore nel salvataggio");
     }
@@ -220,10 +223,24 @@ function AnagraficaTab() {
           </div>
         </div>
 
-        {/* Titolare */}
-        <div className="space-y-2">
-          <Label>Nominativo Titolare</Label>
-          <Input value={currentTitolareName} onChange={(e) => setTitolareName(e.target.value)} placeholder="Nome e cognome del titolare" />
+        {/* Titolare + Tipo animale */}
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Nominativo Titolare</Label>
+            <Input value={currentTitolareName} onChange={(e) => setTitolareName(e.target.value)} placeholder="Nome e cognome del titolare" />
+          </div>
+          <div className="space-y-2">
+            <Label>Tipo animale</Label>
+            <Select value={currentPetType} onValueChange={(v) => setPetType(v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="gatti">Gatti</SelectItem>
+                <SelectItem value="cani">Cani</SelectItem>
+                <SelectItem value="entrambi">Entrambi</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">Determina le etichette nell'interfaccia</p>
+          </div>
         </div>
 
         {/* Contatti */}
@@ -331,17 +348,17 @@ function CasetteTab() {
           <div className="space-y-2">
             <Label htmlFor="singole">Casette Singole</Label>
             <Input id="singole" type="number" min={0} value={s} onChange={(e) => setSingole(Number(e.target.value))} />
-            <p className="text-xs text-muted-foreground">Per 1 gatto</p>
+            <p className="text-xs text-muted-foreground">Per 1 pet</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="doppie">Casette Doppie</Label>
             <Input id="doppie" type="number" min={0} value={d} onChange={(e) => setDoppie(Number(e.target.value))} />
-            <p className="text-xs text-muted-foreground">Per 2+ gatti fratelli</p>
+            <p className="text-xs text-muted-foreground">Per 2+ pets fratelli</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="maxCats">Capienza max gatti</Label>
+            <Label htmlFor="maxCats">Capienza max pets</Label>
             <Input id="maxCats" type="number" min={0} value={mc} onChange={(e) => setMaxCats(Number(e.target.value))} />
-            <p className="text-xs text-muted-foreground">Numero massimo di gatti ospitabili</p>
+            <p className="text-xs text-muted-foreground">Numero massimo di pets ospitabili</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="rule">Giorni occupazione minima</Label>
@@ -895,7 +912,7 @@ function ListinoTab() {
                     <Input type="number" min={0} step={0.5} value={pricePerDay} onChange={(e) => setPricePerDay(Number(e.target.value))} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Suppl. gatto extra (€)</Label>
+                    <Label>Suppl. pet extra (€)</Label>
                     <Input type="number" min={0} step={0.5} value={extraSupplement} onChange={(e) => setExtraSupplement(Number(e.target.value))} />
                   </div>
                 </div>

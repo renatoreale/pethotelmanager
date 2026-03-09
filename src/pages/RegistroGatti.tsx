@@ -7,13 +7,16 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Search, ClipboardList, Cat } from "lucide-react";
+import { Search, ClipboardList, Cat, Dog, PawPrint } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 import { useCatRegistry } from "@/hooks/useCatRegistry";
+import { usePetLabels } from "@/hooks/usePetLabels";
 
 export default function RegistroGatti() {
   const { data: entries, isLoading } = useCatRegistry();
+  const pet = usePetLabels();
+  const PetIcon = pet.iconName === "Cat" ? Cat : pet.iconName === "Dog" ? Dog : PawPrint;
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"tutti" | "presenti" | "usciti">("tutti");
 
@@ -45,9 +48,9 @@ export default function RegistroGatti() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Registro Gatti</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Registro {pet.pluralCap}</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Registro degli ingressi e delle uscite dei gatti dalla struttura.
+          Registro degli ingressi e delle uscite {pet.ofPlural} dalla struttura.
         </p>
       </div>
 
@@ -72,7 +75,7 @@ export default function RegistroGatti() {
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Cerca gatto, cliente o microchip..."
+            placeholder={`Cerca ${pet.singular}, cliente o microchip...`}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-9"
@@ -94,16 +97,16 @@ export default function RegistroGatti() {
         <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
       ) : !filtered.length ? (
         <div className="rounded-lg border border-dashed p-12 text-center text-muted-foreground">
-          <Cat className="h-8 w-8 mx-auto mb-3 opacity-40" />
-          <p className="font-medium">Nessun gatto nel registro</p>
-          <p className="text-sm mt-1">I gatti verranno aggiunti automaticamente al check-in.</p>
+          <PetIcon className="h-8 w-8 mx-auto mb-3 opacity-40" />
+          <p className="font-medium">Nessun {pet.singular} nel registro</p>
+          <p className="text-sm mt-1">I {pet.plural} verranno aggiunti automaticamente al check-in.</p>
         </div>
       ) : (
         <div className="rounded-md border overflow-auto">
           <Table>
             <TableHeader>
              <TableRow>
-                <TableHead>Gatto</TableHead>
+                <TableHead>{pet.singularCap}</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Microchip</TableHead>
                 <TableHead>Razza</TableHead>
@@ -119,7 +122,7 @@ export default function RegistroGatti() {
                 <TableRow key={entry.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
-                      <Cat className="h-4 w-4 text-muted-foreground" />
+                      <PetIcon className="h-4 w-4 text-muted-foreground" />
                       {entry.cat_name}
                     </div>
                   </TableCell>
