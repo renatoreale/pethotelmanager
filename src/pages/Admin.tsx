@@ -304,8 +304,8 @@ function PensioniTab() {
 function UtentiTab() {
   const { data: users, isLoading: usersLoading } = useAllUsers();
   const { data: tenants } = useAllTenants();
-  const assignTenant = useAssignUserToTenant();
-  const assignRole = useAssignRole();
+  const addTenantRole = useAddTenantRole();
+  const removeTenantRole = useRemoveTenantRole();
   const createUser = useCreateUser();
   const updateProfile = useUpdateUserProfile();
   const deleteUser = useDeleteUser();
@@ -314,11 +314,17 @@ function UtentiTab() {
   const [editingUser, setEditingUser] = useState<UserWithProfile | null>(null);
   const [deletingUser, setDeletingUser] = useState<UserWithProfile | null>(null);
   const [editName, setEditName] = useState("");
+  const [addRoleOpen, setAddRoleOpen] = useState<UserWithProfile | null>(null);
   
   const [form, setForm] = useState({
     email: "",
     password: "",
     full_name: "",
+    tenant_id: "",
+    role: "operatore" as AppRole,
+  });
+
+  const [addRoleForm, setAddRoleForm] = useState({
     tenant_id: "",
     role: "operatore" as AppRole,
   });
@@ -371,13 +377,32 @@ function UtentiTab() {
     setDeletingUser(null);
   };
 
+  const openAddRole = (user: UserWithProfile) => {
+    setAddRoleOpen(user);
+    setAddRoleForm({ tenant_id: "", role: "operatore" });
+  };
+
+  const handleAddRole = async () => {
+    if (!addRoleOpen || !addRoleForm.tenant_id) return;
+    await addTenantRole.mutateAsync({
+      userId: addRoleOpen.user_id,
+      tenantId: addRoleForm.tenant_id,
+      role: addRoleForm.role,
+    });
+    setAddRoleOpen(null);
+  };
+
+  const handleRemoveRole = async (roleId: string) => {
+    await removeTenantRole.mutateAsync(roleId);
+  };
+
   return (
     <>
       <Card>
         <CardHeader className="flex-row items-center justify-between">
           <div>
             <CardTitle>Utenti & Ruoli</CardTitle>
-            <CardDescription>Gestisci gli utenti di sistema, assegna pensioni e ruoli</CardDescription>
+            <CardDescription>Gestisci gli utenti di sistema e le loro associazioni pensione-ruolo</CardDescription>
           </div>
           <Button onClick={() => setDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> Nuovo Utente
@@ -389,83 +414,66 @@ function UtentiTab() {
           ) : !users?.length ? (
             <div className="py-12 text-center text-muted-foreground">Nessun utente trovato</div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Pensione</TableHead>
-                    <TableHead>Ruolo</TableHead>
-                    <TableHead className="w-[100px]">Azioni</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">
+            <div className="space-y-6">
+              {users.map((user) => (
+                <Card key={user.id} className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="font-semibold text-lg">
                         {user.full_name || "Utente Senza Nome"}
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={user.tenant_id || "none"}
-                          onValueChange={(val) =>
-                            assignTenant.mutate({
-                              profileId: user.id,
-                              tenantId: val === "none" ? null : val,
-                            })
-                          }
-                        >
-                          <SelectTrigger className="w-[200px]">
-                            <SelectValue placeholder="Seleziona pensione..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">— Nessuna —</SelectItem>
-                            {tenants?.map((t) => (
-                              <SelectItem key={t.id} value={t.id}>
-                                {t.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={user.role || "none"}
-                          onValueChange={(val) =>
-                            assignRole.mutate({
-                              userId: user.user_id,
-                              role: val as AppRole,
-                              tenantId: user.tenant_id,
-                              existingRoleId: user.role_id,
-                            })
-                          }
-                        >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Seleziona ruolo..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ROLES.map((r) => (
-                              <SelectItem key={r.value} value={r.value}>
-                                {r.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => openEdit(user)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => setDeletingUser(user)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Pensione attiva: {user.active_tenant_id ? 
+                          tenants?.find(t => t.id === user.active_tenant_id)?.name || "Sconosciuta" : 
+                          "Nessuna"
+                        }
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => openAddRole(user)}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(user)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => setDeletingUser(user)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm">Associazioni Pensione-Ruolo:</h4>
+                    {user.tenant_roles.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Nessuna associazione</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {user.tenant_roles.map((tenantRole) => (
+                          <div 
+                            key={tenantRole.id} 
+                            className="flex items-center justify-between bg-muted/50 rounded p-2"
+                          >
+                            <div>
+                              <span className="font-medium">{tenantRole.tenant_name}</span>
+                              <Badge variant="secondary" className="ml-2">
+                                {ROLES.find(r => r.value === tenantRole.role)?.label || tenantRole.role}
+                              </Badge>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleRemoveRole(tenantRole.id)}
+                              className="h-6 w-6"
+                            >
+                              <Trash2 className="h-3 w-3 text-destructive" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              ))}
             </div>
           )}
         </CardContent>
@@ -546,6 +554,62 @@ function UtentiTab() {
             <Button onClick={handleCreateUser} className="w-full mt-4" disabled={createUser.isPending}>
               {createUser.isPending ? "Creazione..." : "Crea Utente"}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Aggiungi Ruolo */}
+      <Dialog open={!!addRoleOpen} onOpenChange={() => setAddRoleOpen(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Aggiungi Associazione</DialogTitle>
+            <DialogDescription>
+              Aggiungi una nuova associazione pensione-ruolo per {addRoleOpen?.full_name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Pensione *</Label>
+              <Select
+                value={addRoleForm.tenant_id}
+                onValueChange={(val) => setAddRoleForm({ ...addRoleForm, tenant_id: val })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona pensione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {tenants?.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Ruolo *</Label>
+              <Select
+                value={addRoleForm.role}
+                onValueChange={(val) => setAddRoleForm({ ...addRoleForm, role: val as AppRole })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona ruolo..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLES.map((r) => (
+                    <SelectItem key={r.value} value={r.value}>
+                      {r.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAddRoleOpen(null)}>Annulla</Button>
+              <Button onClick={handleAddRole} disabled={addTenantRole.isPending || !addRoleForm.tenant_id}>
+                {addTenantRole.isPending ? "Aggiunta..." : "Aggiungi"}
+              </Button>
+            </DialogFooter>
           </div>
         </DialogContent>
       </Dialog>
