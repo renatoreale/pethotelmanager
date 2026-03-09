@@ -38,7 +38,7 @@ export function AppLayout() {
                   <Button variant="outline" size="sm" className="gap-2">
                     <Building2 className="h-4 w-4" />
                     <span className="max-w-[200px] truncate">
-                      {activeTenant?.name || "Seleziona pensione"}
+                      {currentTenant?.name || "Seleziona pensione"}
                     </span>
                     <ChevronDown className="h-3 w-3 opacity-50" />
                   </Button>
