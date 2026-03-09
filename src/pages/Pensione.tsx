@@ -277,7 +277,8 @@ function SlotTab() {
     if (!profile?.tenant_id) return;
     setResetting(true);
     try {
-      await supabase.rpc("reset_tenant_slot_configs" as any, { _tenant_id: profile.tenant_id });
+      const { error } = await supabase.rpc("reset_tenant_slot_configs" as any, { _tenant_id: profile.tenant_id });
+      if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["slot-configs"] });
       toast.success("Slot ripristinati ai valori predefiniti");
     } catch (err: any) {
@@ -558,7 +559,8 @@ function ListinoTab() {
     if (!profile?.tenant_id) return;
     setResetting(true);
     try {
-      await supabase.rpc("reset_tenant_price_lists" as any, { _tenant_id: profile.tenant_id });
+      const { error } = await supabase.rpc("reset_tenant_price_lists" as any, { _tenant_id: profile.tenant_id });
+      if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["price-lists"] });
       toast.success("Listino ripristinato ai valori predefiniti");
     } catch (err: any) {
@@ -857,7 +859,8 @@ function PaymentMethodsTab() {
     if (!profile?.tenant_id) return;
     setResetting(true);
     try {
-      await supabase.rpc("reset_tenant_payment_methods" as any, { _tenant_id: profile.tenant_id });
+      const { error } = await supabase.rpc("reset_tenant_payment_methods" as any, { _tenant_id: profile.tenant_id });
+      if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["payment-methods"] });
       toast.success("Metodi di pagamento ripristinati ai valori predefiniti");
     } catch (err: any) {
