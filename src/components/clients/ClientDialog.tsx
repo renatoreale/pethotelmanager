@@ -125,10 +125,11 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           medical_notes: c.medical_notes ?? "",
           dietary_notes: c.dietary_notes ?? "",
           behavioral_notes: c.behavioral_notes ?? "",
+          pet_type: c.pet_type ?? defaultAnimalType,
         }))
       );
     } else if (!isEditing) {
-      setCats([emptyCat()]);
+      setCats([emptyCat(defaultAnimalType)]);
     }
   }, [isEditing, existingCats]);
 
