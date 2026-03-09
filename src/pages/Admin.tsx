@@ -26,7 +26,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Database } from "@/integrations/supabase/types";
 import {
   useAllTenants, useCreateTenant, useUpdateTenant, useDeleteTenant,
-  useAllUsers, useAddTenantRole, useRemoveTenantRole, useCreateUser,
+  useAllUsers, useCreateUser,
   useUpdateUserProfile, useUpdateUserEmail, useDeleteUser,
   useRolePermissions, useBulkUpsertPermissions,
   RESOURCES, ROLES, type Tenant, type UserWithProfile, type RolePermission,
@@ -95,7 +95,6 @@ function PensioniTab() {
   const [editing, setEditing] = useState<Tenant | null>(null);
   const [deleting, setDeleting] = useState<Tenant | null>(null);
 
-  // Form state
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [email, setEmail] = useState("");
@@ -105,53 +104,22 @@ function PensioniTab() {
   const [numDoppie, setNumDoppie] = useState(0);
 
   const openNew = () => {
-    setEditing(null);
-    setName("");
-    setSlug("");
-    setEmail("");
-    setPhone("");
-    setAddress("");
-    setNumSingole(0);
-    setNumDoppie(0);
-    setDialogOpen(true);
+    setEditing(null); setName(""); setSlug(""); setEmail(""); setPhone(""); setAddress("");
+    setNumSingole(0); setNumDoppie(0); setDialogOpen(true);
   };
 
   const openEdit = (tenant: Tenant) => {
-    setEditing(tenant);
-    setName(tenant.name);
-    setSlug(tenant.slug);
-    setEmail(tenant.email || "");
-    setPhone(tenant.phone || "");
-    setAddress(tenant.address || "");
-    setNumSingole(tenant.num_singole);
-    setNumDoppie(tenant.num_doppie);
-    setDialogOpen(true);
+    setEditing(tenant); setName(tenant.name); setSlug(tenant.slug);
+    setEmail(tenant.email || ""); setPhone(tenant.phone || ""); setAddress(tenant.address || "");
+    setNumSingole(tenant.num_singole); setNumDoppie(tenant.num_doppie); setDialogOpen(true);
   };
 
   const handleSave = async () => {
     if (!name.trim() || !slug.trim()) return;
-
     if (editing) {
-      await updateTenant.mutateAsync({
-        id: editing.id,
-        name,
-        slug,
-        email: email || null,
-        phone: phone || null,
-        address: address || null,
-        num_singole: numSingole,
-        num_doppie: numDoppie,
-      });
+      await updateTenant.mutateAsync({ id: editing.id, name, slug, email: email || null, phone: phone || null, address: address || null, num_singole: numSingole, num_doppie: numDoppie });
     } else {
-      await createTenant.mutateAsync({
-        name,
-        slug,
-        email: email || null,
-        phone: phone || null,
-        address: address || null,
-        num_singole: numSingole,
-        num_doppie: numDoppie,
-      });
+      await createTenant.mutateAsync({ name, slug, email: email || null, phone: phone || null, address: address || null, num_singole: numSingole, num_doppie: numDoppie });
     }
     setDialogOpen(false);
   };
@@ -170,9 +138,7 @@ function PensioniTab() {
             <CardTitle>Pensioni</CardTitle>
             <CardDescription>Gestisci le pensioni nel sistema</CardDescription>
           </div>
-          <Button onClick={openNew}>
-            <Plus className="mr-2 h-4 w-4" /> Nuova Pensione
-          </Button>
+          <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Nuova Pensione</Button>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -196,22 +162,14 @@ function PensioniTab() {
                   {tenants.map((tenant) => (
                     <TableRow key={tenant.id}>
                       <TableCell className="font-medium">{tenant.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{tenant.slug}</Badge>
-                      </TableCell>
+                      <TableCell><Badge variant="outline">{tenant.slug}</Badge></TableCell>
                       <TableCell>{tenant.email || "-"}</TableCell>
                       <TableCell>{tenant.phone || "-"}</TableCell>
-                      <TableCell>
-                        {tenant.num_singole} singole, {tenant.num_doppie} doppie
-                      </TableCell>
+                      <TableCell>{tenant.num_singole} singole, {tenant.num_doppie} doppie</TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => openEdit(tenant)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => setDeleting(tenant)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(tenant)}><Pencil className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => setDeleting(tenant)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -227,51 +185,26 @@ function PensioniTab() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{editing ? "Modifica Pensione" : "Nuova Pensione"}</DialogTitle>
-            <DialogDescription>
-              {editing ? "Modifica i dettagli della pensione" : "Crea una nuova pensione nel sistema"}
-            </DialogDescription>
+            <DialogDescription>{editing ? "Modifica i dettagli della pensione" : "Crea una nuova pensione nel sistema"}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Nome *</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Pensione Milano" />
-              </div>
-              <div className="space-y-2">
-                <Label>Slug *</Label>
-                <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="milano" />
-              </div>
+              <div className="space-y-2"><Label>Nome *</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Pensione Milano" /></div>
+              <div className="space-y-2"><Label>Slug *</Label><Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="milano" /></div>
             </div>
-            <div className="space-y-2">
-              <Label>Email</Label>
-              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <div className="space-y-2"><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Telefono</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+              <div className="space-y-2"><Label>Indirizzo</Label><Input value={address} onChange={(e) => setAddress(e.target.value)} /></div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Telefono</Label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Indirizzo</Label>
-                <Input value={address} onChange={(e) => setAddress(e.target.value)} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Casette Singole</Label>
-                <Input type="number" min={0} value={numSingole} onChange={(e) => setNumSingole(Number(e.target.value))} />
-              </div>
-              <div className="space-y-2">
-                <Label>Casette Doppie</Label>
-                <Input type="number" min={0} value={numDoppie} onChange={(e) => setNumDoppie(Number(e.target.value))} />
-              </div>
+              <div className="space-y-2"><Label>Casette Singole</Label><Input type="number" min={0} value={numSingole} onChange={(e) => setNumSingole(Number(e.target.value))} /></div>
+              <div className="space-y-2"><Label>Casette Doppie</Label><Input type="number" min={0} value={numDoppie} onChange={(e) => setNumDoppie(Number(e.target.value))} /></div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Annulla</Button>
-            <Button onClick={handleSave} disabled={createTenant.isPending || updateTenant.isPending}>
-              {editing ? "Salva" : "Crea"}
-            </Button>
+            <Button onClick={handleSave} disabled={createTenant.isPending || updateTenant.isPending}>{editing ? "Salva" : "Crea"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -280,18 +213,11 @@ function PensioniTab() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminare la pensione?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Questa azione eliminerà permanentemente la pensione "{deleting?.name}" e tutti i dati associati.
-            </AlertDialogDescription>
+            <AlertDialogDescription>Questa azione eliminerà permanentemente la pensione "{deleting?.name}" e tutti i dati associati.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annulla</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Elimina
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Elimina</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -300,13 +226,11 @@ function PensioniTab() {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// UTENTI TAB
+// UTENTI TAB (simplified - one role per user per tenant)
 // ══════════════════════════════════════════════════════════════════════════════
 function UtentiTab() {
   const { data: users, isLoading: usersLoading } = useAllUsers();
   const { data: tenants } = useAllTenants();
-  const addTenantRole = useAddTenantRole();
-  const removeTenantRole = useRemoveTenantRole();
   const createUser = useCreateUser();
   const updateProfile = useUpdateUserProfile();
   const updateEmail = useUpdateUserEmail();
@@ -319,45 +243,19 @@ function UtentiTab() {
   const [editEmail, setEditEmail] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [editActiveTenant, setEditActiveTenant] = useState("");
-  const [addRoleOpen, setAddRoleOpen] = useState<UserWithProfile | null>(null);
-  
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-    full_name: "",
-    tenant_id: "",
-    role: "operatore" as AppRole,
-  });
+  const [editRole, setEditRole] = useState<AppRole>("operatore");
 
-  const [addRoleForm, setAddRoleForm] = useState({
-    tenant_id: "",
-    role: "operatore" as AppRole,
+  const [form, setForm] = useState({
+    email: "", password: "", full_name: "", tenant_id: "", role: "operatore" as AppRole,
   });
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const handleCreateUser = async () => {
-    if (!form.email || !form.password || !form.full_name) {
-      toast.error("Compila tutti i campi obbligatori");
-      return;
-    }
-    if (!emailRegex.test(form.email)) {
-      toast.error("Formato email non valido");
-      return;
-    }
-    if (form.password.length < 6) {
-      toast.error("La password deve avere almeno 6 caratteri");
-      return;
-    }
-    
-    await createUser.mutateAsync({
-      email: form.email,
-      password: form.password,
-      full_name: form.full_name,
-      tenant_id: form.tenant_id || null,
-      role: form.role,
-    });
-    
+    if (!form.email || !form.password || !form.full_name) { toast.error("Compila tutti i campi obbligatori"); return; }
+    if (!emailRegex.test(form.email)) { toast.error("Formato email non valido"); return; }
+    if (form.password.length < 6) { toast.error("La password deve avere almeno 6 caratteri"); return; }
+    await createUser.mutateAsync({ email: form.email, password: form.password, full_name: form.full_name, tenant_id: form.tenant_id || null, role: form.role });
     setDialogOpen(false);
     setForm({ email: "", password: "", full_name: "", tenant_id: "", role: "operatore" });
   };
@@ -368,34 +266,24 @@ function UtentiTab() {
     setEditEmail(user.email || "");
     setEditPhone(user.phone || "");
     setEditActiveTenant(user.active_tenant_id || "");
+    // Get user's role from tenant_roles
+    const primaryRole = user.tenant_roles[0]?.role || "operatore";
+    setEditRole(primaryRole);
   };
 
   const handleSaveEdit = async () => {
     if (!editingUser || !editName.trim()) return;
-    
-    // Update profile fields
-    await updateProfile.mutateAsync({
-      profileId: editingUser.id,
-      full_name: editName.trim(),
-      phone: editPhone.trim() || null,
-    });
-
-    // Update email if changed
+    await updateProfile.mutateAsync({ profileId: editingUser.id, full_name: editName.trim(), phone: editPhone.trim() || null });
     if (editEmail.trim() && editEmail.trim() !== (editingUser.email || "")) {
-      await updateEmail.mutateAsync({
-        userId: editingUser.user_id,
-        email: editEmail.trim(),
-      });
+      await updateEmail.mutateAsync({ userId: editingUser.user_id, email: editEmail.trim() });
     }
-    
-    // Update active tenant if changed
     if (editActiveTenant !== (editingUser.active_tenant_id || "")) {
-      await supabase
-        .from("profiles")
-        .update({ tenant_id: editActiveTenant || null })
-        .eq("id", editingUser.id);
+      await supabase.from("profiles").update({ tenant_id: editActiveTenant || null }).eq("id", editingUser.id);
     }
-    
+    // Update role if changed
+    if (editingUser.tenant_roles[0] && editRole !== editingUser.tenant_roles[0].role) {
+      await supabase.from("user_roles").update({ role: editRole }).eq("id", editingUser.tenant_roles[0].id);
+    }
     setEditingUser(null);
   };
 
@@ -405,36 +293,15 @@ function UtentiTab() {
     setDeletingUser(null);
   };
 
-  const openAddRole = (user: UserWithProfile) => {
-    setAddRoleOpen(user);
-    setAddRoleForm({ tenant_id: "", role: "operatore" });
-  };
-
-  const handleAddRole = async () => {
-    if (!addRoleOpen || !addRoleForm.tenant_id) return;
-    await addTenantRole.mutateAsync({
-      userId: addRoleOpen.user_id,
-      tenantId: addRoleForm.tenant_id,
-      role: addRoleForm.role,
-    });
-    setAddRoleOpen(null);
-  };
-
-  const handleRemoveRole = async (roleId: string) => {
-    await removeTenantRole.mutateAsync(roleId);
-  };
-
   return (
     <>
       <Card>
         <CardHeader className="flex-row items-center justify-between">
           <div>
             <CardTitle>Utenti & Ruoli</CardTitle>
-            <CardDescription>Gestisci gli utenti di sistema e le loro associazioni pensione-ruolo</CardDescription>
+            <CardDescription>Gestisci gli utenti di sistema e i loro ruoli</CardDescription>
           </div>
-          <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Nuovo Utente
-          </Button>
+          <Button onClick={() => setDialogOpen(true)}><Plus className="mr-2 h-4 w-4" /> Nuovo Utente</Button>
         </CardHeader>
         <CardContent>
           {usersLoading ? (
@@ -442,69 +309,44 @@ function UtentiTab() {
           ) : !users?.length ? (
             <div className="py-12 text-center text-muted-foreground">Nessun utente trovato</div>
           ) : (
-            <div className="space-y-6">
-              {users.map((user) => (
-                <Card key={user.id} className="p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="font-semibold text-lg">
-                        {user.full_name || "Utente Senza Nome"}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {user.email || "Email non disponibile"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Pensione attiva: {user.active_tenant_id ? 
-                          tenants?.find(t => t.id === user.active_tenant_id)?.name || "Sconosciuta" : 
-                          "Nessuna"
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Pensione</TableHead>
+                    <TableHead>Ruolo</TableHead>
+                    <TableHead className="w-[120px]">Azioni</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.full_name || "Senza nome"}</TableCell>
+                      <TableCell className="text-muted-foreground">{user.email || "-"}</TableCell>
+                      <TableCell>
+                        {user.tenant_roles.length > 0 
+                          ? user.tenant_roles.map(tr => tr.tenant_name).join(", ")
+                          : <span className="text-muted-foreground italic">Nessuna</span>
                         }
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => openAddRole(user)}>
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(user)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeletingUser(user)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Associazioni Pensione-Ruolo:</h4>
-                    {user.tenant_roles.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">Nessuna associazione</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {user.tenant_roles.map((tenantRole) => (
-                          <div 
-                            key={tenantRole.id} 
-                            className="flex items-center justify-between bg-muted/50 rounded p-2"
-                          >
-                            <div>
-                              <span className="font-medium">{tenantRole.tenant_name}</span>
-                              <Badge variant="secondary" className="ml-2">
-                                {ROLES.find(r => r.value === tenantRole.role)?.label || tenantRole.role}
-                              </Badge>
-                            </div>
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => handleRemoveRole(tenantRole.id)}
-                              className="h-6 w-6"
-                            >
-                              <Trash2 className="h-3 w-3 text-destructive" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </Card>
-              ))}
+                      </TableCell>
+                      <TableCell>
+                        {user.tenant_roles.length > 0
+                          ? <Badge variant="secondary">{ROLES.find(r => r.value === user.tenant_roles[0]?.role)?.label || user.tenant_roles[0]?.role}</Badge>
+                          : <span className="text-muted-foreground italic">Nessuno</span>
+                        }
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(user)}><Pencil className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => setDeletingUser(user)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>
@@ -515,71 +357,24 @@ function UtentiTab() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Crea Nuovo Utente</DialogTitle>
-            <DialogDescription>
-              Crea un utente e assegnalo a una pensione con un ruolo specifico
-            </DialogDescription>
+            <DialogDescription>Crea un utente e assegnalo a una pensione con un ruolo</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Nome Completo *</Label>
-              <Input
-                value={form.full_name}
-                onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                placeholder="Mario Rossi"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Email *</Label>
-              <Input
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder="mario@example.com"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Password *</Label>
-              <Input
-                type="password"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                placeholder="••••••••"
-              />
-            </div>
+            <div className="space-y-2"><Label>Nome Completo *</Label><Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder="Mario Rossi" /></div>
+            <div className="space-y-2"><Label>Email *</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="mario@example.com" /></div>
+            <div className="space-y-2"><Label>Password *</Label><Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="••••••••" /></div>
             <div className="space-y-2">
               <Label>Pensione</Label>
-              <Select
-                value={form.tenant_id}
-                onValueChange={(val) => setForm({ ...form, tenant_id: val })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona pensione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {tenants?.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+              <Select value={form.tenant_id} onValueChange={(val) => setForm({ ...form, tenant_id: val })}>
+                <SelectTrigger><SelectValue placeholder="Seleziona pensione..." /></SelectTrigger>
+                <SelectContent>{tenants?.map((t) => (<SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>))}</SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
               <Label>Ruolo</Label>
-              <Select
-                value={form.role}
-                onValueChange={(val) => setForm({ ...form, role: val as AppRole })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona ruolo..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {ROLES.map((r) => (
-                    <SelectItem key={r.value} value={r.value}>
-                      {r.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+              <Select value={form.role} onValueChange={(val) => setForm({ ...form, role: val as AppRole })}>
+                <SelectTrigger><SelectValue placeholder="Seleziona ruolo..." /></SelectTrigger>
+                <SelectContent>{ROLES.map((r) => (<SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>))}</SelectContent>
               </Select>
             </div>
             <Button onClick={handleCreateUser} className="w-full mt-4" disabled={createUser.isPending}>
@@ -589,110 +384,29 @@ function UtentiTab() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Aggiungi Ruolo */}
-      <Dialog open={!!addRoleOpen} onOpenChange={() => setAddRoleOpen(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Aggiungi Associazione</DialogTitle>
-            <DialogDescription>
-              Aggiungi una nuova associazione pensione-ruolo per {addRoleOpen?.full_name}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Pensione *</Label>
-              <Select
-                value={addRoleForm.tenant_id}
-                onValueChange={(val) => setAddRoleForm({ ...addRoleForm, tenant_id: val })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona pensione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {tenants?.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Ruolo *</Label>
-              <Select
-                value={addRoleForm.role}
-                onValueChange={(val) => setAddRoleForm({ ...addRoleForm, role: val as AppRole })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona ruolo..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {ROLES.map((r) => (
-                    <SelectItem key={r.value} value={r.value}>
-                      {r.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setAddRoleOpen(null)}>Annulla</Button>
-              <Button onClick={handleAddRole} disabled={addTenantRole.isPending || !addRoleForm.tenant_id}>
-                {addTenantRole.isPending ? "Aggiunta..." : "Aggiungi"}
-              </Button>
-            </DialogFooter>
-          </div>
-        </DialogContent>
-      </Dialog>
-
       {/* Dialog Modifica Utente */}
       <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Modifica Utente</DialogTitle>
-            <DialogDescription>
-              Modifica i dati dell'utente
-            </DialogDescription>
+            <DialogDescription>Modifica i dati dell'utente</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Nome Completo</Label>
-              <Input
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                placeholder="Mario Rossi"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Email</Label>
-              <Input
-                type="email"
-                value={editEmail}
-                onChange={(e) => setEditEmail(e.target.value)}
-                placeholder="mario@example.com"
-              />
-              <Input
-                value={editPhone}
-                onChange={(e) => setEditPhone(e.target.value)}
-                placeholder="+39 333 1234567"
-              />
-            </div>
+            <div className="space-y-2"><Label>Nome Completo</Label><Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Mario Rossi" /></div>
+            <div className="space-y-2"><Label>Email</Label><Input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} placeholder="mario@example.com" /></div>
+            <div className="space-y-2"><Label>Telefono</Label><Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="+39 333 1234567" /></div>
             <div className="space-y-2">
               <Label>Pensione Attiva</Label>
-              <Select
-                value={editActiveTenant}
-                onValueChange={(val) => setEditActiveTenant(val)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Nessuna pensione attiva" />
-                </SelectTrigger>
-                <SelectContent>
-                  {tenants?.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+              <Select value={editActiveTenant} onValueChange={(val) => setEditActiveTenant(val)}>
+                <SelectTrigger><SelectValue placeholder="Nessuna pensione attiva" /></SelectTrigger>
+                <SelectContent>{tenants?.map((t) => (<SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>))}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Ruolo</Label>
+              <Select value={editRole} onValueChange={(val) => setEditRole(val as AppRole)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{ROLES.map((r) => (<SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>))}</SelectContent>
               </Select>
             </div>
             <DialogFooter>
@@ -710,19 +424,11 @@ function UtentiTab() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminare l'utente?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Questa azione eliminerà permanentemente l'utente "{deletingUser?.full_name || 'Senza nome'}" dal sistema.
-              Tutti i dati associati verranno persi.
-            </AlertDialogDescription>
+            <AlertDialogDescription>Questa azione eliminerà permanentemente l'utente "{deletingUser?.full_name || 'Senza nome'}" dal sistema.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annulla</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Elimina
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Elimina</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -736,26 +442,24 @@ function UtentiTab() {
 function PermessiTab() {
   const { data: permissions, isLoading } = useRolePermissions();
   const bulkUpsert = useBulkUpsertPermissions();
-  const [localPerms, setLocalPerms] = useState<Map<string, { can_read: boolean; can_write: boolean; can_delete: boolean }>>(new Map());
+  const [localPerms, setLocalPerms] = useState<Map<string, { can_read: boolean; can_write: boolean; can_delete: boolean; is_visible: boolean }>>(new Map());
   const [selectedRole, setSelectedRole] = useState<AppRole>("operatore");
 
-  // Build a map of permissions for the selected role
   const getPermKey = (role: AppRole, resource: string) => `${role}:${resource}`;
 
   const getPerm = (resource: string) => {
     const key = getPermKey(selectedRole, resource);
-    if (localPerms.has(key)) {
-      return localPerms.get(key)!;
-    }
+    if (localPerms.has(key)) return localPerms.get(key)!;
     const existing = permissions?.find((p) => p.role === selectedRole && p.resource === resource);
     return {
       can_read: existing?.can_read ?? false,
       can_write: existing?.can_write ?? false,
       can_delete: existing?.can_delete ?? false,
+      is_visible: existing?.is_visible ?? true,
     };
   };
 
-  const setPerm = (resource: string, field: "can_read" | "can_write" | "can_delete", value: boolean) => {
+  const setPerm = (resource: string, field: "can_read" | "can_write" | "can_delete" | "is_visible", value: boolean) => {
     const key = getPermKey(selectedRole, resource);
     const current = getPerm(resource);
     setLocalPerms(new Map(localPerms).set(key, { ...current, [field]: value }));
@@ -771,6 +475,7 @@ function PermessiTab() {
         can_read: perm.can_read,
         can_write: perm.can_write,
         can_delete: perm.can_delete,
+        is_visible: perm.is_visible,
         tenant_id: null,
       };
     });
@@ -784,20 +489,14 @@ function PermessiTab() {
         <div>
           <CardTitle>Permessi per Ruolo</CardTitle>
           <CardDescription>
-            Configura i permessi di lettura, scrittura ed eliminazione per ogni pagina
+            Configura i permessi e la visibilità delle pagine nel menu per ogni ruolo
           </CardDescription>
         </div>
         <div className="flex items-center gap-4">
           <Select value={selectedRole} onValueChange={(v) => { setSelectedRole(v as AppRole); setLocalPerms(new Map()); }}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {ROLES.map((r) => (
-                <SelectItem key={r.value} value={r.value}>
-                  {r.label}
-                </SelectItem>
-              ))}
+              {ROLES.map((r) => (<SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>))}
             </SelectContent>
           </Select>
           <Button onClick={handleSave} disabled={bulkUpsert.isPending}>
@@ -814,6 +513,7 @@ function PermessiTab() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Pagina</TableHead>
+                  <TableHead className="text-center w-[100px]">Visibile</TableHead>
                   <TableHead className="text-center w-[100px]">Lettura</TableHead>
                   <TableHead className="text-center w-[100px]">Scrittura</TableHead>
                   <TableHead className="text-center w-[100px]">Eliminazione</TableHead>
@@ -826,22 +526,16 @@ function PermessiTab() {
                     <TableRow key={res.value}>
                       <TableCell className="font-medium">{res.label}</TableCell>
                       <TableCell className="text-center">
-                        <Checkbox
-                          checked={perm.can_read}
-                          onCheckedChange={(v) => setPerm(res.value, "can_read", !!v)}
-                        />
+                        <Checkbox checked={perm.is_visible} onCheckedChange={(v) => setPerm(res.value, "is_visible", !!v)} />
                       </TableCell>
                       <TableCell className="text-center">
-                        <Checkbox
-                          checked={perm.can_write}
-                          onCheckedChange={(v) => setPerm(res.value, "can_write", !!v)}
-                        />
+                        <Checkbox checked={perm.can_read} onCheckedChange={(v) => setPerm(res.value, "can_read", !!v)} />
                       </TableCell>
                       <TableCell className="text-center">
-                        <Checkbox
-                          checked={perm.can_delete}
-                          onCheckedChange={(v) => setPerm(res.value, "can_delete", !!v)}
-                        />
+                        <Checkbox checked={perm.can_write} onCheckedChange={(v) => setPerm(res.value, "can_write", !!v)} />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Checkbox checked={perm.can_delete} onCheckedChange={(v) => setPerm(res.value, "can_delete", !!v)} />
                       </TableCell>
                     </TableRow>
                   );
@@ -852,13 +546,12 @@ function PermessiTab() {
         )}
 
         <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-          <h4 className="font-semibold text-sm mb-2">Legenda ruoli predefiniti:</h4>
+          <h4 className="font-semibold text-sm mb-2">Legenda:</h4>
           <ul className="text-sm text-muted-foreground space-y-1">
-            <li><strong>Admin:</strong> Accesso totale a tutto il sistema, gestione pensioni e utenti</li>
-            <li><strong>CEO:</strong> Sola lettura di report globali su tutte le pensioni</li>
-            <li><strong>Titolare:</strong> Pieno controllo sulla propria pensione</li>
-            <li><strong>Manager:</strong> Operatività completa sulla pensione, senza configurazioni avanzate</li>
-            <li><strong>Operatore:</strong> Solo visualizzazione e compiti assegnati</li>
+            <li><strong>Visibile:</strong> Mostra/nasconde la pagina dal menu di navigazione laterale</li>
+            <li><strong>Lettura:</strong> Permette di visualizzare i dati della pagina</li>
+            <li><strong>Scrittura:</strong> Permette di creare e modificare i dati</li>
+            <li><strong>Eliminazione:</strong> Permette di eliminare i dati</li>
           </ul>
         </div>
       </CardContent>

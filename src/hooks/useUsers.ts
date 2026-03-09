@@ -24,7 +24,7 @@ export function useUsers() {
     queryFn: async () => {
       if (!profile?.tenant_id) return [];
 
-      // First get user_ids that have a role for this tenant
+      // Get user_ids that have a role for this tenant, EXCLUDING admin roles
       const { data: tenantRoles, error: rolesError } = await supabase
         .from("user_roles")
         .select("*")
@@ -33,9 +33,12 @@ export function useUsers() {
 
       if (!tenantRoles || tenantRoles.length === 0) return [];
 
-      const userIds = [...new Set(tenantRoles.map(r => r.user_id))];
+      // Filter out admin users
+      const nonAdminRoles = tenantRoles.filter(r => r.role !== "admin");
+      const userIds = [...new Set(nonAdminRoles.map(r => r.user_id))];
 
-      // Get profiles for these users
+      if (userIds.length === 0) return [];
+
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("*")
@@ -43,8 +46,7 @@ export function useUsers() {
       if (profilesError) throw profilesError;
 
       return (profiles || []).map(p => {
-        // Find the role for this tenant specifically
-        const userRole = tenantRoles.find(r => r.user_id === p.user_id);
+        const userRole = nonAdminRoles.find(r => r.user_id === p.user_id);
         return {
           id: p.id,
           user_id: p.user_id,
@@ -82,9 +84,5 @@ export function useUsers() {
     }
   });
 
-  return {
-    users,
-    isLoading,
-    assignRole,
-  };
+  return { users, isLoading, assignRole };
 }

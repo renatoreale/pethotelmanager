@@ -7,7 +7,6 @@ type UserRole = "admin" | "ceo" | "titolare" | "manager" | "operatore";
 interface UserTenant {
   id: string;
   name: string;
-  roles: UserRole[];
 }
 
 interface AuthContextType {
@@ -80,42 +79,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(profileRes.data);
     }
 
-    // Build userTenants with roles per tenant
-    const tenantMap = new Map<string, UserTenant>();
-    const globalRoles: UserRole[] = [];
+    // Each user has a single role (simplified model)
+    const userRoles: UserRole[] = [];
+    const tenantList: UserTenant[] = [];
+    const tenantLookup = new Map(tenantsRes.data?.map((t) => [t.id, t.name]) || []);
 
     if (rolesRes.data) {
-      const tenantLookup = new Map(tenantsRes.data?.map((t) => [t.id, t.name]) || []);
-      
       for (const r of rolesRes.data) {
         const role = r.role as UserRole;
-        if (r.tenant_id) {
-          const existing = tenantMap.get(r.tenant_id);
-          if (existing) {
-            existing.roles.push(role);
-          } else {
-            tenantMap.set(r.tenant_id, {
-              id: r.tenant_id,
-              name: tenantLookup.get(r.tenant_id) || "Pensione",
-              roles: [role],
-            });
-          }
-        } else {
-          globalRoles.push(role);
+        if (!userRoles.includes(role)) userRoles.push(role);
+        if (r.tenant_id && !tenantList.find(t => t.id === r.tenant_id)) {
+          tenantList.push({
+            id: r.tenant_id,
+            name: tenantLookup.get(r.tenant_id) || "Pensione",
+          });
         }
       }
     }
 
-    const userTenantsArray = Array.from(tenantMap.values());
-    setUserTenants(userTenantsArray);
+    setUserTenants(tenantList);
+    setRoles(userRoles);
 
-    // Set roles for the active tenant
+    // Auto-select first tenant if none is active
     let activeTenantId = profileRes.data?.tenant_id;
-    
-    // Auto-select first tenant if none is active but user has tenant associations
-    if (!activeTenantId && userTenantsArray.length > 0) {
-      activeTenantId = userTenantsArray[0].id;
-      // Persist the auto-selection
+    if (!activeTenantId && tenantList.length > 0) {
+      activeTenantId = tenantList[0].id;
       if (profileRes.data) {
         await supabase
           .from("profiles")
@@ -123,13 +111,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .eq("id", profileRes.data.id);
         setProfile({ ...profileRes.data, tenant_id: activeTenantId });
       }
-    }
-    
-    if (activeTenantId) {
-      const activeTenantRoles = tenantMap.get(activeTenantId)?.roles || [];
-      setRoles([...globalRoles, ...activeTenantRoles]);
-    } else {
-      setRoles(globalRoles);
     }
   }
 
@@ -146,10 +127,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Refetch profile and roles
-    if (user) {
-      await fetchProfileAndRoles(user.id);
-    }
+    setProfile({ ...profile, tenant_id: tenantId });
+    // Reload page to refresh all data for new tenant
+    window.location.reload();
   };
 
   const hasRole = (role: UserRole) => roles.includes(role);
@@ -167,16 +147,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ 
-      user, 
-      session, 
-      loading, 
-      profile, 
-      roles, 
-      userTenants,
-      activeTenant,
-      hasRole, 
-      switchTenant,
-      signOut 
+      user, session, loading, profile, roles, 
+      userTenants, activeTenant,
+      hasRole, switchTenant, signOut 
     }}>
       {children}
     </AuthContext.Provider>

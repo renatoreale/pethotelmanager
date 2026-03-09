@@ -2,18 +2,25 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useAllTenants } from "@/hooks/useAdmin";
+import { Building2, ChevronDown, Check } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 export function AppLayout() {
-  const { profile } = useAuth();
+  const { profile, activeTenant, userTenants, switchTenant } = useAuth();
+  const { isAdmin, isManager, isTitolare } = usePermissions();
+  const { data: allTenants } = useAllTenants();
 
-  const initials = profile?.full_name
-    ? profile.full_name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : "??";
+  // Admin sees ALL tenants, manager/titolare see their associated tenants
+  const tenantOptions = isAdmin ? (allTenants || []) : userTenants.map(t => ({ id: t.id, name: t.name }));
+  const showTenantSwitcher = tenantOptions.length > 0 && (isAdmin || isManager || isTitolare);
 
   return (
     <SidebarProvider>
@@ -22,6 +29,35 @@ export function AppLayout() {
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-14 flex items-center gap-4 border-b bg-card/50 px-4 backdrop-blur-sm sticky top-0 z-30">
             <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
+            
+            {showTenantSwitcher && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Building2 className="h-4 w-4" />
+                    <span className="max-w-[200px] truncate">
+                      {activeTenant?.name || "Seleziona pensione"}
+                    </span>
+                    <ChevronDown className="h-3 w-3 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  {tenantOptions.map((tenant) => (
+                    <DropdownMenuItem
+                      key={tenant.id}
+                      onClick={() => switchTenant(tenant.id)}
+                      className="flex items-center justify-between"
+                    >
+                      <span>{tenant.name}</span>
+                      {tenant.id === activeTenant?.id && (
+                        <Check className="h-4 w-4 text-primary" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
             <div className="flex-1" />
           </header>
           <main className="flex-1 p-6">

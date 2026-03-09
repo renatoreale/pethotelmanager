@@ -270,6 +270,7 @@ export interface RolePermission {
   can_read: boolean;
   can_write: boolean;
   can_delete: boolean;
+  is_visible: boolean;
   tenant_id: string | null;
 }
 
@@ -397,6 +398,7 @@ export function useBulkUpsertPermissions() {
               can_read: perm.can_read,
               can_write: perm.can_write,
               can_delete: perm.can_delete,
+              is_visible: perm.is_visible,
             })
             .eq("id", existing.id);
         } else {
@@ -406,6 +408,7 @@ export function useBulkUpsertPermissions() {
             can_read: perm.can_read,
             can_write: perm.can_write,
             can_delete: perm.can_delete,
+            is_visible: perm.is_visible,
             tenant_id: perm.tenant_id,
           });
         }
