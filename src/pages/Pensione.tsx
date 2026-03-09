@@ -730,6 +730,7 @@ function ListinoTab() {
     setValidFrom(p.valid_from ?? "");
     setValidTo(p.valid_to ?? "");
     setActive(p.is_active);
+    setPetType(p.pet_type || "gatti");
     setDialogOpen(true);
   };
 
