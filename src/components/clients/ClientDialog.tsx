@@ -381,6 +381,24 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       )}
                     </div>
 
+                    {pet.petType === "entrambi" && (
+                      <div className="space-y-1">
+                        <Label className="text-xs">Tipo animale *</Label>
+                        <Select
+                          value={cat.pet_type || ""}
+                          onValueChange={(v) => updateCat(index, "pet_type", v as PetType)}
+                        >
+                          <SelectTrigger className="h-9 text-sm">
+                            <SelectValue placeholder="Seleziona..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="gatti">🐱 Gatto</SelectItem>
+                            <SelectItem value="cani">🐶 Cane</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-3 gap-3">
                       <div className="space-y-1">
                         <Label className="text-xs">Nome *</Label>
