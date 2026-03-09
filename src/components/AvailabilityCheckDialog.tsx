@@ -50,6 +50,7 @@ export function AvailabilityCheckDialog() {
   const occupancyDays = tenantConfig?.occupancy_rule_days ?? 4;
   const totalSingole = tenantConfig?.num_singole ?? 0;
   const totalDoppie = tenantConfig?.num_doppie ?? 0;
+  const petType = tenantConfig?.pet_type as "gatti" | "cani" | "entrambi" | undefined;
 
   const rangeStart = useMemo(() => subDays(checkInDate, 5), [checkInDate]);
   const rangeEnd = useMemo(() => addDays(checkInDate, 5), [checkInDate]);
