@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { CalendarIcon, CheckCircle2, XCircle, Clock, LogIn, LogOut, Trash2, Pencil, CalendarClock } from "lucide-react";
 import { AutocompleteSearch } from "@/components/AutocompleteSearch";
-import { format, addDays, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addWeeks, subWeeks, addMonths, subMonths, parseISO, getDay } from "date-fns";
+import { format, addDays, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addWeeks, subWeeks, addMonths, subMonths, parseISO, getDay, eachDayOfInterval } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -40,6 +40,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { EditCheckoutDialog, type CheckoutBookingData } from "@/components/appointments/EditCheckoutDialog";
+import { CalendarGrid } from "@/components/appointments/CalendarGrid";
 import { useBookings } from "@/hooks/useBookings";
 
 type ViewMode = "giorno" | "settimana" | "mese" | "personalizzato";
@@ -286,8 +287,24 @@ export default function Appuntamenti() {
     </TableHeader>
   );
 
+  // Handle clicking an appointment in the calendar grid
+  const handleCalendarApptClick = (appt: AppointmentWithDetails) => {
+    const bookingStatus = appt.booking?.status ?? "";
+    const isLocked = ["chiusa", "cancellata", "rimborsata"].includes(bookingStatus);
+    const isInCorso = bookingStatus === "in_corso";
+    const isIn = appt.appointment_type === "check_in";
+
+    if (isLocked || (isInCorso && isIn)) return;
+
+    if (appt.appointment_type === "check_out" && isInCorso) {
+      setEditingCheckout(appt);
+    } else {
+      setEditing(appt);
+    }
+  };
+
   const renderAllAppointments = () => {
-    if (!filteredAppointments.length) {
+    if (!filteredAppointments.length && !(viewMode === "settimana" || viewMode === "mese")) {
       return (
         <div className="py-12 text-center text-muted-foreground">
           <Clock className="mx-auto h-10 w-10 mb-3 opacity-30" />
@@ -296,8 +313,32 @@ export default function Appuntamenti() {
       );
     }
 
+    // Calendar grid for week and month views (not during search)
+    if ((viewMode === "settimana" || viewMode === "mese") && !hasSearch) {
+      return (
+        <CalendarGrid
+          viewMode={viewMode}
+          selectedDate={selectedDate}
+          appointments={filteredAppointments}
+          onSelectDate={(d) => {
+            setSelectedDate(d);
+            setViewMode("giorno");
+          }}
+          onClickAppointment={handleCalendarApptClick}
+        />
+      );
+    }
+
     if (isRange || hasSearch) {
       const grouped = groupByDate(filteredAppointments);
+      if (!grouped.length) {
+        return (
+          <div className="py-12 text-center text-muted-foreground">
+            <Clock className="mx-auto h-10 w-10 mb-3 opacity-30" />
+            Nessun appuntamento trovato
+          </div>
+        );
+      }
       return (
         <div className="space-y-6">
           {grouped.map(([date, dayAppts]) => (
