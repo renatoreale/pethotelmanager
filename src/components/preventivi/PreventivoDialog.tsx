@@ -1167,6 +1167,7 @@ export function PreventivoDialog({
             excludeBookingId={editing?.id}
             highlightDate={checkInDate ? format(checkInDate, "yyyy-MM-dd") : undefined}
             compact
+            petType={petType}
           />
         )}
         <DialogFooter>
