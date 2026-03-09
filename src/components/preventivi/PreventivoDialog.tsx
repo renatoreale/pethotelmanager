@@ -124,6 +124,8 @@ export function PreventivoDialog({
   const { data: tenantConfig } = useTenantConfig();
   const occupancyDays = tenantConfig?.occupancy_rule_days ?? 3;
   const petType = tenantConfig?.pet_type as "gatti" | "cani" | "entrambi" | undefined;
+
+  const { data: clientCats } = useClientCats(clientId || undefined);
   
   // Determine pet_type of the booking from selected cats
   const bookingPetType = useMemo(() => {
