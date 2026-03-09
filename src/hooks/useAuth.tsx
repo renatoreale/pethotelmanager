@@ -110,7 +110,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserTenants(userTenantsArray);
 
     // Set roles for the active tenant
-    const activeTenantId = profileRes.data?.tenant_id;
+    let activeTenantId = profileRes.data?.tenant_id;
+    
+    // Auto-select first tenant if none is active but user has tenant associations
+    if (!activeTenantId && userTenantsArray.length > 0) {
+      activeTenantId = userTenantsArray[0].id;
+      // Persist the auto-selection
+      if (profileRes.data) {
+        await supabase
+          .from("profiles")
+          .update({ tenant_id: activeTenantId })
+          .eq("id", profileRes.data.id);
+        setProfile({ ...profileRes.data, tenant_id: activeTenantId });
+      }
+    }
+    
     if (activeTenantId) {
       const activeTenantRoles = tenantMap.get(activeTenantId)?.roles || [];
       setRoles([...globalRoles, ...activeTenantRoles]);
