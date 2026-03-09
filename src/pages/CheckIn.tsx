@@ -688,7 +688,7 @@ export default function CheckIn() {
               )}
 
               <p className="text-xs text-muted-foreground">
-                I gatti verranno automaticamente registrati nel Registro Gatti.
+                I pets verranno automaticamente registrati nel Registro Pets.
               </p>
             </div>
           )}

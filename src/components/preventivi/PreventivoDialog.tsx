@@ -901,8 +901,8 @@ export function PreventivoDialog({
                   </div>
                   {selectedCats.length > 0 && (
                     <p className="text-xs text-muted-foreground">
-                      {selectedCats.length} gatt{selectedCats.length === 1 ? "o" : "i"} × {period.days} {stayLabel}
-                      {period.supplementCost > 0 && ` (incl. suppl. gatto extra: € ${period.supplementCost.toFixed(2)})`}
+                      {selectedCats.length} pet{selectedCats.length === 1 ? "" : "s"} × {period.days} {stayLabel}
+                      {period.supplementCost > 0 && ` (incl. suppl. pet extra: € ${period.supplementCost.toFixed(2)})`}
                     </p>
                   )}
                 </div>

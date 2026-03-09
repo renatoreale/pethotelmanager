@@ -549,7 +549,7 @@ export default function CheckOut() {
               {/* Registry info */}
               <div className="rounded-md bg-muted/50 border p-3 text-sm">
                 <p className="text-muted-foreground">
-                  Il registro gatti verrà aggiornato con la data di check-out selezionata e motivazione <strong>"Ritorno a casa"</strong>.
+                  Il registro pets verrà aggiornato con la data di check-out selezionata e motivazione <strong>"Ritorno a casa"</strong>.
                 </p>
               </div>
 

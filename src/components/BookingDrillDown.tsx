@@ -235,7 +235,7 @@ export function BookingDrillDown({ booking, defaultOpen = false }: BookingDrillD
                   <span className="font-medium">{extraDaysInfo.extra_days} {stayLabel} extra</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Gatti</span>
+                  <span className="text-muted-foreground">Pets</span>
                   <span className="font-medium">{extraDaysInfo.num_cats}</span>
                 </div>
                 {extraDaysInfo.tariff_name && (

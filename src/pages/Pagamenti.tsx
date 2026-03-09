@@ -293,7 +293,7 @@ export default function Pagamenti() {
       <AutocompleteSearch
         value={search}
         onChange={setSearch}
-        placeholder="Cerca cliente o gatto..."
+        placeholder="Cerca cliente o pet..."
         className="max-w-sm"
       />
 

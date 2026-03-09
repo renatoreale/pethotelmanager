@@ -895,7 +895,7 @@ function ListinoTab() {
                     <Input type="number" min={0} step={0.5} value={pricePerDay} onChange={(e) => setPricePerDay(Number(e.target.value))} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Suppl. gatto extra (€)</Label>
+                    <Label>Suppl. pet extra (€)</Label>
                     <Input type="number" min={0} step={0.5} value={extraSupplement} onChange={(e) => setExtraSupplement(Number(e.target.value))} />
                   </div>
                 </div>

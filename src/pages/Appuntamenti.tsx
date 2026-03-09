@@ -562,7 +562,7 @@ export default function Appuntamenti() {
                   <TableRow>
                     <TableHead>N° Prenotazione</TableHead>
                     <TableHead>Cliente</TableHead>
-                    <TableHead>Gatti</TableHead>
+                    <TableHead>Pets</TableHead>
                     <TableHead>Check-in</TableHead>
                     <TableHead>Check-out</TableHead>
                     <TableHead>Stato</TableHead>
