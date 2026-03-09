@@ -40,6 +40,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { EditCheckoutDialog, type CheckoutBookingData } from "@/components/appointments/EditCheckoutDialog";
+import { EditCheckinDialog } from "@/components/appointments/EditCheckinDialog";
 import { CalendarGrid } from "@/components/appointments/CalendarGrid";
 import { useBookings } from "@/hooks/useBookings";
 
@@ -57,6 +58,7 @@ export default function Appuntamenti() {
   const [editing, setEditing] = useState<AppointmentWithDetails | null>(null);
   const [editingCheckout, setEditingCheckout] = useState<AppointmentWithDetails | null>(null);
   const [creatingCheckout, setCreatingCheckout] = useState<CheckoutBookingData | null>(null);
+  const [editingCheckin, setEditingCheckin] = useState<AppointmentWithDetails | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("tutti");
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
@@ -168,6 +170,14 @@ export default function Appuntamenti() {
     setDeleting(null);
   };
 
+  // Check if a check-in appointment is in the future (date > today)
+  const isFutureCheckin = (appt: AppointmentWithDetails) => {
+    if (appt.appointment_type !== "check_in") return false;
+    const apptDate = appt.scheduled_at.slice(0, 10);
+    const todayStr = format(new Date(), "yyyy-MM-dd");
+    return apptDate >= todayStr;
+  };
+
   const extractTime = (isoStr: string) => {
     const tIndex = isoStr.indexOf("T");
     return tIndex >= 0 ? isoStr.slice(tIndex + 1, tIndex + 6) : "--:--";
@@ -257,6 +267,8 @@ export default function Appuntamenti() {
               <Button variant="ghost" size="icon" onClick={() => {
                 if (appt.appointment_type === "check_out" && isInCorso) {
                   setEditingCheckout(appt);
+                } else if (appt.appointment_type === "check_in" && isFutureCheckin(appt)) {
+                  setEditingCheckin(appt);
                 } else {
                   setEditing(appt);
                 }
@@ -298,6 +310,8 @@ export default function Appuntamenti() {
 
     if (appt.appointment_type === "check_out" && isInCorso) {
       setEditingCheckout(appt);
+    } else if (appt.appointment_type === "check_in" && isFutureCheckin(appt)) {
+      setEditingCheckin(appt);
     } else {
       setEditing(appt);
     }
@@ -636,6 +650,14 @@ export default function Appuntamenti() {
           onOpenChange={(open) => { if (!open) { setEditingCheckout(null); setCreatingCheckout(null); } }}
           appointment={editingCheckout}
           bookingData={creatingCheckout}
+        />
+      )}
+
+      {editingCheckin && (
+        <EditCheckinDialog
+          open={!!editingCheckin}
+          onOpenChange={(open) => { if (!open) setEditingCheckin(null); }}
+          appointment={editingCheckin}
         />
       )}
     </div>
