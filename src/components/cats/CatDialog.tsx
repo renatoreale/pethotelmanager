@@ -32,6 +32,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useCreateCat, useUpdateCat, type Cat } from "@/hooks/useCats";
 import { useClients } from "@/hooks/useClients";
+import { usePetLabels } from "@/hooks/usePetLabels";
 
 const catSchema = z.object({
   name: z.string().trim().min(1, "Nome obbligatorio").max(100),
