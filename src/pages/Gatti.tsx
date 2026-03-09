@@ -113,7 +113,7 @@ export default function Gatti() {
                     <TableRow key={cat.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
-                          <CatIcon className="h-4 w-4 text-primary shrink-0" />
+                          <PetIcon className="h-4 w-4 text-primary shrink-0" />
                           {cat.name}
                         </div>
                       </TableCell>
