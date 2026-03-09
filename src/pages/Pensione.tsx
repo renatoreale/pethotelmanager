@@ -65,12 +65,14 @@ export default function Pensione() {
           <TabsTrigger value="slot" className="gap-2"><Clock className="h-4 w-4" /> Slot Appuntamenti</TabsTrigger>
           <TabsTrigger value="listino" className="gap-2"><Euro className="h-4 w-4" /> Listino Prezzi</TabsTrigger>
           <TabsTrigger value="pagamenti" className="gap-2"><CreditCard className="h-4 w-4" /> Modalità Pagamento</TabsTrigger>
+          <TabsTrigger value="cancellazione" className="gap-2"><Ban className="h-4 w-4" /> Cancellazione</TabsTrigger>
         </TabsList>
 
         <TabsContent value="casette"><CasetteTab /></TabsContent>
         <TabsContent value="slot"><SlotTab /></TabsContent>
         <TabsContent value="listino"><ListinoTab /></TabsContent>
         <TabsContent value="pagamenti"><PaymentMethodsTab /></TabsContent>
+        <TabsContent value="cancellazione"><CancellationPolicyTab /></TabsContent>
       </Tabs>
     </div>
   );
