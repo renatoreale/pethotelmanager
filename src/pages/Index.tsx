@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useOccupancyData } from "@/components/OccupancyGrid";
 import { Button } from "@/components/ui/button";
 import { Cat, CalendarCheck, LogIn, LogOut, CreditCard, AlertTriangle, CalendarIcon } from "lucide-react";
 import { AvailabilityCheckDialog } from "@/components/AvailabilityCheckDialog";
