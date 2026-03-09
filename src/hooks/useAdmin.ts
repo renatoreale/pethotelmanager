@@ -384,3 +384,32 @@ export function useBulkUpsertPermissions() {
     },
   });
 }
+
+// ── CREATE USER (via Edge Function) ──
+export function useCreateUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (userData: {
+      email: string;
+      password: string;
+      full_name: string;
+      tenant_id: string | null;
+      role: AppRole;
+    }) => {
+      const { data, error } = await supabase.functions.invoke("admin-create-user", {
+        body: userData,
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-all-users"] });
+      qc.invalidateQueries({ queryKey: ["users"] });
+      toast.success("Utente creato con successo");
+    },
+    onError: (error: any) => {
+      toast.error("Errore nella creazione utente: " + error.message);
+    },
+  });
+}
