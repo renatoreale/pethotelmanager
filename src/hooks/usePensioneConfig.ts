@@ -121,7 +121,7 @@ export function usePriceLists() {
       const { data, error } = await supabase
         .from("price_lists")
         .select("*")
-        .or(`tenant_id.is.null,tenant_id.eq.${profile?.tenant_id}`)
+        .eq("tenant_id", profile!.tenant_id)
         .order("name");
       if (error) throw error;
       return data;
