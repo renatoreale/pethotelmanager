@@ -18,9 +18,10 @@ export function AppLayout() {
   const { isAdmin, isManager, isTitolare } = usePermissions();
   const { data: allTenants } = useAllTenants();
 
-  // Admin sees ALL tenants, manager/titolare see their associated tenants
-  const tenantOptions = isAdmin ? (allTenants || []) : userTenants.map(t => ({ id: t.id, name: t.name }));
-  const showTenantSwitcher = tenantOptions.length > 0 && (isAdmin || isManager || isTitolare);
+  const { isCeo } = usePermissions();
+  // Admin/CEO see ALL tenants, titolare sees their associated tenants, manager sees only their own (no switcher)
+  const tenantOptions = (isAdmin || isCeo) ? (allTenants || []) : userTenants.map(t => ({ id: t.id, name: t.name }));
+  const showTenantSwitcher = tenantOptions.length > 1 && (isAdmin || isCeo || isTitolare);
   // Resolve active tenant name from options (covers admin selecting tenants they don't have roles for)
   const currentTenant = tenantOptions.find(t => t.id === profile?.tenant_id) || activeTenant;
 
