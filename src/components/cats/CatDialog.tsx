@@ -163,6 +163,30 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
               )}
             />
 
+            {pet.petType === "entrambi" && (
+              <FormField
+                control={form.control}
+                name="pet_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo animale *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleziona tipo..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="gatti">🐱 Gatto</SelectItem>
+                        <SelectItem value="cani">🐶 Cane</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
