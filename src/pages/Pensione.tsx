@@ -278,6 +278,7 @@ function CasetteTab() {
   const updateConfig = useUpdateTenantConfig();
   const [singole, setSingole] = useState<number | null>(null);
   const [doppie, setDoppie] = useState<number | null>(null);
+  const [maxCats, setMaxCats] = useState<number | null>(null);
   const [ruleDays, setRuleDays] = useState<number | null>(null);
   const [stayCalcType, setStayCalcType] = useState<string | null>(null);
   const [countCheckinDay, setCountCheckinDay] = useState<boolean | null>(null);
@@ -285,6 +286,7 @@ function CasetteTab() {
 
   const s = singole ?? config?.num_singole ?? 0;
   const d = doppie ?? config?.num_doppie ?? 0;
+  const mc = maxCats ?? (config as any)?.max_cats ?? 0;
   const r = ruleDays ?? config?.occupancy_rule_days ?? 4;
   const sct = stayCalcType ?? (config as any)?.stay_calc_type ?? "notti";
   const cid = countCheckinDay ?? (config as any)?.count_checkin_day ?? false;
@@ -297,6 +299,7 @@ function CasetteTab() {
         id: config.id,
         num_singole: s,
         num_doppie: d,
+        max_cats: mc,
         occupancy_rule_days: r,
         stay_calc_type: sct,
         count_checkin_day: cid,
@@ -305,6 +308,7 @@ function CasetteTab() {
       toast.success("Configurazione casette salvata");
       setSingole(null);
       setDoppie(null);
+      setMaxCats(null);
       setRuleDays(null);
       setStayCalcType(null);
       setCountCheckinDay(null);
@@ -323,7 +327,7 @@ function CasetteTab() {
         <CardDescription>Configura il numero di casette disponibili e la regola di occupazione</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid gap-6 sm:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-4">
           <div className="space-y-2">
             <Label htmlFor="singole">Casette Singole</Label>
             <Input id="singole" type="number" min={0} value={s} onChange={(e) => setSingole(Number(e.target.value))} />
@@ -333,6 +337,11 @@ function CasetteTab() {
             <Label htmlFor="doppie">Casette Doppie</Label>
             <Input id="doppie" type="number" min={0} value={d} onChange={(e) => setDoppie(Number(e.target.value))} />
             <p className="text-xs text-muted-foreground">Per 2+ gatti fratelli</p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="maxCats">Capienza max gatti</Label>
+            <Input id="maxCats" type="number" min={0} value={mc} onChange={(e) => setMaxCats(Number(e.target.value))} />
+            <p className="text-xs text-muted-foreground">Numero massimo di gatti ospitabili</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="rule">Giorni occupazione minima</Label>
