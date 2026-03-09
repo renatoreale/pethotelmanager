@@ -1,0 +1,1 @@
+ALTER TABLE public.cats ADD COLUMN pet_type public.pet_type NULL;

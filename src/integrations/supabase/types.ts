@@ -437,6 +437,7 @@ export type Database = {
           microchip: string | null
           name: string
           needs_double_cage: boolean
+          pet_type: Database["public"]["Enums"]["pet_type"] | null
           sibling_group_id: string | null
           tenant_id: string
           updated_at: string
@@ -457,6 +458,7 @@ export type Database = {
           microchip?: string | null
           name: string
           needs_double_cage?: boolean
+          pet_type?: Database["public"]["Enums"]["pet_type"] | null
           sibling_group_id?: string | null
           tenant_id: string
           updated_at?: string
@@ -477,6 +479,7 @@ export type Database = {
           microchip?: string | null
           name?: string
           needs_double_cage?: boolean
+          pet_type?: Database["public"]["Enums"]["pet_type"] | null
           sibling_group_id?: string | null
           tenant_id?: string
           updated_at?: string
