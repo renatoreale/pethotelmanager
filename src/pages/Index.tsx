@@ -542,7 +542,7 @@ export default function Index() {
 
       {/* Alerts - hide for operatore */}
       {!isOperatoreRestricted && s.expiringPreventivi > 0 && (
-        <Card className="border-none shadow-sm border-l-4 border-l-warning">
+        <Card className="border shadow-sm border-l-4 border-l-warning">
           <CardContent className="flex items-center gap-3 py-4">
             <AlertTriangle className="h-5 w-5 text-warning shrink-0" />
             <div>
