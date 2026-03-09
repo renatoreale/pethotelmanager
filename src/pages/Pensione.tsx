@@ -222,10 +222,24 @@ function AnagraficaTab() {
           </div>
         </div>
 
-        {/* Titolare */}
-        <div className="space-y-2">
-          <Label>Nominativo Titolare</Label>
-          <Input value={currentTitolareName} onChange={(e) => setTitolareName(e.target.value)} placeholder="Nome e cognome del titolare" />
+        {/* Titolare + Tipo animale */}
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Nominativo Titolare</Label>
+            <Input value={currentTitolareName} onChange={(e) => setTitolareName(e.target.value)} placeholder="Nome e cognome del titolare" />
+          </div>
+          <div className="space-y-2">
+            <Label>Tipo animale</Label>
+            <Select value={currentPetType} onValueChange={(v) => setPetType(v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="gatti">Gatti</SelectItem>
+                <SelectItem value="cani">Cani</SelectItem>
+                <SelectItem value="entrambi">Entrambi</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">Determina le etichette nell'interfaccia</p>
+          </div>
         </div>
 
         {/* Contatti */}
