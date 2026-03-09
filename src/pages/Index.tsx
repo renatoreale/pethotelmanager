@@ -200,12 +200,13 @@ export default function Index() {
   };
 
   // Build KPI cards based on permissions
+  const PetIcon = pet.iconName === "Cat" ? Cat : pet.iconName === "Dog" ? Dog : PawPrint;
   const kpis = [
     {
-      title: "Gatti in struttura",
+      title: `${pet.pluralCap} in struttura`,
       value: String(s.catsInStructure),
       subtitle: maxCats > 0 ? `su ${maxCats} posti in struttura` : `su ${totalSlots} posti totali`,
-      icon: Cat,
+      icon: PetIcon,
       color: "text-primary",
       bg: "bg-primary/10",
       show: true,

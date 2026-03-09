@@ -168,7 +168,7 @@ export default function Gatti() {
       <AlertDialog open={!!deletingCat} onOpenChange={() => setDeletingCat(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminare il gatto?</AlertDialogTitle>
+            <AlertDialogTitle>Eliminare {pet.articleSingular}?</AlertDialogTitle>
             <AlertDialogDescription>
               {deletingCat && `Stai per eliminare ${deletingCat.name}. Questa azione non può essere annullata.`}
             </AlertDialogDescription>
