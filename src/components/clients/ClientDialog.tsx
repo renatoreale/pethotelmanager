@@ -176,8 +176,16 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     const activeCats = cats.filter((c) => !c._deleted);
     const validCats = activeCats.filter((c) => c.name.trim());
     if (validCats.length === 0) {
-      toast.error("Aggiungi almeno un gatto con un nome");
+      toast.error(`Aggiungi almeno ${pet.indefiniteSingular} con un nome`);
       return;
+    }
+    // Validate pet_type for "entrambi" tenants
+    if (pet.petType === "entrambi") {
+      const missingType = validCats.some((c) => !c.pet_type);
+      if (missingType) {
+        toast.error("Seleziona il tipo di animale per ciascun pet");
+        return;
+      }
     }
 
     setSaving(true);
