@@ -299,6 +299,7 @@ function CasetteTab() {
         id: config.id,
         num_singole: s,
         num_doppie: d,
+        max_cats: mc,
         occupancy_rule_days: r,
         stay_calc_type: sct,
         count_checkin_day: cid,
@@ -307,6 +308,7 @@ function CasetteTab() {
       toast.success("Configurazione casette salvata");
       setSingole(null);
       setDoppie(null);
+      setMaxCats(null);
       setRuleDays(null);
       setStayCalcType(null);
       setCountCheckinDay(null);
