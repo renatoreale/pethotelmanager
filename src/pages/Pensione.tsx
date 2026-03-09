@@ -250,10 +250,20 @@ function AnagraficaTab() {
           </div>
         </div>
 
-        {/* Indirizzo */}
-        <div className="space-y-2">
-          <Label>Indirizzo</Label>
-          <Input value={currentAddress} onChange={(e) => setAddress(e.target.value)} placeholder="Via, Città, CAP" />
+        {/* Indirizzo, CAP, Città */}
+        <div className="grid gap-6 sm:grid-cols-3">
+          <div className="space-y-2 sm:col-span-1">
+            <Label>Indirizzo</Label>
+            <Input value={currentAddress} onChange={(e) => setAddress(e.target.value)} placeholder="Via Roma 1" />
+          </div>
+          <div className="space-y-2">
+            <Label>CAP</Label>
+            <Input value={currentCap} onChange={(e) => setCap(e.target.value)} placeholder="00100" maxLength={5} />
+          </div>
+          <div className="space-y-2">
+            <Label>Città</Label>
+            <Input value={currentCity} onChange={(e) => setCity(e.target.value)} placeholder="Roma" />
+          </div>
         </div>
 
         <Button onClick={handleSave} disabled={updateConfig.isPending}>
