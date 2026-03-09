@@ -149,8 +149,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   });
 
   const isBlacklisted = form.watch("is_blacklisted");
-
-  const addCat = () => setCats((prev) => [...prev, emptyCat()]);
+  const addCat = () => setCats((prev) => [...prev, emptyCat(defaultAnimalType)]);
 
   const removeCat = (index: number) => {
     setCats((prev) => {
