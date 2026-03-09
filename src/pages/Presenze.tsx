@@ -168,7 +168,7 @@ export default function Presenze() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Gatto</TableHead>
+                <TableHead>{pet.singularCap}</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Microchip</TableHead>
                 <TableHead>Razza</TableHead>
