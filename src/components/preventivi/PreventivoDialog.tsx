@@ -19,7 +19,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Plus, CalendarIcon, X, User, Cat, Home, Calendar as CalIcon, Sparkles, Percent, FileText, UserPlus, AlertTriangle } from "lucide-react";
+import { Plus, CalendarIcon, X, User, Cat, Dog, Home, Calendar as CalIcon, Sparkles, Percent, FileText, UserPlus, AlertTriangle } from "lucide-react";
 import { ClientDialog } from "@/components/clients/ClientDialog";
 import { toast } from "sonner";
 import { format, differenceInDays, parseISO, startOfDay, addDays, subDays } from "date-fns";
@@ -93,6 +93,11 @@ export function PreventivoDialog({
   const [selectedCats, setSelectedCats] = useState<string[]>([]);
   const [unitsOccupied, setUnitsOccupied] = useState(1);
   const [cageUnits, setCageUnits] = useState<("singola" | "doppia")[]>(["singola"]);
+  // Mixed-pet cage state (separate pools for gatti and cani)
+  const [cageUnitsGatti, setCageUnitsGatti] = useState<("singola" | "doppia")[]>(["singola"]);
+  const [cageUnitsCani, setCageUnitsCani] = useState<("singola" | "doppia")[]>(["singola"]);
+  const [unitsGatti, setUnitsGatti] = useState(1);
+  const [unitsCani, setUnitsCani] = useState(1);
   const [checkInDate, setCheckInDate] = useState<Date | undefined>();
   const [checkOutDate, setCheckOutDate] = useState<Date | undefined>();
   const [notes, setNotes] = useState("");
@@ -127,30 +132,46 @@ export function PreventivoDialog({
 
   const { data: clientCats } = useClientCats(clientId || undefined);
   
+  // Determine if selected pets are mixed (both cats and dogs)
+  const selectedPetTypes = useMemo(() => {
+    if (!clientCats || selectedCats.length === 0) return new Set<string>();
+    const selectedCatData = clientCats.filter((c: any) => selectedCats.includes(c.id));
+    return new Set(selectedCatData.map((c: any) => c.pet_type).filter(Boolean));
+  }, [clientCats, selectedCats]);
+
+  const isMixedPets = petType === "entrambi" && selectedPetTypes.has("gatti") && selectedPetTypes.has("cani");
+  
   // Determine pet_type of the booking from selected cats
   const bookingPetType = useMemo(() => {
+    if (isMixedPets) return null; // mixed booking
     if (!clientCats || selectedCats.length === 0) return petType === "entrambi" ? null : petType ?? null;
     const selectedCatData = clientCats.filter((c: any) => selectedCats.includes(c.id));
     const types = new Set(selectedCatData.map((c: any) => c.pet_type).filter(Boolean));
     if (types.size === 1) return types.values().next().value as "gatti" | "cani";
     if (petType !== "entrambi") return petType ?? null;
     return null;
-  }, [clientCats, selectedCats, petType]);
+  }, [clientCats, selectedCats, petType, isMixedPets]);
+
+  // Per-type totals for "entrambi" facilities
+  const singoleGatti = (tenantConfig as any)?.num_singole_gatti ?? 0;
+  const doppieGatti = (tenantConfig as any)?.num_doppie_gatti ?? 0;
+  const singoleCani = (tenantConfig as any)?.num_singole_cani ?? 0;
+  const doppieCani = (tenantConfig as any)?.num_doppie_cani ?? 0;
 
   // Get per-type cage totals
   const totalSingole = useMemo(() => {
     if (petType !== "entrambi") return tenantConfig?.num_singole ?? 0;
-    if (bookingPetType === "gatti") return (tenantConfig as any)?.num_singole_gatti ?? 0;
-    if (bookingPetType === "cani") return (tenantConfig as any)?.num_singole_cani ?? 0;
+    if (bookingPetType === "gatti") return singoleGatti;
+    if (bookingPetType === "cani") return singoleCani;
     return tenantConfig?.num_singole ?? 0;
-  }, [tenantConfig, petType, bookingPetType]);
+  }, [tenantConfig, petType, bookingPetType, singoleGatti, singoleCani]);
   
   const totalDoppie = useMemo(() => {
     if (petType !== "entrambi") return tenantConfig?.num_doppie ?? 0;
-    if (bookingPetType === "gatti") return (tenantConfig as any)?.num_doppie_gatti ?? 0;
-    if (bookingPetType === "cani") return (tenantConfig as any)?.num_doppie_cani ?? 0;
+    if (bookingPetType === "gatti") return doppieGatti;
+    if (bookingPetType === "cani") return doppieCani;
     return tenantConfig?.num_doppie ?? 0;
-  }, [tenantConfig, petType, bookingPetType]);
+  }, [tenantConfig, petType, bookingPetType, doppieGatti, doppieCani]);
 
   const { bookingOccupancy } = useOccupancyData(
     allBookings ?? [],
@@ -159,22 +180,44 @@ export function PreventivoDialog({
     petType,
   );
 
+  // For mixed pets, run availability checks on BOTH pools separately
+  const availabilityResultGatti = useMemo(() => {
+    if (!isMixedPets || !checkInDate || cageUnitsGatti.length === 0) return null;
+    const checkInStr = format(checkInDate, "yyyy-MM-dd");
+    const filteredOccupancy = bookingOccupancy.filter(bo => {
+      const bpt = (bo.booking as any).pet_type;
+      return bpt === "gatti" || bpt === null || bpt === undefined;
+    });
+    return checkAvailability(filteredOccupancy, checkInStr, occupancyDays, cageUnitsGatti, singoleGatti, doppieGatti);
+  }, [isMixedPets, checkInDate, cageUnitsGatti, bookingOccupancy, occupancyDays, singoleGatti, doppieGatti]);
+
+  const availabilityResultCani = useMemo(() => {
+    if (!isMixedPets || !checkInDate || cageUnitsCani.length === 0) return null;
+    const checkInStr = format(checkInDate, "yyyy-MM-dd");
+    const filteredOccupancy = bookingOccupancy.filter(bo => {
+      const bpt = (bo.booking as any).pet_type;
+      return bpt === "cani" || bpt === null || bpt === undefined;
+    });
+    return checkAvailability(filteredOccupancy, checkInStr, occupancyDays, cageUnitsCani, singoleCani, doppieCani);
+  }, [isMixedPets, checkInDate, cageUnitsCani, bookingOccupancy, occupancyDays, singoleCani, doppieCani]);
+
   const availabilityResult = useMemo(() => {
+    if (isMixedPets) return null; // handled separately above
     if (!checkInDate || cageUnits.length === 0) return null;
     const checkInStr = format(checkInDate, "yyyy-MM-dd");
-    // For "entrambi" facilities, filter occupancy to same pet type
     const filteredOccupancy = petType === "entrambi" && bookingPetType
       ? bookingOccupancy.filter(bo => (bo.booking as any).pet_type === bookingPetType)
       : bookingOccupancy;
     return checkAvailability(filteredOccupancy, checkInStr, occupancyDays, cageUnits, totalSingole, totalDoppie);
-  }, [checkInDate, cageUnits, bookingOccupancy, occupancyDays, totalSingole, totalDoppie, petType, bookingPetType]);
+  }, [isMixedPets, checkInDate, cageUnits, bookingOccupancy, occupancyDays, totalSingole, totalDoppie, petType, bookingPetType]);
 
-  const hasConflicts = availabilityResult && !availabilityResult.available;
+  const hasConflicts = isMixedPets
+    ? (availabilityResultGatti && !availabilityResultGatti.available) || (availabilityResultCani && !availabilityResultCani.available)
+    : availabilityResult && !availabilityResult.available;
 
   const occupancyRangeStart = useMemo(() => checkInDate ? subDays(checkInDate, 5) : new Date(), [checkInDate]);
   const occupancyRangeEnd = useMemo(() => checkInDate ? addDays(checkInDate, occupancyDays + 5) : new Date(), [checkInDate, occupancyDays]);
 
-  // clientCats already declared above
   const today = startOfDay(new Date());
 
   const checkIn = checkInDate ? format(checkInDate, "yyyy-MM-dd") : "";
@@ -188,14 +231,12 @@ export function PreventivoDialog({
     const diff = differenceInDays(parseISO(co), parseISO(ci));
     if (diff < 0) return 0;
     if (stayCalcType === "notti") return diff;
-    // giorni: base = all calendar days
     let days = diff + 1;
     if (!countCheckinDay) days -= 1;
     if (!countCheckoutDay) days -= 1;
     return Math.max(0, days);
   }, [stayCalcType, countCheckinDay, countCheckoutDay]);
 
-  // Period days (no checkin/checkout adjustment — raw sub-range)
   const calcPeriodDays = useCallback((from: string, to: string) => {
     if (!from || !to) return 0;
     const diff = differenceInDays(parseISO(to), parseISO(from));
@@ -219,18 +260,18 @@ export function PreventivoDialog({
       setCheckInDate(editing.check_in_date ? parseISO(editing.check_in_date) : undefined);
       setCheckOutDate(editing.check_out_date ? parseISO(editing.check_out_date) : undefined);
       setSelectedCats(editing.booking_cats?.map((bc: any) => bc.cat_id) ?? []);
-      // Strip auto-generated breakdown lines from notes for display
       setNotes((editing.notes ?? "").split("\n").filter((line: string) => !line.startsWith("[")).join("\n").trim());
       setTotalAmount(Number(editing.total_amount ?? 0));
       setDepositAmount(Number(editing.deposit_amount ?? 0));
 
-      // Restore breakdown from JSON
       const bd = editing.price_breakdown;
       if (bd) {
         setSeasonPeriods(bd.seasonPeriods ?? []);
         setExtraServices(bd.extraServices ?? []);
         setDiscounts(bd.discounts ?? []);
         if (bd.cageUnits) setCageUnits(bd.cageUnits);
+        if (bd.cageUnitsGatti) { setCageUnitsGatti(bd.cageUnitsGatti); setUnitsGatti(bd.cageUnitsGatti.length); }
+        if (bd.cageUnitsCani) { setCageUnitsCani(bd.cageUnitsCani); setUnitsCani(bd.cageUnitsCani.length); }
       } else {
         setSeasonPeriods([]);
         setExtraServices([]);
@@ -241,6 +282,10 @@ export function PreventivoDialog({
       setClientId("");
       setUnitsOccupied(1);
       setCageUnits(["singola"]);
+      setCageUnitsGatti(["singola"]);
+      setCageUnitsCani(["singola"]);
+      setUnitsGatti(1);
+      setUnitsCani(1);
       setCheckInDate(undefined);
       setCheckOutDate(undefined);
       setSelectedCats([]);
@@ -256,7 +301,6 @@ export function PreventivoDialog({
     setClientDropdownOpen(false);
   };
 
-  // Close client dropdown on click outside
   const clientSearchRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -270,21 +314,38 @@ export function PreventivoDialog({
 
   useEffect(() => { if (open) resetForm(); }, [open, editing]);
 
-  // Fix checkout if before checkin
   useEffect(() => {
     if (checkInDate && checkOutDate && checkOutDate < checkInDate) {
       setCheckOutDate(undefined);
     }
   }, [checkInDate]);
 
-  // Sync cage units array with unitsOccupied
+  // Sync cage units arrays
   useEffect(() => {
-    setCageUnits(prev => {
+    if (!isMixedPets) {
+      setCageUnits(prev => {
+        const newArr = [...prev];
+        while (newArr.length < unitsOccupied) newArr.push("singola");
+        return newArr.slice(0, unitsOccupied);
+      });
+    }
+  }, [unitsOccupied, isMixedPets]);
+
+  useEffect(() => {
+    setCageUnitsGatti(prev => {
       const newArr = [...prev];
-      while (newArr.length < unitsOccupied) newArr.push("singola");
-      return newArr.slice(0, unitsOccupied);
+      while (newArr.length < unitsGatti) newArr.push("singola");
+      return newArr.slice(0, unitsGatti);
     });
-  }, [unitsOccupied]);
+  }, [unitsGatti]);
+
+  useEffect(() => {
+    setCageUnitsCani(prev => {
+      const newArr = [...prev];
+      while (newArr.length < unitsCani) newArr.push("singola");
+      return newArr.slice(0, unitsCani);
+    });
+  }, [unitsCani]);
 
   // ── Seasonal tariffs (filtered by tenant pet_type) ──
   const tenantPetType = tenantConfig?.pet_type as "gatti" | "cani" | "entrambi" | undefined;
@@ -297,7 +358,6 @@ export function PreventivoDialog({
     });
   }, [priceLists, tenantPetType]);
 
-  // ── Extra service tariffs ──
   const availableExtras = useMemo(() => {
     if (!priceLists) return [];
     return priceLists.filter((pl: any) => {
@@ -347,7 +407,6 @@ export function PreventivoDialog({
     }));
   };
 
-  // Recalculate all periods when cats change
   const numSelectedCats = selectedCats.length;
   useEffect(() => {
     setSeasonPeriods(prev => {
@@ -391,7 +450,7 @@ export function PreventivoDialog({
       const extraKm = Math.max(0, line.quantity - line.includedKm);
       return line.fixedCost + extraKm * line.extraKmCost;
     }
-    return line.fixedCost; // una_tantum
+    return line.fixedCost;
   };
 
   const updateExtraQuantity = (idx: number, qty: number) => {
@@ -426,7 +485,6 @@ export function PreventivoDialog({
   const seasonTotal = useMemo(() => seasonPeriods.reduce((sum, p) => sum + p.total, 0), [seasonPeriods]);
   const extrasTotal = useMemo(() => extraServices.reduce((sum, s) => sum + s.total, 0), [extraServices]);
 
-  // Discount applies ONLY to stay total (seasonTotal), not extras
   useEffect(() => {
     setDiscounts(prev => prev.map(d => ({
       ...d,
@@ -451,7 +509,7 @@ export function PreventivoDialog({
   const discountedStay = Math.max(0, seasonTotal - discountTotal);
   const grandTotal = discountedStay + extrasTotal;
 
-  // ── Period validation: days sum & gaps ──
+  // ── Period validation ──
   const periodDaysTotal = useMemo(() => seasonPeriods.reduce((sum, p) => sum + p.days, 0), [seasonPeriods]);
   const periodDaysMismatch = seasonPeriods.length > 0 && duration > 0 && periodDaysTotal !== duration;
 
@@ -459,16 +517,12 @@ export function PreventivoDialog({
     if (seasonPeriods.length < 2 || !checkIn || !checkOut) return [];
     const sorted = [...seasonPeriods].sort((a, b) => a.fromDate.localeCompare(b.fromDate));
     const gaps: string[] = [];
-    // Check gap before first period
     if (sorted[0].fromDate > checkIn) {
       gaps.push(`${checkIn} → ${sorted[0].fromDate}`);
     }
-    // Check gaps between periods
     for (let i = 0; i < sorted.length - 1; i++) {
       const endCurrent = sorted[i].toDate;
       const startNext = sorted[i + 1].fromDate;
-      // In "notti" mode the next period should start on the end date of the previous
-      // In "giorni" mode the next day after toDate should be the start of next period
       const expectedNext = stayCalcType === "notti" ? endCurrent : format(
         new Date(new Date(endCurrent).getTime() + 86400000), "yyyy-MM-dd"
       );
@@ -476,7 +530,6 @@ export function PreventivoDialog({
         gaps.push(`${expectedNext} → ${startNext}`);
       }
     }
-    // Check gap after last period
     if (sorted[sorted.length - 1].toDate < checkOut) {
       const lastEnd = sorted[sorted.length - 1].toDate;
       const expectedStart = stayCalcType === "notti" ? lastEnd : format(
@@ -489,14 +542,12 @@ export function PreventivoDialog({
     return gaps;
   }, [seasonPeriods, checkIn, checkOut, stayCalcType]);
 
-  // Auto-apply calculated total
   useEffect(() => {
     if (seasonPeriods.length > 0 || extraServices.length > 0) {
       setTotalAmount(grandTotal);
     }
   }, [grandTotal, seasonPeriods.length, extraServices.length]);
 
-  // Auto-apply deposit (50%) when total changes and not manually set
   useEffect(() => {
     if (!depositManuallySet) {
       setDepositAmount(Math.round(totalAmount * 50) / 100);
@@ -521,6 +572,14 @@ export function PreventivoDialog({
     setCageUnits(prev => prev.map((t, i) => i === idx ? type : t));
   };
 
+  const updateCageUnitGatti = (idx: number, type: "singola" | "doppia") => {
+    setCageUnitsGatti(prev => prev.map((t, i) => i === idx ? type : t));
+  };
+
+  const updateCageUnitCani = (idx: number, type: "singola" | "doppia") => {
+    setCageUnitsCani(prev => prev.map((t, i) => i === idx ? type : t));
+  };
+
   const numDoppie = cageUnits.filter(t => t === "doppia").length;
   const primaryCageType: "singola" | "doppia" = numDoppie > 0 ? "doppia" : "singola";
 
@@ -535,14 +594,24 @@ export function PreventivoDialog({
   const handleSave = async () => {
     if (!clientId) { toast.error("Seleziona un cliente"); return; }
     if (!checkIn || !checkOut) { toast.error("Date check-in/out obbligatorie"); return; }
-    if (selectedCats.length === 0) { toast.error("Seleziona almeno un gatto"); return; }
+    if (selectedCats.length === 0) { toast.error("Seleziona almeno un pet"); return; }
+
+    // Calculate effective units and cage type
+    const effectiveUnitsOccupied = isMixedPets
+      ? unitsGatti + unitsCani
+      : unitsOccupied;
+    const effectivePrimaryCageType = isMixedPets ? "singola" : primaryCageType;
+    const effectiveCageUnits = isMixedPets
+      ? [...cageUnitsGatti, ...cageUnitsCani]
+      : cageUnits;
 
     // Build price_breakdown JSON
     const priceBreakdown = {
       seasonPeriods,
       extraServices,
       discounts,
-      cageUnits,
+      cageUnits: effectiveCageUnits,
+      ...(isMixedPets ? { cageUnitsGatti, cageUnitsCani } : {}),
       seasonTotal,
       extrasTotal,
       discountTotal,
@@ -552,9 +621,15 @@ export function PreventivoDialog({
 
     // Build breakdown notes for display
     const breakdownParts: string[] = [];
-    if (unitsOccupied > 1) {
-      const ns = cageUnits.filter(t => t === "singola").length;
-      const nd = cageUnits.filter(t => t === "doppia").length;
+    if (isMixedPets) {
+      const nsG = cageUnitsGatti.filter(t => t === "singola").length;
+      const ndG = cageUnitsGatti.filter(t => t === "doppia").length;
+      const nsC = cageUnitsCani.filter(t => t === "singola").length;
+      const ndC = cageUnitsCani.filter(t => t === "doppia").length;
+      breakdownParts.push(`[Casette Gatti: ${nsG}S + ${ndG}D · Casette Cani: ${nsC}S + ${ndC}D]`);
+    } else if (effectiveUnitsOccupied > 1) {
+      const ns = effectiveCageUnits.filter(t => t === "singola").length;
+      const nd = effectiveCageUnits.filter(t => t === "doppia").length;
       breakdownParts.push(`[Casette: ${ns}S + ${nd}D]`);
     }
     if (seasonPeriods.length > 0) {
@@ -572,8 +647,10 @@ export function PreventivoDialog({
       if (parts.length > 0) breakdownParts.push(`[Sconti: ${parts.join("; ")}]`);
     }
 
-    // notes state is already clean (no breakdown lines), just append breakdown
     const fullNotes = [notes.trim(), ...breakdownParts].filter(Boolean).join("\n");
+
+    // Determine booking pet_type
+    const savePetType = isMixedPets ? "entrambi" : (bookingPetType ?? undefined);
 
     try {
       if (editing) {
@@ -583,8 +660,8 @@ export function PreventivoDialog({
         await onUpdate.mutateAsync({
           id: editing.id,
           client_id: clientId,
-          cage_pool_type: primaryCageType,
-          units_occupied: unitsOccupied,
+          cage_pool_type: effectivePrimaryCageType,
+          units_occupied: effectiveUnitsOccupied,
           check_in_date: checkIn,
           check_out_date: checkOut,
           total_amount: totalAmount,
@@ -592,10 +669,9 @@ export function PreventivoDialog({
           notes: fullNotes || null,
           cat_ids: selectedCats,
           price_breakdown: priceBreakdown,
-          ...(bookingPetType ? { pet_type: bookingPetType } : {}),
+          ...(savePetType ? { pet_type: savePetType } : {}),
         });
 
-        // Check if dates changed and there are existing appointments
         if (datesChanged && editing.appointments && editing.appointments.length > 0) {
           setAppointmentSyncDialog({
             bookingId: editing.id,
@@ -606,15 +682,15 @@ export function PreventivoDialog({
             appointments: editing.appointments,
           });
           toast.success("Prenotazione aggiornata");
-          return; // Don't close dialog yet, wait for appointment sync choice
+          return;
         }
 
         toast.success("Preventivo aggiornato");
       } else {
         await onCreate.mutateAsync({
           client_id: clientId,
-          cage_pool_type: primaryCageType,
-          units_occupied: unitsOccupied,
+          cage_pool_type: effectivePrimaryCageType,
+          units_occupied: effectiveUnitsOccupied,
           check_in_date: checkIn,
           check_out_date: checkOut,
           total_amount: totalAmount,
@@ -622,7 +698,7 @@ export function PreventivoDialog({
           notes: fullNotes || undefined,
           cat_ids: selectedCats,
           price_breakdown: priceBreakdown,
-          pet_type: bookingPetType ?? undefined,
+          pet_type: savePetType ?? undefined,
         });
         toast.success("Preventivo creato");
       }
@@ -648,7 +724,7 @@ export function PreventivoDialog({
     try {
       for (const appt of appointments) {
         const oldDate = appt.scheduled_at;
-        const time = oldDate.split("T")[1]; // preserve time
+        const time = oldDate.split("T")[1];
         const newDate = appt.appointment_type === "check_in" ? newCheckIn : newCheckOut;
         await supabase
           .from("appointments")
@@ -681,6 +757,62 @@ export function PreventivoDialog({
     setAppointmentSyncDialog(null);
     onOpenChange(false);
   };
+
+  // Helper to render cage unit selectors for a specific pool
+  const renderCageSelector = (
+    label: string,
+    icon: React.ReactNode,
+    units: number,
+    setUnits: (n: number) => void,
+    cageArr: ("singola" | "doppia")[],
+    updateFn: (idx: number, type: "singola" | "doppia") => void,
+    maxSingole: number,
+    maxDoppie: number,
+  ) => (
+    <div className="space-y-2 p-3 rounded-md border bg-muted/30">
+      <div className="flex items-center gap-2 text-sm font-medium">
+        {icon}
+        <span>{label}</span>
+        <span className="text-xs text-muted-foreground ml-auto">
+          (S: {maxSingole} · D: {maxDoppie})
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">N° casette</Label>
+          <Input type="number" min={1} max={20} value={units}
+            onChange={(e) => setUnits(Math.max(1, Number(e.target.value)))} />
+        </div>
+      </div>
+      {units === 1 ? (
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Tipo</Label>
+          <Select value={cageArr[0]} onValueChange={(v) => updateFn(0, v as "singola" | "doppia")}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="singola">Singola</SelectItem>
+              <SelectItem value="doppia">Doppia</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          {cageArr.map((type, idx) => (
+            <div key={idx} className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground w-20">Casetta {idx + 1}</span>
+              <Select value={type} onValueChange={(v) => updateFn(idx, v as "singola" | "doppia")}>
+                <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="singola">Singola</SelectItem>
+                  <SelectItem value="doppia">Doppia</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -777,6 +909,8 @@ export function PreventivoDialog({
                           onClick={() => toggleCat(cat.id)}>
                           <Checkbox checked={selectedCats.includes(cat.id)} />
                           <span className="text-sm font-medium">{cat.name}</span>
+                          {cat.pet_type === "cani" && <Badge variant="outline" className="text-xs gap-1"><Dog className="h-3 w-3" />Cane</Badge>}
+                          {cat.pet_type === "gatti" && <Badge variant="outline" className="text-xs gap-1"><Cat className="h-3 w-3" />Gatto</Badge>}
                           {cat.needs_double_cage && <Badge variant="outline" className="text-xs">Casetta doppia</Badge>}
                         </div>
                       ))}
@@ -788,41 +922,63 @@ export function PreventivoDialog({
               <Separator />
               <div className="space-y-3">
                 <Label className="flex items-center gap-1"><Home className="h-3.5 w-3.5" /> Casette</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">N° casette</Label>
-                    <Input type="number" min={1} max={20} value={unitsOccupied}
-                      onChange={(e) => setUnitsOccupied(Math.max(1, Number(e.target.value)))} />
-                  </div>
-                </div>
-                {unitsOccupied === 1 ? (
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Tipo</Label>
-                    <Select value={cageUnits[0]} onValueChange={(v) => setCageUnits([v as "singola" | "doppia"])}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="singola">Singola</SelectItem>
-                        <SelectItem value="doppia">Doppia</SelectItem>
-                      </SelectContent>
-                    </Select>
+                
+                {isMixedPets ? (
+                  /* ── Mixed pets: separate cage selectors for gatti and cani ── */
+                  <div className="space-y-3">
+                    {renderCageSelector(
+                      "Casette Gatti 🐱", <Cat className="h-4 w-4 text-primary" />,
+                      unitsGatti, setUnitsGatti,
+                      cageUnitsGatti, updateCageUnitGatti,
+                      singoleGatti, doppieGatti,
+                    )}
+                    {renderCageSelector(
+                      "Casette Cani 🐶", <Dog className="h-4 w-4 text-primary" />,
+                      unitsCani, setUnitsCani,
+                      cageUnitsCani, updateCageUnitCani,
+                      singoleCani, doppieCani,
+                    )}
                   </div>
                 ) : (
-                  <div className="space-y-2 p-3 rounded-md border bg-muted/30">
-                    <div className="grid grid-cols-2 gap-2">
-                      {cageUnits.map((type, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <span className="text-sm text-muted-foreground w-20">Casetta {idx + 1}</span>
-                          <Select value={type} onValueChange={(v) => updateCageUnit(idx, v as "singola" | "doppia")}>
-                            <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="singola">Singola</SelectItem>
-                              <SelectItem value="doppia">Doppia</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      ))}
+                  /* ── Single pet type: standard cage selector ── */
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">N° casette</Label>
+                        <Input type="number" min={1} max={20} value={unitsOccupied}
+                          onChange={(e) => setUnitsOccupied(Math.max(1, Number(e.target.value)))} />
+                      </div>
                     </div>
-                  </div>
+                    {unitsOccupied === 1 ? (
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Tipo</Label>
+                        <Select value={cageUnits[0]} onValueChange={(v) => setCageUnits([v as "singola" | "doppia"])}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="singola">Singola</SelectItem>
+                            <SelectItem value="doppia">Doppia</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 p-3 rounded-md border bg-muted/30">
+                        <div className="grid grid-cols-2 gap-2">
+                          {cageUnits.map((type, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <span className="text-sm text-muted-foreground w-20">Casetta {idx + 1}</span>
+                              <Select value={type} onValueChange={(v) => updateCageUnit(idx, v as "singola" | "doppia")}>
+                                <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="singola">Singola</SelectItem>
+                                  <SelectItem value="doppia">Doppia</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -867,7 +1023,28 @@ export function PreventivoDialog({
                     Durata: <strong>{duration} {duration === 1 ? (stayLabel === "notti" ? "notte" : "giorno") : stayLabel}</strong>
                   </p>
                 )}
-                {hasConflicts && (
+                {/* Availability conflicts */}
+                {isMixedPets && availabilityResultGatti && !availabilityResultGatti.available && (
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      🐱 Casette gatti insufficienti: {availabilityResultGatti.conflicts.map(c =>
+                        `${format(parseISO(c.date), "dd/MM")} (${c.type}: ${c.occupied}/${c.total})`
+                      ).join(", ")}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {isMixedPets && availabilityResultCani && !availabilityResultCani.available && (
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      🐶 Casette cani insufficienti: {availabilityResultCani.conflicts.map(c =>
+                        `${format(parseISO(c.date), "dd/MM")} (${c.type}: ${c.occupied}/${c.total})`
+                      ).join(", ")}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {!isMixedPets && hasConflicts && (
                   <Alert variant="destructive" className="mt-2">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription className="flex items-center justify-between">
@@ -881,6 +1058,11 @@ export function PreventivoDialog({
                       </Button>
                     </AlertDescription>
                   </Alert>
+                )}
+                {(isMixedPets && hasConflicts) && (
+                  <Button variant="outline" size="sm" className="mt-1" onClick={() => setOccupancyModalOpen(true)}>
+                    Vedi occupazione
+                  </Button>
                 )}
               </div>
 
@@ -1103,7 +1285,6 @@ export function PreventivoDialog({
               <CardTitle className="text-base">💰 Totale Preventivo</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {/* Riepilogo */}
               <div className="rounded-md bg-muted/50 p-3 space-y-1">
                 {discountedStay > 0 && (
                   <div className="text-sm flex justify-between">
@@ -1146,7 +1327,6 @@ export function PreventivoDialog({
       open={newClientDialogOpen}
       onOpenChange={(v) => {
         setNewClientDialogOpen(v);
-        // After closing, the clients list will refetch automatically via react-query
       }}
     />
 
@@ -1185,30 +1365,77 @@ export function PreventivoDialog({
           Periodo: {checkInDate ? format(occupancyRangeStart, "dd MMM yyyy", { locale: it }) : "—"} → {checkInDate ? format(occupancyRangeEnd, "dd MMM yyyy", { locale: it }) : "—"}
           {" "}· Regola occupazione: {occupancyDays} giorni dal check-in
         </p>
-        <div className="flex items-center gap-4 text-xs text-muted-foreground mb-2">
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm bg-primary/70" />
-            <span>Occupa capacità</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm bg-primary/20" />
-            <span>Soggiorno</span>
-          </div>
-          <span>Singole: {totalSingole} · Doppie: {totalDoppie}</span>
-        </div>
-        {allBookings && (
-          <OccupancyGrid
-            bookings={allBookings}
-            occupancyDays={occupancyDays}
-            totalSingole={totalSingole}
-            totalDoppie={totalDoppie}
-            rangeStart={occupancyRangeStart}
-            rangeEnd={occupancyRangeEnd}
-            excludeBookingId={editing?.id}
-            highlightDate={checkInDate ? format(checkInDate, "yyyy-MM-dd") : undefined}
-            compact
-            petType={petType}
-          />
+        {isMixedPets || petType === "entrambi" ? (
+          <>
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold">🐱 Casette Gatti</h3>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground mb-1">
+                <span>Singole: {singoleGatti} · Doppie: {doppieGatti}</span>
+              </div>
+              {allBookings && (
+                <OccupancyGrid
+                  bookings={(allBookings ?? []).filter(b => (b as any).pet_type === "gatti" || (b as any).pet_type === "entrambi")}
+                  occupancyDays={occupancyDays}
+                  totalSingole={singoleGatti}
+                  totalDoppie={doppieGatti}
+                  rangeStart={occupancyRangeStart}
+                  rangeEnd={occupancyRangeEnd}
+                  excludeBookingId={editing?.id}
+                  highlightDate={checkInDate ? format(checkInDate, "yyyy-MM-dd") : undefined}
+                  compact
+                  petType="gatti"
+                />
+              )}
+            </div>
+            <div className="space-y-1 mt-4">
+              <h3 className="text-sm font-semibold">🐶 Casette Cani</h3>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground mb-1">
+                <span>Singole: {singoleCani} · Doppie: {doppieCani}</span>
+              </div>
+              {allBookings && (
+                <OccupancyGrid
+                  bookings={(allBookings ?? []).filter(b => (b as any).pet_type === "cani" || (b as any).pet_type === "entrambi")}
+                  occupancyDays={occupancyDays}
+                  totalSingole={singoleCani}
+                  totalDoppie={doppieCani}
+                  rangeStart={occupancyRangeStart}
+                  rangeEnd={occupancyRangeEnd}
+                  excludeBookingId={editing?.id}
+                  highlightDate={checkInDate ? format(checkInDate, "yyyy-MM-dd") : undefined}
+                  compact
+                  petType="cani"
+                />
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground mb-2">
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-sm bg-primary/70" />
+                <span>Occupa capacità</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-sm bg-primary/20" />
+                <span>Soggiorno</span>
+              </div>
+              <span>Singole: {totalSingole} · Doppie: {totalDoppie}</span>
+            </div>
+            {allBookings && (
+              <OccupancyGrid
+                bookings={allBookings}
+                occupancyDays={occupancyDays}
+                totalSingole={totalSingole}
+                totalDoppie={totalDoppie}
+                rangeStart={occupancyRangeStart}
+                rangeEnd={occupancyRangeEnd}
+                excludeBookingId={editing?.id}
+                highlightDate={checkInDate ? format(checkInDate, "yyyy-MM-dd") : undefined}
+                compact
+                petType={petType}
+              />
+            )}
+          </>
         )}
         <DialogFooter>
           <Button variant="outline" onClick={() => setOccupancyModalOpen(false)}>Chiudi</Button>
