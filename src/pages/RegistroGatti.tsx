@@ -7,10 +7,11 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Search, ClipboardList, Cat } from "lucide-react";
+import { Search, ClipboardList, Cat, Dog, PawPrint } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 import { useCatRegistry } from "@/hooks/useCatRegistry";
+import { usePetLabels } from "@/hooks/usePetLabels";
 
 export default function RegistroGatti() {
   const { data: entries, isLoading } = useCatRegistry();
