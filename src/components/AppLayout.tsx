@@ -21,6 +21,8 @@ export function AppLayout() {
   // Admin sees ALL tenants, manager/titolare see their associated tenants
   const tenantOptions = isAdmin ? (allTenants || []) : userTenants.map(t => ({ id: t.id, name: t.name }));
   const showTenantSwitcher = tenantOptions.length > 0 && (isAdmin || isManager || isTitolare);
+  // Resolve active tenant name from options (covers admin selecting tenants they don't have roles for)
+  const currentTenant = tenantOptions.find(t => t.id === profile?.tenant_id) || activeTenant;
 
   return (
     <SidebarProvider>
