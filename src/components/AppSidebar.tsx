@@ -28,13 +28,13 @@ const mainNav: NavItem[] = [
   { title: "Appuntamenti", url: "/appuntamenti", icon: Calendar, resource: "appuntamenti" },
   { title: "Check-in", url: "/check-in", icon: LogIn, resource: "check-in" },
   { title: "Check-out", url: "/check-out", icon: LogOut, resource: "check-out" },
+  { title: "Presenze", url: "/presenze", icon: PawPrint, resource: "presenze" },
   { title: "Pagamenti", url: "/pagamenti", icon: CreditCard, resource: "pagamenti" },
 ];
 
 const registryNav: NavItem[] = [
   { title: "Clienti", url: "/clienti", icon: Users, resource: "clienti" },
   { title: "Gatti", url: "/gatti", icon: Cat, resource: "gatti" },
-  { title: "Presenze", url: "/presenze", icon: PawPrint, resource: "presenze" },
   { title: "Registro Gatti", url: "/registro-gatti", icon: ClipboardList, resource: "registro-gatti" },
 ];
 
