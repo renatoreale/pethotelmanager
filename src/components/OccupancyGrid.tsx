@@ -37,6 +37,7 @@ export function useOccupancyData(
   bookings: Booking[],
   occupancyDays: number,
   excludeBookingId?: string,
+  petType?: "gatti" | "cani" | "entrambi",
 ) {
   const relevantBookings = useMemo(() => {
     return bookings
@@ -49,14 +50,15 @@ export function useOccupancyData(
       const checkIn = parseISO(b.check_in_date);
       const checkOut = parseISO(b.check_out_date);
       const stayDays = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      const occDays = Math.min(occupancyDays, stayDays);
+      // Per i cani la casetta resta occupata per tutto il soggiorno
+      const occDays = petType === "cani" ? stayDays : Math.min(occupancyDays, stayDays);
       const occupiedDates = new Set<string>();
       for (let i = 0; i < occDays; i++) {
         occupiedDates.add(format(addDays(checkIn, i), "yyyy-MM-dd"));
       }
       return { booking: b, occupiedDates, stayStart: b.check_in_date, stayEnd: b.check_out_date };
     });
-  }, [relevantBookings, occupancyDays]);
+  }, [relevantBookings, occupancyDays, petType]);
 
   return { bookingOccupancy, relevantBookings };
 }
