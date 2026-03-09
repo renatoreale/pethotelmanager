@@ -328,7 +328,7 @@ export default function CheckOut() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Check-out</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Dimissione gatti dalla struttura. Seleziona una prenotazione per effettuare il check-out.
+          Dimissione pets dalla struttura. Seleziona una prenotazione per effettuare il check-out.
         </p>
       </div>
 
