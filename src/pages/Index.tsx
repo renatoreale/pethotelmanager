@@ -73,9 +73,9 @@ export default function Index() {
     const catsInStructure = inCorsoOverlapping.reduce((sum, b) => sum + (b.booking_cats?.length ?? 0), 0);
 
     // Occupancy by cage type: include all accepted bookings overlapping selected date
-    const occupancyStatuses = ["confermata", "appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato", "check_in", "in_corso"];
+    const occupancyStatuses = ["confermata", "appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato", "check_in", "in_corso", "check_out"];
     const occupyingBookings = bookings.filter(b =>
-      occupancyStatuses.includes(b.status) && b.check_in_date <= selectedDateStr && b.check_out_date >= selectedDateStr
+      occupancyStatuses.includes(b.status) && b.check_in_date <= selectedDateStr && b.check_out_date > selectedDateStr
     );
     const singoleOccupied = occupyingBookings.filter(b => b.cage_pool_type === "singola").reduce((s, b) => s + b.units_occupied, 0);
     const doppieOccupied = occupyingBookings.filter(b => b.cage_pool_type === "doppia").reduce((s, b) => s + b.units_occupied, 0);
@@ -289,7 +289,9 @@ export default function Index() {
       {!isOperatoreRestricted && (
         <Card className="border-none shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base">Occupazione casette</CardTitle>
+            <CardTitle className="text-base">
+              Occupazione casette {!isSelectedToday && `— ${format(selectedDate, "dd MMM yyyy", { locale: it })}`}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
