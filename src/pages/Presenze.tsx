@@ -155,12 +155,12 @@ export default function Presenze() {
         <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
       ) : !catsPresent.length ? (
         <div className="rounded-lg border border-dashed p-12 text-center text-muted-foreground">
-          <Cat className="h-8 w-8 mx-auto mb-3 opacity-40" />
-          <p className="font-medium">Nessun gatto presente</p>
+          <PetIcon className="h-8 w-8 mx-auto mb-3 opacity-40" />
+          <p className="font-medium">Nessun {pet.singular} presente</p>
           <p className="text-sm mt-1">
             {isToday
-              ? "Non ci sono gatti in struttura oggi."
-              : `Non risultano gatti presenti il ${format(selectedDate, "dd/MM/yyyy")}.`}
+              ? `Non ci sono ${pet.plural} in struttura oggi.`
+              : `Non risultano ${pet.plural} presenti il ${format(selectedDate, "dd/MM/yyyy")}.`}
           </p>
         </div>
       ) : (
