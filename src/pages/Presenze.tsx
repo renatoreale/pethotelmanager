@@ -35,6 +35,8 @@ function calcStayDays(
 export default function Presenze() {
   const { data: entries, isLoading } = useCatRegistry();
   const { data: tenantConfig } = useTenantConfig();
+  const pet = usePetLabels();
+  const PetIcon = pet.iconName === "Cat" ? Cat : pet.iconName === "Dog" ? Dog : PawPrint;
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [search, setSearch] = useState("");
   const [calendarOpen, setCalendarOpen] = useState(false);
