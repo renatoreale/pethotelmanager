@@ -21,6 +21,8 @@ export function AppLayout() {
   // Admin sees ALL tenants, manager/titolare see their associated tenants
   const tenantOptions = isAdmin ? (allTenants || []) : userTenants.map(t => ({ id: t.id, name: t.name }));
   const showTenantSwitcher = tenantOptions.length > 0 && (isAdmin || isManager || isTitolare);
+  // Resolve active tenant name from options (covers admin selecting tenants they don't have roles for)
+  const currentTenant = tenantOptions.find(t => t.id === profile?.tenant_id) || activeTenant;
 
   return (
     <SidebarProvider>
@@ -36,7 +38,7 @@ export function AppLayout() {
                   <Button variant="outline" size="sm" className="gap-2">
                     <Building2 className="h-4 w-4" />
                     <span className="max-w-[200px] truncate">
-                      {activeTenant?.name || "Seleziona pensione"}
+                      {currentTenant?.name || "Seleziona pensione"}
                     </span>
                     <ChevronDown className="h-3 w-3 opacity-50" />
                   </Button>
@@ -49,7 +51,7 @@ export function AppLayout() {
                       className="flex items-center justify-between"
                     >
                       <span>{tenant.name}</span>
-                      {tenant.id === activeTenant?.id && (
+                      {tenant.id === profile?.tenant_id && (
                         <Check className="h-4 w-4 text-primary" />
                       )}
                     </DropdownMenuItem>
