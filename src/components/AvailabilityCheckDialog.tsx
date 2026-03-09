@@ -198,7 +198,7 @@ function AvailabilityAlert({
 
     const free = Math.max(0, total - maxOccupied);
     return { free, total, maxOccupied };
-  }, [bookingOccupancy, checkInDate, cageType, totalSingole, totalDoppie, occupancyDays]);
+  }, [bookingOccupancy, checkInDate, cageType, totalSingole, totalDoppie, occupancyDays, filterPetType]);
 
   const isAvailable = availability.free > 0;
 
