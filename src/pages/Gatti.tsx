@@ -97,16 +97,17 @@ export default function Gatti() {
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Proprietario</TableHead>
-                    <TableHead>Microchip</TableHead>
-                    <TableHead>Razza</TableHead>
-                    <TableHead>Sesso</TableHead>
-                    <TableHead>Peso</TableHead>
-                    <TableHead>Casetta</TableHead>
-                    <TableHead className="w-[100px]">Azioni</TableHead>
-                  </TableRow>
+                   <TableRow>
+                     {pet.petType === "entrambi" && <TableHead>Tipo</TableHead>}
+                     <TableHead>Nome</TableHead>
+                     <TableHead>Proprietario</TableHead>
+                     <TableHead>Microchip</TableHead>
+                     <TableHead>Razza</TableHead>
+                     <TableHead>Sesso</TableHead>
+                     <TableHead>Peso</TableHead>
+                     <TableHead>Casetta</TableHead>
+                     <TableHead className="w-[100px]">Azioni</TableHead>
+                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {cats.map((cat: any) => (
