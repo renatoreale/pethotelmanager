@@ -15,6 +15,8 @@ import { usePetLabels } from "@/hooks/usePetLabels";
 
 export default function RegistroGatti() {
   const { data: entries, isLoading } = useCatRegistry();
+  const pet = usePetLabels();
+  const PetIcon = pet.iconName === "Cat" ? Cat : pet.iconName === "Dog" ? Dog : PawPrint;
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"tutti" | "presenti" | "usciti">("tutti");
 
