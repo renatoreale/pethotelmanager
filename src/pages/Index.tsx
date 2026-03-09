@@ -276,8 +276,19 @@ export default function Index() {
               className="gap-2 animate-pulse"
               onClick={() => missingApptRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
             >
-              <AlertTriangle className="h-4 w-4" />
-              {s.missingAppointment.length} senza appuntamento
+              <LogIn className="h-4 w-4" />
+              {s.missingAppointment.length} IN senza app.
+            </Button>
+          )}
+          {!isOperatoreRestricted && s.missingCheckOutAppt.length > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              className="gap-2 animate-pulse"
+              onClick={() => missingCheckOutRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+            >
+              <LogOut className="h-4 w-4" />
+              {s.missingCheckOutAppt.length} OUT senza app.
             </Button>
           )}
           {!isOperatoreRestricted && <AvailabilityCheckDialog />}
