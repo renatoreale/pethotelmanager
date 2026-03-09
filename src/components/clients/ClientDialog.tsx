@@ -238,6 +238,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           dietary_notes: cat.dietary_notes || null,
           behavioral_notes: cat.behavioral_notes || null,
           sibling_group_id: null,
+          pet_type: cat.pet_type || defaultAnimalType || null,
         };
 
         if (cat._deleted && cat.id) {
