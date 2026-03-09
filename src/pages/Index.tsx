@@ -146,6 +146,15 @@ export default function Index() {
       return !hasCheckInAppt;
     });
 
+    // Active bookings with check-out in next 4 days but no appointment OUT scheduled
+    const activeOutStatuses = ["confermata", "appuntamento_in_fissato", "check_in", "in_corso"];
+    const missingCheckOutAppt = bookings.filter(b => {
+      if (!activeOutStatuses.includes(b.status)) return false;
+      if (b.check_out_date < todayStr || b.check_out_date > soon4Date) return false;
+      const hasCheckOutAppt = (b.appointments ?? []).some((a: any) => a.appointment_type === "check_out");
+      return !hasCheckOutAppt;
+    });
+
     return {
       catsInStructure,
       singoleOccupied,
@@ -160,6 +169,7 @@ export default function Index() {
       dayBookings,
       expiringPreventivi: expiringPreventivi.length,
       missingAppointment,
+      missingCheckOutAppt,
     };
   }, [bookings, allPayments, bookingOccupancy, selectedDateStr, monthStart, monthEnd, yearStart, yearEnd, todayStr, tomorrowStr]);
 
