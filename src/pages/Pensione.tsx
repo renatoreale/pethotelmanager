@@ -858,6 +858,21 @@ function PaymentMethodsTab() {
     setDeleting(null);
   };
 
+  const handleReset = async () => {
+    if (!profile?.tenant_id) return;
+    setResetting(true);
+    try {
+      await supabase.from("payment_methods").delete().eq("tenant_id", profile.tenant_id);
+      await supabase.rpc("copy_global_templates_to_tenant", { _tenant_id: profile.tenant_id });
+      queryClient.invalidateQueries({ queryKey: ["payment-methods"] });
+      toast.success("Metodi di pagamento ripristinati ai valori predefiniti");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nel ripristino");
+    }
+    setResetting(false);
+    setResetConfirm(false);
+  };
+
   return (
     <>
       <Card>
@@ -866,8 +881,14 @@ function PaymentMethodsTab() {
             <CardTitle>Modalità di Pagamento</CardTitle>
             <CardDescription>Configura i metodi di pagamento accettati (es. Contanti, Bonifico, Carta)</CardDescription>
           </div>
-          <Button onClick={() => { setNewName(""); setDialogOpen(true); }}>
-            <Plus className="mr-2 h-4 w-4" /> Nuova Modalità
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setResetConfirm(true)} disabled={resetting}>
+              <RotateCcw className="mr-2 h-4 w-4" /> Reset Predefiniti
+            </Button>
+            <Button onClick={() => { setNewName(""); setDialogOpen(true); }}>
+              <Plus className="mr-2 h-4 w-4" /> Nuova Modalità
+            </Button>
+          </div>
           </Button>
         </CardHeader>
         <CardContent>
