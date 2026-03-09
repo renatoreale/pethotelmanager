@@ -98,7 +98,7 @@ export default function Clienti() {
                     <TableHead>Nome</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Telefono</TableHead>
-                    <TableHead>Gatti</TableHead>
+                    <TableHead>Animali</TableHead>
                     <TableHead>Stato</TableHead>
                     <TableHead className="w-[100px]">Azioni</TableHead>
                   </TableRow>

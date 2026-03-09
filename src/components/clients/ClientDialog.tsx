@@ -31,10 +31,11 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Plus, Trash2, Cat } from "lucide-react";
+import { Plus, Trash2, Cat, Dog, PawPrint } from "lucide-react";
 import { useCreateClient, useUpdateClient, type Client } from "@/hooks/useClients";
 import { useCreateCat, useCats, useDeleteCat, useUpdateCat } from "@/hooks/useCats";
 import { supabase } from "@/integrations/supabase/client";
+import { usePetLabels, type PetType } from "@/hooks/usePetLabels";
 
 const clientSchema = z.object({
   first_name: z.string().trim().min(1, "Nome obbligatorio").max(100),
@@ -64,10 +65,11 @@ interface InlineCat {
   medical_notes: string;
   dietary_notes: string;
   behavioral_notes: string;
+  pet_type?: PetType;
   _deleted?: boolean; // mark for deletion
 }
 
-const emptyCat = (): InlineCat => ({
+const emptyCat = (defaultPetType?: PetType): InlineCat => ({
   name: "",
   breed: "",
   color: "",
@@ -80,6 +82,7 @@ const emptyCat = (): InlineCat => ({
   medical_notes: "",
   dietary_notes: "",
   behavioral_notes: "",
+  pet_type: defaultPetType,
 });
 
 interface ClientDialogProps {
@@ -95,11 +98,13 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   const createCat = useCreateCat();
   const updateCatMut = useUpdateCat();
   const deleteCatMut = useDeleteCat();
+  const pet = usePetLabels();
   const isEditing = !!client;
 
   const { data: existingCats } = useCats(client?.id);
 
-  const [cats, setCats] = useState<InlineCat[]>([emptyCat()]);
+  const defaultAnimalType: PetType | undefined = pet.petType === "entrambi" ? undefined : pet.petType;
+  const [cats, setCats] = useState<InlineCat[]>([emptyCat(defaultAnimalType)]);
   const [saving, setSaving] = useState(false);
 
   // Load existing cats when editing
@@ -120,10 +125,11 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           medical_notes: c.medical_notes ?? "",
           dietary_notes: c.dietary_notes ?? "",
           behavioral_notes: c.behavioral_notes ?? "",
+          pet_type: c.pet_type ?? defaultAnimalType,
         }))
       );
     } else if (!isEditing) {
-      setCats([emptyCat()]);
+      setCats([emptyCat(defaultAnimalType)]);
     }
   }, [isEditing, existingCats]);
 
@@ -143,8 +149,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   });
 
   const isBlacklisted = form.watch("is_blacklisted");
-
-  const addCat = () => setCats((prev) => [...prev, emptyCat()]);
+  const addCat = () => setCats((prev) => [...prev, emptyCat(defaultAnimalType)]);
 
   const removeCat = (index: number) => {
     setCats((prev) => {
@@ -171,8 +176,16 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     const activeCats = cats.filter((c) => !c._deleted);
     const validCats = activeCats.filter((c) => c.name.trim());
     if (validCats.length === 0) {
-      toast.error("Aggiungi almeno un gatto con un nome");
+      toast.error(`Aggiungi almeno ${pet.indefiniteSingular} con un nome`);
       return;
+    }
+    // Validate pet_type for "entrambi" tenants
+    if (pet.petType === "entrambi") {
+      const missingType = validCats.some((c) => !c.pet_type);
+      if (missingType) {
+        toast.error("Seleziona il tipo di animale per ciascun pet");
+        return;
+      }
     }
 
     setSaving(true);
@@ -225,6 +238,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           dietary_notes: cat.dietary_notes || null,
           behavioral_notes: cat.behavioral_notes || null,
           sibling_group_id: null,
+          pet_type: cat.pet_type || defaultAnimalType || null,
         };
 
         if (cat._deleted && cat.id) {
@@ -236,10 +250,10 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         }
       }
 
-      toast.success(isEditing ? "Cliente e gatti aggiornati" : "Cliente e gatti creati");
+      toast.success(isEditing ? `Cliente e ${pet.plural} aggiornati` : `Cliente e ${pet.plural} creati`);
       onOpenChange(false);
       form.reset();
-      setCats([emptyCat()]);
+      setCats([emptyCat(defaultAnimalType)]);
     } catch (err: any) {
       toast.error(err.message || "Errore nel salvataggio");
     } finally {
@@ -252,7 +266,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif">
-            {isEditing ? "Modifica Cliente & Gatti" : "Nuovo Cliente & Gatti"}
+            {isEditing ? `Modifica Cliente & ${pet.pluralCap}` : `Nuovo Cliente & ${pet.pluralCap}`}
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
@@ -338,11 +352,11 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold flex items-center gap-2">
-                  <Cat className="h-4 w-4 text-primary" />
-                  Gatti ({visibleCats.length})
+                  {pet.petType === "cani" ? <Dog className="h-4 w-4 text-primary" /> : pet.petType === "gatti" ? <Cat className="h-4 w-4 text-primary" /> : <PawPrint className="h-4 w-4 text-primary" />}
+                  {pet.pluralCap} ({visibleCats.length})
                 </h3>
                 <Button type="button" variant="outline" size="sm" onClick={addCat}>
-                  <Plus className="mr-1 h-3 w-3" /> Aggiungi gatto
+                  <Plus className="mr-1 h-3 w-3" /> Aggiungi {pet.singular}
                 </Button>
               </div>
 
@@ -352,7 +366,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                   <div key={index} className="rounded-lg border bg-muted/30 p-4 space-y-3 relative">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        Gatto {visibleCats.indexOf(cat) + 1}
+                        {cat.pet_type === "cani" ? "Cane" : cat.pet_type === "gatti" ? "Gatto" : pet.singularCap} {visibleCats.indexOf(cat) + 1}
                       </span>
                       {visibleCats.length > 1 && (
                         <Button
@@ -366,6 +380,24 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                         </Button>
                       )}
                     </div>
+
+                    {pet.petType === "entrambi" && (
+                      <div className="space-y-1">
+                        <Label className="text-xs">Tipo animale *</Label>
+                        <Select
+                          value={cat.pet_type || ""}
+                          onValueChange={(v) => updateCat(index, "pet_type", v as PetType)}
+                        >
+                          <SelectTrigger className="h-9 text-sm">
+                            <SelectValue placeholder="Seleziona..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="gatti">🐱 Gatto</SelectItem>
+                            <SelectItem value="cani">🐶 Cane</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-3 gap-3">
                       <div className="space-y-1">
@@ -497,7 +529,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                 Annulla
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? "Salvataggio..." : "Salva Cliente & Gatti"}
+                {saving ? "Salvataggio..." : `Salva Cliente & ${pet.pluralCap}`}
               </Button>
             </div>
           </form>

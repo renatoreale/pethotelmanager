@@ -32,7 +32,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useCreateCat, useUpdateCat, type Cat } from "@/hooks/useCats";
 import { useClients } from "@/hooks/useClients";
-import { usePetLabels } from "@/hooks/usePetLabels";
+import { usePetLabels, type PetType } from "@/hooks/usePetLabels";
 
 const catSchema = z.object({
   name: z.string().trim().min(1, "Nome obbligatorio").max(100),
@@ -48,6 +48,7 @@ const catSchema = z.object({
   dietary_notes: z.string().trim().max(2000).optional(),
   behavioral_notes: z.string().trim().max(2000).optional(),
   needs_double_cage: z.boolean().default(false),
+  pet_type: z.string().optional(),
 });
 
 type CatFormValues = z.infer<typeof catSchema>;
@@ -65,6 +66,7 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
   const updateCat = useUpdateCat();
   const { data: clients } = useClients();
   const pet = usePetLabels();
+  const defaultPetType = pet.petType === "entrambi" ? undefined : pet.petType;
   const isEditing = !!cat;
 
   const form = useForm<CatFormValues>({
@@ -83,10 +85,15 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
       dietary_notes: cat?.dietary_notes ?? "",
       behavioral_notes: cat?.behavioral_notes ?? "",
       needs_double_cage: cat?.needs_double_cage ?? false,
+      pet_type: cat?.pet_type ?? defaultPetType ?? "",
     },
   });
 
   const onSubmit = async (values: CatFormValues) => {
+    if (pet.petType === "entrambi" && !values.pet_type) {
+      toast.error("Seleziona il tipo di animale");
+      return;
+    }
     try {
       const payload = {
         name: values.name,
@@ -104,6 +111,7 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
         dietary_notes: values.dietary_notes || null,
         behavioral_notes: values.behavioral_notes || null,
         sibling_group_id: cat?.sibling_group_id ?? null,
+        pet_type: (values.pet_type as PetType) || defaultPetType || null,
       };
 
       if (isEditing && cat) {
@@ -154,6 +162,30 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
                 </FormItem>
               )}
             />
+
+            {pet.petType === "entrambi" && (
+              <FormField
+                control={form.control}
+                name="pet_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo animale *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleziona tipo..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="gatti">🐱 Gatto</SelectItem>
+                        <SelectItem value="cani">🐶 Cane</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
