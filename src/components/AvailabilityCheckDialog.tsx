@@ -187,6 +187,8 @@ function AvailabilityAlert({
       const dateStr = format(addDays(checkIn, i), "yyyy-MM-dd");
       let occupied = 0;
       for (const bo of bookingOccupancy) {
+        // Filter by pet type if specified
+        if (filterPetType && (bo.booking as any).pet_type !== filterPetType) continue;
         if (bo.occupiedDates.has(dateStr) && bo.booking.cage_pool_type === cageType) {
           occupied += bo.booking.units_occupied;
         }
