@@ -51,6 +51,12 @@ export function AvailabilityCheckDialog() {
   const totalSingole = tenantConfig?.num_singole ?? 0;
   const totalDoppie = tenantConfig?.num_doppie ?? 0;
   const petType = tenantConfig?.pet_type as "gatti" | "cani" | "entrambi" | undefined;
+  
+  // Per-type totals for "entrambi" facilities
+  const singoleGatti = (tenantConfig as any)?.num_singole_gatti ?? 0;
+  const doppieGatti = (tenantConfig as any)?.num_doppie_gatti ?? 0;
+  const singoleCani = (tenantConfig as any)?.num_singole_cani ?? 0;
+  const doppieCani = (tenantConfig as any)?.num_doppie_cani ?? 0;
 
   const rangeStart = useMemo(() => subDays(checkInDate, 5), [checkInDate]);
   const rangeEnd = useMemo(() => addDays(checkInDate, 5), [checkInDate]);
