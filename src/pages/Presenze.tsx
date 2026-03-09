@@ -65,7 +65,17 @@ export default function Presenze() {
     return list;
   }, [entries, selectedDate, search]);
 
-  const isToday = format(selectedDate, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
+  const dateStr = format(selectedDate, "yyyy-MM-dd");
+  const checkInsToday = useMemo(() => 
+    (entries ?? []).filter((e: any) => e.check_in_date === dateStr).length,
+    [entries, dateStr]
+  );
+  const checkOutsToday = useMemo(() => 
+    (entries ?? []).filter((e: any) => e.booking?.check_out_date === dateStr).length,
+    [entries, dateStr]
+  );
+
+  const isToday = dateStr === format(new Date(), "yyyy-MM-dd");
 
   return (
     <div className="space-y-6">
