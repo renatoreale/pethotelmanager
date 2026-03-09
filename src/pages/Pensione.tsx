@@ -327,7 +327,7 @@ function CasetteTab() {
         <CardDescription>Configura il numero di casette disponibili e la regola di occupazione</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid gap-6 sm:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-4">
           <div className="space-y-2">
             <Label htmlFor="singole">Casette Singole</Label>
             <Input id="singole" type="number" min={0} value={s} onChange={(e) => setSingole(Number(e.target.value))} />
@@ -337,6 +337,11 @@ function CasetteTab() {
             <Label htmlFor="doppie">Casette Doppie</Label>
             <Input id="doppie" type="number" min={0} value={d} onChange={(e) => setDoppie(Number(e.target.value))} />
             <p className="text-xs text-muted-foreground">Per 2+ gatti fratelli</p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="maxCats">Capienza max gatti</Label>
+            <Input id="maxCats" type="number" min={0} value={mc} onChange={(e) => setMaxCats(Number(e.target.value))} />
+            <p className="text-xs text-muted-foreground">Numero massimo di gatti ospitabili</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="rule">Giorni occupazione minima</Label>
