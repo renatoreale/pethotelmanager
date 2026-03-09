@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, FileText, CalendarCheck, Calendar, LogIn, LogOut,
   CreditCard, Users, Cat, ClipboardList, Shield, Mail, Building2,
-  Power, Grid3X3, Settings2,
+  Power, Grid3X3, Settings2, PawPrint,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
