@@ -751,6 +751,7 @@ function ListinoTab() {
         valid_from: validFrom || null,
         valid_to: validTo || null,
         is_active: active,
+        pet_type: petType as any,
       });
       toast.success(editing ? "Tariffa aggiornata" : "Tariffa creata");
       setDialogOpen(false);
