@@ -112,6 +112,7 @@ export function AvailabilityCheckDialog() {
           cageType={cageType}
           totalSingole={totalSingole}
           totalDoppie={totalDoppie}
+          petType={petType}
         />
 
         <OccupancyGrid
@@ -122,6 +123,7 @@ export function AvailabilityCheckDialog() {
           rangeStart={rangeStart}
           rangeEnd={rangeEnd}
           highlightDate={highlightDate}
+          petType={petType}
         />
       </DialogContent>
     </Dialog>
