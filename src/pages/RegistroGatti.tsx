@@ -124,9 +124,22 @@ export default function RegistroGatti() {
             <TableBody>
               {filtered.map((entry: any) => (
                 <TableRow key={entry.id}>
+                  {isEntrambi && (
+                    <TableCell>
+                      {entry.cats?.pet_type === "cani" ? (
+                        <Badge variant="outline" className="gap-1 text-[10px]"><Dog className="h-3 w-3" />Cane</Badge>
+                      ) : (
+                        <Badge variant="outline" className="gap-1 text-[10px]"><Cat className="h-3 w-3" />Gatto</Badge>
+                      )}
+                    </TableCell>
+                  )}
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
-                      <PetIcon className="h-4 w-4 text-muted-foreground" />
+                      {isEntrambi ? (
+                        entry.cats?.pet_type === "cani" ? <Dog className="h-4 w-4 text-muted-foreground" /> : <Cat className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <PetIcon className="h-4 w-4 text-muted-foreground" />
+                      )}
                       {entry.cat_name}
                     </div>
                   </TableCell>
