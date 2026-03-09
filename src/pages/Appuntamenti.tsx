@@ -332,16 +332,19 @@ export default function Appuntamenti() {
     // Calendar grid for week and month views (not during search)
     if ((viewMode === "settimana" || viewMode === "mese") && !hasSearch) {
       return (
-        <CalendarGrid
-          viewMode={viewMode}
-          selectedDate={selectedDate}
-          appointments={filteredAppointments}
-          onSelectDate={(d) => {
-            setSelectedDate(d);
-            setViewMode("giorno");
-          }}
-          onClickAppointment={handleCalendarApptClick}
-        />
+        <div className="space-y-3">
+          <CalendarLegend />
+          <CalendarGrid
+            viewMode={viewMode}
+            selectedDate={selectedDate}
+            appointments={filteredAppointments}
+            onSelectDate={(d) => {
+              setSelectedDate(d);
+              setViewMode("giorno");
+            }}
+            onClickAppointment={handleCalendarApptClick}
+          />
+        </div>
       );
     }
 
