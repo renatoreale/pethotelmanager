@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOccupancyData } from "@/components/OccupancyGrid";
 import { Button } from "@/components/ui/button";
-import { Cat, CalendarCheck, LogIn, LogOut, CreditCard, AlertTriangle, CalendarIcon, AlertCircle, Calendar as CalendarIconAlt } from "lucide-react";
+import { Cat, Dog, CalendarCheck, LogIn, LogOut, CreditCard, AlertTriangle, CalendarIcon, AlertCircle, Calendar as CalendarIconAlt, PawPrint } from "lucide-react";
 import { AvailabilityCheckDialog } from "@/components/AvailabilityCheckDialog";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { Progress } from "@/components/ui/progress";
