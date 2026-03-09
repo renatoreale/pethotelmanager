@@ -232,11 +232,12 @@ function PensioniTab() {
 function UtentiTab() {
   const { data: allUsers, isLoading: usersLoading } = useAllUsers();
   const { data: tenants } = useAllTenants();
-  const { activeTenant } = useAuth();
+  const { activeTenant, profile } = useAuth();
 
-  // Filtra utenti in base alla pensione selezionata in alto
-  const users = activeTenant
-    ? allUsers?.filter(u => u.tenant_roles.some(tr => tr.tenant_id === activeTenant.id))
+  // Filtra utenti in base alla pensione selezionata in alto (usa profile.tenant_id che funziona anche per admin)
+  const selectedTenantId = profile?.tenant_id;
+  const users = selectedTenantId
+    ? allUsers?.filter(u => u.tenant_roles.some(tr => tr.tenant_id === selectedTenantId))
     : allUsers;
   const createUser = useCreateUser();
   const updateProfile = useUpdateUserProfile();
