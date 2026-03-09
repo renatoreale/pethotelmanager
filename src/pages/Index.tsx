@@ -200,6 +200,8 @@ export default function Index() {
 
   const singolePct = numSingole > 0 ? Math.round((s.singoleOccupied / numSingole) * 100) : 0;
   const doppiePct = numDoppie > 0 ? Math.round((s.doppieOccupied / numDoppie) * 100) : 0;
+  const singoleOverbooking = s.singoleOccupied > numSingole;
+  const doppieOverbooking = s.doppieOccupied > numDoppie;
 
   return (
     <div className="space-y-8">
