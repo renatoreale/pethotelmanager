@@ -144,6 +144,7 @@ export function GlobalPriceListsTab() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
+                    <TableHead>Animale</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Stagione</TableHead>
                     <TableHead>€/giorno</TableHead>
