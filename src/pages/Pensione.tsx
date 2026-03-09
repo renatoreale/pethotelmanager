@@ -558,6 +558,21 @@ function ListinoTab() {
     }
   };
 
+  const handleReset = async () => {
+    if (!profile?.tenant_id) return;
+    setResetting(true);
+    try {
+      await supabase.from("price_lists").delete().eq("tenant_id", profile.tenant_id);
+      await supabase.rpc("copy_global_templates_to_tenant", { _tenant_id: profile.tenant_id });
+      queryClient.invalidateQueries({ queryKey: ["price-lists"] });
+      toast.success("Listino ripristinato ai valori predefiniti");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nel ripristino");
+    }
+    setResetting(false);
+    setResetConfirm(false);
+  };
+
   return (
     <>
       <Card>
@@ -566,7 +581,12 @@ function ListinoTab() {
             <CardTitle>Listino Prezzi</CardTitle>
             <CardDescription>Gestisci tariffe stagionali e servizi extra</CardDescription>
           </div>
-          <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Nuova Tariffa</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setResetConfirm(true)} disabled={resetting}>
+              <RotateCcw className="mr-2 h-4 w-4" /> Reset Predefiniti
+            </Button>
+            <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Nuova Tariffa</Button>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
