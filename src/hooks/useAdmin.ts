@@ -481,7 +481,27 @@ export function useUpdateUserProfile() {
   });
 }
 
-// ── DELETE USER (via Edge Function) ──
+// ── UPDATE USER EMAIL (via Edge Function) ──
+export function useUpdateUserEmail() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, email }: { userId: string; email: string }) => {
+      const { data, error } = await supabase.functions.invoke("admin-update-user", {
+        body: { user_id: userId, email },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-all-users"] });
+      toast.success("Email aggiornata con successo");
+    },
+    onError: (error: any) => {
+      toast.error("Errore nell'aggiornamento email: " + error.message);
+    },
+  });
+}
 export function useDeleteUser() {
   const qc = useQueryClient();
   return useMutation({
