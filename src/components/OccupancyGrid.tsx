@@ -11,6 +11,10 @@ interface BookingOccupancy {
   occupiedDates: Set<string>;
   stayStart: string;
   stayEnd: string;
+  /** For mixed bookings filtered to a specific pool, override units_occupied */
+  effectiveUnits?: number;
+  /** For mixed bookings filtered to a specific pool, override cage_pool_type */
+  effectiveCageType?: "singola" | "doppia";
 }
 
 interface Props {
@@ -20,12 +24,9 @@ interface Props {
   totalDoppie: number;
   rangeStart: Date;
   rangeEnd: Date;
-  /** Booking ID to exclude from occupancy (e.g. current editing booking) */
   excludeBookingId?: string;
   compact?: boolean;
-  /** Date string (yyyy-MM-dd) to highlight as the check-in column */
   highlightDate?: string;
-  /** Tipo animale del tenant – per i cani l'occupazione copre tutto il soggiorno */
   petType?: "gatti" | "cani" | "entrambi";
 }
 
@@ -34,6 +35,27 @@ const ACTIVE_STATUSES = [
   "appuntamento_out_fissato", "appuntamento_in_out_fissato",
   "check_in", "in_corso", "check_out", "chiusa",
 ];
+
+/**
+ * For mixed bookings (pet_type = "entrambi"), extract per-pool cage info
+ * from price_breakdown. Returns the cage units for the requested pool.
+ */
+function getMixedBookingCageInfo(booking: Booking, forPool: "gatti" | "cani"): {
+  units: number;
+  cageTypes: ("singola" | "doppia")[];
+} | null {
+  const bpt = (booking as any).pet_type;
+  if (bpt !== "entrambi") return null;
+  
+  const bd = (booking as any).price_breakdown;
+  if (!bd) return null;
+  
+  const key = forPool === "gatti" ? "cageUnitsGatti" : "cageUnitsCani";
+  const cageArr = bd[key];
+  if (!cageArr || !Array.isArray(cageArr) || cageArr.length === 0) return null;
+  
+  return { units: cageArr.length, cageTypes: cageArr };
+}
 
 export function useOccupancyData(
   bookings: Booking[],
@@ -52,18 +74,97 @@ export function useOccupancyData(
       const checkIn = parseISO(b.check_in_date);
       const checkOut = parseISO(b.check_out_date);
       const stayDays = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      // Determine per-booking pet type: explicit field, or derive from tenant setting
-      const bookingPetType = (b as any).pet_type as "gatti" | "cani" | null | undefined;
-      // For occupancy duration: dogs occupy full stay, cats use occupancy_rule_days
+      const bookingPetType = (b as any).pet_type as "gatti" | "cani" | "entrambi" | null | undefined;
       const isDog = bookingPetType === "cani" || (petType === "cani" && !bookingPetType);
       const occDays = isDog ? stayDays : Math.min(occupancyDays, stayDays);
       const occupiedDates = new Set<string>();
       for (let i = 0; i < occDays; i++) {
         occupiedDates.add(format(addDays(checkIn, i), "yyyy-MM-dd"));
       }
-      return { booking: b, occupiedDates, stayStart: b.check_in_date, stayEnd: b.check_out_date };
+      return { booking: b, occupiedDates, stayStart: b.check_in_date, stayEnd: b.check_out_date } as BookingOccupancy;
     });
   }, [relevantBookings, occupancyDays, petType]);
+
+  return { bookingOccupancy, relevantBookings };
+}
+
+/**
+ * Build occupancy data for a specific pet-type pool, handling mixed bookings.
+ * Mixed bookings (pet_type = "entrambi") are split so that only the relevant
+ * portion (gatti or cani) contributes to each pool.
+ */
+export function usePoolOccupancyData(
+  bookings: Booking[],
+  occupancyDays: number,
+  forPool: "gatti" | "cani",
+  excludeBookingId?: string,
+) {
+  const relevantBookings = useMemo(() => {
+    return bookings
+      .filter(b => ACTIVE_STATUSES.includes(b.status))
+      .filter(b => !excludeBookingId || b.id !== excludeBookingId);
+  }, [bookings, excludeBookingId]);
+
+  const bookingOccupancy = useMemo(() => {
+    const result: BookingOccupancy[] = [];
+    
+    for (const b of relevantBookings) {
+      const bpt = (b as any).pet_type as "gatti" | "cani" | "entrambi" | null | undefined;
+      
+      // Skip bookings that don't belong to this pool
+      if (bpt && bpt !== forPool && bpt !== "entrambi") continue;
+      // If no pet_type set and tenant is entrambi, skip (can't determine pool)
+      if (!bpt) continue;
+      
+      const checkIn = parseISO(b.check_in_date);
+      const checkOut = parseISO(b.check_out_date);
+      const stayDays = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      
+      // For dogs, occupy full stay; for cats, use occupancy_rule_days
+      const isDog = forPool === "cani";
+      const occDays = isDog ? stayDays : Math.min(occupancyDays, stayDays);
+      
+      const occupiedDates = new Set<string>();
+      for (let i = 0; i < occDays; i++) {
+        occupiedDates.add(format(addDays(checkIn, i), "yyyy-MM-dd"));
+      }
+      
+      // For mixed bookings, override units/cage type from breakdown
+      if (bpt === "entrambi") {
+        const mixedInfo = getMixedBookingCageInfo(b, forPool);
+        if (!mixedInfo || mixedInfo.units === 0) continue;
+        
+        // Create entries for each cage unit in this pool
+        const numSingole = mixedInfo.cageTypes.filter(t => t === "singola").length;
+        const numDoppie = mixedInfo.cageTypes.filter(t => t === "doppia").length;
+        
+        if (numSingole > 0) {
+          result.push({
+            booking: { ...b, cage_pool_type: "singola" as const, units_occupied: numSingole } as Booking,
+            occupiedDates,
+            stayStart: b.check_in_date,
+            stayEnd: b.check_out_date,
+            effectiveUnits: numSingole,
+            effectiveCageType: "singola",
+          });
+        }
+        if (numDoppie > 0) {
+          result.push({
+            booking: { ...b, cage_pool_type: "doppia" as const, units_occupied: numDoppie } as Booking,
+            occupiedDates,
+            stayStart: b.check_in_date,
+            stayEnd: b.check_out_date,
+            effectiveUnits: numDoppie,
+            effectiveCageType: "doppia",
+          });
+        }
+      } else {
+        result.push({ booking: b, occupiedDates, stayStart: b.check_in_date, stayEnd: b.check_out_date });
+      }
+    }
+    
+    return result;
+  }, [relevantBookings, occupancyDays, forPool]);
 
   return { bookingOccupancy, relevantBookings };
 }
@@ -79,7 +180,6 @@ export function checkAvailability(
   const conflicts: { date: string; type: "singola" | "doppia"; occupied: number; total: number }[] = [];
   const checkIn = parseISO(checkInDate);
 
-  // Count how many of each type the new booking needs
   const needSingole = cageUnits.filter(t => t === "singola").length;
   const needDoppie = cageUnits.filter(t => t === "doppia").length;
 
@@ -116,7 +216,14 @@ export function OccupancyGrid({
     return eachDayOfInterval({ start: rangeStart, end: rangeEnd });
   }, [rangeStart, rangeEnd]);
 
-  const { bookingOccupancy } = useOccupancyData(bookings, occupancyDays, excludeBookingId, petType);
+  // Use pool-specific occupancy for gatti/cani views to handle mixed bookings correctly
+  const isPoolView = petType === "gatti" || petType === "cani";
+  const { bookingOccupancy: genericOccupancy } = useOccupancyData(bookings, occupancyDays, excludeBookingId, petType);
+  const { bookingOccupancy: poolOccupancy } = usePoolOccupancyData(
+    bookings, occupancyDays, petType as "gatti" | "cani", excludeBookingId
+  );
+  
+  const bookingOccupancy = isPoolView ? poolOccupancy : genericOccupancy;
 
   const dailyTotals = useMemo(() => {
     const totals: Record<string, { singole: number; doppie: number }> = {};
@@ -135,7 +242,6 @@ export function OccupancyGrid({
     return totals;
   }, [days, bookingOccupancy]);
 
-  // Expand bookings into individual rows per unit/cat
   const visibleRows = useMemo(() => {
     const startStr = format(rangeStart, "yyyy-MM-dd");
     const endStr = format(rangeEnd, "yyyy-MM-dd");
@@ -148,12 +254,10 @@ export function OccupancyGrid({
       const units = b.units_occupied ?? 1;
       
       if (units <= 1 || cats.length <= 1) {
-        // Single row
-        rows.push({ bo, catName: cats.join(", ") || "—", rowKey: b.id });
+        rows.push({ bo, catName: cats.join(", ") || "—", rowKey: `${b.id}-${bo.effectiveCageType ?? ""}` });
       } else {
-        // One row per cat/unit
         for (let i = 0; i < Math.max(units, cats.length); i++) {
-          rows.push({ bo, catName: cats[i] || `Gatto ${i + 1}`, rowKey: `${b.id}-${i}` });
+          rows.push({ bo, catName: cats[i] || `Pet ${i + 1}`, rowKey: `${b.id}-${bo.effectiveCageType ?? ""}-${i}` });
         }
       }
     }
