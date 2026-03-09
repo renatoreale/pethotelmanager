@@ -202,7 +202,7 @@ export default function Index() {
     {
       title: "Gatti in struttura",
       value: String(s.catsInStructure),
-      subtitle: `su ${totalSlots} posti totali`,
+      subtitle: maxCats > 0 ? `su ${maxCats} posti in struttura` : `su ${totalSlots} posti totali`,
       icon: Cat,
       color: "text-primary",
       bg: "bg-primary/10",
