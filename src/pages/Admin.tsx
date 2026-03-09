@@ -230,8 +230,14 @@ function PensioniTab() {
 // UTENTI TAB (simplified - one role per user per tenant)
 // ══════════════════════════════════════════════════════════════════════════════
 function UtentiTab() {
-  const { data: users, isLoading: usersLoading } = useAllUsers();
+  const { data: allUsers, isLoading: usersLoading } = useAllUsers();
   const { data: tenants } = useAllTenants();
+  const { activeTenant } = useAuth();
+
+  // Filtra utenti in base alla pensione selezionata in alto
+  const users = activeTenant
+    ? allUsers?.filter(u => u.tenant_roles.some(tr => tr.tenant_id === activeTenant.id))
+    : allUsers;
   const createUser = useCreateUser();
   const updateProfile = useUpdateUserProfile();
   const updateEmail = useUpdateUserEmail();
