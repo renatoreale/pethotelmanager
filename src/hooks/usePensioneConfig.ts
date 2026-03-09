@@ -28,6 +28,7 @@ export function useUpdateTenantConfig() {
       id: string;
       num_singole?: number;
       num_doppie?: number;
+      max_cats?: number;
       occupancy_rule_days?: number;
       email?: string | null;
       phone?: string | null;
