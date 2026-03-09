@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Database } from "@/integrations/supabase/types";
 import {
   useAllTenants, useCreateTenant, useUpdateTenant, useDeleteTenant,
-  useAllUsers, useAssignUserToTenant, useAssignRole,
+  useAllUsers, useAssignUserToTenant, useAssignRole, useCreateUser,
   useRolePermissions, useBulkUpsertPermissions,
   RESOURCES, ROLES, type Tenant, type UserWithProfile, type RolePermission,
 } from "@/hooks/useAdmin";
