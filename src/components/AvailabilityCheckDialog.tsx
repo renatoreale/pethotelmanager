@@ -111,15 +111,42 @@ export function AvailabilityCheckDialog() {
           </div>
         </div>
 
-        <AvailabilityAlert
-          bookings={allBookings ?? []}
-          occupancyDays={occupancyDays}
-          checkInDate={highlightDate}
-          cageType={cageType}
-          totalSingole={totalSingole}
-          totalDoppie={totalDoppie}
-          petType={petType}
-        />
+        {petType === "entrambi" ? (
+          <>
+            <AvailabilityAlert
+              bookings={allBookings ?? []}
+              occupancyDays={occupancyDays}
+              checkInDate={highlightDate}
+              cageType={cageType}
+              totalSingole={singoleGatti}
+              totalDoppie={doppieGatti}
+              petType="gatti"
+              filterPetType="gatti"
+              label="🐱 Gatti"
+            />
+            <AvailabilityAlert
+              bookings={allBookings ?? []}
+              occupancyDays={occupancyDays}
+              checkInDate={highlightDate}
+              cageType={cageType}
+              totalSingole={singoleCani}
+              totalDoppie={doppieCani}
+              petType="cani"
+              filterPetType="cani"
+              label="🐶 Cani"
+            />
+          </>
+        ) : (
+          <AvailabilityAlert
+            bookings={allBookings ?? []}
+            occupancyDays={occupancyDays}
+            checkInDate={highlightDate}
+            cageType={cageType}
+            totalSingole={totalSingole}
+            totalDoppie={totalDoppie}
+            petType={petType}
+          />
+        )}
 
         <OccupancyGrid
           bookings={allBookings ?? []}
@@ -137,7 +164,7 @@ export function AvailabilityCheckDialog() {
 }
 
 function AvailabilityAlert({
-  bookings, occupancyDays, checkInDate, cageType, totalSingole, totalDoppie, petType,
+  bookings, occupancyDays, checkInDate, cageType, totalSingole, totalDoppie, petType, filterPetType, label,
 }: {
   bookings: Booking[];
   occupancyDays: number;
@@ -146,6 +173,8 @@ function AvailabilityAlert({
   totalSingole: number;
   totalDoppie: number;
   petType?: "gatti" | "cani" | "entrambi";
+  filterPetType?: "gatti" | "cani";
+  label?: string;
 }) {
   const { bookingOccupancy } = useOccupancyData(bookings, occupancyDays, undefined, petType);
 
