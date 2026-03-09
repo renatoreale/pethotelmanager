@@ -39,6 +39,11 @@ const SEASON_OPTIONS = [
   { value: "bassa", label: "Bassa stagione" },
 ];
 
+const PET_TYPE_LABELS: Record<string, string> = {
+  gatti: "🐱 Gatti",
+  cani: "🐶 Cani",
+};
+
 export function GlobalPriceListsTab() {
   const { data: priceLists, isLoading } = useGlobalPriceLists();
   const upsert = useUpsertGlobalPriceList();
