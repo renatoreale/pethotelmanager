@@ -308,7 +308,7 @@ export default function Pagamenti() {
             const clientTotal = group.bookings.reduce((s: number, b: any) => s + Number(b.total_amount ?? 0), 0);
             const clientPayments = group.bookings.flatMap((b: any) => b.payments ?? []);
             const { net: clientNet } = calcTotals(clientPayments);
-            const clientRemaining = clientTotal - clientNet;
+            const clientRemaining = Math.max(0, clientTotal - clientNet);
 
             return (
               <div key={group.clientId} className="rounded-xl border bg-card overflow-hidden">
