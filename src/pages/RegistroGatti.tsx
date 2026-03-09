@@ -48,9 +48,9 @@ export default function RegistroGatti() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Registro Gatti</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Registro {pet.pluralCap}</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Registro degli ingressi e delle uscite dei gatti dalla struttura.
+          Registro degli ingressi e delle uscite {pet.ofPlural} dalla struttura.
         </p>
       </div>
 
