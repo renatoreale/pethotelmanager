@@ -63,6 +63,8 @@ export default function Index() {
   const isSelectedToday = isTodayFn(selectedDate);
   const monthStart = format(startOfMonth(selectedDate), "yyyy-MM-dd");
   const monthEnd = format(endOfMonth(selectedDate), "yyyy-MM-dd");
+  const yearStart = format(startOfYear(selectedDate), "yyyy-MM-dd");
+  const yearEnd = format(endOfYear(selectedDate), "yyyy-MM-dd");
 
   // For operatore: restrict to today and tomorrow only
   const todayStr = format(new Date(), "yyyy-MM-dd");
