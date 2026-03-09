@@ -558,8 +558,7 @@ function ListinoTab() {
     if (!profile?.tenant_id) return;
     setResetting(true);
     try {
-      await supabase.from("price_lists").delete().eq("tenant_id", profile.tenant_id);
-      await supabase.rpc("copy_global_templates_to_tenant", { _tenant_id: profile.tenant_id });
+      await supabase.rpc("reset_tenant_price_lists" as any, { _tenant_id: profile.tenant_id });
       queryClient.invalidateQueries({ queryKey: ["price-lists"] });
       toast.success("Listino ripristinato ai valori predefiniti");
     } catch (err: any) {
