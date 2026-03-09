@@ -440,7 +440,7 @@ export default function Index() {
 
           {/* Missing check-in appointment */}
           <div ref={missingApptRef}>
-            <Card className={cn("border-none shadow-sm h-full", s.missingAppointment.length > 0 && "border-l-4 border-l-destructive")}>
+            <Card className={cn("border shadow-sm h-full", s.missingAppointment.length > 0 && "border-l-4 border-l-destructive")}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2 text-destructive">
                   <LogIn className="h-5 w-5" />
