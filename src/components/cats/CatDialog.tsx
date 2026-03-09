@@ -66,6 +66,7 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
   const updateCat = useUpdateCat();
   const { data: clients } = useClients();
   const pet = usePetLabels();
+  const defaultPetType = pet.petType === "entrambi" ? undefined : pet.petType;
   const isEditing = !!cat;
 
   const form = useForm<CatFormValues>({
