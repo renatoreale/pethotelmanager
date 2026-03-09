@@ -35,6 +35,7 @@ const TYPE_LABELS: Record<string, string> = {
   extra: "Extra",
   rimborso: "Rimborso",
   manuale: "Manuale",
+  gestione_pratica: "Gestione pratica",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -55,7 +56,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 function calcTotals(payments: any[]) {
   const paid = payments
-    .filter((p: any) => p.payment_type !== "rimborso")
+    .filter((p: any) => p.payment_type !== "rimborso" && p.payment_type !== "gestione_pratica")
     .reduce((s: number, p: any) => s + Number(p.amount), 0);
   const refunded = payments
     .filter((p: any) => p.payment_type === "rimborso")
@@ -65,7 +66,7 @@ function calcTotals(payments: any[]) {
 
 interface TransactionFormData {
   amount: string;
-  payment_type: "caparra" | "saldo" | "extra" | "rimborso" | "manuale";
+  payment_type: "caparra" | "saldo" | "extra" | "rimborso" | "manuale" | "gestione_pratica";
   payment_date: string;
   payment_method_id: string;
   notes: string;
