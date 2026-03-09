@@ -299,7 +299,12 @@ function SlotTab() {
             <CardTitle>Slot Appuntamenti</CardTitle>
             <CardDescription>Configura le fasce orarie per check-in e check-out</CardDescription>
           </div>
-          <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Nuovo Slot</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setResetConfirm(true)} disabled={resetting}>
+              <RotateCcw className="mr-2 h-4 w-4" /> Reset Predefiniti
+            </Button>
+            <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Nuovo Slot</Button>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
