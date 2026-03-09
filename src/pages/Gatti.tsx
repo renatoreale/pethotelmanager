@@ -22,9 +22,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, Pencil, Trash2, Cat as CatIcon } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Cat as CatIcon, Dog, PawPrint } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { usePetLabels } from "@/hooks/usePetLabels";
 
 export default function Gatti() {
   const [search, setSearch] = useState("");
