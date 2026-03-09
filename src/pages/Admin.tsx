@@ -66,7 +66,7 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="pensioni" className="space-y-4">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="pensioni" className="gap-2">
             <Building2 className="h-4 w-4" /> Pensioni
           </TabsTrigger>
@@ -76,11 +76,23 @@ export default function Admin() {
           <TabsTrigger value="permessi" className="gap-2">
             <ShieldCheck className="h-4 w-4" /> Permessi
           </TabsTrigger>
+          <TabsTrigger value="slot-globali" className="gap-2">
+            <Clock className="h-4 w-4" /> Slot Globali
+          </TabsTrigger>
+          <TabsTrigger value="listino-globale" className="gap-2">
+            <Euro className="h-4 w-4" /> Listino Globale
+          </TabsTrigger>
+          <TabsTrigger value="pagamenti-globali" className="gap-2">
+            <CreditCard className="h-4 w-4" /> Pagamenti Globali
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pensioni"><PensioniTab /></TabsContent>
         <TabsContent value="utenti"><UtentiTab /></TabsContent>
         <TabsContent value="permessi"><PermessiTab /></TabsContent>
+        <TabsContent value="slot-globali"><GlobalSlotConfigsTab /></TabsContent>
+        <TabsContent value="listino-globale"><GlobalPriceListsTab /></TabsContent>
+        <TabsContent value="pagamenti-globali"><GlobalPaymentMethodsTab /></TabsContent>
       </Tabs>
     </div>
   );
