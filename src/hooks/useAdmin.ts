@@ -54,6 +54,16 @@ export function useCreateTenant() {
         .select()
         .single();
       if (error) throw error;
+
+      // Copy global templates to the new tenant
+      const { error: copyError } = await supabase.rpc("copy_global_templates_to_tenant", {
+        _tenant_id: data.id,
+      });
+      if (copyError) {
+        console.error("Error copying global templates:", copyError);
+        // Don't fail tenant creation if template copy fails
+      }
+
       return data;
     },
     onSuccess: () => {
