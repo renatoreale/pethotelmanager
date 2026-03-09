@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { format, parseISO, differenceInCalendarDays } from "date-fns";
 import { it } from "date-fns/locale";
-import { Cat, CalendarIcon, Search } from "lucide-react";
+import { Cat, Dog, CalendarIcon, Search, PawPrint } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
