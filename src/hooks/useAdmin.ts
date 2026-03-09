@@ -413,3 +413,48 @@ export function useCreateUser() {
     },
   });
 }
+
+// ── UPDATE USER PROFILE ──
+export function useUpdateUserProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ profileId, full_name }: { profileId: string; full_name: string }) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ full_name })
+        .eq("id", profileId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-all-users"] });
+      qc.invalidateQueries({ queryKey: ["users"] });
+      toast.success("Profilo aggiornato con successo");
+    },
+    onError: (error: any) => {
+      toast.error("Errore nell'aggiornamento: " + error.message);
+    },
+  });
+}
+
+// ── DELETE USER (via Edge Function) ──
+export function useDeleteUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+        body: { user_id: userId },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-all-users"] });
+      qc.invalidateQueries({ queryKey: ["users"] });
+      toast.success("Utente eliminato con successo");
+    },
+    onError: (error: any) => {
+      toast.error("Errore nell'eliminazione: " + error.message);
+    },
+  });
+}
