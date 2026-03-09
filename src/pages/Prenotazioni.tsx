@@ -118,7 +118,7 @@ export default function Prenotazioni() {
 
   const handleTransition = async () => {
     if (!transitioning) return;
-    try {
+      let cancellationInfo: string | null = null;
       // If cancelling, automatically calculate refund and create payment records
       if (transitioning.newStatus === "cancellata" && profile?.tenant_id) {
         const booking = bookings?.find(b => b.id === transitioning.id);
