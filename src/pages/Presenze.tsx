@@ -48,7 +48,8 @@ export default function Presenze() {
 
     let list = entries.filter((e: any) => {
       const checkIn = e.check_in_date;
-      const checkOut = e.check_out_date;
+      // Use actual check-out if available, otherwise use booking's planned check-out
+      const checkOut = e.check_out_date || e.booking?.check_out_date;
       return checkIn <= dateStr && (!checkOut || checkOut >= dateStr);
     });
 
