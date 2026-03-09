@@ -889,11 +889,23 @@ function ListinoTab() {
             <DialogTitle>{editing ? "Modifica Tariffa" : "Nuova Tariffa"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className={`grid ${tenantPetType === "entrambi" ? "grid-cols-3" : "grid-cols-2"} gap-4`}>
               <div className="space-y-2">
                 <Label>Nome tariffa</Label>
                 <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Es. Alta Stagione" />
               </div>
+              {tenantPetType === "entrambi" && (
+                <div className="space-y-2">
+                  <Label>Tipo animale</Label>
+                  <Select value={petType} onValueChange={(v) => setPetType(v as "gatti" | "cani")}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="gatti">🐱 Gatti</SelectItem>
+                      <SelectItem value="cani">🐶 Cani</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Tipologia</Label>
                 <Select value={tariffType} onValueChange={(v) => setTariffType(v as TariffType)}>
