@@ -35,6 +35,8 @@ export default function Gatti() {
 
   const { data: cats, isLoading } = useCats(undefined, search);
   const deleteCat = useDeleteCat();
+  const pet = usePetLabels();
+  const PetIcon = pet.iconName === "Cat" ? CatIcon : pet.iconName === "Dog" ? Dog : PawPrint;
 
   const handleEdit = (cat: any) => {
     setEditingCat(cat);
