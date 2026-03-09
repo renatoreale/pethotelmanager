@@ -56,7 +56,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 function calcTotals(payments: any[]) {
   const paid = payments
-    .filter((p: any) => p.payment_type !== "rimborso")
+    .filter((p: any) => p.payment_type !== "rimborso" && p.payment_type !== "gestione_pratica")
     .reduce((s: number, p: any) => s + Number(p.amount), 0);
   const refunded = payments
     .filter((p: any) => p.payment_type === "rimborso")

@@ -232,6 +232,10 @@ export default function Prenotazioni() {
         }
       }
       await transitionBooking.mutateAsync({ id: transitioning.id, newStatus: transitioning.newStatus });
+      // Set total_amount to 0 on cancellation so residual becomes 0
+      if (transitioning.newStatus === "cancellata") {
+        await supabase.from("bookings").update({ total_amount: 0 }).eq("id", transitioning.id);
+      }
       toast.success(`Prenotazione ${transitioning.bookingNumber}: ${transitioning.label}`);
       if (cancellationInfo) {
         setTimeout(() => toast.info(cancellationInfo!, { duration: 10000 }), 500);
