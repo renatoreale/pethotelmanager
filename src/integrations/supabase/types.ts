@@ -1062,6 +1062,7 @@ export type Database = {
           email: string | null
           id: string
           logo_url: string | null
+          max_cats: number
           name: string
           num_doppie: number
           num_singole: number
@@ -1084,6 +1085,7 @@ export type Database = {
           email?: string | null
           id?: string
           logo_url?: string | null
+          max_cats?: number
           name: string
           num_doppie?: number
           num_singole?: number
@@ -1106,6 +1108,7 @@ export type Database = {
           email?: string | null
           id?: string
           logo_url?: string | null
+          max_cats?: number
           name?: string
           num_doppie?: number
           num_singole?: number
