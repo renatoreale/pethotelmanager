@@ -307,8 +307,14 @@ function UtentiTab() {
   const assignTenant = useAssignUserToTenant();
   const assignRole = useAssignRole();
   const createUser = useCreateUser();
+  const updateProfile = useUpdateUserProfile();
+  const deleteUser = useDeleteUser();
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserWithProfile | null>(null);
+  const [deletingUser, setDeletingUser] = useState<UserWithProfile | null>(null);
+  const [editName, setEditName] = useState("");
+  
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -345,93 +351,127 @@ function UtentiTab() {
     setForm({ email: "", password: "", full_name: "", tenant_id: "", role: "operatore" });
   };
 
-  return (
-    <Card>
-      <CardHeader className="flex-row items-center justify-between">
-        <div>
-          <CardTitle>Utenti & Ruoli</CardTitle>
-          <CardDescription>Gestisci gli utenti di sistema, assegna pensioni e ruoli</CardDescription>
-        </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Nuovo Utente
-        </Button>
-      </CardHeader>
-      <CardContent>
-        {usersLoading ? (
-          <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
-        ) : !users?.length ? (
-          <div className="py-12 text-center text-muted-foreground">Nessun utente trovato</div>
-        ) : (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Pensione</TableHead>
-                  <TableHead>Ruolo</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">
-                      {user.full_name || "Utente Senza Nome"}
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        value={user.tenant_id || "none"}
-                        onValueChange={(val) =>
-                          assignTenant.mutate({
-                            profileId: user.id,
-                            tenantId: val === "none" ? null : val,
-                          })
-                        }
-                      >
-                        <SelectTrigger className="w-[200px]">
-                          <SelectValue placeholder="Seleziona pensione..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">— Nessuna —</SelectItem>
-                          {tenants?.map((t) => (
-                            <SelectItem key={t.id} value={t.id}>
-                              {t.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        value={user.role || "none"}
-                        onValueChange={(val) =>
-                          assignRole.mutate({
-                            userId: user.user_id,
-                            role: val as AppRole,
-                            tenantId: user.tenant_id,
-                            existingRoleId: user.role_id,
-                          })
-                        }
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Seleziona ruolo..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ROLES.map((r) => (
-                            <SelectItem key={r.value} value={r.value}>
-                              {r.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </CardContent>
+  const openEdit = (user: UserWithProfile) => {
+    setEditingUser(user);
+    setEditName(user.full_name || "");
+  };
 
+  const handleSaveEdit = async () => {
+    if (!editingUser || !editName.trim()) return;
+    await updateProfile.mutateAsync({
+      profileId: editingUser.id,
+      full_name: editName.trim(),
+    });
+    setEditingUser(null);
+  };
+
+  const handleDelete = async () => {
+    if (!deletingUser) return;
+    await deleteUser.mutateAsync(deletingUser.user_id);
+    setDeletingUser(null);
+  };
+
+  return (
+    <>
+      <Card>
+        <CardHeader className="flex-row items-center justify-between">
+          <div>
+            <CardTitle>Utenti & Ruoli</CardTitle>
+            <CardDescription>Gestisci gli utenti di sistema, assegna pensioni e ruoli</CardDescription>
+          </div>
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Nuovo Utente
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {usersLoading ? (
+            <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
+          ) : !users?.length ? (
+            <div className="py-12 text-center text-muted-foreground">Nessun utente trovato</div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Pensione</TableHead>
+                    <TableHead>Ruolo</TableHead>
+                    <TableHead className="w-[100px]">Azioni</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">
+                        {user.full_name || "Utente Senza Nome"}
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={user.tenant_id || "none"}
+                          onValueChange={(val) =>
+                            assignTenant.mutate({
+                              profileId: user.id,
+                              tenantId: val === "none" ? null : val,
+                            })
+                          }
+                        >
+                          <SelectTrigger className="w-[200px]">
+                            <SelectValue placeholder="Seleziona pensione..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">— Nessuna —</SelectItem>
+                            {tenants?.map((t) => (
+                              <SelectItem key={t.id} value={t.id}>
+                                {t.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={user.role || "none"}
+                          onValueChange={(val) =>
+                            assignRole.mutate({
+                              userId: user.user_id,
+                              role: val as AppRole,
+                              tenantId: user.tenant_id,
+                              existingRoleId: user.role_id,
+                            })
+                          }
+                        >
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Seleziona ruolo..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ROLES.map((r) => (
+                              <SelectItem key={r.value} value={r.value}>
+                                {r.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(user)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => setDeletingUser(user)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Dialog Crea Utente */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -509,7 +549,57 @@ function UtentiTab() {
           </div>
         </DialogContent>
       </Dialog>
-    </Card>
+
+      {/* Dialog Modifica Nome Utente */}
+      <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifica Utente</DialogTitle>
+            <DialogDescription>
+              Modifica il nome dell'utente
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome Completo</Label>
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Mario Rossi"
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingUser(null)}>Annulla</Button>
+              <Button onClick={handleSaveEdit} disabled={updateProfile.isPending}>
+                {updateProfile.isPending ? "Salvataggio..." : "Salva"}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Alert Elimina Utente */}
+      <AlertDialog open={!!deletingUser} onOpenChange={() => setDeletingUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminare l'utente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Questa azione eliminerà permanentemente l'utente "{deletingUser?.full_name || 'Senza nome'}" dal sistema.
+              Tutti i dati associati verranno persi.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Elimina
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
