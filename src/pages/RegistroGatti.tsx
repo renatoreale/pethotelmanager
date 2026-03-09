@@ -17,6 +17,8 @@ import { useTenantConfig } from "@/hooks/usePensioneConfig";
 export default function RegistroGatti() {
   const { data: entries, isLoading } = useCatRegistry();
   const pet = usePetLabels();
+  const { data: tenantConfig } = useTenantConfig();
+  const isEntrambi = tenantConfig?.pet_type === "entrambi";
   const PetIcon = pet.iconName === "Cat" ? Cat : pet.iconName === "Dog" ? Dog : PawPrint;
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"tutti" | "presenti" | "usciti">("tutti");
