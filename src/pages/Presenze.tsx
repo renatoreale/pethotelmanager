@@ -1,8 +1,7 @@
 import { useState, useMemo } from "react";
-import { format, parseISO, isWithinInterval } from "date-fns";
+import { format, parseISO, differenceInCalendarDays } from "date-fns";
 import { it } from "date-fns/locale";
-import { Cat, CalendarIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Cat, CalendarIcon, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -12,15 +11,36 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCatRegistry } from "@/hooks/useCatRegistry";
+import { useTenantConfig } from "@/hooks/usePensioneConfig";
+
+function calcStayDays(
+  checkIn: string,
+  checkOut: string,
+  stayCalcType: string,
+  countCheckinDay: boolean,
+  countCheckoutDay: boolean
+): number {
+  const nights = differenceInCalendarDays(parseISO(checkOut), parseISO(checkIn));
+  if (stayCalcType === "notti") return nights;
+  // "giorni" mode: inclusive count adjusted by flags
+  let days = nights + 1;
+  if (!countCheckinDay) days--;
+  if (!countCheckoutDay) days--;
+  return Math.max(days, 0);
+}
 
 export default function Presenze() {
   const { data: entries, isLoading } = useCatRegistry();
+  const { data: tenantConfig } = useTenantConfig();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [search, setSearch] = useState("");
   const [calendarOpen, setCalendarOpen] = useState(false);
+
+  const stayCalcType = tenantConfig?.stay_calc_type ?? "notti";
+  const countCheckinDay = tenantConfig?.count_checkin_day ?? true;
+  const countCheckoutDay = tenantConfig?.count_checkout_day ?? true;
 
   const catsPresent = useMemo(() => {
     if (!entries) return [];
@@ -29,7 +49,6 @@ export default function Presenze() {
     let list = entries.filter((e: any) => {
       const checkIn = e.check_in_date;
       const checkOut = e.check_out_date;
-      // Present if check_in <= date and (no check_out or check_out >= date)
       return checkIn <= dateStr && (!checkOut || checkOut >= dateStr);
     });
 
@@ -138,41 +157,54 @@ export default function Presenze() {
                 <TableHead>Sesso</TableHead>
                 <TableHead>Check-in</TableHead>
                 <TableHead>Check-out previsto</TableHead>
+                <TableHead className="text-center">
+                  {stayCalcType === "notti" ? "Notti" : "Giorni"}
+                </TableHead>
                 <TableHead>Note</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {catsPresent.map((entry: any) => (
-                <TableRow key={entry.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <Cat className="h-4 w-4 text-muted-foreground" />
-                      {entry.cat_name}
-                    </div>
-                  </TableCell>
-                  <TableCell>{entry.client_name}</TableCell>
-                  <TableCell className="font-mono text-xs">
-                    {entry.microchip ?? <span className="text-muted-foreground">—</span>}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {entry.cats?.breed ?? <span className="text-muted-foreground">—</span>}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {entry.cats?.gender ?? <span className="text-muted-foreground">—</span>}
-                  </TableCell>
-                  <TableCell>
-                    {format(parseISO(entry.check_in_date), "dd MMM yyyy", { locale: it })}
-                  </TableCell>
-                  <TableCell>
-                    {entry.booking?.check_out_date
-                      ? format(parseISO(entry.booking.check_out_date), "dd MMM yyyy", { locale: it })
-                      : <span className="text-muted-foreground">—</span>}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                    {entry.notes ?? "—"}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {catsPresent.map((entry: any) => {
+                const bookingCheckOut = entry.booking?.check_out_date;
+                const stayDays = bookingCheckOut
+                  ? calcStayDays(entry.check_in_date, bookingCheckOut, stayCalcType, countCheckinDay, countCheckoutDay)
+                  : null;
+
+                return (
+                  <TableRow key={entry.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <Cat className="h-4 w-4 text-muted-foreground" />
+                        {entry.cat_name}
+                      </div>
+                    </TableCell>
+                    <TableCell>{entry.client_name}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {entry.microchip ?? <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {entry.cats?.breed ?? <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {entry.cats?.gender ?? <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <TableCell>
+                      {format(parseISO(entry.check_in_date), "dd MMM yyyy", { locale: it })}
+                    </TableCell>
+                    <TableCell>
+                      {bookingCheckOut
+                        ? format(parseISO(bookingCheckOut), "dd MMM yyyy", { locale: it })
+                        : <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <TableCell className="text-center font-mono font-semibold">
+                      {stayDays != null ? stayDays : <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                      {entry.notes ?? "—"}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
