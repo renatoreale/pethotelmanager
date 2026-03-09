@@ -828,6 +828,7 @@ function ListinoTab() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
+                    {tenantPetType === "entrambi" && <TableHead>Animale</TableHead>}
                     <TableHead>Tipologia</TableHead>
                     <TableHead>Prezzo</TableHead>
                     <TableHead>Validità</TableHead>
