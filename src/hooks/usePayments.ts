@@ -161,7 +161,7 @@ export function useCreatePayment() {
     mutationFn: async (input: {
       booking_id: string;
       amount: number;
-      payment_type: "caparra" | "saldo" | "extra" | "rimborso" | "manuale";
+      payment_type: "caparra" | "saldo" | "extra" | "rimborso" | "manuale" | "gestione_pratica";
       payment_date: string;
       payment_method_id: string;
       notes?: string;
