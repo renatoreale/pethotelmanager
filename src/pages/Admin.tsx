@@ -26,6 +26,7 @@ import { Database } from "@/integrations/supabase/types";
 import {
   useAllTenants, useCreateTenant, useUpdateTenant, useDeleteTenant,
   useAllUsers, useAssignUserToTenant, useAssignRole, useCreateUser,
+  useUpdateUserProfile, useDeleteUser,
   useRolePermissions, useBulkUpsertPermissions,
   RESOURCES, ROLES, type Tenant, type UserWithProfile, type RolePermission,
 } from "@/hooks/useAdmin";
