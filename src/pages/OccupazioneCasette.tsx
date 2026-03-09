@@ -98,6 +98,7 @@ export default function OccupazioneCasette() {
           totalDoppie={totalDoppie}
           rangeStart={rangeStart}
           rangeEnd={rangeEnd}
+          petType={petType}
         />
       )}
     </div>
