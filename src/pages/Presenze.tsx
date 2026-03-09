@@ -164,8 +164,8 @@ export default function Presenze() {
                     {format(parseISO(entry.check_in_date), "dd MMM yyyy", { locale: it })}
                   </TableCell>
                   <TableCell>
-                    {entry.check_out_date
-                      ? format(parseISO(entry.check_out_date), "dd MMM yyyy", { locale: it })
+                    {entry.booking?.check_out_date
+                      ? format(parseISO(entry.booking.check_out_date), "dd MMM yyyy", { locale: it })
                       : <span className="text-muted-foreground">—</span>}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
