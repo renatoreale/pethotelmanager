@@ -335,7 +335,7 @@ export default function CheckOut() {
       <AutocompleteSearch
         value={search}
         onChange={setSearch}
-        placeholder="Cerca cliente, gatto o numero prenotazione..."
+        placeholder="Cerca cliente, pet o numero prenotazione..."
         className="max-w-sm"
       />
 
