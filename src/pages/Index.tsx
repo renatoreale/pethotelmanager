@@ -51,6 +51,8 @@ export default function Index() {
   const { data: tenantConfig } = useTenantConfig();
   const { data: allPayments } = useAllPayments();
   const { canRead, isOperatoreRestricted } = usePermissions();
+  const occupancyDays = tenantConfig?.occupancy_rule_days ?? 4;
+  const { bookingOccupancy } = useOccupancyData(bookings ?? [], occupancyDays);
 
   const canSeeRevenue = canRead("dashboard_revenue");
 
