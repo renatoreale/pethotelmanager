@@ -847,6 +847,11 @@ function ListinoTab() {
                           </Badge>
                         )}
                       </TableCell>
+                      {tenantPetType === "entrambi" && (
+                        <TableCell>
+                          <Badge variant="outline">{p.pet_type === "cani" ? "🐶 Cani" : "🐱 Gatti"}</Badge>
+                        </TableCell>
+                      )}
                       <TableCell>
                         <Badge variant="secondary">
                           {TARIFF_TYPE_LABELS[p.tariff_type as TariffType] ?? p.tariff_type}
