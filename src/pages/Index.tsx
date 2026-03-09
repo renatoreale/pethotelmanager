@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useOccupancyData } from "@/components/OccupancyGrid";
 import { Button } from "@/components/ui/button";
 import { Cat, CalendarCheck, LogIn, LogOut, CreditCard, AlertTriangle, CalendarIcon } from "lucide-react";
 import { AvailabilityCheckDialog } from "@/components/AvailabilityCheckDialog";
@@ -50,6 +51,8 @@ export default function Index() {
   const { data: tenantConfig } = useTenantConfig();
   const { data: allPayments } = useAllPayments();
   const { canRead, isOperatoreRestricted } = usePermissions();
+  const occupancyDays = tenantConfig?.occupancy_rule_days ?? 4;
+  const { bookingOccupancy } = useOccupancyData(bookings ?? [], occupancyDays);
 
   const canSeeRevenue = canRead("dashboard_revenue");
 
@@ -72,13 +75,15 @@ export default function Index() {
     const inCorsoOverlapping = bookings.filter(b => b.status === "in_corso" && b.check_in_date <= selectedDateStr && b.check_out_date >= selectedDateStr);
     const catsInStructure = inCorsoOverlapping.reduce((sum, b) => sum + (b.booking_cats?.length ?? 0), 0);
 
-    // Occupancy by cage type: include all accepted bookings overlapping selected date
-    const occupancyStatuses = ["confermata", "appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato", "check_in", "in_corso", "check_out"];
-    const occupyingBookings = bookings.filter(b =>
-      occupancyStatuses.includes(b.status) && b.check_in_date <= selectedDateStr && b.check_out_date > selectedDateStr
-    );
-    const singoleOccupied = occupyingBookings.filter(b => b.cage_pool_type === "singola").reduce((s, b) => s + b.units_occupied, 0);
-    const doppieOccupied = occupyingBookings.filter(b => b.cage_pool_type === "doppia").reduce((s, b) => s + b.units_occupied, 0);
+    // Occupancy by cage type: use same occupancy_rule_days logic as OccupazioneCasette
+    let singoleOccupied = 0;
+    let doppieOccupied = 0;
+    for (const bo of bookingOccupancy) {
+      if (bo.occupiedDates.has(selectedDateStr)) {
+        if (bo.booking.cage_pool_type === "singola") singoleOccupied += bo.booking.units_occupied;
+        else doppieOccupied += bo.booking.units_occupied;
+      }
+    }
 
     // Active bookings overlapping selected date
     const activeStatuses = ["confermata", "appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato", "check_in", "in_corso"];
@@ -129,7 +134,7 @@ export default function Index() {
       dayBookings,
       expiringPreventivi: expiringPreventivi.length,
     };
-  }, [bookings, allPayments, selectedDateStr, monthStart, monthEnd, todayStr, tomorrowStr]);
+  }, [bookings, allPayments, bookingOccupancy, selectedDateStr, monthStart, monthEnd, todayStr, tomorrowStr]);
 
   const numSingole = tenantConfig?.num_singole ?? 0;
   const numDoppie = tenantConfig?.num_doppie ?? 0;
