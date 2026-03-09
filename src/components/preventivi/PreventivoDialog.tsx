@@ -123,9 +123,32 @@ export function PreventivoDialog({
   const { data: allBookings } = useBookings();
   const { data: tenantConfig } = useTenantConfig();
   const occupancyDays = tenantConfig?.occupancy_rule_days ?? 3;
-  const totalSingole = tenantConfig?.num_singole ?? 0;
-  const totalDoppie = tenantConfig?.num_doppie ?? 0;
   const petType = tenantConfig?.pet_type as "gatti" | "cani" | "entrambi" | undefined;
+  
+  // Determine pet_type of the booking from selected cats
+  const bookingPetType = useMemo(() => {
+    if (!clientCats || selectedCats.length === 0) return petType === "entrambi" ? null : petType ?? null;
+    const selectedCatData = clientCats.filter((c: any) => selectedCats.includes(c.id));
+    const types = new Set(selectedCatData.map((c: any) => c.pet_type).filter(Boolean));
+    if (types.size === 1) return types.values().next().value as "gatti" | "cani";
+    if (petType !== "entrambi") return petType ?? null;
+    return null;
+  }, [clientCats, selectedCats, petType]);
+
+  // Get per-type cage totals
+  const totalSingole = useMemo(() => {
+    if (petType !== "entrambi") return tenantConfig?.num_singole ?? 0;
+    if (bookingPetType === "gatti") return (tenantConfig as any)?.num_singole_gatti ?? 0;
+    if (bookingPetType === "cani") return (tenantConfig as any)?.num_singole_cani ?? 0;
+    return tenantConfig?.num_singole ?? 0;
+  }, [tenantConfig, petType, bookingPetType]);
+  
+  const totalDoppie = useMemo(() => {
+    if (petType !== "entrambi") return tenantConfig?.num_doppie ?? 0;
+    if (bookingPetType === "gatti") return (tenantConfig as any)?.num_doppie_gatti ?? 0;
+    if (bookingPetType === "cani") return (tenantConfig as any)?.num_doppie_cani ?? 0;
+    return tenantConfig?.num_doppie ?? 0;
+  }, [tenantConfig, petType, bookingPetType]);
 
   const { bookingOccupancy } = useOccupancyData(
     allBookings ?? [],
@@ -137,8 +160,12 @@ export function PreventivoDialog({
   const availabilityResult = useMemo(() => {
     if (!checkInDate || cageUnits.length === 0) return null;
     const checkInStr = format(checkInDate, "yyyy-MM-dd");
-    return checkAvailability(bookingOccupancy, checkInStr, occupancyDays, cageUnits, totalSingole, totalDoppie);
-  }, [checkInDate, cageUnits, bookingOccupancy, occupancyDays, totalSingole, totalDoppie]);
+    // For "entrambi" facilities, filter occupancy to same pet type
+    const filteredOccupancy = petType === "entrambi" && bookingPetType
+      ? bookingOccupancy.filter(bo => (bo.booking as any).pet_type === bookingPetType)
+      : bookingOccupancy;
+    return checkAvailability(filteredOccupancy, checkInStr, occupancyDays, cageUnits, totalSingole, totalDoppie);
+  }, [checkInDate, cageUnits, bookingOccupancy, occupancyDays, totalSingole, totalDoppie, petType, bookingPetType]);
 
   const hasConflicts = availabilityResult && !availabilityResult.available;
 
