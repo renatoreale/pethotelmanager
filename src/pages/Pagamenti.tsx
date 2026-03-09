@@ -256,7 +256,7 @@ export default function Pagamenti() {
         paid += net;
       });
     });
-    return { total, paid, remaining: total - paid };
+    return { total, paid, remaining: Math.max(0, total - paid) };
   }, [clientGroups]);
 
   return (
