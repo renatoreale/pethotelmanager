@@ -270,6 +270,7 @@ export interface RolePermission {
   can_read: boolean;
   can_write: boolean;
   can_delete: boolean;
+  is_visible: boolean;
   tenant_id: string | null;
 }
 
