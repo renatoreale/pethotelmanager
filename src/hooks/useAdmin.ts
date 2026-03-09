@@ -19,6 +19,10 @@ export interface Tenant {
   stay_calc_type: string;
   count_checkin_day: boolean;
   count_checkout_day: boolean;
+  partita_iva: string | null;
+  pec: string | null;
+  titolare_name: string | null;
+  logo_url: string | null;
   created_at: string;
 }
 
