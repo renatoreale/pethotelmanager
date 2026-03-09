@@ -39,7 +39,7 @@ export function useCancellationPolicy() {
         .order("days_before_checkin", { ascending: false });
       if (rulesErr) throw rulesErr;
 
-      return { ...policy, rules: rules || [] } as unknown as CancellationPolicy;
+      return { id: policyObj.id, tenant_id: policyObj.tenant_id, admin_fee: policyObj.admin_fee, rules: (rules || []) as unknown as CancellationRule[] } as CancellationPolicy;
     },
     enabled: !!profile?.tenant_id,
   });
