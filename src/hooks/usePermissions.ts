@@ -50,7 +50,7 @@ const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> 
     dashboard: ["read"], dashboard_revenue: ["read"],
     preventivi: ["read"], prenotazioni: ["read"], appuntamenti: ["read"],
     "check-in": ["read"], "check-out": ["read"], pagamenti: ["read"],
-    clienti: ["read"], gatti: ["read"], "registro-gatti": ["read"],
+    clienti: ["read"], gatti: ["read"], presenze: ["read"], "registro-gatti": ["read"],
     planning: ["read"], occupazione: ["read"], utenti: ["read"],
     "template-email": ["read"], pensione: ["read"], admin: [],
   },
