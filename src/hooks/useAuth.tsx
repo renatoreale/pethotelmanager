@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const switchTenant = async (tenantId: string) => {
+  const switchTenant = useCallback(async (tenantId: string) => {
     if (!profile) return;
 
     const { error } = await supabase
@@ -130,9 +130,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setProfile({ ...profile, tenant_id: tenantId });
-    // Reload page to refresh all data for new tenant
-    window.location.reload();
-  };
+    // Invalidate all queries so they refetch with the new tenant context
+    queryClient.invalidateQueries();
+  }, [profile, queryClient]);
 
   const hasRole = (role: UserRole) => roles.includes(role);
 
