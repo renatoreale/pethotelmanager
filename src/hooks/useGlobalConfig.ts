@@ -88,7 +88,7 @@ export function useUpsertGlobalPriceList() {
     mutationFn: async (price: {
       id?: string;
       name: string;
-      tariff_type: string;
+      tariff_type: "stagionale" | "extra_giornaliero" | "extra_km" | "extra_una_tantum";
       season?: string | null;
       price_per_day?: number;
       fixed_cost?: number;
