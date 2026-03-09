@@ -103,7 +103,7 @@ export function useUpsertGlobalPriceList() {
         const { id, ...rest } = price;
         const { data, error } = await supabase
           .from("price_lists")
-          .update({ ...rest, tenant_id: null })
+          .update({ ...rest, tenant_id: null } as any)
           .eq("id", id)
           .select()
           .single();
