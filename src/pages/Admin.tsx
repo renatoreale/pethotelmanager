@@ -309,12 +309,14 @@ function UtentiTab() {
   const removeTenantRole = useRemoveTenantRole();
   const createUser = useCreateUser();
   const updateProfile = useUpdateUserProfile();
+  const updateEmail = useUpdateUserEmail();
   const deleteUser = useDeleteUser();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserWithProfile | null>(null);
   const [deletingUser, setDeletingUser] = useState<UserWithProfile | null>(null);
   const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [editActiveTenant, setEditActiveTenant] = useState("");
   const [addRoleOpen, setAddRoleOpen] = useState<UserWithProfile | null>(null);
