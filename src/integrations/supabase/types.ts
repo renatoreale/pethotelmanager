@@ -1085,6 +1085,18 @@ export type Database = {
         Returns: boolean
       }
       next_booking_number: { Args: { _tenant_id: string }; Returns: string }
+      reset_tenant_payment_methods: {
+        Args: { _tenant_id: string }
+        Returns: undefined
+      }
+      reset_tenant_price_lists: {
+        Args: { _tenant_id: string }
+        Returns: undefined
+      }
+      reset_tenant_slot_configs: {
+        Args: { _tenant_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "ceo" | "titolare" | "manager" | "operatore"
