@@ -417,35 +417,55 @@ export default function Index() {
 
       {/* Missing appointment alert */}
       {!isOperatoreRestricted && s.missingAppointment.length > 0 && (
-        <Card className="border-none shadow-sm border-l-4 border-l-destructive">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-5 w-5" />
-              Appuntamento mancante — {s.missingAppointment.length} prenotazion{s.missingAppointment.length === 1 ? "e" : "i"}
-            </CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Check-in previsto tra oggi e i prossimi 4 giorni senza appuntamento fissato
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {s.missingAppointment.map((b: any) => {
-              const clientName = b.client ? `${b.client.first_name} ${b.client.last_name}` : "—";
-              const catNames = (b.booking_cats ?? []).map((bc: any) => bc.cat?.name).filter(Boolean).join(", ") || "—";
-              return (
-                <div key={b.id} className="flex items-center justify-between py-1.5 border-b last:border-0">
-                  <div>
-                    <p className="text-sm font-medium">{clientName}</p>
-                    <p className="text-xs text-muted-foreground">{catNames} · {b.booking_number}</p>
+        <div ref={missingApptRef}>
+          <Card className="border-none shadow-sm border-l-4 border-l-destructive">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+                Appuntamento mancante — {s.missingAppointment.length} prenotazion{s.missingAppointment.length === 1 ? "e" : "i"}
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Check-in previsto tra oggi e i prossimi 4 giorni senza appuntamento fissato
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {s.missingAppointment.map((b: any) => {
+                const clientName = b.client ? `${b.client.first_name} ${b.client.last_name}` : "—";
+                const catNames = (b.booking_cats ?? []).map((bc: any) => bc.cat?.name).filter(Boolean).join(", ") || "—";
+                return (
+                  <div key={b.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                    <div>
+                      <p className="text-sm font-medium">{clientName}</p>
+                      <p className="text-xs text-muted-foreground">{catNames} · {b.booking_number}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground">
+                        Check-in: {format(new Date(b.check_in_date + "T00:00:00"), "dd MMM", { locale: it })}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5 text-xs"
+                        onClick={() => setAppointmentBooking(b)}
+                      >
+                        <CalendarIconAlt className="h-3.5 w-3.5" />
+                        Fissa appuntamento
+                      </Button>
+                    </div>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    Check-in: {format(new Date(b.check_in_date + "T00:00:00"), "dd MMM", { locale: it })}
-                  </span>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </div>
       )}
+
+      {/* Appointment scheduling dialog */}
+      <AppointmentScheduleDialog
+        open={!!appointmentBooking}
+        onOpenChange={(open) => { if (!open) setAppointmentBooking(null); }}
+        booking={appointmentBooking}
+      />
 
       {/* Alerts - hide for operatore */}
       {!isOperatoreRestricted && s.expiringPreventivi > 0 && (
