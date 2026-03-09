@@ -1,46 +1,17 @@
 import {
-  LayoutDashboard,
-  FileText,
-  CalendarCheck,
-  Calendar,
-  LogIn,
-  LogOut,
-  CreditCard,
-  Users,
-  Cat,
-  ClipboardList,
-  Shield,
-  Mail,
-  Building2,
-  ChevronDown,
-  Power,
-  Grid3X3,
-  Settings2,
-  Check,
+  LayoutDashboard, FileText, CalendarCheck, Calendar, LogIn, LogOut,
+  CreditCard, Users, Cat, ClipboardList, Shield, Mail, Building2,
+  Power, Grid3X3, Settings2,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions, Resource } from "@/hooks/usePermissions";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarHeader,
-  SidebarFooter,
-  useSidebar,
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
+  SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
+  SidebarHeader, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
 
 interface NavItem {
@@ -78,23 +49,15 @@ const adminNav: NavItem[] = [
   { title: "Admin Sistema", url: "/admin", icon: Settings2, resource: "admin" },
 ];
 
-function NavGroup({
-  label,
-  items,
-  collapsed,
-}: {
-  label: string;
-  items: NavItem[];
-  collapsed: boolean;
-}) {
+function NavGroup({ label, items, collapsed }: { label: string; items: NavItem[]; collapsed: boolean }) {
   const location = useLocation();
-  const { canRead } = usePermissions();
-  
+  const { isVisible } = usePermissions();
+
   const isActive = (path: string) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
 
-  const visibleItems = items.filter(item => canRead(item.resource));
-
+  // Use isVisible instead of canRead for menu visibility
+  const visibleItems = items.filter(item => isVisible(item.resource));
   if (visibleItems.length === 0) return null;
 
   return (
@@ -108,10 +71,7 @@ function NavGroup({
         <SidebarMenu>
           {visibleItems.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive(item.url)}
-              >
+              <SidebarMenuButton asChild isActive={isActive(item.url)}>
                 <NavLink
                   to={item.url}
                   end={item.url === "/"}
@@ -133,23 +93,16 @@ function NavGroup({
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { profile, roles, signOut, user, userTenants, activeTenant, switchTenant } = useAuth();
+  const { profile, signOut, user } = useAuth();
   const { primaryRole } = usePermissions();
 
   const initials = profile?.full_name
-    ? profile.full_name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
+    ? profile.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : user?.email?.slice(0, 2).toUpperCase() ?? "??";
 
-  const roleLabel = primaryRole 
-    ? { admin: "Amministratore", ceo: "CEO", titolare: "Titolare", manager: "Manager", operatore: "Operatore" }[primaryRole] 
+  const roleLabel = primaryRole
+    ? { admin: "Amministratore", ceo: "CEO", titolare: "Titolare", manager: "Manager", operatore: "Operatore" }[primaryRole]
     : "Utente";
-
-  const hasMultipleTenants = userTenants.length > 1;
 
   return (
     <Sidebar collapsible="icon">
@@ -163,34 +116,6 @@ export function AppSidebar() {
               <span className="font-serif font-bold text-sm text-sidebar-foreground">
                 CatHotel
               </span>
-              {hasMultipleTenants ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-1 text-[11px] text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors text-left">
-                      {activeTenant?.name || "Seleziona pensione"}
-                      <ChevronDown className="h-3 w-3" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-56">
-                    {userTenants.map((tenant) => (
-                      <DropdownMenuItem
-                        key={tenant.id}
-                        onClick={() => switchTenant(tenant.id)}
-                        className="flex items-center justify-between"
-                      >
-                        <span>{tenant.name}</span>
-                        {tenant.id === activeTenant?.id && (
-                          <Check className="h-4 w-4 text-primary" />
-                        )}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <span className="text-[11px] text-sidebar-foreground/60">
-                  {activeTenant?.name || "Pensione"}
-                </span>
-              )}
             </div>
           )}
         </div>
