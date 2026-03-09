@@ -49,7 +49,7 @@ import { useBookings } from "@/hooks/useBookings";
 type ViewMode = "giorno" | "settimana" | "mese" | "personalizzato";
 
 export default function Appuntamenti() {
-  const [viewMode, setViewMode] = useState<ViewMode>("giorno");
+  const [viewMode, setViewMode] = useState<ViewMode>("mese");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [rangeFrom, setRangeFrom] = useState<Date>(new Date());
   const [rangeTo, setRangeTo] = useState<Date>(addDays(new Date(), 7));
