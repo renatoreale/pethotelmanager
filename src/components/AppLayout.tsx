@@ -4,6 +4,7 @@ import { Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAllTenants } from "@/hooks/useAdmin";
+import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import { Building2, ChevronDown, Check } from "lucide-react";
 import {
   DropdownMenu,
