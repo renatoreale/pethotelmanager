@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Settings, Clock, Euro, CreditCard, Plus, Pencil, Trash2, Save, RotateCcw, Ban } from "lucide-react";
+import { Settings, Clock, Euro, CreditCard, Plus, Pencil, Trash2, Save, RotateCcw, Ban, Building2, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -56,11 +56,12 @@ export default function Pensione() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Configurazione Pensione</h1>
-        <p className="text-muted-foreground text-sm mt-1">Casette, slot appuntamenti, listino prezzi, pagamenti e politica di cancellazione</p>
+        <p className="text-muted-foreground text-sm mt-1">Anagrafica, casette, slot appuntamenti, listino prezzi, pagamenti e politica di cancellazione</p>
       </div>
 
-      <Tabs defaultValue="casette" className="space-y-4">
-        <TabsList>
+      <Tabs defaultValue="anagrafica" className="space-y-4">
+        <TabsList className="flex-wrap">
+          <TabsTrigger value="anagrafica" className="gap-2"><Building2 className="h-4 w-4" /> Anagrafica</TabsTrigger>
           <TabsTrigger value="casette" className="gap-2"><Settings className="h-4 w-4" /> Casette</TabsTrigger>
           <TabsTrigger value="slot" className="gap-2"><Clock className="h-4 w-4" /> Slot Appuntamenti</TabsTrigger>
           <TabsTrigger value="listino" className="gap-2"><Euro className="h-4 w-4" /> Listino Prezzi</TabsTrigger>
@@ -68,6 +69,7 @@ export default function Pensione() {
           <TabsTrigger value="cancellazione" className="gap-2"><Ban className="h-4 w-4" /> Cancellazione</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="anagrafica"><AnagraficaTab /></TabsContent>
         <TabsContent value="casette"><CasetteTab /></TabsContent>
         <TabsContent value="slot"><SlotTab /></TabsContent>
         <TabsContent value="listino"><ListinoTab /></TabsContent>
@@ -78,7 +80,182 @@ export default function Pensione() {
   );
 }
 
-// ── CASETTE TAB ──
+// ── ANAGRAFICA TAB ──
+function AnagraficaTab() {
+  const { data: config, isLoading } = useTenantConfig();
+  const updateConfig = useUpdateTenantConfig();
+  const [name, setName] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+  const [phone, setPhone] = useState<string | null>(null);
+  const [address, setAddress] = useState<string | null>(null);
+  const [partitaIva, setPartitaIva] = useState<string | null>(null);
+  const [pec, setPec] = useState<string | null>(null);
+  const [titolareName, setTitolareName] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const currentName = name ?? config?.name ?? "";
+  const currentEmail = email ?? config?.email ?? "";
+  const currentPhone = phone ?? config?.phone ?? "";
+  const currentAddress = address ?? config?.address ?? "";
+  const currentPartitaIva = partitaIva ?? (config as any)?.partita_iva ?? "";
+  const currentPec = pec ?? (config as any)?.pec ?? "";
+  const currentTitolareName = titolareName ?? (config as any)?.titolare_name ?? "";
+  const currentLogoUrl = (config as any)?.logo_url ?? null;
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !config) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${config.id}/logo.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("tenant-logos")
+        .upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from("tenant-logos").getPublicUrl(path);
+      await updateConfig.mutateAsync({ id: config.id, logo_url: urlData.publicUrl });
+      toast.success("Logo caricato con successo");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nel caricamento del logo");
+    }
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleRemoveLogo = async () => {
+    if (!config) return;
+    try {
+      await updateConfig.mutateAsync({ id: config.id, logo_url: null });
+      toast.success("Logo rimosso");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nella rimozione del logo");
+    }
+  };
+
+  const handleSave = async () => {
+    if (!config) return;
+    try {
+      await updateConfig.mutateAsync({
+        id: config.id,
+        email: currentEmail || null,
+        phone: currentPhone || null,
+        address: currentAddress || null,
+        partita_iva: currentPartitaIva || null,
+        pec: currentPec || null,
+        titolare_name: currentTitolareName || null,
+      });
+      toast.success("Anagrafica salvata");
+      setName(null); setEmail(null); setPhone(null); setAddress(null);
+      setPartitaIva(null); setPec(null); setTitolareName(null);
+    } catch (err: any) {
+      toast.error(err.message || "Errore nel salvataggio");
+    }
+  };
+
+  if (isLoading) return <div className="py-12 text-center text-muted-foreground">Caricamento...</div>;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Anagrafica Pensione</CardTitle>
+        <CardDescription>Dati identificativi della pensione. Il codice pensione non è modificabile.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Logo */}
+        <div className="space-y-3">
+          <Label className="text-base font-semibold">Logo</Label>
+          <div className="flex items-center gap-4">
+            {currentLogoUrl ? (
+              <div className="relative">
+                <img src={currentLogoUrl} alt="Logo pensione" className="h-20 w-20 rounded-lg object-contain border bg-background" />
+                <button
+                  onClick={handleRemoveLogo}
+                  className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <div className="h-20 w-20 rounded-lg border-2 border-dashed flex items-center justify-center text-muted-foreground">
+                <Building2 className="h-8 w-8" />
+              </div>
+            )}
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleLogoUpload}
+                className="hidden"
+              />
+              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                <Upload className="mr-2 h-4 w-4" />
+                {uploading ? "Caricamento..." : "Carica logo"}
+              </Button>
+              <p className="text-xs text-muted-foreground mt-1">PNG, JPG o SVG. Max 2MB.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Codice pensione (read-only) */}
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Codice Pensione</Label>
+            <Input value={config?.slug ?? ""} disabled className="bg-muted" />
+            <p className="text-xs text-muted-foreground">Non modificabile</p>
+          </div>
+          <div className="space-y-2">
+            <Label>Nome Pensione</Label>
+            <Input value={currentName} disabled className="bg-muted" />
+            <p className="text-xs text-muted-foreground">Modificabile solo dall'amministratore</p>
+          </div>
+        </div>
+
+        {/* Titolare */}
+        <div className="space-y-2">
+          <Label>Nominativo Titolare</Label>
+          <Input value={currentTitolareName} onChange={(e) => setTitolareName(e.target.value)} placeholder="Nome e cognome del titolare" />
+        </div>
+
+        {/* Contatti */}
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Email</Label>
+            <Input type="email" value={currentEmail} onChange={(e) => setEmail(e.target.value)} placeholder="email@pensione.it" />
+          </div>
+          <div className="space-y-2">
+            <Label>Telefono</Label>
+            <Input type="tel" value={currentPhone} onChange={(e) => setPhone(e.target.value)} placeholder="+39 ..." />
+          </div>
+        </div>
+
+        {/* P.IVA e PEC */}
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Partita IVA</Label>
+            <Input value={currentPartitaIva} onChange={(e) => setPartitaIva(e.target.value)} placeholder="01234567890" />
+          </div>
+          <div className="space-y-2">
+            <Label>PEC</Label>
+            <Input type="email" value={currentPec} onChange={(e) => setPec(e.target.value)} placeholder="pec@pec.it" />
+          </div>
+        </div>
+
+        {/* Indirizzo */}
+        <div className="space-y-2">
+          <Label>Indirizzo</Label>
+          <Input value={currentAddress} onChange={(e) => setAddress(e.target.value)} placeholder="Via, Città, CAP" />
+        </div>
+
+        <Button onClick={handleSave} disabled={updateConfig.isPending}>
+          <Save className="mr-2 h-4 w-4" /> Salva Anagrafica
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
 function CasetteTab() {
   const { data: config, isLoading } = useTenantConfig();
   const updateConfig = useUpdateTenantConfig();
