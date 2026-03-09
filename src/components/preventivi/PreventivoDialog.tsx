@@ -622,6 +622,7 @@ export function PreventivoDialog({
           notes: fullNotes || undefined,
           cat_ids: selectedCats,
           price_breakdown: priceBreakdown,
+          pet_type: bookingPetType ?? undefined,
         });
         toast.success("Preventivo creato");
       }
