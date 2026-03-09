@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOccupancyData } from "@/components/OccupancyGrid";
 import { Button } from "@/components/ui/button";
-import { Cat, CalendarCheck, LogIn, LogOut, CreditCard, AlertTriangle, CalendarIcon } from "lucide-react";
+import { Cat, CalendarCheck, LogIn, LogOut, CreditCard, AlertTriangle, CalendarIcon, AlertCircle } from "lucide-react";
 import { AvailabilityCheckDialog } from "@/components/AvailabilityCheckDialog";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -200,6 +200,8 @@ export default function Index() {
 
   const singolePct = numSingole > 0 ? Math.round((s.singoleOccupied / numSingole) * 100) : 0;
   const doppiePct = numDoppie > 0 ? Math.round((s.doppieOccupied / numDoppie) * 100) : 0;
+  const singoleOverbooking = s.singoleOccupied > numSingole;
+  const doppieOverbooking = s.doppieOccupied > numDoppie;
 
   return (
     <div className="space-y-8">
@@ -302,16 +304,22 @@ export default function Index() {
             <div>
               <div className="flex justify-between text-sm mb-1.5">
                 <span className="text-muted-foreground">Singole</span>
-                <span className="font-medium">{s.singoleOccupied} / {numSingole}</span>
+                <div className="flex items-center gap-1.5">
+                  {singoleOverbooking && <AlertCircle className="h-4 w-4 text-[hsl(340,80%,35%)]" />}
+                  <span className={cn("font-medium", singoleOverbooking && "text-[hsl(340,80%,35%)]")}>{s.singoleOccupied} / {numSingole}</span>
+                </div>
               </div>
-              <Progress value={singolePct} className="h-2" />
+              <Progress value={Math.min(singolePct, 100)} className="h-2" indicatorClassName={singoleOverbooking ? "bg-[hsl(340,80%,25%)]" : undefined} />
             </div>
             <div>
               <div className="flex justify-between text-sm mb-1.5">
                 <span className="text-muted-foreground">Doppie</span>
-                <span className="font-medium">{s.doppieOccupied} / {numDoppie}</span>
+                <div className="flex items-center gap-1.5">
+                  {doppieOverbooking && <AlertCircle className="h-4 w-4 text-[hsl(340,80%,35%)]" />}
+                  <span className={cn("font-medium", doppieOverbooking && "text-[hsl(340,80%,35%)]")}>{s.doppieOccupied} / {numDoppie}</span>
+                </div>
               </div>
-              <Progress value={doppiePct} className="h-2" />
+              <Progress value={Math.min(doppiePct, 100)} className="h-2" indicatorClassName={doppieOverbooking ? "bg-[hsl(340,80%,25%)]" : undefined} />
             </div>
           </CardContent>
         </Card>
