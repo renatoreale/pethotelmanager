@@ -211,8 +211,17 @@ export default function Index() {
       show: true,
     },
     {
+      title: "Incasso anno",
+      value: `€ ${s.yearRevenue.toLocaleString("it-IT", { maximumFractionDigits: 0 })}`,
+      subtitle: format(selectedDate, "yyyy", { locale: it }),
+      icon: CreditCard,
+      color: "text-primary",
+      bg: "bg-primary/10",
+      show: canSeeRevenue,
+    },
+    {
       title: "Incasso mese",
-      value: `€ ${s.monthRevenue.toFixed(0)}`,
+      value: `€ ${s.monthRevenue.toLocaleString("it-IT", { maximumFractionDigits: 0 })}`,
       subtitle: format(selectedDate, "MMMM yyyy", { locale: it }),
       icon: CreditCard,
       color: "text-warning",
