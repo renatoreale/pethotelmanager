@@ -322,7 +322,7 @@ export default function Index() {
       {/* KPI Cards */}
       <div className={cn("grid gap-4 sm:grid-cols-2", kpis.length >= 4 ? "lg:grid-cols-4" : kpis.length === 3 ? "lg:grid-cols-3" : "")}>
         {kpis.map((stat) => (
-          <Card key={stat.title} className="border-none shadow-sm">
+          <Card key={stat.title} className="border shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {stat.title}
