@@ -32,6 +32,8 @@ export function useUpdateTenantConfig() {
       email?: string | null;
       phone?: string | null;
       address?: string | null;
+      cap?: string | null;
+      city?: string | null;
       stay_calc_type?: string;
       count_checkin_day?: boolean;
       count_checkout_day?: boolean;

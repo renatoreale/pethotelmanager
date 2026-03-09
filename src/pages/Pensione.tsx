@@ -88,6 +88,8 @@ function AnagraficaTab() {
   const [email, setEmail] = useState<string | null>(null);
   const [phone, setPhone] = useState<string | null>(null);
   const [address, setAddress] = useState<string | null>(null);
+  const [cap, setCap] = useState<string | null>(null);
+  const [city, setCity] = useState<string | null>(null);
   const [partitaIva, setPartitaIva] = useState<string | null>(null);
   const [pec, setPec] = useState<string | null>(null);
   const [titolareName, setTitolareName] = useState<string | null>(null);
@@ -98,6 +100,8 @@ function AnagraficaTab() {
   const currentEmail = email ?? config?.email ?? "";
   const currentPhone = phone ?? config?.phone ?? "";
   const currentAddress = address ?? config?.address ?? "";
+  const currentCap = cap ?? (config as any)?.cap ?? "";
+  const currentCity = city ?? (config as any)?.city ?? "";
   const currentPartitaIva = partitaIva ?? (config as any)?.partita_iva ?? "";
   const currentPec = pec ?? (config as any)?.pec ?? "";
   const currentTitolareName = titolareName ?? (config as any)?.titolare_name ?? "";
