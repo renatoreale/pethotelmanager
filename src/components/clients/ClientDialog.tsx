@@ -266,7 +266,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif">
-            {isEditing ? "Modifica Cliente & Gatti" : "Nuovo Cliente & Gatti"}
+            {isEditing ? `Modifica Cliente & ${pet.pluralCap}` : `Nuovo Cliente & ${pet.pluralCap}`}
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
