@@ -154,7 +154,7 @@ export default function Pagamenti() {
         bookings: g.bookings.filter((b: any) => {
           const bTotal = Number(b.total_amount ?? 0);
           const { net } = calcTotals(b.payments ?? []);
-          return bTotal - net > 0;
+          return Math.max(0, bTotal - net) > 0;
         }),
       })).filter(g => g.bookings.length > 0);
     }
@@ -256,7 +256,7 @@ export default function Pagamenti() {
         paid += net;
       });
     });
-    return { total, paid, remaining: total - paid };
+    return { total, paid, remaining: Math.max(0, total - paid) };
   }, [clientGroups]);
 
   return (
@@ -308,7 +308,7 @@ export default function Pagamenti() {
             const clientTotal = group.bookings.reduce((s: number, b: any) => s + Number(b.total_amount ?? 0), 0);
             const clientPayments = group.bookings.flatMap((b: any) => b.payments ?? []);
             const { net: clientNet } = calcTotals(clientPayments);
-            const clientRemaining = clientTotal - clientNet;
+            const clientRemaining = Math.max(0, clientTotal - clientNet);
 
             return (
               <div key={group.clientId} className="rounded-xl border bg-card overflow-hidden">
@@ -430,7 +430,7 @@ export default function Pagamenti() {
             const bPayments = selectedBooking.payments ?? [];
             const bTotal = Number(selectedBooking.total_amount ?? 0);
             const { net: bNet } = calcTotals(bPayments);
-            const bRemaining = bTotal - bNet;
+            const bRemaining = Math.max(0, bTotal - bNet);
 
             return (
               <>

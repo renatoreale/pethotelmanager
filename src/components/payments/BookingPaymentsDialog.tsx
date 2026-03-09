@@ -45,7 +45,7 @@ export function BookingPaymentsDialog({ open, onOpenChange, booking }: BookingPa
     .reduce((s, p) => s + Number(p.amount), 0);
   const netPaid = totalPaid - totalRefunded;
   const totalAmount = Number(booking.total_amount ?? 0);
-  const remaining = totalAmount - netPaid;
+  const remaining = Math.max(0, totalAmount - netPaid);
 
   const clientName = booking.client
     ? `${booking.client.first_name} ${booking.client.last_name}`
