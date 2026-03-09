@@ -48,6 +48,7 @@ const catSchema = z.object({
   dietary_notes: z.string().trim().max(2000).optional(),
   behavioral_notes: z.string().trim().max(2000).optional(),
   needs_double_cage: z.boolean().default(false),
+  pet_type: z.string().optional(),
 });
 
 type CatFormValues = z.infer<typeof catSchema>;
