@@ -580,15 +580,26 @@ export default function Appuntamenti() {
                         <TableCell className="text-sm">{format(parseISO(b.check_out_date), "dd MMM yyyy", { locale: it })}</TableCell>
                         <TableCell><StatusBadge status={b.status} /></TableCell>
                         <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1 text-xs"
-                            onClick={() => setSchedulingBooking(b)}
-                          >
-                            <CalendarClock className="h-3.5 w-3.5" />
-                            Fissa Appuntamento
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => setEditingBookingDates(b)}
+                              title="Modifica date"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-1 text-xs"
+                              onClick={() => setSchedulingBooking(b)}
+                            >
+                              <CalendarClock className="h-3.5 w-3.5" />
+                              Fissa Appuntamento
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
