@@ -41,6 +41,7 @@ import { Label } from "@/components/ui/label";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { EditCheckoutDialog, type CheckoutBookingData } from "@/components/appointments/EditCheckoutDialog";
 import { EditCheckinDialog } from "@/components/appointments/EditCheckinDialog";
+import { EditBookingDatesDialog } from "@/components/appointments/EditBookingDatesDialog";
 import { CalendarGrid } from "@/components/appointments/CalendarGrid";
 import { useBookings } from "@/hooks/useBookings";
 
@@ -62,6 +63,7 @@ export default function Appuntamenti() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("tutti");
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
+  const [editingBookingDates, setEditingBookingDates] = useState<any>(null);
 
   // Compute date range based on view mode
   const { startDate, endDate } = useMemo(() => {
@@ -578,15 +580,26 @@ export default function Appuntamenti() {
                         <TableCell className="text-sm">{format(parseISO(b.check_out_date), "dd MMM yyyy", { locale: it })}</TableCell>
                         <TableCell><StatusBadge status={b.status} /></TableCell>
                         <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1 text-xs"
-                            onClick={() => setSchedulingBooking(b)}
-                          >
-                            <CalendarClock className="h-3.5 w-3.5" />
-                            Fissa Appuntamento
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => setEditingBookingDates(b)}
+                              title="Modifica date"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-1 text-xs"
+                              onClick={() => setSchedulingBooking(b)}
+                            >
+                              <CalendarClock className="h-3.5 w-3.5" />
+                              Fissa Appuntamento
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -658,6 +671,14 @@ export default function Appuntamenti() {
           open={!!editingCheckin}
           onOpenChange={(open) => { if (!open) setEditingCheckin(null); }}
           appointment={editingCheckin}
+        />
+      )}
+
+      {editingBookingDates && (
+        <EditBookingDatesDialog
+          open={!!editingBookingDates}
+          onOpenChange={(open) => { if (!open) setEditingBookingDates(null); }}
+          booking={editingBookingDates}
         />
       )}
     </div>
