@@ -134,6 +134,15 @@ export default function Index() {
     const soonStr = format(soonDate, "yyyy-MM-dd");
     const expiringPreventivi = bookings.filter(b => b.status === "preventivo" && b.check_in_date >= selectedDateStr && b.check_in_date <= soonStr);
 
+    // Confirmed bookings with check-in in next 4 days but no appointment IN scheduled
+    const soon4Date = format(addDays(new Date(), 4), "yyyy-MM-dd");
+    const missingAppointment = bookings.filter(b => {
+      if (b.status !== "confermata") return false;
+      if (b.check_in_date < todayStr || b.check_in_date > soon4Date) return false;
+      const hasCheckInAppt = (b.appointments ?? []).some((a: any) => a.appointment_type === "check_in");
+      return !hasCheckInAppt;
+    });
+
     return {
       catsInStructure,
       singoleOccupied,
@@ -147,6 +156,7 @@ export default function Index() {
       yearRevenue,
       dayBookings,
       expiringPreventivi: expiringPreventivi.length,
+      missingAppointment,
     };
   }, [bookings, allPayments, bookingOccupancy, selectedDateStr, monthStart, monthEnd, yearStart, yearEnd, todayStr, tomorrowStr]);
 
