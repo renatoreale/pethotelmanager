@@ -28,6 +28,8 @@ import { it } from "date-fns/locale";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import { useBookings, useTransitionBooking, useDeleteBooking, getTransitions } from "@/hooks/useBookings";
 import { useUpdatePreventivo } from "@/hooks/usePreventivi";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const STATUS_OPTIONS = [
   { value: "tutti", label: "Tutti gli stati" },
