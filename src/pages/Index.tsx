@@ -482,7 +482,51 @@ export default function Index() {
         </div>
       )}
 
-      {/* Appointment scheduling dialog */}
+      {/* Missing check-out appointment alert */}
+      {!isOperatoreRestricted && s.missingCheckOutAppt.length > 0 && (
+        <div ref={missingCheckOutRef}>
+          <Card className="border-none shadow-sm border-l-4 border-l-[hsl(25,90%,50%)]">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2 text-[hsl(25,90%,40%)]">
+                <LogOut className="h-5 w-5" />
+                Check-out senza appuntamento — {s.missingCheckOutAppt.length} prenotazion{s.missingCheckOutAppt.length === 1 ? "e" : "i"}
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Check-out previsto tra oggi e i prossimi 4 giorni senza appuntamento fissato
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {s.missingCheckOutAppt.map((b: any) => {
+                const clientName = b.client ? `${b.client.first_name} ${b.client.last_name}` : "—";
+                const catNames = (b.booking_cats ?? []).map((bc: any) => bc.cat?.name).filter(Boolean).join(", ") || "—";
+                return (
+                  <div key={b.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                    <div>
+                      <p className="text-sm font-medium">{clientName}</p>
+                      <p className="text-xs text-muted-foreground">{catNames} · {b.booking_number}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground">
+                        Check-out: {format(new Date(b.check_out_date + "T00:00:00"), "dd MMM", { locale: it })}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5 text-xs"
+                        onClick={() => setAppointmentBooking(b)}
+                      >
+                        <CalendarIconAlt className="h-3.5 w-3.5" />
+                        Fissa appuntamento
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <AppointmentScheduleDialog
         open={!!appointmentBooking}
         onOpenChange={(open) => { if (!open) setAppointmentBooking(null); }}
