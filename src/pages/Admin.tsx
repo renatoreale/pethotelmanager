@@ -361,6 +361,8 @@ function UtentiTab() {
   const openEdit = (user: UserWithProfile) => {
     setEditingUser(user);
     setEditName(user.full_name || "");
+    setEditPhone(user.phone || "");
+    setEditActiveTenant(user.active_tenant_id || "");
   };
 
   const handleSaveEdit = async () => {
