@@ -170,7 +170,7 @@ export default function Appuntamenti() {
     setDeleting(null);
   };
 
-  // Check if a check-in appointment is in the future (date > today)
+  // Check if a check-in appointment is today or in the future
   const isFutureCheckin = (appt: AppointmentWithDetails) => {
     if (appt.appointment_type !== "check_in") return false;
     const apptDate = appt.scheduled_at.slice(0, 10);
