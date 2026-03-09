@@ -859,6 +859,7 @@ export type Database = {
           included_km: number | null
           is_active: boolean
           name: string
+          pet_type: Database["public"]["Enums"]["pet_type"] | null
           price_per_day: number
           season: string | null
           tariff_type: Database["public"]["Enums"]["tariff_type"]
@@ -877,6 +878,7 @@ export type Database = {
           included_km?: number | null
           is_active?: boolean
           name: string
+          pet_type?: Database["public"]["Enums"]["pet_type"] | null
           price_per_day?: number
           season?: string | null
           tariff_type?: Database["public"]["Enums"]["tariff_type"]
@@ -895,6 +897,7 @@ export type Database = {
           included_km?: number | null
           is_active?: boolean
           name?: string
+          pet_type?: Database["public"]["Enums"]["pet_type"] | null
           price_per_day?: number
           season?: string | null
           tariff_type?: Database["public"]["Enums"]["tariff_type"]
