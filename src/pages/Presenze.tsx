@@ -65,7 +65,17 @@ export default function Presenze() {
     return list;
   }, [entries, selectedDate, search]);
 
-  const isToday = format(selectedDate, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
+  const dateStr = format(selectedDate, "yyyy-MM-dd");
+  const checkInsToday = useMemo(() => 
+    (entries ?? []).filter((e: any) => e.check_in_date === dateStr).length,
+    [entries, dateStr]
+  );
+  const checkOutsToday = useMemo(() => 
+    (entries ?? []).filter((e: any) => e.booking?.check_out_date === dateStr).length,
+    [entries, dateStr]
+  );
+
+  const isToday = dateStr === format(new Date(), "yyyy-MM-dd");
 
   return (
     <div className="space-y-6">
@@ -123,14 +133,18 @@ export default function Presenze() {
       </div>
 
       {/* Summary */}
-      <div className="rounded-xl border bg-card p-4 inline-flex items-center gap-3">
-        <Cat className="h-5 w-5 text-primary" />
-        <div>
-          <span className="text-2xl font-bold font-mono text-primary">{catsPresent.length}</span>
-          <span className="text-sm text-muted-foreground ml-2">
-            {catsPresent.length === 1 ? "gatto presente" : "gatti presenti"}
-            {isToday ? " oggi" : ` il ${format(selectedDate, "dd/MM/yyyy")}`}
-          </span>
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-xl border bg-card p-4">
+          <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Presenti</div>
+          <div className="text-2xl font-bold font-mono mt-1 text-primary">{catsPresent.length}</div>
+        </div>
+        <div className="rounded-xl border bg-card p-4">
+          <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Check-in</div>
+          <div className="text-2xl font-bold font-mono mt-1 text-green-600">{checkInsToday}</div>
+        </div>
+        <div className="rounded-xl border bg-card p-4">
+          <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Check-out</div>
+          <div className="text-2xl font-bold font-mono mt-1 text-orange-600">{checkOutsToday}</div>
         </div>
       </div>
 
