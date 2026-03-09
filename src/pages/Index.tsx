@@ -289,7 +289,9 @@ export default function Index() {
       {!isOperatoreRestricted && (
         <Card className="border-none shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base">Occupazione casette</CardTitle>
+            <CardTitle className="text-base">
+              Occupazione casette {!isSelectedToday && `— ${format(selectedDate, "dd MMM yyyy", { locale: it })}`}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
