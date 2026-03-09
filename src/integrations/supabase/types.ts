@@ -1186,7 +1186,13 @@ export type Database = {
         | "appuntamento_in_out_fissato"
       cage_pool_type: "singola" | "doppia"
       email_status: "queued" | "sent" | "failed"
-      payment_type: "caparra" | "saldo" | "extra" | "rimborso" | "manuale"
+      payment_type:
+        | "caparra"
+        | "saldo"
+        | "extra"
+        | "rimborso"
+        | "manuale"
+        | "gestione_pratica"
       tariff_type:
         | "stagionale"
         | "extra_giornaliero"
@@ -1339,7 +1345,14 @@ export const Constants = {
       ],
       cage_pool_type: ["singola", "doppia"],
       email_status: ["queued", "sent", "failed"],
-      payment_type: ["caparra", "saldo", "extra", "rimborso", "manuale"],
+      payment_type: [
+        "caparra",
+        "saldo",
+        "extra",
+        "rimborso",
+        "manuale",
+        "gestione_pratica",
+      ],
       tariff_type: [
         "stagionale",
         "extra_giornaliero",
