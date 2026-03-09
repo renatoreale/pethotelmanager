@@ -451,6 +451,9 @@ function UtentiTab() {
                         {user.full_name || "Utente Senza Nome"}
                       </h3>
                       <p className="text-sm text-muted-foreground">
+                        {user.email || "Email non disponibile"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
                         Pensione attiva: {user.active_tenant_id ? 
                           tenants?.find(t => t.id === user.active_tenant_id)?.name || "Sconosciuta" : 
                           "Nessuna"
