@@ -273,6 +273,24 @@ function SlotTab() {
     setDeleting(null);
   };
 
+  const handleReset = async () => {
+    if (!profile?.tenant_id) return;
+    setResetting(true);
+    try {
+      // Delete all tenant slot configs
+      await supabase.from("slot_configs").delete().eq("tenant_id", profile.tenant_id);
+      // Copy global templates
+      await supabase.rpc("copy_global_templates_to_tenant", { _tenant_id: profile.tenant_id });
+      // Only invalidate slot-configs (the function copies all, but we only care about slots here)
+      queryClient.invalidateQueries({ queryKey: ["slot-configs"] });
+      toast.success("Slot ripristinati ai valori predefiniti");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nel ripristino");
+    }
+    setResetting(false);
+    setResetConfirm(false);
+  };
+
   return (
     <>
       <Card>
