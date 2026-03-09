@@ -287,6 +287,70 @@ export type Database = {
           },
         ]
       }
+      cancellation_policies: {
+        Row: {
+          admin_fee: number
+          created_at: string
+          id: string
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_fee?: number
+          created_at?: string
+          id?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_fee?: number
+          created_at?: string
+          id?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cancellation_policies_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cancellation_policy_rules: {
+        Row: {
+          created_at: string
+          days_before_checkin: number
+          id: string
+          policy_id: string
+          refund_percentage: number
+        }
+        Insert: {
+          created_at?: string
+          days_before_checkin: number
+          id?: string
+          policy_id: string
+          refund_percentage?: number
+        }
+        Update: {
+          created_at?: string
+          days_before_checkin?: number
+          id?: string
+          policy_id?: string
+          refund_percentage?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cancellation_policy_rules_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "cancellation_policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cat_registry: {
         Row: {
           booking_id: string
@@ -1085,6 +1149,10 @@ export type Database = {
         Returns: boolean
       }
       next_booking_number: { Args: { _tenant_id: string }; Returns: string }
+      reset_tenant_cancellation_policy: {
+        Args: { _tenant_id: string }
+        Returns: undefined
+      }
       reset_tenant_payment_methods: {
         Args: { _tenant_id: string }
         Returns: undefined

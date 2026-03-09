@@ -20,10 +20,11 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Building2, Users, ShieldCheck, Plus, Pencil, Trash2, Save, Clock, Euro, CreditCard } from "lucide-react";
+import { Building2, Users, ShieldCheck, Plus, Pencil, Trash2, Save, Clock, Euro, CreditCard, Ban } from "lucide-react";
 import { GlobalSlotConfigsTab } from "@/components/admin/GlobalSlotConfigsTab";
 import { GlobalPriceListsTab } from "@/components/admin/GlobalPriceListsTab";
 import { GlobalPaymentMethodsTab } from "@/components/admin/GlobalPaymentMethodsTab";
+import { GlobalCancellationPolicyTab } from "@/components/admin/GlobalCancellationPolicyTab";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Database } from "@/integrations/supabase/types";
@@ -85,6 +86,9 @@ export default function Admin() {
           <TabsTrigger value="pagamenti-globali" className="gap-2">
             <CreditCard className="h-4 w-4" /> Pagamenti Globali
           </TabsTrigger>
+          <TabsTrigger value="cancellazione-globale" className="gap-2">
+            <Ban className="h-4 w-4" /> Cancellazione
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pensioni"><PensioniTab /></TabsContent>
@@ -93,6 +97,7 @@ export default function Admin() {
         <TabsContent value="slot-globali"><GlobalSlotConfigsTab /></TabsContent>
         <TabsContent value="listino-globale"><GlobalPriceListsTab /></TabsContent>
         <TabsContent value="pagamenti-globali"><GlobalPaymentMethodsTab /></TabsContent>
+        <TabsContent value="cancellazione-globale"><GlobalCancellationPolicyTab /></TabsContent>
       </Tabs>
     </div>
   );

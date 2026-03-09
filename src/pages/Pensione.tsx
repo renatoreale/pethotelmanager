@@ -19,7 +19,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Settings, Clock, Euro, CreditCard, Plus, Pencil, Trash2, Save, RotateCcw } from "lucide-react";
+import { Settings, Clock, Euro, CreditCard, Plus, Pencil, Trash2, Save, RotateCcw, Ban } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -34,6 +34,7 @@ import {
   useAllPaymentMethods, useCreatePaymentMethod,
   useTogglePaymentMethod, useDeletePaymentMethod, useUpdatePaymentMethod,
 } from "@/hooks/usePayments";
+import { CancellationPolicyTab } from "@/components/pensione/CancellationPolicyTab";
 
 const DAYS = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
 
@@ -55,7 +56,7 @@ export default function Pensione() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Configurazione Pensione</h1>
-        <p className="text-muted-foreground text-sm mt-1">Casette, slot appuntamenti, listino prezzi e modalità di pagamento</p>
+        <p className="text-muted-foreground text-sm mt-1">Casette, slot appuntamenti, listino prezzi, pagamenti e politica di cancellazione</p>
       </div>
 
       <Tabs defaultValue="casette" className="space-y-4">
@@ -64,12 +65,14 @@ export default function Pensione() {
           <TabsTrigger value="slot" className="gap-2"><Clock className="h-4 w-4" /> Slot Appuntamenti</TabsTrigger>
           <TabsTrigger value="listino" className="gap-2"><Euro className="h-4 w-4" /> Listino Prezzi</TabsTrigger>
           <TabsTrigger value="pagamenti" className="gap-2"><CreditCard className="h-4 w-4" /> Modalità Pagamento</TabsTrigger>
+          <TabsTrigger value="cancellazione" className="gap-2"><Ban className="h-4 w-4" /> Cancellazione</TabsTrigger>
         </TabsList>
 
         <TabsContent value="casette"><CasetteTab /></TabsContent>
         <TabsContent value="slot"><SlotTab /></TabsContent>
         <TabsContent value="listino"><ListinoTab /></TabsContent>
         <TabsContent value="pagamenti"><PaymentMethodsTab /></TabsContent>
+        <TabsContent value="cancellazione"><CancellationPolicyTab /></TabsContent>
       </Tabs>
     </div>
   );
