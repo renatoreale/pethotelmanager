@@ -183,8 +183,9 @@ export default function Prenotazioni() {
 
             // 6. Calculate amounts
             const grossRefund = totalPaid * (refundPercentage / 100);
-            const netRefund = Math.max(0, grossRefund - adminFee);
-            const actualAdminFee = grossRefund > 0 ? Math.min(adminFee, grossRefund) : 0;
+            // Admin fee is always applied when there are payments, even with 0% refund
+            const actualAdminFee = totalPaid > 0 ? Math.min(adminFee, totalPaid) : 0;
+            const netRefund = Math.max(0, grossRefund - actualAdminFee);
             const paymentDate = new Date().toISOString();
 
             // 7. Create payment records
@@ -222,15 +223,18 @@ export default function Prenotazioni() {
               if (payErr) throw payErr;
             }
 
-            const refundInfo = refundPercentage > 0
+            // Store refund info to show AFTER success toast
+            cancellationInfo = refundPercentage > 0
               ? `Rimborso: €${netRefund.toFixed(2)} (${refundPercentage}%)${actualAdminFee > 0 ? ` | Gestione pratica: €${actualAdminFee.toFixed(2)}` : ""}`
-              : `Nessun rimborso previsto${actualAdminFee > 0 ? ` | Gestione pratica: €${actualAdminFee.toFixed(2)}` : ""}`;
-            toast.info(refundInfo, { duration: 8000 });
+              : `Nessun rimborso previsto. Totale pagato: €${totalPaid.toFixed(2)}${actualAdminFee > 0 ? ` | Gestione pratica trattenuta: €${actualAdminFee.toFixed(2)}` : ""}`;
           }
         }
       }
       await transitionBooking.mutateAsync({ id: transitioning.id, newStatus: transitioning.newStatus });
       toast.success(`Prenotazione ${transitioning.bookingNumber}: ${transitioning.label}`);
+      if (cancellationInfo) {
+        setTimeout(() => toast.info(cancellationInfo!, { duration: 10000 }), 500);
+      }
     } catch (err: any) {
       toast.error(err.message || "Errore nella transizione");
     }
