@@ -106,6 +106,7 @@ function AnagraficaTab() {
   const currentPartitaIva = partitaIva ?? (config as any)?.partita_iva ?? "";
   const currentPec = pec ?? (config as any)?.pec ?? "";
   const currentTitolareName = titolareName ?? (config as any)?.titolare_name ?? "";
+  const currentPetType = petType ?? (config as any)?.pet_type ?? "gatti";
   const currentLogoUrl = (config as any)?.logo_url ?? null;
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
