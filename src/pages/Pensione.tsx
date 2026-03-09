@@ -88,6 +88,8 @@ function AnagraficaTab() {
   const [email, setEmail] = useState<string | null>(null);
   const [phone, setPhone] = useState<string | null>(null);
   const [address, setAddress] = useState<string | null>(null);
+  const [cap, setCap] = useState<string | null>(null);
+  const [city, setCity] = useState<string | null>(null);
   const [partitaIva, setPartitaIva] = useState<string | null>(null);
   const [pec, setPec] = useState<string | null>(null);
   const [titolareName, setTitolareName] = useState<string | null>(null);
@@ -98,6 +100,8 @@ function AnagraficaTab() {
   const currentEmail = email ?? config?.email ?? "";
   const currentPhone = phone ?? config?.phone ?? "";
   const currentAddress = address ?? config?.address ?? "";
+  const currentCap = cap ?? (config as any)?.cap ?? "";
+  const currentCity = city ?? (config as any)?.city ?? "";
   const currentPartitaIva = partitaIva ?? (config as any)?.partita_iva ?? "";
   const currentPec = pec ?? (config as any)?.pec ?? "";
   const currentTitolareName = titolareName ?? (config as any)?.titolare_name ?? "";
@@ -142,12 +146,15 @@ function AnagraficaTab() {
         email: currentEmail || null,
         phone: currentPhone || null,
         address: currentAddress || null,
+        cap: currentCap || null,
+        city: currentCity || null,
         partita_iva: currentPartitaIva || null,
         pec: currentPec || null,
         titolare_name: currentTitolareName || null,
       });
       toast.success("Anagrafica salvata");
       setName(null); setEmail(null); setPhone(null); setAddress(null);
+      setCap(null); setCity(null);
       setPartitaIva(null); setPec(null); setTitolareName(null);
     } catch (err: any) {
       toast.error(err.message || "Errore nel salvataggio");
@@ -243,10 +250,20 @@ function AnagraficaTab() {
           </div>
         </div>
 
-        {/* Indirizzo */}
-        <div className="space-y-2">
-          <Label>Indirizzo</Label>
-          <Input value={currentAddress} onChange={(e) => setAddress(e.target.value)} placeholder="Via, Città, CAP" />
+        {/* Indirizzo, CAP, Città */}
+        <div className="grid gap-6 sm:grid-cols-3">
+          <div className="space-y-2 sm:col-span-1">
+            <Label>Indirizzo</Label>
+            <Input value={currentAddress} onChange={(e) => setAddress(e.target.value)} placeholder="Via Roma 1" />
+          </div>
+          <div className="space-y-2">
+            <Label>CAP</Label>
+            <Input value={currentCap} onChange={(e) => setCap(e.target.value)} placeholder="00100" maxLength={5} />
+          </div>
+          <div className="space-y-2">
+            <Label>Città</Label>
+            <Input value={currentCity} onChange={(e) => setCity(e.target.value)} placeholder="Roma" />
+          </div>
         </div>
 
         <Button onClick={handleSave} disabled={updateConfig.isPending}>

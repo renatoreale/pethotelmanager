@@ -1054,6 +1054,8 @@ export type Database = {
       tenants: {
         Row: {
           address: string | null
+          cap: string | null
+          city: string | null
           count_checkin_day: boolean
           count_checkout_day: boolean
           created_at: string
@@ -1074,6 +1076,8 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          cap?: string | null
+          city?: string | null
           count_checkin_day?: boolean
           count_checkout_day?: boolean
           created_at?: string
@@ -1094,6 +1098,8 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          cap?: string | null
+          city?: string | null
           count_checkin_day?: boolean
           count_checkout_day?: boolean
           created_at?: string
