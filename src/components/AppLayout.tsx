@@ -32,12 +32,12 @@ export function AppLayout() {
           <header className="h-14 flex items-center gap-4 border-b bg-card/50 px-4 backdrop-blur-sm sticky top-0 z-30">
             <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
             
-            {showTenantSwitcher && (
+            {showTenantSwitcher ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-2">
-                    <Building2 className="h-4 w-4" />
-                    <span className="max-w-[200px] truncate">
+                    <Building2 className="h-4 w-4 text-primary" />
+                    <span className="max-w-[250px] truncate font-semibold">
                       {currentTenant?.name || "Seleziona pensione"}
                     </span>
                     <ChevronDown className="h-3 w-3 opacity-50" />
@@ -58,7 +58,12 @@ export function AppLayout() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-            )}
+            ) : currentTenant ? (
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-primary" />
+                <span className="font-semibold text-sm">{currentTenant.name}</span>
+              </div>
+            ) : null}
 
             <div className="flex-1" />
           </header>
