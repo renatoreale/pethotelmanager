@@ -366,7 +366,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                   <div key={index} className="rounded-lg border bg-muted/30 p-4 space-y-3 relative">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        Gatto {visibleCats.indexOf(cat) + 1}
+                        {cat.pet_type === "cani" ? "Cane" : cat.pet_type === "gatti" ? "Gatto" : pet.singularCap} {visibleCats.indexOf(cat) + 1}
                       </span>
                       {visibleCats.length > 1 && (
                         <Button
