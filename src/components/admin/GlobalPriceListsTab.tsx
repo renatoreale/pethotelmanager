@@ -107,6 +107,7 @@ export function GlobalPriceListsTab() {
       included_km: includedKm,
       extra_km_cost: extraKmCost,
       is_active: isActive,
+      pet_type: petType,
     });
     toast.success(editing ? "Tariffa globale aggiornata" : "Tariffa globale creata");
     setDialogOpen(false);
