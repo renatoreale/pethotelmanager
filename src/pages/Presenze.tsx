@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useCatRegistry } from "@/hooks/useCatRegistry";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
+import { usePetLabels } from "@/hooks/usePetLabels";
 
 function calcStayDays(
   checkIn: string,
