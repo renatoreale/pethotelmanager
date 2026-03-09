@@ -250,10 +250,10 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         }
       }
 
-      toast.success(isEditing ? "Cliente e gatti aggiornati" : "Cliente e gatti creati");
+      toast.success(isEditing ? `Cliente e ${pet.plural} aggiornati` : `Cliente e ${pet.plural} creati`);
       onOpenChange(false);
       form.reset();
-      setCats([emptyCat()]);
+      setCats([emptyCat(defaultAnimalType)]);
     } catch (err: any) {
       toast.error(err.message || "Errore nel salvataggio");
     } finally {
