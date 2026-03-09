@@ -64,6 +64,7 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
   const createCat = useCreateCat();
   const updateCat = useUpdateCat();
   const { data: clients } = useClients();
+  const pet = usePetLabels();
   const isEditing = !!cat;
 
   const form = useForm<CatFormValues>({
