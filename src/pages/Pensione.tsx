@@ -454,9 +454,12 @@ function ListinoTab() {
   const { data: prices, isLoading } = usePriceLists();
   const upsertPrice = useUpsertPriceList();
   const deletePrice = useDeletePriceList();
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [deleting, setDeleting] = useState<any>(null);
+  const [resetConfirm, setResetConfirm] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   // Form state
   const [name, setName] = useState("");
