@@ -97,9 +97,9 @@ export default function RegistroGatti() {
         <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
       ) : !filtered.length ? (
         <div className="rounded-lg border border-dashed p-12 text-center text-muted-foreground">
-          <Cat className="h-8 w-8 mx-auto mb-3 opacity-40" />
-          <p className="font-medium">Nessun gatto nel registro</p>
-          <p className="text-sm mt-1">I gatti verranno aggiunti automaticamente al check-in.</p>
+          <PetIcon className="h-8 w-8 mx-auto mb-3 opacity-40" />
+          <p className="font-medium">Nessun {pet.singular} nel registro</p>
+          <p className="text-sm mt-1">I {pet.plural} verranno aggiunti automaticamente al check-in.</p>
         </div>
       ) : (
         <div className="rounded-md border overflow-auto">
