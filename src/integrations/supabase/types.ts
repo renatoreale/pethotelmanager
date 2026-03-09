@@ -186,6 +186,7 @@ export type Database = {
           deposit_amount: number | null
           id: string
           notes: string | null
+          pet_type: Database["public"]["Enums"]["pet_type"] | null
           price_breakdown: Json | null
           status: Database["public"]["Enums"]["booking_status"]
           tenant_id: string
@@ -204,6 +205,7 @@ export type Database = {
           deposit_amount?: number | null
           id?: string
           notes?: string | null
+          pet_type?: Database["public"]["Enums"]["pet_type"] | null
           price_breakdown?: Json | null
           status?: Database["public"]["Enums"]["booking_status"]
           tenant_id: string
@@ -222,6 +224,7 @@ export type Database = {
           deposit_amount?: number | null
           id?: string
           notes?: string | null
+          pet_type?: Database["public"]["Enums"]["pet_type"] | null
           price_breakdown?: Json | null
           status?: Database["public"]["Enums"]["booking_status"]
           tenant_id?: string
@@ -1071,7 +1074,11 @@ export type Database = {
           max_cats: number
           name: string
           num_doppie: number
+          num_doppie_cani: number
+          num_doppie_gatti: number
           num_singole: number
+          num_singole_cani: number
+          num_singole_gatti: number
           occupancy_rule_days: number
           partita_iva: string | null
           pec: string | null
@@ -1095,7 +1102,11 @@ export type Database = {
           max_cats?: number
           name: string
           num_doppie?: number
+          num_doppie_cani?: number
+          num_doppie_gatti?: number
           num_singole?: number
+          num_singole_cani?: number
+          num_singole_gatti?: number
           occupancy_rule_days?: number
           partita_iva?: string | null
           pec?: string | null
@@ -1119,7 +1130,11 @@ export type Database = {
           max_cats?: number
           name?: string
           num_doppie?: number
+          num_doppie_cani?: number
+          num_doppie_gatti?: number
           num_singole?: number
+          num_singole_cani?: number
+          num_singole_gatti?: number
           occupancy_rule_days?: number
           partita_iva?: string | null
           pec?: string | null

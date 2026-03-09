@@ -52,8 +52,11 @@ export function useOccupancyData(
       const checkIn = parseISO(b.check_in_date);
       const checkOut = parseISO(b.check_out_date);
       const stayDays = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      // Per i cani la casetta resta occupata per tutto il soggiorno
-      const occDays = petType === "cani" ? stayDays : Math.min(occupancyDays, stayDays);
+      // Determine per-booking pet type: explicit field, or derive from tenant setting
+      const bookingPetType = (b as any).pet_type as "gatti" | "cani" | null | undefined;
+      // For occupancy duration: dogs occupy full stay, cats use occupancy_rule_days
+      const isDog = bookingPetType === "cani" || (petType === "cani" && !bookingPetType);
+      const occDays = isDog ? stayDays : Math.min(occupancyDays, stayDays);
       const occupiedDates = new Set<string>();
       for (let i = 0; i < occDays; i++) {
         occupiedDates.add(format(addDays(checkIn, i), "yyyy-MM-dd"));

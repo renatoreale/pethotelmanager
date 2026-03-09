@@ -51,6 +51,12 @@ export function AvailabilityCheckDialog() {
   const totalSingole = tenantConfig?.num_singole ?? 0;
   const totalDoppie = tenantConfig?.num_doppie ?? 0;
   const petType = tenantConfig?.pet_type as "gatti" | "cani" | "entrambi" | undefined;
+  
+  // Per-type totals for "entrambi" facilities
+  const singoleGatti = (tenantConfig as any)?.num_singole_gatti ?? 0;
+  const doppieGatti = (tenantConfig as any)?.num_doppie_gatti ?? 0;
+  const singoleCani = (tenantConfig as any)?.num_singole_cani ?? 0;
+  const doppieCani = (tenantConfig as any)?.num_doppie_cani ?? 0;
 
   const rangeStart = useMemo(() => subDays(checkInDate, 5), [checkInDate]);
   const rangeEnd = useMemo(() => addDays(checkInDate, 5), [checkInDate]);
@@ -105,15 +111,42 @@ export function AvailabilityCheckDialog() {
           </div>
         </div>
 
-        <AvailabilityAlert
-          bookings={allBookings ?? []}
-          occupancyDays={occupancyDays}
-          checkInDate={highlightDate}
-          cageType={cageType}
-          totalSingole={totalSingole}
-          totalDoppie={totalDoppie}
-          petType={petType}
-        />
+        {petType === "entrambi" ? (
+          <>
+            <AvailabilityAlert
+              bookings={allBookings ?? []}
+              occupancyDays={occupancyDays}
+              checkInDate={highlightDate}
+              cageType={cageType}
+              totalSingole={singoleGatti}
+              totalDoppie={doppieGatti}
+              petType="gatti"
+              filterPetType="gatti"
+              label="🐱 Gatti"
+            />
+            <AvailabilityAlert
+              bookings={allBookings ?? []}
+              occupancyDays={occupancyDays}
+              checkInDate={highlightDate}
+              cageType={cageType}
+              totalSingole={singoleCani}
+              totalDoppie={doppieCani}
+              petType="cani"
+              filterPetType="cani"
+              label="🐶 Cani"
+            />
+          </>
+        ) : (
+          <AvailabilityAlert
+            bookings={allBookings ?? []}
+            occupancyDays={occupancyDays}
+            checkInDate={highlightDate}
+            cageType={cageType}
+            totalSingole={totalSingole}
+            totalDoppie={totalDoppie}
+            petType={petType}
+          />
+        )}
 
         <OccupancyGrid
           bookings={allBookings ?? []}
@@ -131,7 +164,7 @@ export function AvailabilityCheckDialog() {
 }
 
 function AvailabilityAlert({
-  bookings, occupancyDays, checkInDate, cageType, totalSingole, totalDoppie, petType,
+  bookings, occupancyDays, checkInDate, cageType, totalSingole, totalDoppie, petType, filterPetType, label,
 }: {
   bookings: Booking[];
   occupancyDays: number;
@@ -140,6 +173,8 @@ function AvailabilityAlert({
   totalSingole: number;
   totalDoppie: number;
   petType?: "gatti" | "cani" | "entrambi";
+  filterPetType?: "gatti" | "cani";
+  label?: string;
 }) {
   const { bookingOccupancy } = useOccupancyData(bookings, occupancyDays, undefined, petType);
 
@@ -152,6 +187,8 @@ function AvailabilityAlert({
       const dateStr = format(addDays(checkIn, i), "yyyy-MM-dd");
       let occupied = 0;
       for (const bo of bookingOccupancy) {
+        // Filter by pet type if specified
+        if (filterPetType && (bo.booking as any).pet_type !== filterPetType) continue;
         if (bo.occupiedDates.has(dateStr) && bo.booking.cage_pool_type === cageType) {
           occupied += bo.booking.units_occupied;
         }
@@ -161,7 +198,7 @@ function AvailabilityAlert({
 
     const free = Math.max(0, total - maxOccupied);
     return { free, total, maxOccupied };
-  }, [bookingOccupancy, checkInDate, cageType, totalSingole, totalDoppie, occupancyDays]);
+  }, [bookingOccupancy, checkInDate, cageType, totalSingole, totalDoppie, occupancyDays, filterPetType]);
 
   const isAvailable = availability.free > 0;
 
@@ -178,6 +215,7 @@ function AvailabilityAlert({
         <XCircle className="h-4 w-4" />
       )}
       <AlertDescription className="ml-2 font-medium">
+        {label && <span className="mr-1">{label}:</span>}
         {isAvailable
           ? `Disponibile! ${availability.free} casett${availability.free === 1 ? "a" : "e"} ${cageType === "singola" ? "singol" + (availability.free === 1 ? "a" : "e") : "doppi" + (availability.free === 1 ? "a" : "e")} liber${availability.free === 1 ? "a" : "e"} nel periodo di occupazione.`
           : `Non disponibile. Tutte le ${availability.total} casette ${cageType === "singola" ? "singole" : "doppie"} sono occupate in almeno un giorno del periodo.`
