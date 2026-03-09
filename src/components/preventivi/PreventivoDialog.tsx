@@ -592,6 +592,7 @@ export function PreventivoDialog({
           notes: fullNotes || null,
           cat_ids: selectedCats,
           price_breakdown: priceBreakdown,
+          ...(bookingPetType ? { pet_type: bookingPetType } : {}),
         });
 
         // Check if dates changed and there are existing appointments
