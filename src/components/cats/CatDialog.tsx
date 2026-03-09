@@ -125,7 +125,7 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif">
-            {isEditing ? "Modifica Gatto" : "Nuovo Gatto"}
+            {isEditing ? `Modifica ${pet.singularCap}` : `Nuovo ${pet.singularCap}`}
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>

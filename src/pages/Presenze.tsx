@@ -192,7 +192,7 @@ export default function Presenze() {
                   <TableRow key={entry.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
-                        <Cat className="h-4 w-4 text-muted-foreground" />
+                        <PetIcon className="h-4 w-4 text-muted-foreground" />
                         {entry.cat_name}
                       </div>
                     </TableCell>
