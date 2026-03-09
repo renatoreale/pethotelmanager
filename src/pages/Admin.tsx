@@ -315,7 +315,7 @@ function UtentiTab() {
   const [deletingUser, setDeletingUser] = useState<UserWithProfile | null>(null);
   const [editName, setEditName] = useState("");
   const [editPhone, setEditPhone] = useState("");
-  const [editActiveTenant, setEditActiveTenant] = useState("");
+  const [addRoleOpen, setAddRoleOpen] = useState<UserWithProfile | null>(null);
   
   const [form, setForm] = useState({
     email: "",
