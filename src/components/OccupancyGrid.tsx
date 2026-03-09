@@ -25,6 +25,8 @@ interface Props {
   compact?: boolean;
   /** Date string (yyyy-MM-dd) to highlight as the check-in column */
   highlightDate?: string;
+  /** Tipo animale del tenant – per i cani l'occupazione copre tutto il soggiorno */
+  petType?: "gatti" | "cani" | "entrambi";
 }
 
 const ACTIVE_STATUSES = [
