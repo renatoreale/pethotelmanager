@@ -407,7 +407,7 @@ export default function Index() {
       {!isOperatoreRestricted && (
         <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
           {/* Prenotazioni del giorno */}
-          <Card className="border-none shadow-sm">
+          <Card className="border shadow-sm">
             <CardHeader>
               <CardTitle className="text-base">
                 {isSelectedToday ? "Prenotazioni del giorno" : `Prenotazioni — ${format(selectedDate, "dd MMM yyyy", { locale: it })}`}
