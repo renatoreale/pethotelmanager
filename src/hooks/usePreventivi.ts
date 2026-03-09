@@ -80,6 +80,7 @@ export function useCreatePreventivo() {
       notes?: string;
       cat_ids: string[];
       price_breakdown?: any;
+      pet_type?: "gatti" | "cani" | null;
     }) => {
       if (!profile?.tenant_id) throw new Error("Tenant non configurato");
       const { cat_ids, ...booking } = input;
