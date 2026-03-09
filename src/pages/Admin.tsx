@@ -28,6 +28,7 @@ import {
   useAllTenants, useCreateTenant, useUpdateTenant, useDeleteTenant,
   useAllUsers, useCreateUser,
   useUpdateUserProfile, useUpdateUserEmail, useDeleteUser,
+  useAddTenantRole, useRemoveTenantRole,
   useRolePermissions, useBulkUpsertPermissions,
   RESOURCES, ROLES, type Tenant, type UserWithProfile, type RolePermission,
 } from "@/hooks/useAdmin";
