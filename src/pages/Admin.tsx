@@ -305,11 +305,58 @@ function UtentiTab() {
   const assignTenant = useAssignUserToTenant();
   const assignRole = useAssignRole();
 
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    full_name: "",
+    tenant_id: "",
+    role: "operatore" as AppRole,
+  });
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const handleCreateUser = async () => {
+    if (!form.email || !form.password || !form.full_name) return;
+    if (!emailRegex.test(form.email)) {
+      return;
+    }
+    if (form.password.length < 6) {
+      return;
+    }
+    
+    const { data, error } = await import("@/integrations/supabase/client").then(m => 
+      m.supabase.functions.invoke("admin-create-user", {
+        body: {
+          email: form.email,
+          password: form.password,
+          full_name: form.full_name,
+          tenant_id: form.tenant_id || null,
+          role: form.role,
+        },
+      })
+    );
+    
+    if (error || data?.error) {
+      return;
+    }
+    
+    setDialogOpen(false);
+    setForm({ email: "", password: "", full_name: "", tenant_id: "", role: "operatore" });
+    // Refresh users list
+    window.location.reload();
+  };
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Utenti & Ruoli</CardTitle>
-        <CardDescription>Gestisci gli utenti di sistema, assegna pensioni e ruoli</CardDescription>
+      <CardHeader className="flex-row items-center justify-between">
+        <div>
+          <CardTitle>Utenti & Ruoli</CardTitle>
+          <CardDescription>Gestisci gli utenti di sistema, assegna pensioni e ruoli</CardDescription>
+        </div>
+        <Button onClick={() => setDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" /> Nuovo Utente
+        </Button>
       </CardHeader>
       <CardContent>
         {usersLoading ? (
@@ -386,6 +433,84 @@ function UtentiTab() {
           </div>
         )}
       </CardContent>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Crea Nuovo Utente</DialogTitle>
+            <DialogDescription>
+              Crea un utente e assegnalo a una pensione con un ruolo specifico
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome Completo *</Label>
+              <Input
+                value={form.full_name}
+                onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                placeholder="Mario Rossi"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Email *</Label>
+              <Input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="mario@example.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Password *</Label>
+              <Input
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                placeholder="••••••••"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Pensione</Label>
+              <Select
+                value={form.tenant_id}
+                onValueChange={(val) => setForm({ ...form, tenant_id: val })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona pensione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {tenants?.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Ruolo</Label>
+              <Select
+                value={form.role}
+                onValueChange={(val) => setForm({ ...form, role: val as AppRole })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona ruolo..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLES.map((r) => (
+                    <SelectItem key={r.value} value={r.value}>
+                      {r.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleCreateUser} className="w-full mt-4">
+              Crea Utente
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

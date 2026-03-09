@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useUsers } from "@/hooks/useUsers";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { useAllTenants, useCreateUser, ROLES } from "@/hooks/useAdmin";
+import { useCreateUser, ROLES } from "@/hooks/useAdmin";
 import {
   Table,
   TableBody,
@@ -21,6 +21,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -35,10 +36,12 @@ import { UserPlus } from "lucide-react";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
+// Ruoli disponibili per la pensione locale (esclusi admin e ceo che sono cross-tenant)
+const LOCAL_ROLES = ROLES.filter(r => !["admin", "ceo"].includes(r.value));
+
 export default function Utenti() {
   const { users, isLoading, assignRole } = useUsers();
-  const { hasRole } = useAuth();
-  const { data: tenants } = useAllTenants();
+  const { hasRole, profile } = useAuth();
   const createUser = useCreateUser();
 
   const [open, setOpen] = useState(false);
@@ -46,7 +49,6 @@ export default function Utenti() {
     email: "",
     password: "",
     full_name: "",
-    tenant_id: "",
     role: "operatore" as AppRole,
   });
 
@@ -55,7 +57,10 @@ export default function Utenti() {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const handleCreateUser = async () => {
-    if (!form.email || !form.password || !form.full_name) return;
+    if (!form.email || !form.password || !form.full_name) {
+      toast.error("Compila tutti i campi obbligatori");
+      return;
+    }
     if (!emailRegex.test(form.email)) {
       toast.error("Formato email non valido");
       return;
@@ -64,12 +69,16 @@ export default function Utenti() {
       toast.error("La password deve avere almeno 6 caratteri");
       return;
     }
+    if (!profile?.tenant_id) {
+      toast.error("Nessuna pensione associata al tuo profilo");
+      return;
+    }
     await createUser.mutateAsync({
       ...form,
-      tenant_id: form.tenant_id || null,
+      tenant_id: profile.tenant_id,
     });
     setOpen(false);
-    setForm({ email: "", password: "", full_name: "", tenant_id: "", role: "operatore" });
+    setForm({ email: "", password: "", full_name: "", role: "operatore" });
   };
 
   return (
@@ -92,10 +101,13 @@ export default function Utenti() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Crea Nuovo Utente</DialogTitle>
+                <DialogDescription>
+                  L'utente verrà associato automaticamente alla tua pensione
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="full_name">Nome Completo</Label>
+                  <Label htmlFor="full_name">Nome Completo *</Label>
                   <Input
                     id="full_name"
                     value={form.full_name}
@@ -104,7 +116,7 @@ export default function Utenti() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Email *</Label>
                   <Input
                     id="email"
                     type="email"
@@ -114,7 +126,7 @@ export default function Utenti() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Password *</Label>
                   <Input
                     id="password"
                     type="password"
@@ -122,24 +134,6 @@ export default function Utenti() {
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
                     placeholder="••••••••"
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label>Pensione</Label>
-                  <Select
-                    value={form.tenant_id}
-                    onValueChange={(val) => setForm({ ...form, tenant_id: val })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleziona pensione..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tenants?.map((t) => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {t.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Ruolo</Label>
@@ -151,7 +145,7 @@ export default function Utenti() {
                       <SelectValue placeholder="Seleziona ruolo..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {ROLES.map((r) => (
+                      {LOCAL_ROLES.map((r) => (
                         <SelectItem key={r.value} value={r.value}>
                           {r.label}
                         </SelectItem>
@@ -227,7 +221,7 @@ export default function Utenti() {
                           <SelectValue placeholder="Seleziona ruolo..." />
                         </SelectTrigger>
                         <SelectContent>
-                          {ROLES.map((r) => (
+                          {LOCAL_ROLES.map((r) => (
                             <SelectItem key={r.value} value={r.value}>
                               {r.label}
                             </SelectItem>
