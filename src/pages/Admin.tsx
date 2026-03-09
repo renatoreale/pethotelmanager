@@ -27,7 +27,7 @@ import { Database } from "@/integrations/supabase/types";
 import {
   useAllTenants, useCreateTenant, useUpdateTenant, useDeleteTenant,
   useAllUsers, useAddTenantRole, useRemoveTenantRole, useCreateUser,
-  useUpdateUserProfile, useDeleteUser,
+  useUpdateUserProfile, useUpdateUserEmail, useDeleteUser,
   useRolePermissions, useBulkUpsertPermissions,
   RESOURCES, ROLES, type Tenant, type UserWithProfile, type RolePermission,
 } from "@/hooks/useAdmin";
@@ -309,12 +309,14 @@ function UtentiTab() {
   const removeTenantRole = useRemoveTenantRole();
   const createUser = useCreateUser();
   const updateProfile = useUpdateUserProfile();
+  const updateEmail = useUpdateUserEmail();
   const deleteUser = useDeleteUser();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserWithProfile | null>(null);
   const [deletingUser, setDeletingUser] = useState<UserWithProfile | null>(null);
   const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [editActiveTenant, setEditActiveTenant] = useState("");
   const [addRoleOpen, setAddRoleOpen] = useState<UserWithProfile | null>(null);
@@ -363,6 +365,7 @@ function UtentiTab() {
   const openEdit = (user: UserWithProfile) => {
     setEditingUser(user);
     setEditName(user.full_name || "");
+    setEditEmail(user.email || "");
     setEditPhone(user.phone || "");
     setEditActiveTenant(user.active_tenant_id || "");
   };
@@ -376,14 +379,21 @@ function UtentiTab() {
       full_name: editName.trim(),
       phone: editPhone.trim() || null,
     });
+
+    // Update email if changed
+    if (editEmail.trim() && editEmail.trim() !== (editingUser.email || "")) {
+      await updateEmail.mutateAsync({
+        userId: editingUser.user_id,
+        email: editEmail.trim(),
+      });
+    }
     
     // Update active tenant if changed
     if (editActiveTenant !== (editingUser.active_tenant_id || "")) {
-      const setActiveTenantFn = supabase
+      await supabase
         .from("profiles")
         .update({ tenant_id: editActiveTenant || null })
         .eq("id", editingUser.id);
-      await setActiveTenantFn;
     }
     
     setEditingUser(null);
@@ -441,6 +451,9 @@ function UtentiTab() {
                         {user.full_name || "Utente Senza Nome"}
                       </h3>
                       <p className="text-sm text-muted-foreground">
+                        {user.email || "Email non disponibile"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
                         Pensione attiva: {user.active_tenant_id ? 
                           tenants?.find(t => t.id === user.active_tenant_id)?.name || "Sconosciuta" : 
                           "Nessuna"
@@ -651,7 +664,13 @@ function UtentiTab() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Telefono</Label>
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                placeholder="mario@example.com"
+              />
               <Input
                 value={editPhone}
                 onChange={(e) => setEditPhone(e.target.value)}

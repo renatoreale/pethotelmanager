@@ -151,6 +151,17 @@ export function useAllUsers() {
       const { data: tenants } = await supabase.from("tenants").select("id, name");
       const tenantMap = new Map(tenants?.map((t) => [t.id, t.name]) || []);
 
+      // Get emails from auth via edge function
+      let emailMap: Record<string, string> = {};
+      try {
+        const { data: emailData } = await supabase.functions.invoke("admin-list-users");
+        if (emailData?.emails) {
+          emailMap = emailData.emails;
+        }
+      } catch {
+        // If edge function fails, emails will be null
+      }
+
       return profiles.map((p) => {
         const userRoles = roles?.filter((r) => r.user_id === p.user_id) || [];
         return {
@@ -159,7 +170,7 @@ export function useAllUsers() {
           full_name: p.full_name,
           phone: p.phone,
           avatar_url: p.avatar_url,
-          email: null as string | null, // email not available from profiles
+          email: emailMap[p.user_id] || null,
           active_tenant_id: p.tenant_id,
           tenant_roles: userRoles.map((r) => ({
             id: r.id,
@@ -470,7 +481,27 @@ export function useUpdateUserProfile() {
   });
 }
 
-// ── DELETE USER (via Edge Function) ──
+// ── UPDATE USER EMAIL (via Edge Function) ──
+export function useUpdateUserEmail() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, email }: { userId: string; email: string }) => {
+      const { data, error } = await supabase.functions.invoke("admin-update-user", {
+        body: { user_id: userId, email },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-all-users"] });
+      toast.success("Email aggiornata con successo");
+    },
+    onError: (error: any) => {
+      toast.error("Errore nell'aggiornamento email: " + error.message);
+    },
+  });
+}
 export function useDeleteUser() {
   const qc = useQueryClient();
   return useMutation({
