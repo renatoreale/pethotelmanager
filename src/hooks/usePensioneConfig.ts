@@ -54,7 +54,7 @@ export function useUpdateTenantConfig() {
         .update(rest)
         .eq("id", id)
         .select()
-        .single();
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
