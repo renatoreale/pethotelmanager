@@ -207,6 +207,7 @@ export function usePoolOccupancyData(
         } else {
           result.push({ booking: b, occupiedDates, stayStart: b.check_in_date, stayEnd: b.check_out_date });
         }
+      }
     }
     
     return result;
