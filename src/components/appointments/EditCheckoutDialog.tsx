@@ -170,27 +170,22 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
     const newDays = calcDuration(checkInDate, newDateStr);
     const originalTotal = Number((booking as any).total_amount ?? 0);
 
-    const extraDays = Math.max(0, newDays - originalDays);
-    let extraCost = 0;
-    let extraTariffName = "";
+    if (newDays <= 0) return { originalDays, newDays, newTotal: originalTotal, originalTotal, valid: false };
 
-    if (extraDays > 0) {
-      const numCats = ((booking as any).booking_cats ?? []).length;
-      const tariff = findSeasonalTariff(newDateStr > originalCoDate ? originalCoDate : checkInDate);
-      if (tariff) {
-        extraTariffName = tariff.name;
-        const baseCost = Number(tariff.price_per_day) * extraDays * numCats;
-        const extraCats = Math.max(0, numCats - 1);
-        const supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * extraDays;
-        extraCost = Math.round((baseCost + supplementCost) * 100) / 100;
-      }
+    // Full recalculation based on new duration (same logic as check-in)
+    const numCats = ((booking as any).booking_cats ?? []).length || 1;
+    const tariff = findSeasonalTariff(checkInDate);
+    let newTotal = originalTotal;
+
+    if (tariff && newDays !== originalDays) {
+      const baseCost = Number(tariff.price_per_day) * newDays * numCats;
+      const extraCats = Math.max(0, numCats - 1);
+      const supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * newDays;
+      newTotal = Math.round((baseCost + supplementCost) * 100) / 100;
     }
 
-    const effectiveExtraCost = manualExtraCost !== null ? Math.max(0, parseFloat(manualExtraCost) || 0) : extraCost;
-    const newTotal = newDays <= originalDays ? originalTotal : Math.round((originalTotal + effectiveExtraCost) * 100) / 100;
-
-    return { originalDays, newDays, newTotal, originalTotal, extraDays, extraCost, extraTariffName, effectiveExtraCost };
-  }, [booking, checkInDate, originalCoDate, newDateStr, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs, manualExtraCost]);
+    return { originalDays, newDays, newTotal, originalTotal, valid: true };
+  }, [booking, checkInDate, originalCoDate, newDateStr, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs]);
 
   const stayLabel = stayCalcType === "notti" ? "notti" : "giorni";
 
