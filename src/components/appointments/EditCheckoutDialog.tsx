@@ -5,7 +5,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Calendar as CalendarWidget } from "@/components/ui/calendar";
 import {
   Popover, PopoverContent, PopoverTrigger,
@@ -68,7 +67,6 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
   );
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [selectedTime, setSelectedTime] = useState<string>("");
-  const [manualExtraCost, setManualExtraCost] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Extract current time from appointment (edit mode only)
@@ -83,7 +81,6 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
     if (open) {
       setNewDate(originalCoDate ? parseISO(originalCoDate) : new Date());
       setSelectedTime(isCreateMode ? "" : currentTime);
-      setManualExtraCost(null);
     }
   }, [open, originalCoDate, currentTime, isCreateMode]);
 
@@ -170,27 +167,22 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
     const newDays = calcDuration(checkInDate, newDateStr);
     const originalTotal = Number((booking as any).total_amount ?? 0);
 
-    const extraDays = Math.max(0, newDays - originalDays);
-    let extraCost = 0;
-    let extraTariffName = "";
+    if (newDays <= 0) return { originalDays, newDays, newTotal: originalTotal, originalTotal, valid: false };
 
-    if (extraDays > 0) {
-      const numCats = ((booking as any).booking_cats ?? []).length;
-      const tariff = findSeasonalTariff(newDateStr > originalCoDate ? originalCoDate : checkInDate);
-      if (tariff) {
-        extraTariffName = tariff.name;
-        const baseCost = Number(tariff.price_per_day) * extraDays * numCats;
-        const extraCats = Math.max(0, numCats - 1);
-        const supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * extraDays;
-        extraCost = Math.round((baseCost + supplementCost) * 100) / 100;
-      }
+    // Full recalculation based on new duration (same logic as check-in)
+    const numCats = ((booking as any).booking_cats ?? []).length || 1;
+    const tariff = findSeasonalTariff(checkInDate);
+    let newTotal = originalTotal;
+
+    if (tariff && newDays !== originalDays) {
+      const baseCost = Number(tariff.price_per_day) * newDays * numCats;
+      const extraCats = Math.max(0, numCats - 1);
+      const supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * newDays;
+      newTotal = Math.round((baseCost + supplementCost) * 100) / 100;
     }
 
-    const effectiveExtraCost = manualExtraCost !== null ? Math.max(0, parseFloat(manualExtraCost) || 0) : extraCost;
-    const newTotal = newDays <= originalDays ? originalTotal : Math.round((originalTotal + effectiveExtraCost) * 100) / 100;
-
-    return { originalDays, newDays, newTotal, originalTotal, extraDays, extraCost, extraTariffName, effectiveExtraCost };
-  }, [booking, checkInDate, originalCoDate, newDateStr, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs, manualExtraCost]);
+    return { originalDays, newDays, newTotal, originalTotal, valid: true };
+  }, [booking, checkInDate, originalCoDate, newDateStr, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs]);
 
   const stayLabel = stayCalcType === "notti" ? "notti" : "giorni";
 
@@ -227,19 +219,18 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
         const bookingUpdates: any = {
           check_out_date: newDateStr,
           total_amount: recalculated.newTotal,
-        };
-        if (recalculated.extraDays > 0) {
-          bookingUpdates.price_breakdown = {
+          price_breakdown: {
             ...existingBreakdown,
-            extra_days_info: {
-              extra_days: recalculated.extraDays,
-              num_cats: ((booking as any).booking_cats ?? []).length,
-              tariff_name: recalculated.extraTariffName,
-              extra_cost: recalculated.effectiveExtraCost,
-              reason: "check_out_posticipato",
+            checkout_date_change: {
+              original_date: originalCoDate,
+              new_date: newDateStr,
+              original_days: recalculated.originalDays,
+              new_days: recalculated.newDays,
+              original_total: recalculated.originalTotal,
+              new_total: recalculated.newTotal,
             },
-          };
-        }
+          },
+        };
         await supabase.from("bookings").update(bookingUpdates).eq("id", bookingId);
       }
 
@@ -341,7 +332,7 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
           </div>
 
           {/* Pricing recalculation */}
-          {dateChanged && recalculated && (
+          {dateChanged && recalculated && recalculated.valid && (
             <div className="rounded-md border p-3 space-y-1.5 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Durata</span>
@@ -356,49 +347,33 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
                 <span className="text-muted-foreground">Totale originale</span>
                 <span>€ {recalculated.originalTotal.toFixed(2)}</span>
               </div>
-              {recalculated.extraDays > 0 && (
-                <div className="space-y-1.5">
-                  <div className="flex justify-between items-center text-primary">
-                    <span>+ {recalculated.extraDays} {stayLabel} extra {recalculated.extraTariffName && `(${recalculated.extraTariffName})`}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">Importo extra €</span>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      className="h-7 w-28 text-sm"
-                      value={manualExtraCost !== null ? manualExtraCost : recalculated.extraCost.toFixed(2)}
-                      onChange={e => setManualExtraCost(e.target.value)}
-                    />
-                    {manualExtraCost !== null && (
-                      <button
-                        type="button"
-                        className="text-xs text-muted-foreground underline hover:text-foreground"
-                        onClick={() => setManualExtraCost(null)}
-                      >
-                        Reset
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-              {recalculated.newDays < recalculated.originalDays && (
-                <div className="text-xs text-muted-foreground italic">
-                  Soggiorno ridotto di {recalculated.originalDays - recalculated.newDays} {stayLabel} — totale invariato
-                </div>
-              )}
               <div className="flex justify-between border-t pt-1.5">
                 <span className="font-medium">Nuovo totale</span>
-                <span className="font-bold">€ {recalculated.newTotal.toFixed(2)}</span>
+                <span className={cn("font-bold", recalculated.newTotal !== recalculated.originalTotal && "text-primary")}>
+                  € {recalculated.newTotal.toFixed(2)}
+                </span>
               </div>
+              {recalculated.newTotal !== recalculated.originalTotal && (
+                <div className="text-xs text-muted-foreground italic">
+                  {recalculated.newDays > recalculated.originalDays
+                    ? `+${recalculated.newDays - recalculated.originalDays} ${stayLabel} — totale ricalcolato`
+                    : `−${recalculated.originalDays - recalculated.newDays} ${stayLabel} — totale ricalcolato`
+                  }
+                </div>
+              )}
+            </div>
+          )}
+
+          {dateChanged && recalculated && !recalculated.valid && (
+            <div className="rounded-md border border-destructive/50 bg-destructive/5 p-3 text-sm text-destructive">
+              La data di check-out non può essere uguale o precedente al check-in.
             </div>
           )}
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annulla</Button>
-          <Button onClick={handleSave} disabled={saving || noChanges || !selectedTime}>
+          <Button onClick={handleSave} disabled={saving || noChanges || !selectedTime || (recalculated && !recalculated.valid)}>
             {saving ? "Salvataggio..." : isCreateMode ? "Fissa Check-out" : "Salva Modifiche"}
           </Button>
         </DialogFooter>
