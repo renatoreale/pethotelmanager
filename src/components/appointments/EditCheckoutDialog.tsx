@@ -165,6 +165,8 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
     }) ?? seasonalTariffs[0] ?? null;
   };
 
+  const isInCorso = (booking as any)?.status === "in_corso";
+
   const recalculated = useMemo(() => {
     if (!booking || !checkInDate || !originalCoDate) return null;
 
@@ -174,12 +176,14 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
 
     if (newDays <= 0) return { originalDays, newDays, newTotal: originalTotal, originalTotal, valid: false };
 
-    // Full recalculation based on new duration (same logic as check-in)
     const numCats = ((booking as any).booking_cats ?? []).length || 1;
     const tariff = findSeasonalTariff(checkInDate);
     let newTotal = originalTotal;
 
-    if (tariff && newDays !== originalDays) {
+    // Per prenotazioni in corso: anticipo checkout = totale invariato, posticipo = ricalcolo
+    if (isInCorso && newDateStr < originalCoDate) {
+      newTotal = originalTotal;
+    } else if (tariff && newDays !== originalDays) {
       const baseCost = Number(tariff.price_per_day) * newDays * numCats;
       const extraCats = Math.max(0, numCats - 1);
       const supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * newDays;
@@ -187,7 +191,7 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
     }
 
     return { originalDays, newDays, newTotal, originalTotal, valid: true };
-  }, [booking, checkInDate, originalCoDate, newDateStr, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs]);
+  }, [booking, checkInDate, originalCoDate, newDateStr, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs, isInCorso]);
 
   // --- Availability check ---
   const { data: allBookings } = useQuery({
