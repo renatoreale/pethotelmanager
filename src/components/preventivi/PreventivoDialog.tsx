@@ -186,7 +186,7 @@ export function PreventivoDialog({
     const checkInStr = format(checkInDate, "yyyy-MM-dd");
     const filteredOccupancy = bookingOccupancy.filter(bo => {
       const bpt = (bo.booking as any).pet_type;
-      return bpt === "gatti" || bpt === null || bpt === undefined;
+      return bpt === "gatti" || bpt === "entrambi" || !bpt;
     });
     return checkAvailability(filteredOccupancy, checkInStr, occupancyDays, cageUnitsGatti, singoleGatti, doppieGatti);
   }, [isMixedPets, checkInDate, cageUnitsGatti, bookingOccupancy, occupancyDays, singoleGatti, doppieGatti]);
@@ -196,7 +196,7 @@ export function PreventivoDialog({
     const checkInStr = format(checkInDate, "yyyy-MM-dd");
     const filteredOccupancy = bookingOccupancy.filter(bo => {
       const bpt = (bo.booking as any).pet_type;
-      return bpt === "cani" || bpt === null || bpt === undefined;
+      return bpt === "cani" || bpt === "entrambi" || !bpt;
     });
     return checkAvailability(filteredOccupancy, checkInStr, occupancyDays, cageUnitsCani, singoleCani, doppieCani);
   }, [isMixedPets, checkInDate, cageUnitsCani, bookingOccupancy, occupancyDays, singoleCani, doppieCani]);
