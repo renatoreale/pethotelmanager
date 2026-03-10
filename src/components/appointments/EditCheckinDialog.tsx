@@ -360,6 +360,26 @@ export function EditCheckinDialog({ open, onOpenChange, appointment }: Props) {
             )}
           </div>
 
+          {/* Availability check */}
+          {dateChanged && availabilityResult && (
+            <Alert className={cn(
+              availabilityResult.available
+                ? "border-green-500/50 bg-green-50 dark:bg-green-950/30 text-green-800 dark:text-green-200"
+                : "border-destructive/50 bg-destructive/10 text-destructive"
+            )}>
+              {availabilityResult.available ? (
+                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+              ) : (
+                <AlertTriangle className="h-4 w-4" />
+              )}
+              <AlertDescription className="ml-2 text-sm font-medium">
+                {availabilityResult.available
+                  ? `Disponibile: ${availabilityResult.free} casett${availabilityResult.free === 1 ? "a" : "e"} ${bookingCageType === "singola" ? "singol" + (availabilityResult.free === 1 ? "a" : "e") : "doppi" + (availabilityResult.free === 1 ? "a" : "e")} liber${availabilityResult.free === 1 ? "a" : "e"}.`
+                  : `⚠️ Nessuna casetta ${bookingCageType === "singola" ? "singola" : "doppia"} disponibile nel periodo. Tutte le ${availabilityResult.total} casette sono occupate.`
+                }
+              </AlertDescription>
+            </Alert>
+          )}
           {/* Pricing recalculation */}
           {dateChanged && recalculated && recalculated.valid && (
             <div className="rounded-md border p-3 space-y-1.5 text-sm">
