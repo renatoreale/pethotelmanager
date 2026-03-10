@@ -189,6 +189,64 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
     return { originalDays, newDays, newTotal, originalTotal, valid: true };
   }, [booking, checkInDate, originalCoDate, newDateStr, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs]);
 
+  // --- Availability check ---
+  const { data: allBookings } = useQuery({
+    queryKey: ["bookings-availability", profile?.tenant_id],
+    queryFn: async () => {
+      if (!profile?.tenant_id) return [];
+      const { data, error } = await supabase
+        .from("bookings")
+        .select(`*, client:clients(id, first_name, last_name, email, phone), booking_cats(id, cat_id, cat:cats(id, name))`)
+        .eq("tenant_id", profile.tenant_id)
+        .neq("status", "cancellata")
+        .neq("status", "rimborsata")
+        .neq("status", "scaduto");
+      if (error) throw error;
+      return data as unknown as Booking[];
+    },
+    enabled: !!profile?.tenant_id && open && dateChanged,
+  });
+
+  const occupancyDays = tenantConfig?.occupancy_rule_days ?? 4;
+  const petType = tenantConfig?.pet_type as "gatti" | "cani" | "entrambi" | undefined;
+  const totalSingole = petType === "entrambi"
+    ? ((tenantConfig as any)?.[`num_singole_${(booking as any)?.pet_type ?? "gatti"}`] ?? tenantConfig?.num_singole ?? 0)
+    : (tenantConfig?.num_singole ?? 0);
+  const totalDoppie = petType === "entrambi"
+    ? ((tenantConfig as any)?.[`num_doppie_${(booking as any)?.pet_type ?? "gatti"}`] ?? tenantConfig?.num_doppie ?? 0)
+    : (tenantConfig?.num_doppie ?? 0);
+
+  const bookingCageType = (booking as any)?.cage_pool_type ?? "singola";
+  const bookingId = (booking as any)?.id;
+  const { bookingOccupancy } = useOccupancyData(
+    allBookings ?? [], occupancyDays, bookingId, petType
+  );
+
+  const availabilityResult = useMemo(() => {
+    if (!dateChanged || !allBookings) return null;
+    const total = bookingCageType === "singola" ? totalSingole : totalDoppie;
+    const bookingPetType = (booking as any)?.pet_type;
+    const isDog = bookingPetType === "cani";
+    const ciDate = checkInDate ? parseISO(checkInDate) : new Date();
+    const newCoDate = parseISO(newDateStr);
+    const stayDays = Math.ceil((newCoDate.getTime() - ciDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const daysToCheck = isDog ? stayDays : Math.min(occupancyDays, stayDays);
+
+    let maxOccupied = 0;
+    for (let i = 0; i < daysToCheck; i++) {
+      const dateStr = format(addDays(ciDate, i), "yyyy-MM-dd");
+      let occupied = 0;
+      for (const bo of bookingOccupancy) {
+        if (bo.occupiedDates.has(dateStr) && bo.booking.cage_pool_type === bookingCageType) {
+          occupied += bo.booking.units_occupied;
+        }
+      }
+      maxOccupied = Math.max(maxOccupied, occupied);
+    }
+    const free = Math.max(0, total - maxOccupied);
+    return { free, total, available: free > 0 };
+  }, [dateChanged, allBookings, bookingOccupancy, newDateStr, checkInDate, bookingCageType, totalSingole, totalDoppie, occupancyDays, booking]);
+
   const stayLabel = stayCalcType === "notti" ? "notti" : "giorni";
 
   const handleSave = async () => {
