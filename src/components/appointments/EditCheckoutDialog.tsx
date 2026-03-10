@@ -60,6 +60,7 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
   const createAppointment = useCreateAppointment();
   const { data: tenantConfig } = useTenantConfig();
   const { data: priceLists } = usePriceLists();
+  const { profile } = useAuth();
 
   const isCreateMode = !appointment;
   const booking = appointment?.booking ?? bookingData;
