@@ -657,6 +657,10 @@ export default function Appuntamenti() {
             toast.success("Appuntamento aggiornato");
             setEditing(null);
           }}
+          onEditDates={(booking) => {
+            setEditing(null);
+            setEditingBookingDates(booking);
+          }}
         />
       )}
 
@@ -732,11 +736,13 @@ function EditAppointmentDialog({
   open,
   onOpenChange,
   onSave,
+  onEditDates,
 }: {
   appointment: AppointmentWithDetails;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (newTime: string) => Promise<void>;
+  onEditDates?: (booking: any) => void;
 }) {
   const currentTime = (() => {
     const tIndex = appointment.scheduled_at.indexOf("T");
@@ -819,7 +825,16 @@ function EditAppointmentDialog({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          {onEditDates && appointment.booking && !["chiusa", "cancellata", "rimborsata", "in_corso"].includes(appointment.booking.status ?? "") && (
+            <Button variant="outline" className="gap-1 mr-auto" onClick={() => {
+              onOpenChange(false);
+              onEditDates(appointment.booking);
+            }}>
+              <CalendarIcon className="h-4 w-4" />
+              Modifica date
+            </Button>
+          )}
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annulla</Button>
           <Button onClick={handleSave} disabled={saving || selectedTime === currentTime}>
             {saving ? "Salvataggio..." : "Salva"}
