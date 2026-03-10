@@ -87,6 +87,8 @@ export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
     }) ?? seasonalTariffs[0] ?? null;
   };
 
+  const isInCorso = booking.status === "in_corso";
+
   const recalculated = useMemo(() => {
     const originalDays = calcDuration(booking.check_in_date, booking.check_out_date);
     const newDays = calcDuration(newCiStr, newCoStr);
@@ -98,7 +100,10 @@ export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
     const tariff = findSeasonalTariff(newCiStr);
     let newTotal = originalTotal;
 
-    if (tariff && newDays !== originalDays) {
+    // Per prenotazioni in corso: se si anticipa il checkout, il totale resta invariato
+    if (isInCorso && newCoStr < booking.check_out_date) {
+      newTotal = originalTotal;
+    } else if (tariff && newDays !== originalDays) {
       const baseCost = Number(tariff.price_per_day) * newDays * numCats;
       const extraCats = Math.max(0, numCats - 1);
       const supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * newDays;
@@ -106,7 +111,7 @@ export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
     }
 
     return { originalDays, newDays, newTotal, originalTotal, valid: true };
-  }, [booking, newCiStr, newCoStr, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs]);
+  }, [booking, newCiStr, newCoStr, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs, isInCorso]);
 
   const stayLabel = stayCalcType === "notti" ? "notti" : "giorni";
 
