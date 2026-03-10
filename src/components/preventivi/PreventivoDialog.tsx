@@ -1316,7 +1316,7 @@ export function PreventivoDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annulla</Button>
-          <Button onClick={handleSave} disabled={onCreate.isPending || onUpdate.isPending}>
+          <Button onClick={handleSave} disabled={onCreate.isPending || onUpdate.isPending || (seasonPeriods.length === 0 && extraServices.length === 0)}>
             {editing ? "Aggiorna" : "Crea Preventivo"}
           </Button>
         </DialogFooter>
