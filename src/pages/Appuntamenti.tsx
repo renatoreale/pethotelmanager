@@ -316,7 +316,7 @@ export default function Appuntamenti() {
 
     if (isLocked || (isInCorso && isIn)) return;
 
-    if (appt.appointment_type === "check_out" && isInCorso) {
+    if (appt.appointment_type === "check_out") {
       setEditingCheckout(appt);
     } else if (appt.appointment_type === "check_in" && isFutureCheckin(appt)) {
       setEditingCheckin(appt);
