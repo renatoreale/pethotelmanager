@@ -70,7 +70,8 @@ export function useOccupancyData(
   }, [bookings, excludeBookingId]);
 
   const bookingOccupancy = useMemo(() => {
-    return relevantBookings.map(b => {
+    const result: BookingOccupancy[] = [];
+    for (const b of relevantBookings) {
       const checkIn = parseISO(b.check_in_date);
       const checkOut = parseISO(b.check_out_date);
       const stayDays = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) + 1;
@@ -81,8 +82,32 @@ export function useOccupancyData(
       for (let i = 0; i < occDays; i++) {
         occupiedDates.add(format(addDays(checkIn, i), "yyyy-MM-dd"));
       }
-      return { booking: b, occupiedDates, stayStart: b.check_in_date, stayEnd: b.check_out_date } as BookingOccupancy;
-    });
+
+      // Check if price_breakdown has mixed cage types (e.g. ["singola","doppia"])
+      const bd = (b as any).price_breakdown;
+      const cageUnitsArr = bd?.cageUnits as ("singola" | "doppia")[] | undefined;
+      if (cageUnitsArr && Array.isArray(cageUnitsArr) && cageUnitsArr.length > 1) {
+        const numSingole = cageUnitsArr.filter(t => t === "singola").length;
+        const numDoppie = cageUnitsArr.filter(t => t === "doppia").length;
+        if (numSingole > 0) {
+          result.push({
+            booking: { ...b, cage_pool_type: "singola" as const, units_occupied: numSingole } as Booking,
+            occupiedDates, stayStart: b.check_in_date, stayEnd: b.check_out_date,
+            effectiveUnits: numSingole, effectiveCageType: "singola",
+          });
+        }
+        if (numDoppie > 0) {
+          result.push({
+            booking: { ...b, cage_pool_type: "doppia" as const, units_occupied: numDoppie } as Booking,
+            occupiedDates, stayStart: b.check_in_date, stayEnd: b.check_out_date,
+            effectiveUnits: numDoppie, effectiveCageType: "doppia",
+          });
+        }
+      } else {
+        result.push({ booking: b, occupiedDates, stayStart: b.check_in_date, stayEnd: b.check_out_date });
+      }
+    }
+    return result;
   }, [relevantBookings, occupancyDays, petType]);
 
   return { bookingOccupancy, relevantBookings };
