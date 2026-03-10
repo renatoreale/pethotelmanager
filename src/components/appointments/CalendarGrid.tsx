@@ -266,8 +266,8 @@ function AppointmentChip({
     >
       {isIn ? <LogIn className="h-2.5 w-2.5 shrink-0" /> : <LogOut className="h-2.5 w-2.5 shrink-0" />}
       <span className="font-mono mr-0.5">{time}</span>
-      {!compact && <span className="truncate">{clientName}{petNames ? ` · ${petNames}` : ""}</span>}
-      {compact && <span className="truncate">{appt.booking?.client?.last_name ?? ""}{petNames ? ` · ${petNames}` : ""}</span>}
+      {!compact && <span className="truncate">{petNames ? `${petNames} · ` : ""}{clientName}</span>}
+      {compact && <span className="truncate">{petNames ? `${petNames} · ` : ""}{appt.booking?.client?.last_name ?? ""}</span>}
       {appt.confirmed && <CheckCircle2 className="h-2.5 w-2.5 shrink-0 text-[hsl(var(--confirmed-ring))] ml-auto" />}
     </button>
   );
