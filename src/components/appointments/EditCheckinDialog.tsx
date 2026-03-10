@@ -41,6 +41,7 @@ export function EditCheckinDialog({ open, onOpenChange, appointment }: Props) {
   const updateAppointment = useUpdateAppointment();
   const { data: tenantConfig } = useTenantConfig();
   const { data: priceLists } = usePriceLists();
+  const { profile } = useAuth();
 
   const booking = appointment.booking;
   const originalCiDate = booking?.check_in_date;
