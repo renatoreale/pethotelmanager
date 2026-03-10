@@ -187,7 +187,7 @@ export function EditCheckinDialog({ open, onOpenChange, appointment }: Props) {
     ? ((tenantConfig as any)?.[`num_doppie_${(booking as any)?.pet_type ?? "gatti"}`] ?? tenantConfig?.num_doppie ?? 0)
     : (tenantConfig?.num_doppie ?? 0);
 
-  const bookingCageType = booking?.cage_pool_type ?? "singola";
+  const bookingCageType = (booking as any)?.cage_pool_type ?? "singola";
   const { bookingOccupancy } = useOccupancyData(
     allBookings ?? [], occupancyDays, booking?.id, petType
   );
