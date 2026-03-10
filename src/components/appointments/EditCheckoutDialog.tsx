@@ -333,7 +333,7 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
           </div>
 
           {/* Pricing recalculation */}
-          {dateChanged && recalculated && (
+          {dateChanged && recalculated && recalculated.valid && (
             <div className="rounded-md border p-3 space-y-1.5 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Durata</span>
@@ -348,42 +348,26 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
                 <span className="text-muted-foreground">Totale originale</span>
                 <span>€ {recalculated.originalTotal.toFixed(2)}</span>
               </div>
-              {recalculated.extraDays > 0 && (
-                <div className="space-y-1.5">
-                  <div className="flex justify-between items-center text-primary">
-                    <span>+ {recalculated.extraDays} {stayLabel} extra {recalculated.extraTariffName && `(${recalculated.extraTariffName})`}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">Importo extra €</span>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      className="h-7 w-28 text-sm"
-                      value={manualExtraCost !== null ? manualExtraCost : recalculated.extraCost.toFixed(2)}
-                      onChange={e => setManualExtraCost(e.target.value)}
-                    />
-                    {manualExtraCost !== null && (
-                      <button
-                        type="button"
-                        className="text-xs text-muted-foreground underline hover:text-foreground"
-                        onClick={() => setManualExtraCost(null)}
-                      >
-                        Reset
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-              {recalculated.newDays < recalculated.originalDays && (
-                <div className="text-xs text-muted-foreground italic">
-                  Soggiorno ridotto di {recalculated.originalDays - recalculated.newDays} {stayLabel} — totale invariato
-                </div>
-              )}
               <div className="flex justify-between border-t pt-1.5">
                 <span className="font-medium">Nuovo totale</span>
-                <span className="font-bold">€ {recalculated.newTotal.toFixed(2)}</span>
+                <span className={cn("font-bold", recalculated.newTotal !== recalculated.originalTotal && "text-primary")}>
+                  € {recalculated.newTotal.toFixed(2)}
+                </span>
               </div>
+              {recalculated.newTotal !== recalculated.originalTotal && (
+                <div className="text-xs text-muted-foreground italic">
+                  {recalculated.newDays > recalculated.originalDays
+                    ? `+${recalculated.newDays - recalculated.originalDays} ${stayLabel} — totale ricalcolato`
+                    : `−${recalculated.originalDays - recalculated.newDays} ${stayLabel} — totale ricalcolato`
+                  }
+                </div>
+              )}
+            </div>
+          )}
+
+          {dateChanged && recalculated && !recalculated.valid && (
+            <div className="rounded-md border border-destructive/50 bg-destructive/5 p-3 text-sm text-destructive">
+              La data di check-out non può essere uguale o precedente al check-in.
             </div>
           )}
         </div>
