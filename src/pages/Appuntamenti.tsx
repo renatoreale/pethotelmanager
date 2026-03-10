@@ -268,7 +268,7 @@ export default function Appuntamenti() {
           {!isLocked && !(isInCorso && isIn) ? (
             <div className="flex gap-1">
               <Button variant="ghost" size="icon" onClick={() => {
-                if (appt.appointment_type === "check_out" && isInCorso) {
+                if (appt.appointment_type === "check_out") {
                   setEditingCheckout(appt);
                 } else if (appt.appointment_type === "check_in" && isFutureCheckin(appt)) {
                   setEditingCheckin(appt);
