@@ -54,12 +54,14 @@ export function useUpdateTenantConfig() {
         .update(rest)
         .eq("id", id)
         .select()
-        .single();
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
     onSuccess: (data) => {
-      qc.setQueryData(["tenant-config", data.id], data);
+      if (data) {
+        qc.setQueryData(["tenant-config", data.id], data);
+      }
       qc.invalidateQueries({ queryKey: ["tenant-config"] });
     },
   });
