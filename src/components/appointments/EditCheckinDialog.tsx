@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Calendar as CalendarWidget } from "@/components/ui/calendar";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { format, parseISO, differenceInDays, getDay } from "date-fns";
+import { format, parseISO, differenceInDays, getDay, addDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import {
@@ -24,7 +25,10 @@ import {
 } from "@/hooks/useAppointments";
 import { useTenantConfig, usePriceLists } from "@/hooks/usePensioneConfig";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { useOccupancyData } from "@/components/OccupancyGrid";
+import type { Booking } from "@/hooks/useBookings";
 
 interface Props {
   open: boolean;
