@@ -276,6 +276,11 @@ export default function Appuntamenti() {
                   setEditing(appt);
                 }
               }}><Pencil className="h-4 w-4" /></Button>
+              {!isInCorso && appt.booking && (
+                <Button variant="ghost" size="icon" title="Modifica date prenotazione" onClick={() => setEditingBookingDates(appt.booking)}>
+                  <CalendarIcon className="h-4 w-4" />
+                </Button>
+              )}
               <Button variant="ghost" size="icon" onClick={() => setDeleting(appt)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
             </div>
           ) : (
