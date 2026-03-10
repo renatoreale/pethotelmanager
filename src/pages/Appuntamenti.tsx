@@ -732,11 +732,13 @@ function EditAppointmentDialog({
   open,
   onOpenChange,
   onSave,
+  onEditDates,
 }: {
   appointment: AppointmentWithDetails;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (newTime: string) => Promise<void>;
+  onEditDates?: (booking: any) => void;
 }) {
   const currentTime = (() => {
     const tIndex = appointment.scheduled_at.indexOf("T");
