@@ -241,6 +241,10 @@ function AppointmentChip({
   const clientName = appt.booking?.client
     ? `${appt.booking.client.first_name} ${appt.booking.client.last_name}`
     : "—";
+  const petNames = appt.booking?.booking_cats
+    ?.map((bc) => bc.cat?.name)
+    .filter(Boolean)
+    .join(", ") ?? "";
 
   return (
     <button
@@ -258,12 +262,12 @@ function AppointmentChip({
         e.stopPropagation();
         onClick?.(appt);
       }}
-      title={`${time} ${isIn ? "IN" : "OUT"} — ${clientName}`}
+      title={`${time} ${isIn ? "IN" : "OUT"} — ${clientName}${petNames ? ` (${petNames})` : ""}`}
     >
       {isIn ? <LogIn className="h-2.5 w-2.5 shrink-0" /> : <LogOut className="h-2.5 w-2.5 shrink-0" />}
       <span className="font-mono mr-0.5">{time}</span>
-      {!compact && <span className="truncate">{clientName}</span>}
-      {compact && <span className="truncate">{appt.booking?.client?.last_name ?? ""}</span>}
+      {!compact && <span className="truncate">{clientName}{petNames ? ` · ${petNames}` : ""}</span>}
+      {compact && <span className="truncate">{appt.booking?.client?.last_name ?? ""}{petNames ? ` · ${petNames}` : ""}</span>}
       {appt.confirmed && <CheckCircle2 className="h-2.5 w-2.5 shrink-0 text-[hsl(var(--confirmed-ring))] ml-auto" />}
     </button>
   );
