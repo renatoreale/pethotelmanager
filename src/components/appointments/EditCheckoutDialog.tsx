@@ -82,7 +82,6 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
     if (open) {
       setNewDate(originalCoDate ? parseISO(originalCoDate) : new Date());
       setSelectedTime(isCreateMode ? "" : currentTime);
-      setManualExtraCost(null);
     }
   }, [open, originalCoDate, currentTime, isCreateMode]);
 
