@@ -269,7 +269,10 @@ export function PreventivoDialog({
         setSeasonPeriods(bd.seasonPeriods ?? []);
         setExtraServices(bd.extraServices ?? []);
         setDiscounts(bd.discounts ?? []);
-        if (bd.cageUnits) setCageUnits(bd.cageUnits);
+        if (bd.cageUnits) {
+          setCageUnits(bd.cageUnits);
+          setUnitsOccupied(bd.cageUnits.length);
+        }
         if (bd.cageUnitsGatti) { setCageUnitsGatti(bd.cageUnitsGatti); setUnitsGatti(bd.cageUnitsGatti.length); }
         if (bd.cageUnitsCani) { setCageUnitsCani(bd.cageUnitsCani); setUnitsCani(bd.cageUnitsCani.length); }
       } else {
