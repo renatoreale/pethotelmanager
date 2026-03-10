@@ -24,6 +24,7 @@ interface BookingData {
   check_out_date: string;
   total_amount: number | null;
   price_breakdown: any;
+  status?: string;
   client?: { first_name: string; last_name: string };
   booking_cats?: { id: string; cat?: { id: string; name: string } }[];
 }
