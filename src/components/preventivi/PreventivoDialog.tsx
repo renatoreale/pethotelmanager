@@ -206,7 +206,10 @@ export function PreventivoDialog({
     if (!checkInDate || cageUnits.length === 0) return null;
     const checkInStr = format(checkInDate, "yyyy-MM-dd");
     const filteredOccupancy = petType === "entrambi" && bookingPetType
-      ? bookingOccupancy.filter(bo => (bo.booking as any).pet_type === bookingPetType)
+      ? bookingOccupancy.filter(bo => {
+          const bpt = (bo.booking as any).pet_type;
+          return bpt === bookingPetType || bpt === "entrambi" || !bpt;
+        })
       : bookingOccupancy;
     return checkAvailability(filteredOccupancy, checkInStr, occupancyDays, cageUnits, totalSingole, totalDoppie);
   }, [isMixedPets, checkInDate, cageUnits, bookingOccupancy, occupancyDays, totalSingole, totalDoppie, petType, bookingPetType]);
