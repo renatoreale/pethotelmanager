@@ -68,7 +68,6 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
   );
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [selectedTime, setSelectedTime] = useState<string>("");
-  const [manualExtraCost, setManualExtraCost] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Extract current time from appointment (edit mode only)
