@@ -113,13 +113,13 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
     return slots;
   }, [slotConfigs, counts, currentTime, dateChanged, isCreateMode]);
 
-  // Auto-select first available slot in create mode
+  // Auto-select first available slot only in create mode
   useEffect(() => {
-    if (availableSlots.length > 0 && !selectedTime) {
+    if (isCreateMode && availableSlots.length > 0 && !selectedTime) {
       const firstAvailable = availableSlots.find(s => s.available > 0);
       if (firstAvailable) setSelectedTime(firstAvailable.time);
     }
-  }, [availableSlots, selectedTime]);
+  }, [availableSlots, selectedTime, isCreateMode]);
 
   // Reset time selection when date changes and current time is not available
   useEffect(() => {
