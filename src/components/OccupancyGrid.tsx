@@ -184,7 +184,29 @@ export function usePoolOccupancyData(
           });
         }
       } else {
-        result.push({ booking: b, occupiedDates, stayStart: b.check_in_date, stayEnd: b.check_out_date });
+        // Check if price_breakdown has mixed cage types
+        const bd = (b as any).price_breakdown;
+        const cageUnitsArr = bd?.cageUnits as ("singola" | "doppia")[] | undefined;
+        if (cageUnitsArr && Array.isArray(cageUnitsArr) && cageUnitsArr.length > 1) {
+          const numSingole = cageUnitsArr.filter(t => t === "singola").length;
+          const numDoppie = cageUnitsArr.filter(t => t === "doppia").length;
+          if (numSingole > 0) {
+            result.push({
+              booking: { ...b, cage_pool_type: "singola" as const, units_occupied: numSingole } as Booking,
+              occupiedDates, stayStart: b.check_in_date, stayEnd: b.check_out_date,
+              effectiveUnits: numSingole, effectiveCageType: "singola",
+            });
+          }
+          if (numDoppie > 0) {
+            result.push({
+              booking: { ...b, cage_pool_type: "doppia" as const, units_occupied: numDoppie } as Booking,
+              occupiedDates, stayStart: b.check_in_date, stayEnd: b.check_out_date,
+              effectiveUnits: numDoppie, effectiveCageType: "doppia",
+            });
+          }
+        } else {
+          result.push({ booking: b, occupiedDates, stayStart: b.check_in_date, stayEnd: b.check_out_date });
+        }
       }
     }
     
