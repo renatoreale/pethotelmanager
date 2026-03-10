@@ -357,13 +357,16 @@ function CasetteTab() {
           updates.num_doppie_cani = d;
         }
       }
-      await updateConfig.mutateAsync(updates);
+      const result = await updateConfig.mutateAsync(updates);
       toast.success("Configurazione casette salvata");
-      setSingole(null); setDoppie(null);
-      setSingoleGatti(null); setDoppieGatti(null);
-      setSingoleCani(null); setDoppieCani(null);
-      setMaxCats(null); setRuleDays(null);
-      setStayCalcType(null); setCountCheckinDay(null); setCountCheckoutDay(null);
+      // Reset local overrides only after mutation + cache update
+      setTimeout(() => {
+        setSingole(null); setDoppie(null);
+        setSingoleGatti(null); setDoppieGatti(null);
+        setSingoleCani(null); setDoppieCani(null);
+        setMaxCats(null); setRuleDays(null);
+        setStayCalcType(null); setCountCheckinDay(null); setCountCheckoutDay(null);
+      }, 100);
     } catch (err: any) {
       toast.error(err.message || "Errore nel salvataggio");
     }

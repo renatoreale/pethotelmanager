@@ -58,7 +58,10 @@ export function useUpdateTenantConfig() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["tenant-config"] }),
+    onSuccess: (data) => {
+      qc.setQueryData(["tenant-config", data.id], data);
+      qc.invalidateQueries({ queryKey: ["tenant-config"] });
+    },
   });
 }
 
