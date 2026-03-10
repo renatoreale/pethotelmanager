@@ -657,6 +657,10 @@ export default function Appuntamenti() {
             toast.success("Appuntamento aggiornato");
             setEditing(null);
           }}
+          onEditDates={(booking) => {
+            setEditing(null);
+            setEditingBookingDates(booking);
+          }}
         />
       )}
 
