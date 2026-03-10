@@ -373,7 +373,7 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annulla</Button>
-          <Button onClick={handleSave} disabled={saving || noChanges || !selectedTime}>
+          <Button onClick={handleSave} disabled={saving || noChanges || !selectedTime || (recalculated && !recalculated.valid)}>
             {saving ? "Salvataggio..." : isCreateMode ? "Fissa Check-out" : "Salva Modifiche"}
           </Button>
         </DialogFooter>
