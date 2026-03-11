@@ -160,7 +160,8 @@ export async function generatePreventivoPDF(
   const tableBody: any[][] = [];
 
   if (breakdown?.seasonPeriods?.length) {
-    breakdown.seasonPeriods.forEach((period: any) => {
+    const sortedPeriods = [...breakdown.seasonPeriods].sort((a: any, b: any) => a.fromDate.localeCompare(b.fromDate));
+    sortedPeriods.forEach((period: any) => {
       const fromDate = format(parseISO(period.fromDate), "dd/MM/yyyy");
       const toDate = format(parseISO(period.toDate), "dd/MM/yyyy");
       const desc = `Soggiorno dal: ${fromDate} al: ${toDate}`;
