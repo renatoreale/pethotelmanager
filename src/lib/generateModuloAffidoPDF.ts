@@ -498,8 +498,7 @@ export async function generateModuloAffidoPDF(
   // ══════════════════════════════════════════════
   // SIGNATURE BLOCK (dynamic, below content but above footer)
   // ══════════════════════════════════════════════
-  const footerTopY = pageHeight - 30;
-  // Ensure signature is at least at current y, but not overlapping footer
+  const footerTopY = pageHeight - 18;
   const sigStartY = Math.max(y + 5, footerTopY - 25);
 
   let sigY = sigStartY;
