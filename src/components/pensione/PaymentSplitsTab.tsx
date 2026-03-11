@@ -112,7 +112,7 @@ export function PaymentSplitsTab() {
     try {
       await updateConfig.mutateAsync({
         id: config.id,
-        ...(({ iban: currentIban || null, bank_name: currentBankName || null, iban_holder: currentIbanHolder || null, bollo_amount: currentBolloAmount, preventivo_validity_days: currentValidityDays, preventivo_footer_text: currentFooterText || null }) as any),
+        ...(({ iban: currentIban || null, bank_name: currentBankName || null, iban_holder: currentIbanHolder || null, bollo_amount: currentBolloAmount, preventivo_validity_days: currentValidityDays }) as any),
       });
       toast.success("Configurazione preventivo salvata");
       setIban(null); setBankName(null); setIbanHolder(null); setBolloAmount(null); setValidityDays(null); setFooterText(null);
