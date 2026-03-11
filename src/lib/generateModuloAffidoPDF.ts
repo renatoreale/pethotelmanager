@@ -71,7 +71,7 @@ export async function generateModuloAffidoPDF(
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
   const contentWidth = pageWidth - margin * 2;
-  let y = 20;
+  let y = 10;
 
   // ── Colors ──
   const primaryColor: [number, number, number] = [60, 60, 60];
