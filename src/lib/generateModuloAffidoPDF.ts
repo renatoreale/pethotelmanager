@@ -1,7 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format, parseISO, differenceInDays } from "date-fns";
-import { it } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 
 interface BookingData {
@@ -14,6 +13,7 @@ interface BookingData {
   notes: string | null;
   pet_type?: string | null;
   price_breakdown?: any;
+  tenant_id?: string;
   booking_cats?: { cat_id: string; cat?: { id: string; name: string } }[];
   client?: {
     id: string;
@@ -30,6 +30,7 @@ interface BookingData {
 }
 
 interface TenantData {
+  id?: string;
   name: string;
   email?: string | null;
   phone?: string | null;
@@ -84,7 +85,7 @@ export async function generateModuloAffidoPDF(
     .eq("id", booking.client_id)
     .single();
 
-  // ── Fetch full cat data for each booking cat ──
+  // ── Fetch full cat data ──
   const catIds = booking.booking_cats?.map(bc => bc.cat_id || bc.cat?.id).filter(Boolean) as string[] ?? [];
   let fullCats: any[] = [];
   if (catIds.length > 0) {
@@ -93,6 +94,20 @@ export async function generateModuloAffidoPDF(
       .select("*")
       .in("id", catIds);
     fullCats = data ?? [];
+  }
+
+  // ── Fetch extra price lists for tenant ──
+  const tenantId = (tenant as any).id ?? booking.tenant_id;
+  let extraPriceLists: any[] = [];
+  if (tenantId) {
+    const { data } = await supabase
+      .from("price_lists")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .in("tariff_type", ["extra_giornaliero", "extra_km", "extra_una_tantum"])
+      .eq("is_active", true)
+      .order("name");
+    extraPriceLists = data ?? [];
   }
 
   // ── Stay calculation ──
@@ -123,8 +138,11 @@ export async function generateModuloAffidoPDF(
     ? `${fullClient.first_name} ${fullClient.last_name}`
     : (booking.client ? `${booking.client.first_name} ${booking.client.last_name}` : "—");
 
+  // Cat names for header
+  const catNames = fullCats.map(c => c.name).join(", ") || "—";
+
   // ══════════════════════════════════════════════
-  // HEADER (same as preventivo)
+  // HEADER
   // ══════════════════════════════════════════════
   let logoBase64: string | null = null;
   if (tenant.logo_url) {
@@ -145,7 +163,7 @@ export async function generateModuloAffidoPDF(
   doc.setFont("helvetica", "bold");
   doc.text(tenant.name, nameX, nameCenterY);
 
-  // "Modulo di Affido" top-right
+  // Top-right: booking number + cat names
   const rightInfoY = logoBase64 ? y + logoSize / 2 - 3 : y + 5;
   doc.setFontSize(10);
   doc.setTextColor(...lightGray);
@@ -154,7 +172,8 @@ export async function generateModuloAffidoPDF(
   doc.setFontSize(10);
   doc.setTextColor(...primaryColor);
   doc.setFont("helvetica", "normal");
-  doc.text(`Intestato a: ${clientName}`, pageWidth - margin, rightInfoY + 7, { align: "right" });
+  const petLabel = booking.pet_type === "cani" ? "Cani" : "Gatti";
+  doc.text(`${petLabel}: ${catNames}`, pageWidth - margin, rightInfoY + 7, { align: "right" });
 
   y = (logoBase64 ? y + logoSize : y + 15) + 5;
 
@@ -172,71 +191,64 @@ export async function generateModuloAffidoPDF(
   y += 12;
 
   // ══════════════════════════════════════════════
-  // OWNER DATA SECTION
+  // OWNER DATA
   // ══════════════════════════════════════════════
   doc.setFontSize(10);
   doc.setTextColor(...primaryColor);
   doc.setFont("helvetica", "normal");
 
-  const fieldLabel = (label: string, value: string, x: number, yPos: number, maxWidth?: number) => {
+  const fieldLabel = (label: string, value: string | null | undefined, x: number, yPos: number) => {
     doc.setFont("helvetica", "bold");
     doc.text(label, x, yPos);
     const labelWidth = doc.getTextWidth(label);
     doc.setFont("helvetica", "normal");
-    const val = value || "___________________________";
-    if (maxWidth) {
-      doc.text(val, x + labelWidth + 2, yPos, { maxWidth });
-    } else {
-      doc.text(val, x + labelWidth + 2, yPos);
+    if (value) {
+      doc.text(value, x + labelWidth + 2, yPos);
     }
+    // If no value, leave blank (no line)
   };
 
-  // Row 1: Proprietario + CF
   fieldLabel("Proprietario:", clientName, margin, y);
-  fieldLabel("CF:", fullClient?.fiscal_code ?? "", pageWidth / 2, y);
+  fieldLabel("CF:", fullClient?.fiscal_code, pageWidth / 2, y);
   y += 7;
 
-  // Row 2: Indirizzo + CAP + Comune
-  const address = fullClient?.address ?? "";
-  fieldLabel("Indirizzo:", address, margin, y);
+  fieldLabel("Indirizzo:", fullClient?.address, margin, y);
   y += 7;
 
-  // Row 3: Cell + Email
-  fieldLabel("Cell.:", fullClient?.phone ?? "", margin, y);
-  fieldLabel("E-mail:", fullClient?.email ?? "", pageWidth / 2, y);
+  fieldLabel("Cell.:", fullClient?.phone, margin, y);
+  fieldLabel("E-mail:", fullClient?.email, pageWidth / 2, y);
   y += 10;
 
   // ══════════════════════════════════════════════
-  // CAT TABLE(S) - one per cat
+  // CAT TABLE(S)
   // ══════════════════════════════════════════════
   for (let ci = 0; ci < Math.max(fullCats.length, 1); ci++) {
     const cat = fullCats[ci];
 
     if (ci > 0) y += 4;
 
-    // Cat name header
     const petTypeLabel = booking.pet_type === "cani" ? "Cane" : "Gatto";
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(...accentColor);
-    doc.text(`${petTypeLabel}: ${cat?.name ?? "—"}`, margin, y);
+    doc.text(`${petTypeLabel}: ${cat?.name ?? ""}`, margin, y);
     y += 6;
 
-    // Info table
-    const genderLabel = cat?.gender === "M" ? "M" : cat?.gender === "F" ? "F" : cat?.gender ?? "—";
-    const birthDate = cat?.birth_date ? format(parseISO(cat.birth_date), "dd/MM/yyyy") : "—";
-    const neuteredLabel = cat?.is_neutered ? "Sì" : "No";
+    // Build cat row – empty string if value missing (no dash/line)
+    const genderLabel = cat?.gender === "M" ? "M" : cat?.gender === "F" ? "F" : cat?.gender ?? "";
+    const birthDate = cat?.birth_date ? format(parseISO(cat.birth_date), "dd/MM/yyyy") : "";
+    const neuteredLabel = cat?.is_neutered === true ? "Sì" : cat?.is_neutered === false ? "No" : "";
 
     autoTable(doc, {
       startY: y,
       head: [["Microchip", "Sesso", "Data nascita", "Razza", "Colore", "Peso", "Sterilizzato"]],
       body: [[
-        cat?.microchip ?? "—",
+        cat?.microchip ?? "",
         genderLabel,
         birthDate,
-        cat?.breed ?? "—",
-        cat?.color ?? "—",
-        cat?.weight_kg ? `${cat.weight_kg} kg` : "—",
+        cat?.breed ?? "",
+        cat?.color ?? "",
+        cat?.weight_kg ? `${cat.weight_kg} kg` : "",
         neuteredLabel,
       ]],
       margin: { left: margin, right: margin },
@@ -262,30 +274,133 @@ export async function generateModuloAffidoPDF(
     });
 
     y = (doc as any).lastAutoTable.finalY + 3;
-
-    // Notes section
-    const notesLines: string[] = [];
-    if (cat?.medical_notes) notesLines.push(`Note mediche: ${cat.medical_notes}`);
-    if (cat?.dietary_notes) notesLines.push(`Note alimentari: ${cat.dietary_notes}`);
-    if (cat?.behavioral_notes) notesLines.push(`Note comportamentali: ${cat.behavioral_notes}`);
-
-    if (notesLines.length > 0) {
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "italic");
-      doc.setTextColor(100, 100, 100);
-      notesLines.forEach(line => {
-        const split = doc.splitTextToSize(line, contentWidth);
-        doc.text(split, margin, y);
-        y += split.length * 4 + 1;
-      });
-      y += 2;
-    }
   }
 
   y += 4;
 
   // ══════════════════════════════════════════════
-  // STAY PERIOD SECTION
+  // PECULIARITÀ E SEGNALAZIONI (writable box)
+  // ══════════════════════════════════════════════
+  doc.setDrawColor(...lightGray);
+  doc.setLineWidth(0.3);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 6;
+
+  doc.setFontSize(10);
+  doc.setTextColor(...accentColor);
+  doc.setFont("helvetica", "bold");
+  doc.text("Peculiarità e segnalazioni", margin, y);
+  y += 5;
+
+  const lineHeight = 6;
+
+  if (fullCats.length <= 1) {
+    // Single cat or none: one box with 4 lines
+    const boxHeight = lineHeight * 4 + 4;
+    doc.setDrawColor(...lightGray);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(margin, y, contentWidth, boxHeight, 2, 2, "S");
+
+    // Pre-fill existing notes if any
+    const cat = fullCats[0];
+    const existingNotes: string[] = [];
+    if (cat?.medical_notes) existingNotes.push(`Mediche: ${cat.medical_notes}`);
+    if (cat?.dietary_notes) existingNotes.push(`Alimentari: ${cat.dietary_notes}`);
+    if (cat?.behavioral_notes) existingNotes.push(`Comportamentali: ${cat.behavioral_notes}`);
+
+    if (existingNotes.length > 0) {
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "italic");
+      doc.setTextColor(100, 100, 100);
+      let noteY = y + 5;
+      existingNotes.forEach(note => {
+        const split = doc.splitTextToSize(note, contentWidth - 6);
+        doc.text(split[0] || "", margin + 3, noteY);
+        noteY += lineHeight;
+      });
+    }
+
+    // Draw lines inside box for writing
+    doc.setDrawColor(220, 220, 220);
+    for (let i = 1; i <= 4; i++) {
+      const lineY = y + 2 + lineHeight * i;
+      doc.line(margin + 3, lineY, pageWidth - margin - 3, lineY);
+    }
+
+    y += boxHeight + 4;
+  } else {
+    // Multiple cats: one box per cat with 2 lines each
+    for (const cat of fullCats) {
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...accentColor);
+      doc.text(cat.name || "", margin + 3, y + 4);
+
+      const boxHeight = lineHeight * 2 + 6;
+      doc.setDrawColor(...lightGray);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(margin, y, contentWidth, boxHeight, 2, 2, "S");
+
+      // Pre-fill notes
+      const existingNotes: string[] = [];
+      if (cat?.medical_notes) existingNotes.push(`Mediche: ${cat.medical_notes}`);
+      if (cat?.dietary_notes) existingNotes.push(`Alimentari: ${cat.dietary_notes}`);
+      if (cat?.behavioral_notes) existingNotes.push(`Comportamentali: ${cat.behavioral_notes}`);
+
+      if (existingNotes.length > 0) {
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "italic");
+        doc.setTextColor(100, 100, 100);
+        let noteY = y + 4;
+        existingNotes.slice(0, 2).forEach(note => {
+          const split = doc.splitTextToSize(note, contentWidth - 30);
+          doc.text(split[0] || "", margin + 25, noteY);
+          noteY += lineHeight;
+        });
+      }
+
+      // Lines inside box
+      doc.setDrawColor(220, 220, 220);
+      for (let i = 1; i <= 2; i++) {
+        const lineY = y + 4 + lineHeight * i;
+        doc.line(margin + 3, lineY, pageWidth - margin - 3, lineY);
+      }
+
+      y += boxHeight + 2;
+    }
+    y += 2;
+  }
+
+  // ══════════════════════════════════════════════
+  // VETERINARIO DI FIDUCIA (writable box)
+  // ══════════════════════════════════════════════
+  doc.setFontSize(10);
+  doc.setTextColor(...accentColor);
+  doc.setFont("helvetica", "bold");
+  doc.text("Veterinario di fiducia", margin, y);
+  y += 5;
+
+  const vetBoxHeight = lineHeight * 2 + 4;
+  doc.setDrawColor(...lightGray);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(margin, y, contentWidth, vetBoxHeight, 2, 2, "S");
+
+  // Labels inside box
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(150, 150, 150);
+  doc.text("Nome:", margin + 3, y + 5);
+  doc.text("Telefono:", margin + 3, y + 5 + lineHeight);
+
+  // Lines
+  doc.setDrawColor(220, 220, 220);
+  doc.line(margin + 3, y + 2 + lineHeight, pageWidth - margin - 3, y + 2 + lineHeight);
+  doc.line(margin + 3, y + 2 + lineHeight * 2, pageWidth - margin - 3, y + 2 + lineHeight * 2);
+
+  y += vetBoxHeight + 6;
+
+  // ══════════════════════════════════════════════
+  // STAY PERIOD
   // ══════════════════════════════════════════════
   doc.setDrawColor(...lightGray);
   doc.setLineWidth(0.3);
@@ -310,31 +425,51 @@ export async function generateModuloAffidoPDF(
   y += 10;
 
   // ══════════════════════════════════════════════
-  // EXTRAS SECTION
+  // EXTRA SERVICES (from price list, with checkboxes)
   // ══════════════════════════════════════════════
-  const breakdown = booking.price_breakdown;
-  const extras = breakdown?.extraServices ?? [];
-
-  if (extras.length > 0) {
+  if (extraPriceLists.length > 0) {
     doc.setDrawColor(...lightGray);
     doc.setLineWidth(0.3);
     doc.line(margin, y, pageWidth - margin, y);
     y += 6;
 
-    doc.setFontSize(12);
+    doc.setFontSize(10);
     doc.setTextColor(...accentColor);
     doc.setFont("helvetica", "bold");
-    doc.text("Servizi Extra", margin, y);
-    y += 7;
+    doc.text("Servizi Extra Disponibili", margin, y);
+    y += 6;
 
-    doc.setFontSize(9);
-    doc.setTextColor(...primaryColor);
+    doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
+    doc.setTextColor(...primaryColor);
 
-    extras.forEach((extra: any) => {
-      const total = Number(extra.total ?? 0).toFixed(2);
-      doc.text(`• ${extra.name}: € ${total}`, margin + 3, y);
-      y += 5;
+    const colWidth = contentWidth / 2;
+
+    extraPriceLists.forEach((extra, idx) => {
+      const col = idx % 2;
+      const x = margin + col * colWidth;
+
+      // Checkbox square
+      doc.setDrawColor(...lightGray);
+      doc.setLineWidth(0.3);
+      doc.rect(x, y - 3, 3.5, 3.5, "S");
+
+      // Extra name + price
+      let priceLabel = "";
+      if (extra.tariff_type === "extra_giornaliero") {
+        priceLabel = `€ ${Number(extra.price_per_day ?? 0).toFixed(2)}/gg`;
+      } else if (extra.tariff_type === "extra_km") {
+        priceLabel = `€ ${Number(extra.extra_km_cost ?? 0).toFixed(2)}/km`;
+        if (extra.fixed_cost) priceLabel = `€ ${Number(extra.fixed_cost).toFixed(2)} + ${priceLabel}`;
+      } else {
+        priceLabel = `€ ${Number(extra.fixed_cost ?? extra.price_per_day ?? 0).toFixed(2)}`;
+      }
+
+      doc.text(`${extra.name}  (${priceLabel})`, x + 5, y);
+
+      if (col === 1 || idx === extraPriceLists.length - 1) {
+        y += 5;
+      }
     });
 
     y += 3;
@@ -393,7 +528,7 @@ export async function generateModuloAffidoPDF(
   doc.text("Firma del Proprietario: ___________________________", pageWidth - margin - 15, sigY, { align: "right" });
 
   // ══════════════════════════════════════════════
-  // FOOTER (same as preventivo, without IBAN/bank)
+  // FOOTER (without IBAN/bank)
   // ══════════════════════════════════════════════
   const footerY = pageHeight - 25;
   doc.setDrawColor(...lightGray);
