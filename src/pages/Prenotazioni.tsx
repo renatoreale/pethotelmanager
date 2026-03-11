@@ -260,6 +260,16 @@ export default function Prenotazioni() {
     }
   };
 
+  const handleDownloadModuloAffido = async (b: any) => {
+    if (!tenantConfig) return;
+    try {
+      await generateModuloAffidoPDF(b, tenantConfig as any);
+      toast.success("Modulo di Affido generato");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nella generazione del PDF");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
