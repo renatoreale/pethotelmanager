@@ -146,13 +146,14 @@ export async function generatePreventivoPDF(
       // Find tariff name from period
       const desc = `Soggiorno dal: ${fromDate} al: ${toDate}`;
       const numCats = preventivo.booking_cats?.length ?? 1;
+      const unitLabel = stayCalcType === "notti" ? "notti" : "gg";
       const pricePerDay = period.total > 0 && period.days > 0
         ? (period.total / (period.days * numCats))
         : 0;
       tableBody.push([
         desc,
         `€ ${pricePerDay.toFixed(2)}`,
-        String(period.days),
+        `${period.days} ${unitLabel}`,
         String(numCats),
         `€ ${Number(period.total).toFixed(2)}`,
       ]);
