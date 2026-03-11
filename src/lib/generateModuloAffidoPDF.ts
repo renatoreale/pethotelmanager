@@ -319,7 +319,6 @@ export async function generateModuloAffidoPDF(
     doc.setLineWidth(0.3);
     doc.roundedRect(margin, y, contentWidth, boxHeight, 2, 2, "S");
 
-    // Pre-fill existing notes if any
     const cat = fullCats[0];
     const existingNotes: string[] = [];
     if (cat?.medical_notes) existingNotes.push(`Mediche: ${cat.medical_notes}`);
@@ -338,7 +337,6 @@ export async function generateModuloAffidoPDF(
       });
     }
 
-    // Draw lines inside box for writing
     doc.setDrawColor(220, 220, 220);
     for (let i = 1; i <= 4; i++) {
       const lineY = y + 2 + lineHeight * i;
@@ -347,19 +345,26 @@ export async function generateModuloAffidoPDF(
 
     y += boxHeight + 4;
   } else {
-    // Multiple cats: one box per cat with 2 lines each
+    // 2 cats: 2 lines each, 3+ cats: 1 line each
+    const linesPerCat = fullCats.length >= 3 ? 1 : 2;
+
     for (const cat of fullCats) {
+      // Check if we need a new page
+      const boxHeight = lineHeight * linesPerCat + 6;
+      if (y + boxHeight > pageHeight - 40) {
+        doc.addPage();
+        y = 10;
+      }
+
       doc.setFontSize(8);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(...accentColor);
       doc.text(cat.name || "", margin + 3, y + 4);
 
-      const boxHeight = lineHeight * 2 + 6;
       doc.setDrawColor(...lightGray);
       doc.setLineWidth(0.3);
       doc.roundedRect(margin, y, contentWidth, boxHeight, 2, 2, "S");
 
-      // Pre-fill notes
       const existingNotes: string[] = [];
       if (cat?.medical_notes) existingNotes.push(`Mediche: ${cat.medical_notes}`);
       if (cat?.dietary_notes) existingNotes.push(`Alimentari: ${cat.dietary_notes}`);
@@ -370,16 +375,15 @@ export async function generateModuloAffidoPDF(
         doc.setFont("helvetica", "italic");
         doc.setTextColor(100, 100, 100);
         let noteY = y + 4;
-        existingNotes.slice(0, 2).forEach(note => {
+        existingNotes.slice(0, linesPerCat).forEach(note => {
           const split = doc.splitTextToSize(note, contentWidth - 30);
           doc.text(split[0] || "", margin + 25, noteY);
           noteY += lineHeight;
         });
       }
 
-      // Lines inside box
       doc.setDrawColor(220, 220, 220);
-      for (let i = 1; i <= 2; i++) {
+      for (let i = 1; i <= linesPerCat; i++) {
         const lineY = y + 4 + lineHeight * i;
         doc.line(margin + 3, lineY, pageWidth - margin - 3, lineY);
       }
