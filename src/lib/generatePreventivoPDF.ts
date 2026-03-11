@@ -99,8 +99,8 @@ export async function generatePreventivoPDF(
   // STEP 1: Calculate signature block height (fixed at bottom above footer)
   // ══════════════════════════════════════════════
   const footerStartY = pageHeight - 25; // footer area
-  const signatureBlockHeight = 28;
-  const signatureStartY = footerStartY - 5 - signatureBlockHeight;
+  const signatureBlockHeight = 40;
+  const signatureStartY = footerStartY - 8 - signatureBlockHeight;
 
   // ══════════════════════════════════════════════
   // STEP 2: Header - Logo centered with name below
