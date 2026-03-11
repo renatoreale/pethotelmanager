@@ -227,13 +227,6 @@ export async function generateModuloAffidoPDF(
 
     if (ci > 0) y += 4;
 
-    const petTypeLabel = booking.pet_type === "cani" ? "Cane" : "Gatto";
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(...accentColor);
-    doc.text(`${petTypeLabel}: ${cat?.name ?? ""}`, margin, y);
-    y += 6;
-
     // Build cat row – empty string if value missing (no dash/line)
     const genderLabel = cat?.gender === "M" ? "Maschio" : cat?.gender === "F" ? "Femmina" : cat?.gender ?? "";
     const birthDate = cat?.birth_date ? format(parseISO(cat.birth_date), "dd/MM/yyyy") : "";
@@ -241,8 +234,9 @@ export async function generateModuloAffidoPDF(
 
     autoTable(doc, {
       startY: y,
-      head: [["Microchip", "Sesso", "Data di nascita", "Razza", "Colore", "Peso (kg)", "Sterilizzato/a"]],
+      head: [["Nome", "Microchip", "Sesso", "Data di nascita", "Razza", "Colore", "Peso (kg)", "Sterilizzato/a"]],
       body: [[
+        cat?.name ?? "",
         cat?.microchip ?? "",
         genderLabel,
         birthDate,
@@ -263,13 +257,14 @@ export async function generateModuloAffidoPDF(
         textColor: primaryColor,
       },
       columnStyles: {
-        0: { cellWidth: 30 },
-        1: { halign: "center", cellWidth: 15 },
-        2: { halign: "center", cellWidth: 22 },
-        3: { cellWidth: "auto" },
-        4: { cellWidth: 20 },
-        5: { halign: "center", cellWidth: 18 },
-        6: { halign: "center", cellWidth: 22 },
+        0: { cellWidth: 22, fontStyle: "bold" },
+        1: { cellWidth: 28 },
+        2: { halign: "center", cellWidth: 15 },
+        3: { halign: "center", cellWidth: 22 },
+        4: { cellWidth: "auto" },
+        5: { cellWidth: 18 },
+        6: { halign: "center", cellWidth: 16 },
+        7: { halign: "center", cellWidth: 20 },
       },
     });
 
