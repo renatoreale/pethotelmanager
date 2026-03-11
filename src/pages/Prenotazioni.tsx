@@ -91,6 +91,7 @@ export default function Prenotazioni() {
   const deleteBooking = useDeleteBooking();
   const updatePreventivo = useUpdatePreventivo();
   const { data: tenantConfig } = useTenantConfig();
+  const { data: paymentSplits } = usePaymentSplits();
   const { user, profile } = useAuth();
 
   const stayCalcType = (tenantConfig as any)?.stay_calc_type ?? "notti";
