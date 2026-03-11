@@ -215,6 +215,12 @@ export async function generatePreventivoPDF(
     });
   }
 
+  // Pad table body to a fixed minimum of 8 rows
+  const MIN_ROWS = 8;
+  while (tableBody.length < MIN_ROWS) {
+    tableBody.push(["", "", "", "", ""]);
+  }
+
   autoTable(doc, {
     startY: y,
     head: [["DESCRIZIONE SERVIZIO", "PREZZO UNIT.", "Q.TÀ", "PETS", "TOTALE"]],
