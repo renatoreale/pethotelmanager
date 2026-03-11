@@ -208,6 +208,7 @@ export function PaymentSplitsTab() {
                   {splits.map((s) => (
                     <TableRow key={s.id}>
                       <TableCell className="text-center text-muted-foreground">{s.sort_order}</TableCell>
+                      <TableCell className="font-medium">{s.label}</TableCell>
                       <TableCell><Badge variant="secondary">{Number(s.percentage)}%</Badge></TableCell>
                       <TableCell>{PAYMENT_MOMENTS.find(m => m.value === s.payment_moment)?.label ?? s.payment_moment}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{s.payment_method_note ?? "—"}</TableCell>
