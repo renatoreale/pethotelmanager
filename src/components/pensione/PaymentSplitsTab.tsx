@@ -59,12 +59,15 @@ export function PaymentSplitsTab() {
 
   const totalPercentage = (splits ?? []).reduce((sum, s) => sum + Number(s.percentage), 0);
 
+  const [formSortOrder, setFormSortOrder] = useState(0);
+
   const openNewSplit = () => {
     setEditing(null);
     setFormLabel("");
     setFormPercentage(0);
     setFormMoment("caparra");
     setFormNote("");
+    setFormSortOrder((splits?.length ?? 0));
     setFormOpen(true);
   };
 
@@ -74,6 +77,7 @@ export function PaymentSplitsTab() {
     setFormPercentage(Number(s.percentage));
     setFormMoment(s.payment_moment);
     setFormNote(s.payment_method_note ?? "");
+    setFormSortOrder(s.sort_order ?? 0);
     setFormOpen(true);
   };
 
@@ -86,7 +90,7 @@ export function PaymentSplitsTab() {
         label: formLabel,
         percentage: formPercentage,
         payment_moment: formMoment,
-        sort_order: editing?.sort_order ?? (splits?.length ?? 0),
+        sort_order: formSortOrder,
         payment_method_note: formNote || null,
       });
       toast.success(editing ? "Rata aggiornata" : "Rata aggiunta");
@@ -192,6 +196,7 @@ export function PaymentSplitsTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[60px]">Ordine</TableHead>
                     <TableHead>Etichetta</TableHead>
                     <TableHead>Percentuale</TableHead>
                     <TableHead>Momento</TableHead>
@@ -202,6 +207,7 @@ export function PaymentSplitsTab() {
                 <TableBody>
                   {splits.map((s) => (
                     <TableRow key={s.id}>
+                      <TableCell className="text-center text-muted-foreground">{s.sort_order}</TableCell>
                       <TableCell className="font-medium">{s.label}</TableCell>
                       <TableCell><Badge variant="secondary">{Number(s.percentage)}%</Badge></TableCell>
                       <TableCell>{PAYMENT_MOMENTS.find(m => m.value === s.payment_moment)?.label ?? s.payment_moment}</TableCell>
@@ -227,7 +233,7 @@ export function PaymentSplitsTab() {
           {formOpen && (
             <Card className="border-primary">
               <CardContent className="pt-4 space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-3">
                   <div className="space-y-2">
                     <Label>Etichetta</Label>
                     <Input value={formLabel} onChange={(e) => setFormLabel(e.target.value)} placeholder="es. Caparra confirmatoria" />
@@ -235,6 +241,10 @@ export function PaymentSplitsTab() {
                   <div className="space-y-2">
                     <Label>Percentuale (%)</Label>
                     <Input type="number" min={0} max={100} value={formPercentage} onChange={(e) => setFormPercentage(Number(e.target.value))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Ordine nel PDF</Label>
+                    <Input type="number" min={0} value={formSortOrder} onChange={(e) => setFormSortOrder(Number(e.target.value))} placeholder="0" />
                   </div>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
