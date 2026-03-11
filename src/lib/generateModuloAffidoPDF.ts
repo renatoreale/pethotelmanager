@@ -372,7 +372,7 @@ export async function generateModuloAffidoPDF(
   }
 
   // ══════════════════════════════════════════════
-  // VETERINARIO DI FIDUCIA (writable box)
+  // VETERINARIO DI FIDUCIA (single row: nome + telefono)
   // ══════════════════════════════════════════════
   doc.setFontSize(10);
   doc.setTextColor(...accentColor);
@@ -380,24 +380,23 @@ export async function generateModuloAffidoPDF(
   doc.text("Veterinario di fiducia", margin, y);
   y += 5;
 
-  const vetBoxHeight = lineHeight * 2 + 4;
+  const vetBoxHeight = lineHeight + 4;
   doc.setDrawColor(...lightGray);
   doc.setLineWidth(0.3);
   doc.roundedRect(margin, y, contentWidth, vetBoxHeight, 2, 2, "S");
 
-  // Labels inside box
+  // Labels inside box on same line
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(150, 150, 150);
   doc.text("Nome:", margin + 3, y + 5);
-  doc.text("Telefono:", margin + 3, y + 5 + lineHeight);
+  doc.text("Telefono:", margin + contentWidth / 2, y + 5);
 
-  // Lines
+  // Single line
   doc.setDrawColor(220, 220, 220);
   doc.line(margin + 3, y + 2 + lineHeight, pageWidth - margin - 3, y + 2 + lineHeight);
-  doc.line(margin + 3, y + 2 + lineHeight * 2, pageWidth - margin - 3, y + 2 + lineHeight * 2);
 
-  y += vetBoxHeight + 6;
+  y += vetBoxHeight + 4;
 
   // ══════════════════════════════════════════════
   // STAY PERIOD
