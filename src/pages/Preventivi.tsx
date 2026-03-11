@@ -21,6 +21,8 @@ import {
   useDeletePreventivo, useConfirmPreventivo,
 } from "@/hooks/usePreventivi";
 import { PreventivoDialog } from "@/components/preventivi/PreventivoDialog";
+import { usePaymentSplits } from "@/hooks/usePaymentSplits";
+import { generatePreventivoPDF } from "@/lib/generatePreventivoPDF";
 
 export default function Preventivi() {
   const { data: preventivi, isLoading } = usePreventivi();
