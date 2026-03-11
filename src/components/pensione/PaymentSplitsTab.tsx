@@ -156,10 +156,6 @@ export function PaymentSplitsTab() {
               <Input type="number" min={1} value={currentValidityDays} onChange={(e) => setValidityDays(Number(e.target.value))} />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>Testo footer personalizzato</Label>
-            <Input value={currentFooterText} onChange={(e) => setFooterText(e.target.value)} placeholder="Testo aggiuntivo in fondo al preventivo" />
-          </div>
           <Button onClick={handleSaveConfig} disabled={updateConfig.isPending}>
             <Save className="mr-2 h-4 w-4" /> Salva Configurazione
           </Button>
