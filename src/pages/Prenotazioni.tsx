@@ -436,7 +436,11 @@ export default function Prenotazioni() {
                                 ))}
                                 <DropdownMenuItem onClick={() => handleDownloadPDF(b)}>
                                   <FileDown className="h-4 w-4 mr-2" />
-                                  Scarica PDF
+                                  Scarica Preventivo PDF
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDownloadModuloAffido(b)}>
+                                  <FileDown className="h-4 w-4 mr-2" />
+                                  Scarica Modulo Affido
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-destructive focus:text-destructive"
