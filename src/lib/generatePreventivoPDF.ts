@@ -146,13 +146,14 @@ export async function generatePreventivoPDF(
       // Find tariff name from period
       const desc = `Soggiorno dal: ${fromDate} al: ${toDate}`;
       const numCats = preventivo.booking_cats?.length ?? 1;
+      const unitLabel = stayCalcType === "notti" ? "notti" : "gg";
       const pricePerDay = period.total > 0 && period.days > 0
         ? (period.total / (period.days * numCats))
         : 0;
       tableBody.push([
         desc,
         `€ ${pricePerDay.toFixed(2)}`,
-        String(period.days),
+        `${period.days} ${unitLabel}`,
         String(numCats),
         `€ ${Number(period.total).toFixed(2)}`,
       ]);
@@ -162,10 +163,11 @@ export async function generatePreventivoPDF(
     const checkInFormatted = format(parseISO(preventivo.check_in_date), "dd/MM/yyyy");
     const checkOutFormatted = format(parseISO(preventivo.check_out_date), "dd/MM/yyyy");
     const numCats = preventivo.booking_cats?.length ?? 1;
+    const unitLabel = stayCalcType === "notti" ? "notti" : "gg";
     tableBody.push([
       `Soggiorno dal: ${checkInFormatted} al: ${checkOutFormatted}`,
       `€ ${(Number(preventivo.total_amount) / numCats).toFixed(2)}`,
-      "-",
+      `- ${unitLabel}`,
       String(numCats),
       `€ ${Number(preventivo.total_amount).toFixed(2)}`,
     ]);
@@ -174,10 +176,21 @@ export async function generatePreventivoPDF(
   // Extra services
   if (breakdown?.extraServices?.length) {
     breakdown.extraServices.forEach((extra: any) => {
+      const tariffType = extra.tariff_type || extra.tariffType || "";
+      let qtyLabel: string;
+      if (tariffType === "extra_km") {
+        qtyLabel = `${extra.quantity ?? 1} km`;
+      } else if (tariffType === "extra_giornaliero") {
+        qtyLabel = `${extra.quantity ?? 1} gg`;
+      } else if (tariffType === "extra_una_tantum") {
+        qtyLabel = `${extra.quantity ?? 1} pz`;
+      } else {
+        qtyLabel = String(extra.quantity ?? 1);
+      }
       tableBody.push([
         extra.name,
         `€ ${Number(extra.unitCost || extra.fixedCost || 0).toFixed(2)}`,
-        String(extra.quantity ?? 1),
+        qtyLabel,
         "1",
         `€ ${Number(extra.total).toFixed(2)}`,
       ]);
@@ -186,7 +199,7 @@ export async function generatePreventivoPDF(
 
   autoTable(doc, {
     startY: y,
-    head: [["DESCRIZIONE SERVIZIO", "PREZZO", stayCalcType === "notti" ? "NOTTI" : "GIORNI", "PETS", "TOTALE"]],
+    head: [["DESCRIZIONE SERVIZIO", "PREZZO UNIT.", "Q.TÀ", "PETS", "TOTALE"]],
     body: tableBody,
     margin: { left: margin, right: margin },
     headStyles: {
