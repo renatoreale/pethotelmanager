@@ -97,6 +97,16 @@ export default function Preventivi() {
     setDeleting(null);
   };
 
+  const handleDownloadPDF = async (p: any) => {
+    if (!tenantConfig) return;
+    try {
+      await generatePreventivoPDF(p, tenantConfig as any, paymentSplits ?? [], stayCalcType);
+      toast.success("PDF generato");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nella generazione del PDF");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
