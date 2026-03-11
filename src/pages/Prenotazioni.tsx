@@ -30,6 +30,8 @@ import { useBookings, useTransitionBooking, useDeleteBooking, getTransitions } f
 import { useUpdatePreventivo } from "@/hooks/usePreventivi";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { usePaymentSplits } from "@/hooks/usePaymentSplits";
+import { generatePreventivoPDF } from "@/lib/generatePreventivoPDF";
 
 const STATUS_OPTIONS = [
   { value: "tutti", label: "Tutti gli stati" },
