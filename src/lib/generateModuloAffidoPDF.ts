@@ -372,7 +372,7 @@ export async function generateModuloAffidoPDF(
   }
 
   // ══════════════════════════════════════════════
-  // VETERINARIO DI FIDUCIA (writable box)
+  // VETERINARIO DI FIDUCIA (single row: nome + telefono)
   // ══════════════════════════════════════════════
   doc.setFontSize(10);
   doc.setTextColor(...accentColor);
@@ -380,24 +380,23 @@ export async function generateModuloAffidoPDF(
   doc.text("Veterinario di fiducia", margin, y);
   y += 5;
 
-  const vetBoxHeight = lineHeight * 2 + 4;
+  const vetBoxHeight = lineHeight + 4;
   doc.setDrawColor(...lightGray);
   doc.setLineWidth(0.3);
   doc.roundedRect(margin, y, contentWidth, vetBoxHeight, 2, 2, "S");
 
-  // Labels inside box
+  // Labels inside box on same line
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(150, 150, 150);
   doc.text("Nome:", margin + 3, y + 5);
-  doc.text("Telefono:", margin + 3, y + 5 + lineHeight);
+  doc.text("Telefono:", margin + contentWidth / 2, y + 5);
 
-  // Lines
+  // Single line
   doc.setDrawColor(220, 220, 220);
   doc.line(margin + 3, y + 2 + lineHeight, pageWidth - margin - 3, y + 2 + lineHeight);
-  doc.line(margin + 3, y + 2 + lineHeight * 2, pageWidth - margin - 3, y + 2 + lineHeight * 2);
 
-  y += vetBoxHeight + 6;
+  y += vetBoxHeight + 4;
 
   // ══════════════════════════════════════════════
   // STAY PERIOD
@@ -443,10 +442,10 @@ export async function generateModuloAffidoPDF(
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...primaryColor);
 
-    const colWidth = contentWidth / 2;
+    const colWidth = contentWidth / 3;
 
     extraPriceLists.forEach((extra, idx) => {
-      const col = idx % 2;
+      const col = idx % 3;
       const x = margin + col * colWidth;
 
       // Checkbox square
@@ -465,9 +464,9 @@ export async function generateModuloAffidoPDF(
         priceLabel = `€ ${Number(extra.fixed_cost ?? extra.price_per_day ?? 0).toFixed(2)}`;
       }
 
-      doc.text(`${extra.name}  (${priceLabel})`, x + 5, y);
+      doc.text(`${extra.name}  (${priceLabel})`, x + 5, y, { maxWidth: colWidth - 8 });
 
-      if (col === 1 || idx === extraPriceLists.length - 1) {
+      if (col === 2 || idx === extraPriceLists.length - 1) {
         y += 5;
       }
     });
@@ -477,17 +476,18 @@ export async function generateModuloAffidoPDF(
 
 
   // ══════════════════════════════════════════════
-  // SIGNATURE BLOCK (fixed at bottom)
+  // SIGNATURE BLOCK (dynamic, below content but above footer)
   // ══════════════════════════════════════════════
-  const footerStartY = pageHeight - 25;
-  const signatureStartY = footerStartY - 8 - 35;
+  const footerTopY = pageHeight - 30;
+  // Ensure signature is at least at current y, but not overlapping footer
+  const sigStartY = Math.max(y + 5, footerTopY - 25);
 
-  let sigY = signatureStartY;
+  let sigY = sigStartY;
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
   doc.setFont("helvetica", "italic");
   doc.text("Con la firma il proprietario certifica di accettare il regolamento e i requisiti sanitari.", margin, sigY);
-  sigY += 10;
+  sigY += 8;
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
