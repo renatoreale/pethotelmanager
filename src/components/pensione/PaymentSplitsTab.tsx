@@ -196,6 +196,7 @@ export function PaymentSplitsTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[60px]">Ordine</TableHead>
                     <TableHead>Etichetta</TableHead>
                     <TableHead>Percentuale</TableHead>
                     <TableHead>Momento</TableHead>
