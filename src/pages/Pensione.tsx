@@ -69,6 +69,7 @@ export default function Pensione() {
           <TabsTrigger value="listino" className="gap-2"><Euro className="h-4 w-4" /> Listino Prezzi</TabsTrigger>
           <TabsTrigger value="pagamenti" className="gap-2"><CreditCard className="h-4 w-4" /> Modalità Pagamento</TabsTrigger>
           <TabsTrigger value="cancellazione" className="gap-2"><Ban className="h-4 w-4" /> Cancellazione</TabsTrigger>
+          <TabsTrigger value="preventivo-config" className="gap-2"><FileText className="h-4 w-4" /> Config. Preventivo</TabsTrigger>
         </TabsList>
 
         <TabsContent value="anagrafica"><AnagraficaTab /></TabsContent>
