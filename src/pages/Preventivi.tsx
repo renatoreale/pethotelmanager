@@ -31,6 +31,7 @@ export default function Preventivi() {
   const deletePreventivo = useDeletePreventivo();
   const confirmPreventivo = useConfirmPreventivo();
   const { data: tenantConfig } = useTenantConfig();
+  const { data: paymentSplits } = usePaymentSplits();
 
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
