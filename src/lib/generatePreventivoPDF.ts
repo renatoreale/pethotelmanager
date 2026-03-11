@@ -321,15 +321,17 @@ export async function generatePreventivoPDF(
 
   const footerParts: string[] = [tenant.name];
   if (tenant.address) footerParts.push(tenant.address);
-  if (tenant.cap) footerParts.push(tenant.cap);
-  if (tenant.city) footerParts.push(tenant.city);
+  if (tenant.cap && tenant.city) footerParts.push(`${tenant.cap} ${tenant.city}`);
+  else if (tenant.city) footerParts.push(tenant.city);
+  else if (tenant.cap) footerParts.push(tenant.cap);
 
   doc.text(footerParts.join(" • "), pageWidth / 2, footerY, { align: "center" });
 
   const contactParts: string[] = [];
   if (tenant.phone) contactParts.push(`Tel: ${tenant.phone}`);
-  if (tenant.email) contactParts.push(`e-mail: ${tenant.email}`);
+  if (tenant.email) contactParts.push(`Email: ${tenant.email}`);
   if (tenant.pec) contactParts.push(`PEC: ${tenant.pec}`);
+  if (tenant.partita_iva) contactParts.push(`P.IVA: ${tenant.partita_iva}`);
 
   if (contactParts.length) {
     doc.text(contactParts.join(" • "), pageWidth / 2, footerY + 4, { align: "center" });
@@ -340,10 +342,6 @@ export async function generatePreventivoPDF(
     if (tenant.bank_name) ibanLine += ` presso ${tenant.bank_name}`;
     if (tenant.iban_holder) ibanLine += ` intestato a: ${tenant.iban_holder}`;
     doc.text(ibanLine, pageWidth / 2, footerY + 8, { align: "center" });
-  }
-
-  if (tenant.preventivo_footer_text) {
-    doc.text(tenant.preventivo_footer_text, pageWidth / 2, footerY + 12, { align: "center" });
   }
 
   // ── Download ──
