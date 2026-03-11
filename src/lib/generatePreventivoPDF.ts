@@ -288,14 +288,10 @@ export async function generatePreventivoPDF(
 
     paymentSplits.forEach((split) => {
       const amount = Math.round(grandTotal * Number(split.percentage)) / 100;
-      let line = `• € ${amount.toFixed(2)} come ${split.label} del ${Number(split.percentage)}%`;
+      let line = `• € ${amount.toFixed(2)} - ${split.label}, pari al ${Number(split.percentage)}% del totale`;
 
       if (split.payment_moment === "caparra") {
-        line += ` da versare entro il ${validUntil}`;
-      } else if (split.payment_moment === "check_in") {
-        line += `, pari al ${Number(split.percentage)}% del totale`;
-      } else if (split.payment_moment === "check_out") {
-        line += `, pari al ${Number(split.percentage)}% del totale`;
+        line += `, da versare entro il ${validUntil}`;
       }
 
       if (split.payment_method_note) {
