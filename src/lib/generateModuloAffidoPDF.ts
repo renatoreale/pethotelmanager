@@ -371,6 +371,8 @@ export async function generateModuloAffidoPDF(
     y += 2;
   }
 
+  y += 8;
+
   // ══════════════════════════════════════════════
   // VETERINARIO DI FIDUCIA (single row: nome + telefono)
   // ══════════════════════════════════════════════
@@ -378,7 +380,7 @@ export async function generateModuloAffidoPDF(
   doc.setTextColor(...accentColor);
   doc.setFont("helvetica", "bold");
   doc.text("Veterinario di fiducia", margin, y);
-  y += 5;
+  y += 2;
 
   const vetBoxHeight = lineHeight + 4;
   doc.setDrawColor(...lightGray);
