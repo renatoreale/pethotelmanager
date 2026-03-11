@@ -47,6 +47,12 @@ export function useUpdateTenantConfig() {
       num_doppie_gatti?: number;
       num_singole_cani?: number;
       num_doppie_cani?: number;
+      iban?: string | null;
+      bank_name?: string | null;
+      iban_holder?: string | null;
+      bollo_amount?: number;
+      preventivo_validity_days?: number;
+      preventivo_footer_text?: string | null;
     }) => {
       const { id, ...rest } = updates;
       const { data, error } = await supabase
