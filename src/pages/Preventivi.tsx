@@ -10,7 +10,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Search, CheckCircle2, FileText } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, CheckCircle2, FileText, Download } from "lucide-react";
 import { ConfirmPreventivoDialog } from "@/components/preventivi/ConfirmPreventivoDialog";
 import { toast } from "sonner";
 import { format, differenceInDays, parseISO } from "date-fns";
@@ -21,6 +21,8 @@ import {
   useDeletePreventivo, useConfirmPreventivo,
 } from "@/hooks/usePreventivi";
 import { PreventivoDialog } from "@/components/preventivi/PreventivoDialog";
+import { usePaymentSplits } from "@/hooks/usePaymentSplits";
+import { generatePreventivoPDF } from "@/lib/generatePreventivoPDF";
 
 export default function Preventivi() {
   const { data: preventivi, isLoading } = usePreventivi();
@@ -29,6 +31,7 @@ export default function Preventivi() {
   const deletePreventivo = useDeletePreventivo();
   const confirmPreventivo = useConfirmPreventivo();
   const { data: tenantConfig } = useTenantConfig();
+  const { data: paymentSplits } = usePaymentSplits();
 
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -92,6 +95,16 @@ export default function Preventivi() {
       toast.error(err.message || "Errore");
     }
     setDeleting(null);
+  };
+
+  const handleDownloadPDF = async (p: any) => {
+    if (!tenantConfig) return;
+    try {
+      await generatePreventivoPDF(p, tenantConfig as any, paymentSplits ?? [], stayCalcType);
+      toast.success("PDF generato");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nella generazione del PDF");
+    }
   };
 
   return (
@@ -167,6 +180,9 @@ export default function Preventivi() {
                         <TableCell className="text-sm">€ {Number(p.deposit_amount ?? 0).toFixed(2)}</TableCell>
                         <TableCell>
                           <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" title="Scarica PDF" onClick={() => handleDownloadPDF(p)}>
+                              <Download className="h-4 w-4 text-blue-600" />
+                            </Button>
                             <Button variant="ghost" size="icon" title="Conferma" onClick={() => setConfirming(p)}>
                               <CheckCircle2 className="h-4 w-4 text-green-600" />
                             </Button>

@@ -11,7 +11,7 @@ export function useTenantConfig() {
       if (!profile?.tenant_id) return null;
       const { data, error } = await supabase
         .from("tenants")
-        .select("id, name, slug, num_singole, num_doppie, max_cats, occupancy_rule_days, email, phone, address, cap, city, stay_calc_type, count_checkin_day, count_checkout_day, partita_iva, pec, titolare_name, logo_url, pet_type, num_singole_gatti, num_doppie_gatti, num_singole_cani, num_doppie_cani")
+        .select("id, name, slug, num_singole, num_doppie, max_cats, occupancy_rule_days, email, phone, address, cap, city, stay_calc_type, count_checkin_day, count_checkout_day, partita_iva, pec, titolare_name, logo_url, pet_type, num_singole_gatti, num_doppie_gatti, num_singole_cani, num_doppie_cani, iban, bank_name, iban_holder, bollo_amount, preventivo_validity_days, preventivo_footer_text")
         .eq("id", profile.tenant_id)
         .single();
       if (error) throw error;
@@ -47,6 +47,12 @@ export function useUpdateTenantConfig() {
       num_doppie_gatti?: number;
       num_singole_cani?: number;
       num_doppie_cani?: number;
+      iban?: string | null;
+      bank_name?: string | null;
+      iban_holder?: string | null;
+      bollo_amount?: number;
+      preventivo_validity_days?: number;
+      preventivo_footer_text?: string | null;
     }) => {
       const { id, ...rest } = updates;
       const { data, error } = await supabase

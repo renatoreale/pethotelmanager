@@ -740,6 +740,50 @@ export type Database = {
           },
         ]
       }
+      payment_split_configs: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          payment_method_note: string | null
+          payment_moment: string
+          percentage: number
+          sort_order: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          payment_method_note?: string | null
+          payment_moment?: string
+          percentage?: number
+          sort_order?: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          payment_method_note?: string | null
+          payment_moment?: string
+          percentage?: number
+          sort_order?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_split_configs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
@@ -1063,12 +1107,16 @@ export type Database = {
       tenants: {
         Row: {
           address: string | null
+          bank_name: string | null
+          bollo_amount: number
           cap: string | null
           city: string | null
           count_checkin_day: boolean
           count_checkout_day: boolean
           created_at: string
           email: string | null
+          iban: string | null
+          iban_holder: string | null
           id: string
           logo_url: string | null
           max_cats: number
@@ -1084,6 +1132,8 @@ export type Database = {
           pec: string | null
           pet_type: Database["public"]["Enums"]["pet_type"]
           phone: string | null
+          preventivo_footer_text: string | null
+          preventivo_validity_days: number
           slug: string
           stay_calc_type: string
           titolare_name: string | null
@@ -1091,12 +1141,16 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          bank_name?: string | null
+          bollo_amount?: number
           cap?: string | null
           city?: string | null
           count_checkin_day?: boolean
           count_checkout_day?: boolean
           created_at?: string
           email?: string | null
+          iban?: string | null
+          iban_holder?: string | null
           id?: string
           logo_url?: string | null
           max_cats?: number
@@ -1112,6 +1166,8 @@ export type Database = {
           pec?: string | null
           pet_type?: Database["public"]["Enums"]["pet_type"]
           phone?: string | null
+          preventivo_footer_text?: string | null
+          preventivo_validity_days?: number
           slug: string
           stay_calc_type?: string
           titolare_name?: string | null
@@ -1119,12 +1175,16 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          bank_name?: string | null
+          bollo_amount?: number
           cap?: string | null
           city?: string | null
           count_checkin_day?: boolean
           count_checkout_day?: boolean
           created_at?: string
           email?: string | null
+          iban?: string | null
+          iban_holder?: string | null
           id?: string
           logo_url?: string | null
           max_cats?: number
@@ -1140,6 +1200,8 @@ export type Database = {
           pec?: string | null
           pet_type?: Database["public"]["Enums"]["pet_type"]
           phone?: string | null
+          preventivo_footer_text?: string | null
+          preventivo_validity_days?: number
           slug?: string
           stay_calc_type?: string
           titolare_name?: string | null

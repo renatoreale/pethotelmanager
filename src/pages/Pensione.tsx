@@ -20,7 +20,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Settings, Clock, Euro, CreditCard, Plus, Pencil, Trash2, Save, RotateCcw, Ban, Building2, Upload, X } from "lucide-react";
+import { Settings, Clock, Euro, CreditCard, Plus, Pencil, Trash2, Save, RotateCcw, Ban, Building2, Upload, X, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -36,6 +36,7 @@ import {
   useTogglePaymentMethod, useDeletePaymentMethod, useUpdatePaymentMethod,
 } from "@/hooks/usePayments";
 import { CancellationPolicyTab } from "@/components/pensione/CancellationPolicyTab";
+import { PaymentSplitsTab } from "@/components/pensione/PaymentSplitsTab";
 
 const DAYS = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
 
@@ -68,6 +69,7 @@ export default function Pensione() {
           <TabsTrigger value="listino" className="gap-2"><Euro className="h-4 w-4" /> Listino Prezzi</TabsTrigger>
           <TabsTrigger value="pagamenti" className="gap-2"><CreditCard className="h-4 w-4" /> Modalità Pagamento</TabsTrigger>
           <TabsTrigger value="cancellazione" className="gap-2"><Ban className="h-4 w-4" /> Cancellazione</TabsTrigger>
+          <TabsTrigger value="preventivo-config" className="gap-2"><FileText className="h-4 w-4" /> Config. Preventivo</TabsTrigger>
         </TabsList>
 
         <TabsContent value="anagrafica"><AnagraficaTab /></TabsContent>
@@ -76,6 +78,7 @@ export default function Pensione() {
         <TabsContent value="listino"><ListinoTab /></TabsContent>
         <TabsContent value="pagamenti"><PaymentMethodsTab /></TabsContent>
         <TabsContent value="cancellazione"><CancellationPolicyTab /></TabsContent>
+        <TabsContent value="preventivo-config"><PaymentSplitsTab /></TabsContent>
       </Tabs>
     </div>
   );
