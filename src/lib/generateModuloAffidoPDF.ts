@@ -71,7 +71,7 @@ export async function generateModuloAffidoPDF(
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
   const contentWidth = pageWidth - margin * 2;
-  let y = 20;
+  let y = 10;
 
   // ── Colors ──
   const primaryColor: [number, number, number] = [60, 60, 60];
@@ -498,8 +498,7 @@ export async function generateModuloAffidoPDF(
   // ══════════════════════════════════════════════
   // SIGNATURE BLOCK (dynamic, below content but above footer)
   // ══════════════════════════════════════════════
-  const footerTopY = pageHeight - 30;
-  // Ensure signature is at least at current y, but not overlapping footer
+  const footerTopY = pageHeight - 18;
   const sigStartY = Math.max(y + 5, footerTopY - 25);
 
   let sigY = sigStartY;
@@ -519,7 +518,7 @@ export async function generateModuloAffidoPDF(
   // ══════════════════════════════════════════════
   // FOOTER (without IBAN/bank)
   // ══════════════════════════════════════════════
-  const footerY = pageHeight - 25;
+  const footerY = pageHeight - 14;
   doc.setDrawColor(...lightGray);
   doc.setLineWidth(0.3);
   doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
