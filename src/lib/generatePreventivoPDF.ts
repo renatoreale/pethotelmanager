@@ -96,37 +96,11 @@ export async function generatePreventivoPDF(
   const grandTotal = subTotal + bolloAmount;
 
   // ══════════════════════════════════════════════
-  // STEP 1: Calculate payment section height (fixed at bottom)
+  // STEP 1: Calculate signature block height (fixed at bottom above footer)
   // ══════════════════════════════════════════════
   const footerStartY = pageHeight - 25; // footer area
-  let paymentBlockHeight = 0;
-
-  if (paymentSplits.length > 0) {
-    // Title
-    paymentBlockHeight += 8;
-    // Each split line (estimate ~8mm per line)
-    paymentSplits.forEach((split) => {
-      const amount = Math.round(grandTotal * Number(split.percentage)) / 100;
-      let line = `• € ${amount.toFixed(2)} come ${split.label} del ${Number(split.percentage)}%`;
-      if (split.payment_moment === "caparra") line += ` da versare entro il ${validUntil}`;
-      else if (split.payment_moment === "check_in" || split.payment_moment === "check_out") line += `, pari al ${Number(split.percentage)}% del totale`;
-      if (split.payment_method_note) line += ` ${split.payment_method_note}`;
-      if (split.payment_moment === "caparra" && preventivo.booking_number) {
-        const petNamesShort = petNames || "—";
-        line += ` indicando come causale: "prev. ${preventivo.booking_number} - ${petLabel.toLowerCase().replace("nome del ", "")} ${petNamesShort}"`;
-      }
-      const splitLines = doc.splitTextToSize(line, contentWidth - 5);
-      paymentBlockHeight += splitLines.length * 5 + 3;
-    });
-    // Disclaimer lines
-    paymentBlockHeight += 12;
-  }
-
-  // Signature block height
-  const signatureBlockHeight = 30;
-
-  // The Y where payment section must start
-  const paymentStartY = footerStartY - 5 - paymentBlockHeight - signatureBlockHeight;
+  const signatureBlockHeight = 28;
+  const signatureStartY = footerStartY - 5 - signatureBlockHeight;
 
   // ══════════════════════════════════════════════
   // STEP 2: Header - Logo centered with name below
