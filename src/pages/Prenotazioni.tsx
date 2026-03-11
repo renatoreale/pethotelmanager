@@ -16,7 +16,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, CalendarDays, MoreHorizontal, Pencil, CalendarClock, CreditCard, ChevronDown, Trash2 } from "lucide-react";
+import { Search, CalendarDays, MoreHorizontal, Pencil, CalendarClock, CreditCard, ChevronDown, Trash2, FileDown } from "lucide-react";
 import { BookingDrillDown } from "@/components/BookingDrillDown";
 import { AutocompleteSearch } from "@/components/AutocompleteSearch";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
@@ -30,6 +30,8 @@ import { useBookings, useTransitionBooking, useDeleteBooking, getTransitions } f
 import { useUpdatePreventivo } from "@/hooks/usePreventivi";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { usePaymentSplits } from "@/hooks/usePaymentSplits";
+import { generatePreventivoPDF } from "@/lib/generatePreventivoPDF";
 
 const STATUS_OPTIONS = [
   { value: "tutti", label: "Tutti gli stati" },
@@ -89,6 +91,7 @@ export default function Prenotazioni() {
   const deleteBooking = useDeleteBooking();
   const updatePreventivo = useUpdatePreventivo();
   const { data: tenantConfig } = useTenantConfig();
+  const { data: paymentSplits } = usePaymentSplits();
   const { user, profile } = useAuth();
 
   const stayCalcType = (tenantConfig as any)?.stay_calc_type ?? "notti";
@@ -244,6 +247,16 @@ export default function Prenotazioni() {
       toast.error(err.message || "Errore nella transizione");
     }
     setTransitioning(null);
+  };
+
+  const handleDownloadPDF = async (b: any) => {
+    if (!tenantConfig) return;
+    try {
+      await generatePreventivoPDF(b, tenantConfig as any, paymentSplits ?? [], stayCalcType);
+      toast.success("PDF generato");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nella generazione del PDF");
+    }
   };
 
   return (
@@ -410,6 +423,10 @@ export default function Prenotazioni() {
                                     {t.label}
                                   </DropdownMenuItem>
                                 ))}
+                                <DropdownMenuItem onClick={() => handleDownloadPDF(b)}>
+                                  <FileDown className="h-4 w-4 mr-2" />
+                                  Scarica PDF
+                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-destructive focus:text-destructive"
                                   onClick={() => setDeleting({ id: b.id, bookingNumber: b.booking_number })}
