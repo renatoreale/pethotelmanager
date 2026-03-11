@@ -183,7 +183,7 @@ export async function generatePreventivoPDF(
       } else if (tariffType === "extra_giornaliero") {
         qtyLabel = `${extra.quantity ?? 1} gg`;
       } else if (tariffType === "extra_una_tantum") {
-        qtyLabel = `${extra.quantity ?? 1} pz`;
+        qtyLabel = `${extra.quantity ?? 1} v.`;
       } else {
         qtyLabel = String(extra.quantity ?? 1);
       }
