@@ -270,9 +270,9 @@ export async function generatePreventivoPDF(
   });
 
   // ══════════════════════════════════════════════
-  // STEP 4: Payment modalities (fixed at bottom)
+  // STEP 4: Payment modalities (flows after body with spacing)
   // ══════════════════════════════════════════════
-  y = paymentStartY;
+  y += 8;
 
   if (paymentSplits.length > 0) {
     doc.setFont("helvetica", "bold");
@@ -320,18 +320,20 @@ export async function generatePreventivoPDF(
     y += 10;
   }
 
-  // ── Signature block ──
+  // ══════════════════════════════════════════════
+  // STEP 5: Signature block (fixed at bottom, right-aligned)
+  // ══════════════════════════════════════════════
+  let sigY = signatureStartY;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(...primaryColor);
-  doc.text("Grazie per la fiducia!", margin, y);
-  y += 8;
-  doc.text(`Li ${createdDate}`, margin, y);
-  y += 10;
-  doc.text("Per accettazione", margin, y);
-  y += 8;
-  doc.text("Data: _______________", margin, y);
-  doc.text("Firma: _______________", margin + 70, y);
+  doc.text("Grazie per la fiducia!", margin, sigY);
+  sigY += 10;
+  doc.text(`Li ${createdDate}`, pageWidth - margin, sigY, { align: "right" });
+  sigY += 7;
+  doc.text("Per accettazione", pageWidth - margin, sigY, { align: "right" });
+  sigY += 7;
+  doc.text("Firma: _______________", pageWidth - margin, sigY, { align: "right" });
 
   // ══════════════════════════════════════════════
   // STEP 5: Footer (always at very bottom)
