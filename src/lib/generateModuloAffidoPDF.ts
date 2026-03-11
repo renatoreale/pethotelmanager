@@ -220,43 +220,55 @@ export async function generateModuloAffidoPDF(
   y += 10;
 
   // ══════════════════════════════════════════════
-  // CAT TABLE(S)
+  // PET TABLE (all pets in single table body)
   // ══════════════════════════════════════════════
-  for (let ci = 0; ci < Math.max(fullCats.length, 1); ci++) {
-    const cat = fullCats[ci];
-
-    if (ci > 0) y += 4;
-
-    // Build cat row – empty string if value missing (no dash/line)
+  const tableRows = fullCats.map((cat: any) => {
     const genderLabel = cat?.gender === "M" ? "Maschio" : cat?.gender === "F" ? "Femmina" : cat?.gender ?? "";
     const birthDate = cat?.birth_date ? format(parseISO(cat.birth_date), "dd/MM/yyyy") : "";
     const neuteredLabel = cat?.is_neutered === true ? "Sì" : cat?.is_neutered === false ? "No" : "";
+    const needsDouble = cat?.needs_double_cage ? "Sì" : "No";
+    const petTypeLabel = cat?.pet_type === "cani" ? "Cane" : cat?.pet_type === "gatti" ? "Gatto" : "";
+    return [
+      cat?.name ?? "",
+      petTypeLabel,
+      cat?.microchip ?? "",
+      genderLabel,
+      birthDate,
+      cat?.breed ?? "",
+      cat?.color ?? "",
+      cat?.weight_kg ? `${cat.weight_kg}` : "",
+      neuteredLabel,
+      needsDouble,
+    ];
+  });
 
-    autoTable(doc, {
-      startY: y,
-      head: [["Nome", "Microchip", "Sesso", "Data di nascita", "Razza", "Colore", "Peso (kg)", "Sterilizzato/a"]],
-      body: [[
-        cat?.name ?? "",
-        cat?.microchip ?? "",
-        genderLabel,
-        birthDate,
-        cat?.breed ?? "",
-        cat?.color ?? "",
-        cat?.weight_kg ? `${cat.weight_kg} kg` : "",
-        neuteredLabel,
-      ]],
-      margin: { left: margin, right: margin },
-      headStyles: {
-        fillColor: accentColor,
-        textColor: [255, 255, 255],
-        fontSize: 8,
-        fontStyle: "bold",
-      },
-      bodyStyles: {
-        fontSize: 8,
-        textColor: primaryColor,
-      },
-      columnStyles: {
+  if (tableRows.length === 0) {
+    tableRows.push(["", "", "", "", "", "", "", "", "", ""]);
+  }
+
+  const showTipoCol = tenant.pet_type === "entrambi";
+  const headers = showTipoCol
+    ? [["Nome", "Tipo", "Microchip", "Sesso", "Data di nascita", "Razza", "Colore", "Peso (kg)", "Sterilizzato/a", "Casetta doppia"]]
+    : [["Nome", "Microchip", "Sesso", "Data di nascita", "Razza", "Colore", "Peso (kg)", "Sterilizzato/a", "Casetta doppia"]];
+
+  const bodyRows = showTipoCol
+    ? tableRows
+    : tableRows.map(r => [r[0], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9]]);
+
+  const colStyles: any = showTipoCol
+    ? {
+        0: { cellWidth: 20, fontStyle: "bold" },
+        1: { cellWidth: 14, halign: "center" },
+        2: { cellWidth: 26 },
+        3: { halign: "center", cellWidth: 14 },
+        4: { halign: "center", cellWidth: 20 },
+        5: { cellWidth: "auto" },
+        6: { cellWidth: 16 },
+        7: { halign: "center", cellWidth: 14 },
+        8: { halign: "center", cellWidth: 18 },
+        9: { halign: "center", cellWidth: 18 },
+      }
+    : {
         0: { cellWidth: 22, fontStyle: "bold" },
         1: { cellWidth: 28 },
         2: { halign: "center", cellWidth: 15 },
@@ -265,13 +277,28 @@ export async function generateModuloAffidoPDF(
         5: { cellWidth: 18 },
         6: { halign: "center", cellWidth: 16 },
         7: { halign: "center", cellWidth: 20 },
-      },
-    });
+        8: { halign: "center", cellWidth: 20 },
+      };
 
-    y = (doc as any).lastAutoTable.finalY + 3;
-  }
+  autoTable(doc, {
+    startY: y,
+    head: headers,
+    body: bodyRows,
+    margin: { left: margin, right: margin },
+    headStyles: {
+      fillColor: accentColor,
+      textColor: [255, 255, 255],
+      fontSize: 7,
+      fontStyle: "bold",
+    },
+    bodyStyles: {
+      fontSize: 7.5,
+      textColor: primaryColor,
+    },
+    columnStyles: colStyles,
+  });
 
-  y += 4;
+  y = (doc as any).lastAutoTable.finalY + 4;
 
   // ══════════════════════════════════════════════
   // PECULIARITÀ E SEGNALAZIONI (writable box)
