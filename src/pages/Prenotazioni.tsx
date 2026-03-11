@@ -423,6 +423,10 @@ export default function Prenotazioni() {
                                     {t.label}
                                   </DropdownMenuItem>
                                 ))}
+                                <DropdownMenuItem onClick={() => handleDownloadPDF(b)}>
+                                  <FileDown className="h-4 w-4 mr-2" />
+                                  Scarica PDF
+                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-destructive focus:text-destructive"
                                   onClick={() => setDeleting({ id: b.id, bookingNumber: b.booking_number })}
