@@ -329,9 +329,9 @@ export async function generatePreventivoPDF(
   doc.setTextColor(...primaryColor);
   doc.text("Grazie per la fiducia!", margin, sigY);
   sigY += 10;
-  doc.text(`Li ${createdDate}`, pageWidth - margin, sigY, { align: "right" });
-  sigY += 7;
   doc.text("Per accettazione", pageWidth - margin, sigY, { align: "right" });
+  sigY += 7;
+  doc.text("Data: _______________", pageWidth - margin, sigY, { align: "right" });
   sigY += 7;
   doc.text("Firma: _______________", pageWidth - margin, sigY, { align: "right" });
 
