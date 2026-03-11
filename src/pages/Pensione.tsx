@@ -78,6 +78,7 @@ export default function Pensione() {
         <TabsContent value="listino"><ListinoTab /></TabsContent>
         <TabsContent value="pagamenti"><PaymentMethodsTab /></TabsContent>
         <TabsContent value="cancellazione"><CancellationPolicyTab /></TabsContent>
+        <TabsContent value="preventivo-config"><PaymentSplitsTab /></TabsContent>
       </Tabs>
     </div>
   );
