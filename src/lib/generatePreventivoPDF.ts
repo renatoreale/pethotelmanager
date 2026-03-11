@@ -136,32 +136,34 @@ export async function generatePreventivoPDF(
     logoBase64 = await loadImageAsBase64(tenant.logo_url);
   }
 
+  const logoSize = 22;
   if (logoBase64) {
     try {
-      doc.addImage(logoBase64, "PNG", margin, y, 22, 22);
+      doc.addImage(logoBase64, "PNG", margin, y, logoSize, logoSize);
     } catch { /* skip */ }
   }
 
-  // Preventivo number top-right
-  doc.setFontSize(10);
-  doc.setTextColor(...lightGray);
-  doc.text(`Preventivo: ${preventivo.booking_number}`, pageWidth - margin, y + 3, { align: "right" });
-
-  // Client info top-right, below preventivo number
-  doc.setFontSize(10);
-  doc.setTextColor(...primaryColor);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Intestato a: ${clientName}`, pageWidth - margin, y + 10, { align: "right" });
-  doc.text(`${petLabel}: ${petNames}`, pageWidth - margin, y + 16, { align: "right" });
-
-  // Tenant name below logo
-  const nameY = logoBase64 ? y + 25 : y + 8;
+  // Tenant name next to logo, vertically centered with logo, with spacing
+  const nameX = logoBase64 ? margin + logoSize + 6 : margin;
+  const nameCenterY = logoBase64 ? y + logoSize / 2 + 1 : y + 8;
   doc.setFontSize(13);
   doc.setTextColor(...accentColor);
   doc.setFont("helvetica", "bold");
-  doc.text(tenant.name, margin, nameY);
+  doc.text(tenant.name, nameX, nameCenterY);
 
-  y = Math.max(nameY + 5, y + 28);
+  // Preventivo number + client info top-right, starting at logo vertical midpoint
+  const rightInfoY = logoBase64 ? y + logoSize / 2 - 3 : y + 5;
+  doc.setFontSize(10);
+  doc.setTextColor(...lightGray);
+  doc.text(`Preventivo: ${preventivo.booking_number}`, pageWidth - margin, rightInfoY, { align: "right" });
+
+  doc.setFontSize(10);
+  doc.setTextColor(...primaryColor);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Intestato a: ${clientName}`, pageWidth - margin, rightInfoY + 7, { align: "right" });
+  doc.text(`${petLabel}: ${petNames}`, pageWidth - margin, rightInfoY + 13, { align: "right" });
+
+  y = (logoBase64 ? y + logoSize : y + 15) + 5;
 
   // ── Separator ──
   doc.setDrawColor(...accentColor);
@@ -174,9 +176,8 @@ export async function generatePreventivoPDF(
   doc.setTextColor(...primaryColor);
   doc.setFont("helvetica", "normal");
   doc.text(`Data emissione: ${createdDate}`, margin, y);
-  y += 6;
-  doc.text(`Valido fino al: ${validUntil}`, margin, y);
-  y += 10;
+  doc.text(`Valido fino al: ${validUntil}`, pageWidth - margin, y, { align: "right" });
+  y += 12;
 
   // ══════════════════════════════════════════════
   // STEP 3: Services table (dynamic body)
