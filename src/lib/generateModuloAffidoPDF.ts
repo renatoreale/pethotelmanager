@@ -235,13 +235,13 @@ export async function generateModuloAffidoPDF(
     y += 6;
 
     // Build cat row – empty string if value missing (no dash/line)
-    const genderLabel = cat?.gender === "M" ? "M" : cat?.gender === "F" ? "F" : cat?.gender ?? "";
+    const genderLabel = cat?.gender === "M" ? "Maschio" : cat?.gender === "F" ? "Femmina" : cat?.gender ?? "";
     const birthDate = cat?.birth_date ? format(parseISO(cat.birth_date), "dd/MM/yyyy") : "";
     const neuteredLabel = cat?.is_neutered === true ? "Sì" : cat?.is_neutered === false ? "No" : "";
 
     autoTable(doc, {
       startY: y,
-      head: [["Microchip", "Sesso", "Data nascita", "Razza", "Colore", "Peso", "Sterilizzato"]],
+      head: [["Microchip", "Sesso", "Data di nascita", "Razza", "Colore", "Peso (kg)", "Sterilizzato/a"]],
       body: [[
         cat?.microchip ?? "",
         genderLabel,
