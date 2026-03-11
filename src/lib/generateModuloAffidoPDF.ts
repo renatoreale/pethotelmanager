@@ -518,7 +518,7 @@ export async function generateModuloAffidoPDF(
   // ══════════════════════════════════════════════
   // FOOTER (without IBAN/bank)
   // ══════════════════════════════════════════════
-  const footerY = pageHeight - 25;
+  const footerY = pageHeight - 14;
   doc.setDrawColor(...lightGray);
   doc.setLineWidth(0.3);
   doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
