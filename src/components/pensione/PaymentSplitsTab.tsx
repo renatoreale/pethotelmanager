@@ -115,7 +115,7 @@ export function PaymentSplitsTab() {
         ...(({ iban: currentIban || null, bank_name: currentBankName || null, iban_holder: currentIbanHolder || null, bollo_amount: currentBolloAmount, preventivo_validity_days: currentValidityDays }) as any),
       });
       toast.success("Configurazione preventivo salvata");
-      setIban(null); setBankName(null); setIbanHolder(null); setBolloAmount(null); setValidityDays(null); setFooterText(null);
+      setIban(null); setBankName(null); setIbanHolder(null); setBolloAmount(null); setValidityDays(null);
     } catch (err: any) {
       toast.error(err.message || "Errore");
     }
