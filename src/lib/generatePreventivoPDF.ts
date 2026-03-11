@@ -91,7 +91,8 @@ export async function generatePreventivoPDF(
   const seasonTotal = breakdown?.seasonPeriods?.reduce((s: number, p: any) => s + Number(p.total), 0) ?? Number(preventivo.total_amount);
   const extrasTotal = breakdown?.extraServices?.reduce((s: number, e: any) => s + Number(e.total), 0) ?? 0;
   const discountTotal = breakdown?.discounts?.reduce((s: number, d: any) => s + Number(d.amount), 0) ?? 0;
-  const bolloAmount = Number(tenant.bollo_amount ?? 0);
+  const bolloUnitAmount = Number(tenant.bollo_amount ?? 2);
+  const bolloAmount = bolloUnitAmount * (paymentSplits.length || 1);
   const subTotal = seasonTotal + extrasTotal - discountTotal;
   const grandTotal = subTotal + bolloAmount;
 
