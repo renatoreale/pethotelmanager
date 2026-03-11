@@ -475,37 +475,6 @@ export async function generateModuloAffidoPDF(
     y += 3;
   }
 
-  // ══════════════════════════════════════════════
-  // TOTALE
-  // ══════════════════════════════════════════════
-  doc.setDrawColor(...lightGray);
-  doc.setLineWidth(0.3);
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 6;
-
-  doc.setFontSize(11);
-  doc.setTextColor(...primaryColor);
-  doc.setFont("helvetica", "bold");
-  doc.text("Totale soggiorno:", margin, y);
-  doc.text(`€ ${Number(booking.total_amount ?? 0).toFixed(2)}`, pageWidth - margin, y, { align: "right" });
-  y += 10;
-
-  // ══════════════════════════════════════════════
-  // BOOKING NOTES
-  // ══════════════════════════════════════════════
-  if (booking.notes) {
-    doc.setFontSize(10);
-    doc.setTextColor(...accentColor);
-    doc.setFont("helvetica", "bold");
-    doc.text("Note:", margin, y);
-    y += 5;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(...primaryColor);
-    const noteLines = doc.splitTextToSize(booking.notes, contentWidth);
-    doc.text(noteLines, margin, y);
-    y += noteLines.length * 4.5 + 5;
-  }
 
   // ══════════════════════════════════════════════
   // SIGNATURE BLOCK (fixed at bottom)
