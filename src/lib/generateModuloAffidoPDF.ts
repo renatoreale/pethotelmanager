@@ -226,7 +226,6 @@ export async function generateModuloAffidoPDF(
     const genderLabel = cat?.gender === "M" ? "Maschio" : cat?.gender === "F" ? "Femmina" : cat?.gender ?? "";
     const birthDate = cat?.birth_date ? format(parseISO(cat.birth_date), "dd/MM/yyyy") : "";
     const neuteredLabel = cat?.is_neutered === true ? "Sì" : cat?.is_neutered === false ? "No" : "";
-    const needsDouble = cat?.needs_double_cage ? "Sì" : "No";
     const petTypeLabel = cat?.pet_type === "cani" ? "Cane" : cat?.pet_type === "gatti" ? "Gatto" : "";
     return [
       cat?.name ?? "",
@@ -238,46 +237,43 @@ export async function generateModuloAffidoPDF(
       cat?.color ?? "",
       cat?.weight_kg ? `${cat.weight_kg}` : "",
       neuteredLabel,
-      needsDouble,
     ];
   });
 
   if (tableRows.length === 0) {
-    tableRows.push(["", "", "", "", "", "", "", "", "", ""]);
+    tableRows.push(["", "", "", "", "", "", "", "", ""]);
   }
 
   const showTipoCol = tenant.pet_type === "entrambi";
   const headers = showTipoCol
-    ? [["Nome", "Tipo", "Microchip", "Sesso", "Data di nascita", "Razza", "Colore", "Peso (kg)", "Sterilizzato/a", "Casetta doppia"]]
-    : [["Nome", "Microchip", "Sesso", "Data di nascita", "Razza", "Colore", "Peso (kg)", "Sterilizzato/a", "Casetta doppia"]];
+    ? [["Nome", "Tipo", "Microchip", "Sesso", "Data di nascita", "Razza", "Colore", "Peso (kg)", "Sterilizzato/a"]]
+    : [["Nome", "Microchip", "Sesso", "Data di nascita", "Razza", "Colore", "Peso (kg)", "Sterilizzato/a"]];
 
   const bodyRows = showTipoCol
     ? tableRows
-    : tableRows.map(r => [r[0], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9]]);
+    : tableRows.map(r => [r[0], r[2], r[3], r[4], r[5], r[6], r[7], r[8]]);
 
   const colStyles: any = showTipoCol
     ? {
-        0: { cellWidth: 20, fontStyle: "bold" },
+        0: { cellWidth: 22, fontStyle: "bold" },
         1: { cellWidth: 14, halign: "center" },
-        2: { cellWidth: 26 },
-        3: { halign: "center", cellWidth: 14 },
-        4: { halign: "center", cellWidth: 20 },
+        2: { cellWidth: 28 },
+        3: { halign: "center", cellWidth: 15 },
+        4: { halign: "center", cellWidth: 22 },
         5: { cellWidth: "auto" },
-        6: { cellWidth: 16 },
-        7: { halign: "center", cellWidth: 14 },
-        8: { halign: "center", cellWidth: 18 },
-        9: { halign: "center", cellWidth: 18 },
+        6: { cellWidth: 18 },
+        7: { halign: "center", cellWidth: 16 },
+        8: { halign: "center", cellWidth: 20 },
       }
     : {
-        0: { cellWidth: 22, fontStyle: "bold" },
-        1: { cellWidth: 28 },
-        2: { halign: "center", cellWidth: 15 },
-        3: { halign: "center", cellWidth: 22 },
+        0: { cellWidth: 24, fontStyle: "bold" },
+        1: { cellWidth: 30 },
+        2: { halign: "center", cellWidth: 16 },
+        3: { halign: "center", cellWidth: 24 },
         4: { cellWidth: "auto" },
-        5: { cellWidth: 18 },
-        6: { halign: "center", cellWidth: 16 },
-        7: { halign: "center", cellWidth: 20 },
-        8: { halign: "center", cellWidth: 20 },
+        5: { cellWidth: 20 },
+        6: { halign: "center", cellWidth: 18 },
+        7: { halign: "center", cellWidth: 22 },
       };
 
   autoTable(doc, {
