@@ -32,6 +32,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePaymentSplits } from "@/hooks/usePaymentSplits";
 import { generatePreventivoPDF } from "@/lib/generatePreventivoPDF";
+import { generateModuloAffidoPDF } from "@/lib/generateModuloAffidoPDF";
 
 const STATUS_OPTIONS = [
   { value: "tutti", label: "Tutti gli stati" },
