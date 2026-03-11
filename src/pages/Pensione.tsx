@@ -209,6 +209,7 @@ function AnagraficaTab() {
                 {uploading ? "Caricamento..." : "Carica logo"}
               </Button>
               <p className="text-xs text-muted-foreground mt-1">PNG, JPG o SVG. Max 2MB.</p>
+              <p className="text-xs text-muted-foreground">Dimensione consigliata: <strong>400×400 px</strong>, risoluzione <strong>150 DPI</strong>. Formato quadrato per la migliore resa nei documenti PDF.</p>
             </div>
           </div>
         </div>
