@@ -180,6 +180,9 @@ export default function Preventivi() {
                         <TableCell className="text-sm">€ {Number(p.deposit_amount ?? 0).toFixed(2)}</TableCell>
                         <TableCell>
                           <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" title="Scarica PDF" onClick={() => handleDownloadPDF(p)}>
+                              <Download className="h-4 w-4 text-blue-600" />
+                            </Button>
                             <Button variant="ghost" size="icon" title="Conferma" onClick={() => setConfirming(p)}>
                               <CheckCircle2 className="h-4 w-4 text-green-600" />
                             </Button>
