@@ -249,6 +249,16 @@ export default function Prenotazioni() {
     setTransitioning(null);
   };
 
+  const handleDownloadPDF = async (b: any) => {
+    if (!tenantConfig) return;
+    try {
+      await generatePreventivoPDF(b, tenantConfig as any, paymentSplits ?? [], stayCalcType);
+      toast.success("PDF generato");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nella generazione del PDF");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
