@@ -199,7 +199,7 @@ export async function generatePreventivoPDF(
 
   autoTable(doc, {
     startY: y,
-    head: [["DESCRIZIONE SERVIZIO", "PREZZO", stayCalcType === "notti" ? "NOTTI" : "GIORNI", "PETS", "TOTALE"]],
+    head: [["DESCRIZIONE SERVIZIO", "PREZZO UNIT.", "Q.TÀ", "PETS", "TOTALE"]],
     body: tableBody,
     margin: { left: margin, right: margin },
     headStyles: {
