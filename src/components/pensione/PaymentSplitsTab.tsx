@@ -39,7 +39,7 @@ export function PaymentSplitsTab() {
   const [ibanHolder, setIbanHolder] = useState<string | null>(null);
   const [bolloAmount, setBolloAmount] = useState<number | null>(null);
   const [validityDays, setValidityDays] = useState<number | null>(null);
-  const [footerText, setFooterText] = useState<string | null>(null);
+  
 
   const currentIban = iban ?? (config as any)?.iban ?? "";
   const currentBankName = bankName ?? (config as any)?.bank_name ?? "";
