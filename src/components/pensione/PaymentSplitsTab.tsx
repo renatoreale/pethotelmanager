@@ -90,7 +90,7 @@ export function PaymentSplitsTab() {
         label: formLabel,
         percentage: formPercentage,
         payment_moment: formMoment,
-        sort_order: editing?.sort_order ?? (splits?.length ?? 0),
+        sort_order: formSortOrder,
         payment_method_note: formNote || null,
       });
       toast.success(editing ? "Rata aggiornata" : "Rata aggiunta");
