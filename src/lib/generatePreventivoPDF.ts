@@ -242,7 +242,13 @@ export async function generatePreventivoPDF(
     },
   });
 
-  y = (doc as any).lastAutoTable.finalY + 6;
+  y = (doc as any).lastAutoTable.finalY + 4;
+
+  // ── Thin separator line ──
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.3);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 6;
 
   // ── Totals ──
   doc.setFont("helvetica", "normal");
