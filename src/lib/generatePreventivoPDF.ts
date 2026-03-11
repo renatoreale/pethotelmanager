@@ -163,10 +163,11 @@ export async function generatePreventivoPDF(
     const checkInFormatted = format(parseISO(preventivo.check_in_date), "dd/MM/yyyy");
     const checkOutFormatted = format(parseISO(preventivo.check_out_date), "dd/MM/yyyy");
     const numCats = preventivo.booking_cats?.length ?? 1;
+    const unitLabel = stayCalcType === "notti" ? "notti" : "gg";
     tableBody.push([
       `Soggiorno dal: ${checkInFormatted} al: ${checkOutFormatted}`,
       `€ ${(Number(preventivo.total_amount) / numCats).toFixed(2)}`,
-      "-",
+      `- ${unitLabel}`,
       String(numCats),
       `€ ${Number(preventivo.total_amount).toFixed(2)}`,
     ]);
