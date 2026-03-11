@@ -39,14 +39,14 @@ export function PaymentSplitsTab() {
   const [ibanHolder, setIbanHolder] = useState<string | null>(null);
   const [bolloAmount, setBolloAmount] = useState<number | null>(null);
   const [validityDays, setValidityDays] = useState<number | null>(null);
-  const [footerText, setFooterText] = useState<string | null>(null);
+  
 
   const currentIban = iban ?? (config as any)?.iban ?? "";
   const currentBankName = bankName ?? (config as any)?.bank_name ?? "";
   const currentIbanHolder = ibanHolder ?? (config as any)?.iban_holder ?? "";
   const currentBolloAmount = bolloAmount ?? (config as any)?.bollo_amount ?? 0;
   const currentValidityDays = validityDays ?? (config as any)?.preventivo_validity_days ?? 5;
-  const currentFooterText = footerText ?? (config as any)?.preventivo_footer_text ?? "";
+  
 
   // New split form
   const [editing, setEditing] = useState<any>(null);
@@ -112,10 +112,10 @@ export function PaymentSplitsTab() {
     try {
       await updateConfig.mutateAsync({
         id: config.id,
-        ...(({ iban: currentIban || null, bank_name: currentBankName || null, iban_holder: currentIbanHolder || null, bollo_amount: currentBolloAmount, preventivo_validity_days: currentValidityDays, preventivo_footer_text: currentFooterText || null }) as any),
+        ...(({ iban: currentIban || null, bank_name: currentBankName || null, iban_holder: currentIbanHolder || null, bollo_amount: currentBolloAmount, preventivo_validity_days: currentValidityDays }) as any),
       });
       toast.success("Configurazione preventivo salvata");
-      setIban(null); setBankName(null); setIbanHolder(null); setBolloAmount(null); setValidityDays(null); setFooterText(null);
+      setIban(null); setBankName(null); setIbanHolder(null); setBolloAmount(null); setValidityDays(null);
     } catch (err: any) {
       toast.error(err.message || "Errore");
     }
@@ -155,10 +155,6 @@ export function PaymentSplitsTab() {
               <Label>Validità preventivo (giorni)</Label>
               <Input type="number" min={1} value={currentValidityDays} onChange={(e) => setValidityDays(Number(e.target.value))} />
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Testo footer personalizzato</Label>
-            <Input value={currentFooterText} onChange={(e) => setFooterText(e.target.value)} placeholder="Testo aggiuntivo in fondo al preventivo" />
           </div>
           <Button onClick={handleSaveConfig} disabled={updateConfig.isPending}>
             <Save className="mr-2 h-4 w-4" /> Salva Configurazione
