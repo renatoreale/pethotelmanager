@@ -176,10 +176,21 @@ export async function generatePreventivoPDF(
   // Extra services
   if (breakdown?.extraServices?.length) {
     breakdown.extraServices.forEach((extra: any) => {
+      const tariffType = extra.tariff_type || extra.tariffType || "";
+      let qtyLabel: string;
+      if (tariffType === "extra_km") {
+        qtyLabel = `${extra.quantity ?? 1} km`;
+      } else if (tariffType === "extra_giornaliero") {
+        qtyLabel = `${extra.quantity ?? 1} gg`;
+      } else if (tariffType === "extra_una_tantum") {
+        qtyLabel = `${extra.quantity ?? 1} pz`;
+      } else {
+        qtyLabel = String(extra.quantity ?? 1);
+      }
       tableBody.push([
         extra.name,
         `€ ${Number(extra.unitCost || extra.fixedCost || 0).toFixed(2)}`,
-        String(extra.quantity ?? 1),
+        qtyLabel,
         "1",
         `€ ${Number(extra.total).toFixed(2)}`,
       ]);
