@@ -46,7 +46,7 @@ export function PaymentSplitsTab() {
   const currentIbanHolder = ibanHolder ?? (config as any)?.iban_holder ?? "";
   const currentBolloAmount = bolloAmount ?? (config as any)?.bollo_amount ?? 0;
   const currentValidityDays = validityDays ?? (config as any)?.preventivo_validity_days ?? 5;
-  const currentFooterText = footerText ?? (config as any)?.preventivo_footer_text ?? "";
+  
 
   // New split form
   const [editing, setEditing] = useState<any>(null);
