@@ -59,12 +59,15 @@ export function PaymentSplitsTab() {
 
   const totalPercentage = (splits ?? []).reduce((sum, s) => sum + Number(s.percentage), 0);
 
+  const [formSortOrder, setFormSortOrder] = useState(0);
+
   const openNewSplit = () => {
     setEditing(null);
     setFormLabel("");
     setFormPercentage(0);
     setFormMoment("caparra");
     setFormNote("");
+    setFormSortOrder((splits?.length ?? 0));
     setFormOpen(true);
   };
 
