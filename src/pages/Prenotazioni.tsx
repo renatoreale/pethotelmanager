@@ -32,6 +32,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePaymentSplits } from "@/hooks/usePaymentSplits";
 import { generatePreventivoPDF } from "@/lib/generatePreventivoPDF";
+import { generateModuloAffidoPDF } from "@/lib/generateModuloAffidoPDF";
 
 const STATUS_OPTIONS = [
   { value: "tutti", label: "Tutti gli stati" },
@@ -259,6 +260,16 @@ export default function Prenotazioni() {
     }
   };
 
+  const handleDownloadModuloAffido = async (b: any) => {
+    if (!tenantConfig) return;
+    try {
+      await generateModuloAffidoPDF(b, tenantConfig as any);
+      toast.success("Modulo di Affido generato");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nella generazione del PDF");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -425,7 +436,11 @@ export default function Prenotazioni() {
                                 ))}
                                 <DropdownMenuItem onClick={() => handleDownloadPDF(b)}>
                                   <FileDown className="h-4 w-4 mr-2" />
-                                  Scarica PDF
+                                  Scarica Preventivo PDF
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDownloadModuloAffido(b)}>
+                                  <FileDown className="h-4 w-4 mr-2" />
+                                  Scarica Modulo Affido
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-destructive focus:text-destructive"
