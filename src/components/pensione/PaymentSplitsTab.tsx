@@ -77,6 +77,7 @@ export function PaymentSplitsTab() {
     setFormPercentage(Number(s.percentage));
     setFormMoment(s.payment_moment);
     setFormNote(s.payment_method_note ?? "");
+    setFormSortOrder(s.sort_order ?? 0);
     setFormOpen(true);
   };
 
