@@ -38,7 +38,6 @@ interface TenantData {
   iban_holder?: string | null;
   bollo_amount?: number;
   preventivo_validity_days?: number;
-  preventivo_footer_text?: string | null;
   pet_type?: string;
 }
 
@@ -65,6 +64,7 @@ export async function generatePreventivoPDF(
 ) {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
   const contentWidth = pageWidth - margin * 2;
   let y = 20;
@@ -74,37 +74,7 @@ export async function generatePreventivoPDF(
   const accentColor: [number, number, number] = [44, 62, 80];
   const lightGray: [number, number, number] = [200, 200, 200];
 
-  // ── Logo + Header ──
-  let logoBase64: string | null = null;
-  if (tenant.logo_url) {
-    logoBase64 = await loadImageAsBase64(tenant.logo_url);
-  }
-
-  if (logoBase64) {
-    try {
-      doc.addImage(logoBase64, "PNG", margin, y, 25, 25);
-    } catch { /* skip logo if fails */ }
-  }
-
-  const headerX = logoBase64 ? margin + 30 : margin;
-  doc.setFontSize(10);
-  doc.setTextColor(...lightGray);
-  doc.text(`Preventivo: ${preventivo.booking_number}`, pageWidth - margin, y + 3, { align: "right" });
-
-  doc.setFontSize(20);
-  doc.setTextColor(...accentColor);
-  doc.setFont("helvetica", "bold");
-  doc.text(tenant.name, headerX, y + 10);
-
-  y += 32;
-
-  // ── Separator ──
-  doc.setDrawColor(...accentColor);
-  doc.setLineWidth(0.5);
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 8;
-
-  // ── Info block ──
+  // ── Computed values ──
   const createdDate = format(parseISO(preventivo.created_at), "dd/MM/yyyy", { locale: it });
   const validityDays = tenant.preventivo_validity_days ?? 5;
   const validUntil = format(addDays(parseISO(preventivo.created_at), validityDays), "dd/MM/yyyy", { locale: it });
@@ -113,37 +83,110 @@ export async function generatePreventivoPDF(
     ?.map(bc => bc.cat?.name)
     .filter(Boolean)
     .join(", ") ?? "";
-
   const petLabel = preventivo.pet_type === "cani" ? "Nome del cane" :
                    (preventivo.pet_type === "entrambi" ? "Nome dei pet" : "Nome del gatto");
 
+  // ── Totals (pre-calculate for payment section) ──
+  const breakdown = preventivo.price_breakdown;
+  const seasonTotal = breakdown?.seasonPeriods?.reduce((s: number, p: any) => s + Number(p.total), 0) ?? Number(preventivo.total_amount);
+  const extrasTotal = breakdown?.extraServices?.reduce((s: number, e: any) => s + Number(e.total), 0) ?? 0;
+  const discountTotal = breakdown?.discounts?.reduce((s: number, d: any) => s + Number(d.amount), 0) ?? 0;
+  const bolloAmount = Number(tenant.bollo_amount ?? 0);
+  const subTotal = seasonTotal + extrasTotal - discountTotal;
+  const grandTotal = subTotal + bolloAmount;
+
+  // ══════════════════════════════════════════════
+  // STEP 1: Calculate payment section height (fixed at bottom)
+  // ══════════════════════════════════════════════
+  const footerStartY = pageHeight - 25; // footer area
+  let paymentBlockHeight = 0;
+
+  if (paymentSplits.length > 0) {
+    // Title
+    paymentBlockHeight += 8;
+    // Each split line (estimate ~8mm per line)
+    paymentSplits.forEach((split) => {
+      const amount = Math.round(grandTotal * Number(split.percentage)) / 100;
+      let line = `• € ${amount.toFixed(2)} come ${split.label} del ${Number(split.percentage)}%`;
+      if (split.payment_moment === "caparra") line += ` da versare entro il ${validUntil}`;
+      else if (split.payment_moment === "check_in" || split.payment_moment === "check_out") line += `, pari al ${Number(split.percentage)}% del totale`;
+      if (split.payment_method_note) line += ` ${split.payment_method_note}`;
+      if (split.payment_moment === "caparra" && preventivo.booking_number) {
+        const petNamesShort = petNames || "—";
+        line += ` indicando come causale: "prev. ${preventivo.booking_number} - ${petLabel.toLowerCase().replace("nome del ", "")} ${petNamesShort}"`;
+      }
+      const splitLines = doc.splitTextToSize(line, contentWidth - 5);
+      paymentBlockHeight += splitLines.length * 5 + 3;
+    });
+    // Disclaimer lines
+    paymentBlockHeight += 12;
+  }
+
+  // Signature block height
+  const signatureBlockHeight = 30;
+
+  // The Y where payment section must start
+  const paymentStartY = footerStartY - 5 - paymentBlockHeight - signatureBlockHeight;
+
+  // ══════════════════════════════════════════════
+  // STEP 2: Header - Logo centered with name below
+  // ══════════════════════════════════════════════
+  let logoBase64: string | null = null;
+  if (tenant.logo_url) {
+    logoBase64 = await loadImageAsBase64(tenant.logo_url);
+  }
+
+  if (logoBase64) {
+    try {
+      doc.addImage(logoBase64, "PNG", margin, y, 22, 22);
+    } catch { /* skip */ }
+  }
+
+  // Preventivo number top-right
+  doc.setFontSize(10);
+  doc.setTextColor(...lightGray);
+  doc.text(`Preventivo: ${preventivo.booking_number}`, pageWidth - margin, y + 3, { align: "right" });
+
+  // Client info top-right, below preventivo number
   doc.setFontSize(10);
   doc.setTextColor(...primaryColor);
   doc.setFont("helvetica", "normal");
+  doc.text(`Intestato a: ${clientName}`, pageWidth - margin, y + 10, { align: "right" });
+  doc.text(`${petLabel}: ${petNames}`, pageWidth - margin, y + 16, { align: "right" });
 
-  const infoLines = [
-    [`Data emissione: ${createdDate}`, `Valido fino al: ${validUntil}`],
-    [`Intestato a: ${clientName}`, ""],
-    [`${petLabel}: ${petNames}`, ""],
-  ];
+  // Tenant name below logo
+  const nameY = logoBase64 ? y + 25 : y + 8;
+  doc.setFontSize(13);
+  doc.setTextColor(...accentColor);
+  doc.setFont("helvetica", "bold");
+  doc.text(tenant.name, margin, nameY);
 
-  infoLines.forEach(([left, right]) => {
-    doc.text(left, margin, y);
-    if (right) doc.text(right, pageWidth - margin, y, { align: "right" });
-    y += 6;
-  });
+  y = Math.max(nameY + 5, y + 28);
 
-  y += 4;
+  // ── Separator ──
+  doc.setDrawColor(...accentColor);
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 7;
 
-  // ── Services table ──
-  const breakdown = preventivo.price_breakdown;
+  // ── Dates below separator ──
+  doc.setFontSize(10);
+  doc.setTextColor(...primaryColor);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Data emissione: ${createdDate}`, margin, y);
+  y += 6;
+  doc.text(`Valido fino al: ${validUntil}`, margin, y);
+  y += 10;
+
+  // ══════════════════════════════════════════════
+  // STEP 3: Services table (dynamic body)
+  // ══════════════════════════════════════════════
   const tableBody: any[][] = [];
 
   if (breakdown?.seasonPeriods?.length) {
     breakdown.seasonPeriods.forEach((period: any) => {
       const fromDate = format(parseISO(period.fromDate), "dd/MM/yyyy");
       const toDate = format(parseISO(period.toDate), "dd/MM/yyyy");
-      // Find tariff name from period
       const desc = `Soggiorno dal: ${fromDate} al: ${toDate}`;
       const numCats = preventivo.booking_cats?.length ?? 1;
       const unitLabel = stayCalcType === "notti" ? "notti" : "gg";
@@ -159,7 +202,6 @@ export async function generatePreventivoPDF(
       ]);
     });
   } else {
-    // Fallback: single row
     const checkInFormatted = format(parseISO(preventivo.check_in_date), "dd/MM/yyyy");
     const checkOutFormatted = format(parseISO(preventivo.check_out_date), "dd/MM/yyyy");
     const numCats = preventivo.booking_cats?.length ?? 1;
@@ -183,7 +225,7 @@ export async function generatePreventivoPDF(
       } else if (tariffType === "extra_giornaliero") {
         qtyLabel = `${extra.quantity ?? 1} gg`;
       } else if (tariffType === "extra_una_tantum") {
-        qtyLabel = `${extra.quantity ?? 1} v.`;
+        qtyLabel = `${extra.quantity ?? 1} v`;
       } else {
         qtyLabel = String(extra.quantity ?? 1);
       }
@@ -229,13 +271,7 @@ export async function generatePreventivoPDF(
   // ── Totals ──
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-
-  const seasonTotal = breakdown?.seasonPeriods?.reduce((s: number, p: any) => s + Number(p.total), 0) ?? Number(preventivo.total_amount);
-  const extrasTotal = breakdown?.extraServices?.reduce((s: number, e: any) => s + Number(e.total), 0) ?? 0;
-  const discountTotal = breakdown?.discounts?.reduce((s: number, d: any) => s + Number(d.amount), 0) ?? 0;
-  const bolloAmount = Number(tenant.bollo_amount ?? 0);
-  const subTotal = seasonTotal + extrasTotal - discountTotal;
-  const grandTotal = subTotal + bolloAmount;
+  doc.setTextColor(...primaryColor);
 
   const totalsData: [string, string][] = [];
   totalsData.push(["Totale servizi", `€ ${subTotal.toFixed(2)}`]);
@@ -258,9 +294,11 @@ export async function generatePreventivoPDF(
     y += isLast ? 8 : 6;
   });
 
-  y += 6;
+  // ══════════════════════════════════════════════
+  // STEP 4: Payment modalities (fixed at bottom)
+  // ══════════════════════════════════════════════
+  y = paymentStartY;
 
-  // ── Payment modalities ──
   if (paymentSplits.length > 0) {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
@@ -288,7 +326,6 @@ export async function generatePreventivoPDF(
         line += ` ${split.payment_method_note}`;
       }
 
-      // Handle causale for caparra
       if (split.payment_moment === "caparra" && preventivo.booking_number) {
         const petNamesShort = petNames || "—";
         line += ` indicando come causale: "prev. ${preventivo.booking_number} - ${petLabel.toLowerCase().replace("nome del ", "")} ${petNamesShort}"`;
@@ -320,10 +357,11 @@ export async function generatePreventivoPDF(
   y += 8;
   doc.text("Data: _______________", margin, y);
   doc.text("Firma: _______________", margin + 70, y);
-  y += 15;
 
-  // ── Footer ──
-  const footerY = doc.internal.pageSize.getHeight() - 25;
+  // ══════════════════════════════════════════════
+  // STEP 5: Footer (always at very bottom)
+  // ══════════════════════════════════════════════
+  const footerY = pageHeight - 25;
   doc.setDrawColor(...lightGray);
   doc.setLineWidth(0.3);
   doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
