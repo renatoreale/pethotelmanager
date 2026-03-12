@@ -136,17 +136,34 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   const form = useForm<ClientFormValues>({
     resolver: zodResolver(clientSchema),
     defaultValues: {
-      first_name: client?.first_name ?? "",
-      last_name: client?.last_name ?? "",
-      email: client?.email ?? "",
-      phone: client?.phone ?? "",
-      fiscal_code: client?.fiscal_code ?? "",
-      address: client?.address ?? "",
-      notes: client?.notes ?? "",
-      is_blacklisted: client?.is_blacklisted ?? false,
-      blacklist_reason: client?.blacklist_reason ?? "",
+      first_name: "",
+      last_name: "",
+      email: "",
+      phone: "",
+      fiscal_code: "",
+      address: "",
+      notes: "",
+      is_blacklisted: false,
+      blacklist_reason: "",
     },
   });
+
+  // Reset form values when client changes (edit vs new)
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        first_name: client?.first_name ?? "",
+        last_name: client?.last_name ?? "",
+        email: client?.email ?? "",
+        phone: client?.phone ?? "",
+        fiscal_code: client?.fiscal_code ?? "",
+        address: client?.address ?? "",
+        notes: client?.notes ?? "",
+        is_blacklisted: client?.is_blacklisted ?? false,
+        blacklist_reason: client?.blacklist_reason ?? "",
+      });
+    }
+  }, [open, client]);
 
   const isBlacklisted = form.watch("is_blacklisted");
   const addCat = () => setCats((prev) => [...prev, emptyCat(defaultAnimalType)]);
