@@ -100,6 +100,7 @@ function AnagraficaTab() {
   const [pec, setPec] = useState<string | null>(null);
   const [titolareName, setTitolareName] = useState<string | null>(null);
   const [petType, setPetType] = useState<string | null>(null);
+  const [locale, setLocale] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
