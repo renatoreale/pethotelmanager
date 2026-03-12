@@ -46,24 +46,14 @@ function useClientAppointmentCounts(tenantId: string | undefined, date: string |
     queryKey: ["client-appt-counts", tenantId, date, appointmentType],
     queryFn: async () => {
       if (!tenantId || !date) return {};
-      const dayStart = `${date}T00:00:00`;
-      const dayEnd = `${date}T23:59:59`;
-      const { data, error } = await supabase
-        .from("appointments")
-        .select("scheduled_at")
-        .eq("tenant_id", tenantId)
-        .eq("appointment_type", appointmentType)
-        .gte("scheduled_at", dayStart)
-        .lte("scheduled_at", dayEnd);
+      const { data, error } = await supabase.rpc("get_appointment_slot_counts", {
+        _tenant_id: tenantId,
+        _date: date,
+        _appointment_type: appointmentType,
+      });
       if (error) throw error;
-      const counts: Record<string, number> = {};
-      for (const appt of data ?? []) {
-        const isoStr = appt.scheduled_at;
-        const tIndex = isoStr.indexOf("T");
-        const time = tIndex >= 0 ? isoStr.slice(tIndex + 1, tIndex + 6) : new Date(isoStr).toTimeString().slice(0, 5);
-        counts[time] = (counts[time] || 0) + 1;
-      }
-      return counts;
+      // data is a JSONB object like { "15:00": 2, "15:30": 1 }
+      return (data as Record<string, number>) ?? {};
     },
     enabled: !!tenantId && !!date,
   });
