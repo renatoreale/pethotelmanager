@@ -115,7 +115,7 @@ export function AppSidebar() {
           {!collapsed &&
           <div className="flex flex-col">
               <span className="font-serif font-bold text-sm text-sidebar-foreground">
-                Pet Hotel
+                Pet Hotel Manager 
               </span>
             </div>
           }
