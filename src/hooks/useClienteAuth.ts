@@ -205,12 +205,12 @@ export function useClienteQuoteRequests() {
     queryFn: async () => {
       if (!clientProfile) return [];
       const { data, error } = await supabase
-        .from("quote_requests" as any)
+        .from("quote_requests")
         .select("*")
         .eq("client_id", clientProfile.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as any[];
+      return data;
     },
     enabled: !!clientProfile?.id,
   });
