@@ -216,6 +216,12 @@ export default function ClientePreventivi() {
                           Conferma
                         </Button>
                       )}
+                      {b.status !== "preventivo" && b.status !== "cancellata" && b.status !== "rimborsata" && b.status !== "scaduto" && (
+                        <Button size="sm" variant="outline" onClick={() => setDetailBooking(b)}>
+                          <Eye className="mr-1.5 h-3.5 w-3.5" />
+                          Dettagli
+                        </Button>
+                      )}
                       {canDownloadAffido && (
                         <Button
                           size="sm"
