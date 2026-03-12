@@ -8,35 +8,35 @@ import { STRIPE_TIERS } from "@/lib/stripe-config";
 import { toast } from "sonner";
 import {
   PawPrint, Calendar, Users, CreditCard, FileText, BarChart3,
-  Check, Star, ArrowRight, Shield, Clock, Zap, Building2,
-} from "lucide-react";
+  Check, Star, ArrowRight, Shield, Clock, Zap, Building2 } from
+"lucide-react";
 
 const BASE_FEATURES = [
-  "Gestione prenotazioni",
-  "Calendario appuntamenti",
-  "Anagrafica clienti e animali",
-  "Registro presenze",
-  "1 pensione",
-];
+"Gestione prenotazioni",
+"Calendario appuntamenti",
+"Anagrafica clienti e animali",
+"Registro presenze",
+"1 pensione"];
+
 
 const PRO_FEATURES = [
-  "Tutto del piano Base",
-  "Gestione pagamenti completa",
-  "Preventivi e documenti PDF",
-  "Occupazione casette",
-  "Planning e task",
-  "Multi-pensione (fino a 3)",
-  "Report e statistiche",
-];
+"Tutto del piano Base",
+"Gestione pagamenti completa",
+"Preventivi e documenti PDF",
+"Occupazione casette",
+"Planning e task",
+"Multi-pensione (fino a 3)",
+"Report e statistiche"];
+
 
 const SHOWCASE_FEATURES = [
-  { icon: Calendar, title: "Prenotazioni Smart", desc: "Gestisci preventivi, conferme, check-in e check-out con un flusso guidato e intuitivo." },
-  { icon: PawPrint, title: "Anagrafica Animali", desc: "Schede dettagliate per ogni ospite: microchip, dieta, note comportamentali e veterinarie." },
-  { icon: CreditCard, title: "Pagamenti Integrati", desc: "Caparre, saldi, rimborsi e metodi di pagamento personalizzabili per ogni pensione." },
-  { icon: FileText, title: "Documenti PDF", desc: "Genera preventivi e moduli di affido professionali con un click." },
-  { icon: BarChart3, title: "Occupazione in Tempo Reale", desc: "Visualizza la disponibilità delle casette su griglia giornaliera e pianifica al meglio." },
-  { icon: Building2, title: "Multi-Pensione", desc: "Gestisci più sedi da un'unica dashboard con isolamento completo dei dati." },
-];
+{ icon: Calendar, title: "Prenotazioni Smart", desc: "Gestisci preventivi, conferme, check-in e check-out con un flusso guidato e intuitivo." },
+{ icon: PawPrint, title: "Anagrafica Animali", desc: "Schede dettagliate per ogni ospite: microchip, dieta, note comportamentali e veterinarie." },
+{ icon: CreditCard, title: "Pagamenti Integrati", desc: "Caparre, saldi, rimborsi e metodi di pagamento personalizzabili per ogni pensione." },
+{ icon: FileText, title: "Documenti PDF", desc: "Genera preventivi e moduli di affido professionali con un click." },
+{ icon: BarChart3, title: "Occupazione in Tempo Reale", desc: "Visualizza la disponibilità delle casette su griglia giornaliera e pianifica al meglio." },
+{ icon: Building2, title: "Multi-Pensione", desc: "Gestisci più sedi da un'unica dashboard con isolamento completo dei dati." }];
+
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -62,7 +62,7 @@ export default function Landing() {
         return;
       }
       const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId },
+        body: { priceId }
       });
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
@@ -85,7 +85,7 @@ export default function Landing() {
             <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground text-lg">
               🐾
             </div>
-            <span className="font-serif text-xl font-bold text-foreground">CatHotel Manager</span>
+            <span className="font-serif text-xl font-bold text-foreground">PetHotel Manager</span>
           </div>
           <div className="flex items-center gap-3">
             <Link to="/login">
@@ -132,8 +132,8 @@ export default function Landing() {
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {SHOWCASE_FEATURES.map((f) => (
-              <Card key={f.title} className="border-none bg-background shadow-md hover:shadow-lg transition-shadow">
+            {SHOWCASE_FEATURES.map((f) =>
+            <Card key={f.title} className="border-none bg-background shadow-md hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
                     <f.icon className="h-6 w-6 text-primary" />
@@ -144,7 +144,7 @@ export default function Landing() {
                   <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
                 </CardContent>
               </Card>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -196,20 +196,20 @@ export default function Landing() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
-                  {BASE_FEATURES.map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-sm">
+                  {BASE_FEATURES.map((f) =>
+                  <li key={f} className="flex items-start gap-3 text-sm">
                       <Check className="h-4 w-4 text-accent mt-0.5 shrink-0" />
                       <span>{f}</span>
                     </li>
-                  ))}
+                  )}
                 </ul>
                 <Button
                   className="w-full"
                   variant="outline"
                   size="lg"
                   disabled={loadingPlan === "base"}
-                  onClick={() => handleSubscribe(STRIPE_TIERS.base.price_id, "base")}
-                >
+                  onClick={() => handleSubscribe(STRIPE_TIERS.base.price_id, "base")}>
+                  
                   {loadingPlan === "base" ? "Caricamento..." : "Scegli Base"}
                 </Button>
               </CardContent>
@@ -235,19 +235,19 @@ export default function Landing() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
-                  {PRO_FEATURES.map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-sm">
+                  {PRO_FEATURES.map((f) =>
+                  <li key={f} className="flex items-start gap-3 text-sm">
                       <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                       <span>{f}</span>
                     </li>
-                  ))}
+                  )}
                 </ul>
                 <Button
                   className="w-full"
                   size="lg"
                   disabled={loadingPlan === "pro"}
-                  onClick={() => handleSubscribe(STRIPE_TIERS.pro.price_id, "pro")}
-                >
+                  onClick={() => handleSubscribe(STRIPE_TIERS.pro.price_id, "pro")}>
+                  
                   {loadingPlan === "pro" ? "Caricamento..." : "Scegli Pro"}
                 </Button>
               </CardContent>
@@ -287,6 +287,6 @@ export default function Landing() {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>);
+
 }
