@@ -8,6 +8,7 @@ import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions, Resource } from "@/hooks/usePermissions";
 import { useTranslation } from "react-i18next";
+import petHotelLogo from "@/assets/pethotelmanager_logo.png";
 
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
