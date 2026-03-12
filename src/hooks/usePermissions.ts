@@ -19,6 +19,7 @@ export type Resource =
   | "registro-gatti"
   | "planning"
   | "occupazione"
+  | "statistiche"
   | "utenti"
   | "template-email"
   | "pensione"
