@@ -2,6 +2,8 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -10,7 +12,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Search, CheckCircle2, FileText, Download, Inbox } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, CheckCircle2, FileText, Download, Inbox, XCircle } from "lucide-react";
 import { ConfirmPreventivoDialog } from "@/components/preventivi/ConfirmPreventivoDialog";
 import { toast } from "sonner";
 import { format, differenceInDays, parseISO } from "date-fns";
@@ -42,6 +44,8 @@ export default function Preventivi() {
   const [deleting, setDeleting] = useState<any>(null);
   const [confirming, setConfirming] = useState<any>(null);
   const [quotePrefill, setQuotePrefill] = useState<{ client_id: string; check_in_date: string; check_out_date: string; notes?: string } | null>(null);
+  const [rejectingQuote, setRejectingQuote] = useState<any>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   // Stay config
   const stayCalcType = (tenantConfig as any)?.stay_calc_type ?? "notti";
@@ -152,26 +156,36 @@ export default function Preventivi() {
                       {qr.status === "pending" ? "In attesa" : qr.status === "reviewed" ? "In lavorazione" : qr.status}
                     </Badge>
                     {(qr.status === "pending" || qr.status === "reviewed") && (
-                      <Button
-                        size="sm"
-                        variant={qr.status === "pending" ? "outline" : "default"}
-                        onClick={async () => {
-                          if (qr.status === "pending") {
-                            await updateQuoteStatus.mutateAsync({ id: qr.id, status: "reviewed" });
-                          }
-                          setEditing(null);
-                          setQuotePrefill({
-                            client_id: qr.client_id,
-                            check_in_date: qr.check_in_date,
-                            check_out_date: qr.check_out_date,
-                            notes: qr.notes || undefined,
-                          });
-                          setDialogOpen(true);
-                          toast.success("Richiesta presa in carico — compila il preventivo");
-                        }}
-                      >
-                        {qr.status === "pending" ? "Prendi in carico" : "Crea preventivo"}
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant={qr.status === "pending" ? "outline" : "default"}
+                          onClick={async () => {
+                            if (qr.status === "pending") {
+                              await updateQuoteStatus.mutateAsync({ id: qr.id, status: "reviewed" });
+                            }
+                            setEditing(null);
+                            setQuotePrefill({
+                              client_id: qr.client_id,
+                              check_in_date: qr.check_in_date,
+                              check_out_date: qr.check_out_date,
+                              notes: qr.notes || undefined,
+                            });
+                            setDialogOpen(true);
+                            toast.success("Richiesta presa in carico — compila il preventivo");
+                          }}
+                        >
+                          {qr.status === "pending" ? "Prendi in carico" : "Crea preventivo"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => { setRejectingQuote(qr); setRejectionReason(""); }}
+                        >
+                          <XCircle className="h-4 w-4" />
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -299,6 +313,44 @@ export default function Preventivi() {
           <AlertDialogFooter>
             <AlertDialogCancel>Annulla</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Elimina</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      {/* Reject quote request dialog */}
+      <AlertDialog open={!!rejectingQuote} onOpenChange={() => setRejectingQuote(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Rifiuta richiesta preventivo</AlertDialogTitle>
+            <AlertDialogDescription>
+              {rejectingQuote?.client && `Richiesta di ${rejectingQuote.client.first_name} ${rejectingQuote.client.last_name}`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-2">
+            <Label>Motivazione (visibile al cliente)</Label>
+            <Textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Es: Non abbiamo disponibilità per le date richieste..."
+              rows={3}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={!rejectionReason.trim()}
+              onClick={async () => {
+                await updateQuoteStatus.mutateAsync({
+                  id: rejectingQuote.id,
+                  status: "rejected",
+                  rejection_reason: rejectionReason.trim(),
+                });
+                toast.success("Richiesta rifiutata");
+                setRejectingQuote(null);
+              }}
+            >
+              Rifiuta
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -1,0 +1,1 @@
+ALTER TABLE public.quote_requests ADD COLUMN IF NOT EXISTS rejection_reason text DEFAULT NULL;

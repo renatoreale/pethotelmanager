@@ -170,19 +170,24 @@ export default function ClienteDashboard() {
           <CardContent>
             <div className="space-y-3">
               {quoteRequests.slice(0, 5).map((q: any) => (
-                <div key={q.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div>
+                <div key={q.id} className="p-3 rounded-lg bg-muted/50 space-y-1">
+                  <div className="flex items-center justify-between">
                     <p className="font-medium text-sm">
                       {format(new Date(q.check_in_date), "dd MMM yyyy", { locale: it })} → {format(new Date(q.check_out_date), "dd MMM yyyy", { locale: it })}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      🐾 {q.pet_names || `${q.num_pets} animale/i`}
-                      {q.notes && ` · ${q.notes.substring(0, 50)}${q.notes.length > 50 ? "..." : ""}`}
-                    </p>
+                    <Badge variant={QUOTE_STATUS_VARIANT[q.status] || "secondary"}>
+                      {QUOTE_STATUS_LABELS[q.status] || q.status}
+                    </Badge>
                   </div>
-                  <Badge variant={QUOTE_STATUS_VARIANT[q.status] || "secondary"}>
-                    {QUOTE_STATUS_LABELS[q.status] || q.status}
-                  </Badge>
+                  <p className="text-xs text-muted-foreground">
+                    🐾 {q.pet_names || `${q.num_pets} animale/i`}
+                    {q.notes && ` · ${q.notes.substring(0, 50)}${q.notes.length > 50 ? "..." : ""}`}
+                  </p>
+                  {q.status === "rejected" && q.rejection_reason && (
+                    <p className="text-xs text-destructive mt-1">
+                      ❌ Motivo: {q.rejection_reason}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
