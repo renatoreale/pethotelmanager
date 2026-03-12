@@ -174,10 +174,14 @@ export default function Landing() {
             <span className="font-serif text-xl font-bold text-foreground">Pet Hotel Manager</span>
           </div>
           <div className="flex items-center gap-3">
+            <a href="#demo">
+              <Button variant="ghost" size="sm">Demo Gratuita</Button>
+            </a>
             <Link to="/login">
               <Button variant="ghost" size="sm">Accedi</Button>
             </Link>
             <Button size="sm" onClick={handleStartTrial}>Prova Gratis</Button>
+          </div>
           </div>
         </nav>
 
