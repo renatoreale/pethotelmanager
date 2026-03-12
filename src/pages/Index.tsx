@@ -14,9 +14,10 @@ import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import { useAllPayments } from "@/hooks/usePayments";
 import { usePermissions } from "@/hooks/usePermissions";
 import { format, parseISO, startOfMonth, endOfMonth, startOfYear, endOfYear, isToday as isTodayFn, addDays } from "date-fns";
-import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { usePetLabels } from "@/hooks/usePetLabels";
+import { useTranslation } from "react-i18next";
+import { useDateLocale } from "@/hooks/useDateLocale";
 
 const STATUS_LABELS: Record<string, string> = {
   preventivo: "Preventivo",
