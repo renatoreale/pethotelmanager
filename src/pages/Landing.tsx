@@ -124,7 +124,7 @@ function DemoRequestForm() {
   );
 }
 
-
+export default function Landing() {
   const navigate = useNavigate();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [config, setConfig] = useState<any>(null);
