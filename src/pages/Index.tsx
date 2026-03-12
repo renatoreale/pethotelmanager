@@ -468,9 +468,9 @@ export default function Index() {
                             className="gap-1.5 text-xs mt-1.5 w-full"
                             onClick={() => setAppointmentBooking(b)}
                           >
-                            <CalendarIconAlt className="h-3.5 w-3.5" />
-                            Fissa appuntamento
-                          </Button>
+                             <CalendarIconAlt className="h-3.5 w-3.5" />
+                             {t("dashboard.scheduleAppt")}
+                           </Button>
                         </div>
                       );
                     })}
