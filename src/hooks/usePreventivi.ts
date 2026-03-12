@@ -48,6 +48,8 @@ export function usePreventivi() {
     queryKey: ["preventivi", profile?.tenant_id],
     queryFn: async () => {
       if (!profile?.tenant_id) return [];
+      // Expire preventivi past validity
+      await supabase.rpc("expire_preventivi", { _tenant_id: profile.tenant_id });
       const { data, error } = await supabase
         .from("bookings")
         .select(`
