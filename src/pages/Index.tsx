@@ -283,7 +283,7 @@ export default function Index() {
               onClick={() => missingCheckOutRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
             >
               <LogOut className="h-4 w-4" />
-              {s.missingCheckOutAppt.length} OUT senza app.
+              {s.missingCheckOutAppt.length} {t("dashboard.missingOutAppt")}
             </Button>
           )}
           {!isOperatoreRestricted && <AvailabilityCheckDialog />}
