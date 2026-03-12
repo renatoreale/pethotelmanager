@@ -170,6 +170,7 @@ export default function Preventivi() {
                               check_in_date: qr.check_in_date,
                               check_out_date: qr.check_out_date,
                               notes: qr.notes || undefined,
+                              quote_request_id: qr.id,
                             });
                             setDialogOpen(true);
                             toast.success("Richiesta presa in carico — compila il preventivo");
