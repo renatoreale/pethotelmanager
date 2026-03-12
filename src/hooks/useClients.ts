@@ -14,6 +14,7 @@ export interface Client {
   notes: string | null;
   is_blacklisted: boolean;
   blacklist_reason: string | null;
+  user_id: string | null;
   created_at: string;
   updated_at: string;
 }
