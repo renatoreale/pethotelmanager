@@ -85,7 +85,39 @@ export default function ClienteAnimali() {
       behavioral_notes: cat.behavioral_notes || "",
       pet_type: cat.pet_type || "",
     });
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setExistingPhotoUrl(cat.photo_url || null);
     setDialogOpen(true);
+  };
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("L'immagine non può superare i 5MB");
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      toast.error("Seleziona un file immagine valido");
+      return;
+    }
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const uploadPhoto = async (catId: string): Promise<string | null> => {
+    if (!photoFile) return existingPhotoUrl;
+    const ext = photoFile.name.split(".").pop() || "jpg";
+    const path = `${profile!.tenant_id}/${catId}.${ext}`;
+    const { error } = await supabase.storage
+      .from("cat-photos")
+      .upload(path, photoFile, { upsert: true });
+    if (error) throw error;
+    const { data: urlData } = supabase.storage
+      .from("cat-photos")
+      .getPublicUrl(path);
+    return urlData.publicUrl + "?t=" + Date.now();
   };
 
   const handleSave = async () => {
