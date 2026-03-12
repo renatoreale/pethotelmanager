@@ -265,7 +265,7 @@ export default function Preventivi() {
                             <Button variant="ghost" size="icon" title={t("bookings.downloadPDF")} onClick={() => handleDownloadPDF(p)}>
                               <Download className="h-4 w-4 text-blue-600" />
                             </Button>
-                            <Button variant="ghost" size="icon" title="Conferma" onClick={() => setConfirming(p)}>
+                            <Button variant="ghost" size="icon" title={t("common.confirm")} onClick={() => setConfirming(p)}>
                               <CheckCircle2 className="h-4 w-4 text-green-600" />
                             </Button>
                             <Button variant="ghost" size="icon" onClick={() => openEdit(p)}>
