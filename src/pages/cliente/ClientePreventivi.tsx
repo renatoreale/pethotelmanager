@@ -44,6 +44,37 @@ export default function ClientePreventivi() {
   const [paymentDialog, setPaymentDialog] = useState<any>(null);
   const [payingStripe, setPayingStripe] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
+  const verifyAttempted = useRef(false);
+
+  // Auto-verify Stripe payment on return
+  useEffect(() => {
+    const paymentStatus = searchParams.get("payment");
+    const bookingId = searchParams.get("booking");
+    if (paymentStatus === "success" && bookingId && !verifyAttempted.current) {
+      verifyAttempted.current = true;
+      (async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke("verify-stripe-payment", {
+            body: { booking_id: bookingId },
+          });
+          if (error) throw error;
+          if (data?.confirmed) {
+            toast.success("Pagamento confermato! Il preventivo è stato accettato.");
+            queryClient.invalidateQueries({ queryKey: ["cliente-bookings"] });
+          } else {
+            toast.info(data?.reason || "Pagamento in fase di verifica");
+          }
+        } catch (err: any) {
+          toast.error("Errore nella verifica del pagamento");
+          console.error(err);
+        }
+        // Clean URL params
+        setSearchParams({}, { replace: true });
+      })();
+    }
+  }, [searchParams, setSearchParams, queryClient]);
 
   const handleConfirm = (booking: any) => {
     setPaymentDialog(booking);
