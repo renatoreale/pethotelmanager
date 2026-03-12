@@ -272,7 +272,7 @@ export default function Index() {
               onClick={() => missingApptRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
             >
               <LogIn className="h-4 w-4" />
-              {s.missingAppointment.length} IN senza app.
+              {s.missingAppointment.length} {t("dashboard.missingInAppt")}
             </Button>
           )}
           {!isOperatoreRestricted && s.missingCheckOutAppt.length > 0 && (
