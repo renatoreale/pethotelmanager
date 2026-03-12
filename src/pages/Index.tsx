@@ -492,7 +492,7 @@ export default function Index() {
               </CardHeader>
               <CardContent>
                 {s.missingCheckOutAppt.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">Tutto in ordine ✓</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">{t("common.allOk")}</p>
                 ) : (
                   <div className="space-y-2">
                     {s.missingCheckOutAppt.map((b: any) => {
