@@ -1383,7 +1383,7 @@ function StripeConfigTab() {
 
   const tenantId = profile?.tenant_id;
 
-  const { data: existing, isLoading } = useQuery({
+  const { data: existing, isLoading } = useQuery<{ id: string; stripe_secret_key: string; updated_at: string } | null>({
     queryKey: ["tenant-stripe-key", tenantId],
     queryFn: async () => {
       if (!tenantId) return null;
@@ -1393,7 +1393,7 @@ function StripeConfigTab() {
         .eq("tenant_id", tenantId)
         .maybeSingle();
       if (error) throw error;
-      return data as { id: string; stripe_secret_key: string; updated_at: string } | null;
+      return data as any;
     },
     enabled: !!tenantId,
   });
