@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import petHotelLogo from "@/assets/pethotelmanager_logo.png";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -63,9 +64,7 @@ export default function RegisterTrial() {
           <Link to="/landing" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 self-start">
             <ArrowLeft className="h-4 w-4" /> Torna alla landing
           </Link>
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground font-serif text-2xl">
-            🐾
-          </div>
+          <img src={petHotelLogo} alt="Pet Hotel Manager" className="mx-auto mb-4 h-20 w-20 rounded-xl object-contain" />
           <CardTitle className="text-2xl font-serif">Prova Gratuita</CardTitle>
           <CardDescription className="flex items-center justify-center gap-1">
             <Clock className="h-4 w-4" /> {trialDays} giorni gratuiti, nessuna carta richiesta
