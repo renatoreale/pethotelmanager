@@ -8,7 +8,7 @@ import { STRIPE_TIERS } from "@/lib/stripe-config";
 import { toast } from "sonner";
 import {
   PawPrint, Calendar, Users, CreditCard, FileText, BarChart3,
-  Check, Star, ArrowRight, Shield, Clock, Zap, Building2 } from
+  Check, Star, ArrowRight, Shield, Clock, Zap, Building2, Crown } from
 "lucide-react";
 
 const BASE_FEATURES = [
@@ -18,16 +18,24 @@ const BASE_FEATURES = [
 "Registro presenze",
 "1 pensione"];
 
-
 const PRO_FEATURES = [
 "Tutto del piano Base",
 "Gestione pagamenti completa",
 "Preventivi e documenti PDF",
 "Occupazione casette",
-
-"Multi-pensione (fino a 3)",
 "Report e statistiche"];
 
+const GOLD_FEATURES = [
+"Tutto del piano Pro",
+"Multi-pensione (fino a 3)",
+"Dashboard multi-sede",
+"Gestione centralizzata"];
+
+const ENTERPRISE_FEATURES = [
+"Tutto del piano Gold",
+"Pensioni illimitate (oltre 3)",
+"Supporto prioritario",
+"Configurazione dedicata"];
 
 const SHOWCASE_FEATURES = [
 { icon: Calendar, title: "Prenotazioni Smart", desc: "Gestisci preventivi, conferme, check-in e check-out con un flusso guidato e intuitivo." },
@@ -171,7 +179,7 @@ export default function Landing() {
 
       {/* Pricing */}
       <section id="pricing" className="py-24 bg-card/50">
-        <div className="max-w-5xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
               Piani e Prezzi
@@ -180,7 +188,7 @@ export default function Landing() {
               Scegli il piano più adatto alla tua pensione. Abbonamento annuale.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {/* Base Plan */}
             <Card className="relative border-2 border-border hover:border-primary/30 transition-colors">
               <CardHeader className="pb-4">
@@ -209,7 +217,6 @@ export default function Landing() {
                   size="lg"
                   disabled={loadingPlan === "base"}
                   onClick={() => handleSubscribe(STRIPE_TIERS.base.price_id, "base")}>
-                  
                   {loadingPlan === "base" ? "Caricamento..." : "Scegli Base"}
                 </Button>
               </CardContent>
@@ -247,8 +254,77 @@ export default function Landing() {
                   size="lg"
                   disabled={loadingPlan === "pro"}
                   onClick={() => handleSubscribe(STRIPE_TIERS.pro.price_id, "pro")}>
-                  
                   {loadingPlan === "pro" ? "Caricamento..." : "Scegli Pro"}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Gold Plan */}
+            <Card className="relative border-2 border-amber-500/50 shadow-lg shadow-amber-500/10">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <Badge className="bg-amber-500 text-white gap-1">
+                  <Crown className="h-3 w-3" /> Multi-Sede
+                </Badge>
+              </div>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-2xl font-serif">Gold</CardTitle>
+                <CardDescription>Multi-pensione fino a 3</CardDescription>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.gold.priceYearly}</span>
+                  <span className="text-muted-foreground">/anno</span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  equivale a €{(STRIPE_TIERS.gold.priceYearly / 12).toFixed(0)}/mese
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <ul className="space-y-3">
+                  {GOLD_FEATURES.map((f) =>
+                  <li key={f} className="flex items-start gap-3 text-sm">
+                      <Check className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                      <span>{f}</span>
+                    </li>
+                  )}
+                </ul>
+                <Button
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                  size="lg"
+                  disabled={loadingPlan === "gold"}
+                  onClick={() => handleSubscribe(STRIPE_TIERS.gold.price_id, "gold")}>
+                  {loadingPlan === "gold" ? "Caricamento..." : "Scegli Gold"}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Enterprise Plan */}
+            <Card className="relative border-2 border-border hover:border-primary/30 transition-colors">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-2xl font-serif">Enterprise</CardTitle>
+                <CardDescription>Oltre 3 pensioni</CardDescription>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.enterprise.priceYearly}</span>
+                  <span className="text-muted-foreground">/anno</span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  equivale a €{(STRIPE_TIERS.enterprise.priceYearly / 12).toFixed(0)}/mese
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <ul className="space-y-3">
+                  {ENTERPRISE_FEATURES.map((f) =>
+                  <li key={f} className="flex items-start gap-3 text-sm">
+                      <Check className="h-4 w-4 text-accent mt-0.5 shrink-0" />
+                      <span>{f}</span>
+                    </li>
+                  )}
+                </ul>
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  size="lg"
+                  disabled={loadingPlan === "enterprise"}
+                  onClick={() => handleSubscribe(STRIPE_TIERS.enterprise.price_id, "enterprise")}>
+                  {loadingPlan === "enterprise" ? "Caricamento..." : "Scegli Enterprise"}
                 </Button>
               </CardContent>
             </Card>
@@ -288,5 +364,4 @@ export default function Landing() {
         </div>
       </footer>
     </div>);
-
 }

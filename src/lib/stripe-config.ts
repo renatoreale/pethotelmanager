@@ -11,6 +11,18 @@ export const STRIPE_TIERS = {
     name: "Pro",
     priceYearly: 490,
   },
+  gold: {
+    product_id: "prod_U8UHgawtj9PJ7j",
+    price_id: "price_1TADIvQVJRFR5c8XHxHbBxjN",
+    name: "Gold",
+    priceYearly: 690,
+  },
+  enterprise: {
+    product_id: "prod_U8UHsw4xHCfULI",
+    price_id: "price_1TADJCQVJRFR5c8X18WyMnT2",
+    name: "Enterprise",
+    priceYearly: 999,
+  },
 } as const;
 
 export type StripeTier = keyof typeof STRIPE_TIERS;
