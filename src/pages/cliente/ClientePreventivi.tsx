@@ -247,6 +247,11 @@ export default function ClientePreventivi() {
                     {catNames && (
                       <p className="text-xs text-muted-foreground">🐾 {catNames}</p>
                     )}
+                    {b.status === "preventivo" && tenant?.preventivo_validity_days && (
+                      <p className="text-xs text-destructive font-medium">
+                        ⏳ Scade il {format(addDays(new Date(b.created_at), tenant.preventivo_validity_days), "dd MMM yyyy", { locale: it })}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
