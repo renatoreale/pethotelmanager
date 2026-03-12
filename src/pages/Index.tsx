@@ -405,7 +405,7 @@ export default function Index() {
           <Card className="border shadow-sm">
             <CardHeader>
               <CardTitle className="text-base">
-                {isSelectedToday ? "Prenotazioni del giorno" : `Prenotazioni — ${format(selectedDate, "dd MMM yyyy", { locale: it })}`}
+                {isSelectedToday ? t("dashboard.dailyBookings") : t("dashboard.dailyBookingsFor", { date: format(selectedDate, "dd MMM yyyy", { locale: dateLocale }) })}
               </CardTitle>
             </CardHeader>
             <CardContent>
