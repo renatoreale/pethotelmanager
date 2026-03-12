@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Save } from "lucide-react";
 
 export default function ClienteProfilo() {
+  const navigate = useNavigate();
   const { data: profile, isLoading } = useClienteProfile();
   const updateProfile = useUpdateClienteProfile();
 
