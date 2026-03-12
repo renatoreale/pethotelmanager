@@ -48,6 +48,22 @@ export default function ClientePreventivi() {
   const queryClient = useQueryClient();
   const verifyAttempted = useRef(false);
 
+  // Check if tenant has Stripe configured
+  const { data: tenantHasStripe } = useQuery<boolean>({
+    queryKey: ["tenant-has-stripe", tenant?.id],
+    queryFn: async () => {
+      if (!tenant?.id) return false;
+      const { data, error } = await supabase
+        .from("tenant_stripe_keys" as any)
+        .select("id")
+        .eq("tenant_id", tenant.id)
+        .maybeSingle();
+      if (error) return false;
+      return !!data;
+    },
+    enabled: !!tenant?.id,
+  });
+
   // Auto-verify Stripe payment on return
   useEffect(() => {
     const paymentStatus = searchParams.get("payment");
