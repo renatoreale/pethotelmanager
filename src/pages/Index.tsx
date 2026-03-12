@@ -338,7 +338,7 @@ export default function Index() {
       {isOperatoreRestricted && (
         <Card className="border shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base">Domani</CardTitle>
+            <CardTitle className="text-base">{t("common.tomorrow")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
