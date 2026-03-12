@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import petHotelLogo from "@/assets/pethotelmanager_logo.png";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
