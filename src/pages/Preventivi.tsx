@@ -147,8 +147,8 @@ export default function Preventivi() {
                       {qr.client ? `${qr.client.first_name} ${qr.client.last_name}` : "Cliente"}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {format(parseISO(qr.check_in_date), "dd MMM yyyy", { locale: it })} → {format(parseISO(qr.check_out_date), "dd MMM yyyy", { locale: it })}
-                      {" · "}{qr.pet_names || `${qr.num_pets} animale/i`}
+                      {format(parseISO(qr.check_in_date), "dd MMM yyyy", { locale: dateLocale })} → {format(parseISO(qr.check_out_date), "dd MMM yyyy", { locale: dateLocale })}
+                      {" · "}{qr.pet_names || `${qr.num_pets} pet(s)`}
                     </p>
                     {qr.notes && (
                       <p className="text-xs text-muted-foreground italic">"{qr.notes}"</p>
