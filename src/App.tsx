@@ -28,6 +28,8 @@ import RegistroGatti from "./pages/RegistroGatti";
 import Presenze from "./pages/Presenze";
 import OccupazioneCasette from "./pages/OccupazioneCasette";
 import Admin from "./pages/Admin";
+import Landing from "./pages/Landing";
+import RegisterTrial from "./pages/RegisterTrial";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +42,8 @@ const App = () => (
         <AuthProvider>
           <Routes>
             {/* Public routes */}
+            <Route path="/landing" element={<Landing />} />
+            <Route path="/register-trial" element={<RegisterTrial />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />

@@ -20,11 +20,13 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Building2, Users, ShieldCheck, Plus, Pencil, Trash2, Save, Clock, Euro, CreditCard, Ban } from "lucide-react";
+import { Building2, Users, ShieldCheck, Plus, Pencil, Trash2, Save, Clock, Euro, CreditCard, Ban, Globe, TrendingUp } from "lucide-react";
 import { GlobalSlotConfigsTab } from "@/components/admin/GlobalSlotConfigsTab";
 import { GlobalPriceListsTab } from "@/components/admin/GlobalPriceListsTab";
 import { GlobalPaymentMethodsTab } from "@/components/admin/GlobalPaymentMethodsTab";
 import { GlobalCancellationPolicyTab } from "@/components/admin/GlobalCancellationPolicyTab";
+import { LandingConfigTab } from "@/components/admin/LandingConfigTab";
+import { TrialDashboardTab } from "@/components/admin/TrialDashboardTab";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Database } from "@/integrations/supabase/types";
@@ -89,6 +91,12 @@ export default function Admin() {
           <TabsTrigger value="cancellazione-globale" className="gap-2">
             <Ban className="h-4 w-4" /> Cancellazione
           </TabsTrigger>
+          <TabsTrigger value="landing" className="gap-2">
+            <Globe className="h-4 w-4" /> Landing Page
+          </TabsTrigger>
+          <TabsTrigger value="trial" className="gap-2">
+            <TrendingUp className="h-4 w-4" /> Trial & Conversioni
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pensioni"><PensioniTab /></TabsContent>
@@ -98,6 +106,8 @@ export default function Admin() {
         <TabsContent value="listino-globale"><GlobalPriceListsTab /></TabsContent>
         <TabsContent value="pagamenti-globali"><GlobalPaymentMethodsTab /></TabsContent>
         <TabsContent value="cancellazione-globale"><GlobalCancellationPolicyTab /></TabsContent>
+        <TabsContent value="landing"><LandingConfigTab /></TabsContent>
+        <TabsContent value="trial"><TrialDashboardTab /></TabsContent>
       </Tabs>
     </div>
   );
