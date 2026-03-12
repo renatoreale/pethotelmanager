@@ -520,6 +520,7 @@ export type Database = {
           phone: string | null
           tenant_id: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           address?: string | null
@@ -535,6 +536,7 @@ export type Database = {
           phone?: string | null
           tenant_id: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           address?: string | null
@@ -550,6 +552,7 @@ export type Database = {
           phone?: string | null
           tenant_id?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -1055,6 +1058,63 @@ export type Database = {
           },
         ]
       }
+      quote_requests: {
+        Row: {
+          check_in_date: string
+          check_out_date: string
+          client_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          num_pets: number
+          pet_names: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          check_in_date: string
+          check_out_date: string
+          client_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          num_pets?: number
+          pet_names?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          check_in_date?: string
+          check_out_date?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          num_pets?: number
+          pet_names?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_requests_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           can_delete: boolean
@@ -1401,6 +1461,7 @@ export type Database = {
         Args: { _tenant_id: string }
         Returns: undefined
       }
+      get_client_id: { Args: { _user_id: string }; Returns: string }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -1409,6 +1470,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_client: { Args: { _user_id: string }; Returns: boolean }
       next_booking_number: { Args: { _tenant_id: string }; Returns: string }
       reset_tenant_cancellation_policy: {
         Args: { _tenant_id: string }
