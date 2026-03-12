@@ -184,9 +184,15 @@ export default function ClienteDashboard() {
                     {q.notes && ` · ${q.notes.substring(0, 50)}${q.notes.length > 50 ? "..." : ""}`}
                   </p>
                   {q.status === "rejected" && q.rejection_reason && (
-                    <p className="text-xs text-destructive mt-1">
-                      ❌ Motivo: {q.rejection_reason}
-                    </p>
+                    <div className="text-xs text-destructive mt-1 space-y-1">
+                      <p>❌ Motivo: {q.rejection_reason}</p>
+                      {tenant?.phone && (
+                        <p>
+                          Per trovare una soluzione insieme, contattaci al{" "}
+                          <a href={`tel:${tenant.phone}`} className="underline font-medium">{tenant.phone}</a>.
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               ))}
