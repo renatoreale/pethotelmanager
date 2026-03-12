@@ -63,6 +63,9 @@ export default function ClienteAnimali() {
   const openNew = () => {
     setEditingId(null);
     setForm({ ...emptyForm, pet_type: tenant?.pet_type === "cani" ? "cani" : "gatti" });
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setExistingPhotoUrl(null);
     setDialogOpen(true);
   };
 
