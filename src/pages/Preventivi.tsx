@@ -255,8 +255,8 @@ export default function Preventivi() {
                             {p.cage_pool_type === "singola" ? "Singola" : "Doppia"} ×{p.units_occupied}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm">{format(parseISO(p.check_in_date), "dd MMM yyyy", { locale: it })}</TableCell>
-                        <TableCell className="text-sm">{format(parseISO(p.check_out_date), "dd MMM yyyy", { locale: it })}</TableCell>
+                        <TableCell className="text-sm">{format(parseISO(p.check_in_date), "dd MMM yyyy", { locale: dateLocale })}</TableCell>
+                        <TableCell className="text-sm">{format(parseISO(p.check_out_date), "dd MMM yyyy", { locale: dateLocale })}</TableCell>
                         <TableCell>{duration}</TableCell>
                         <TableCell className="font-medium">€ {Number(p.total_amount ?? 0).toFixed(2)}</TableCell>
                         <TableCell className="text-sm">€ {Number(p.deposit_amount ?? 0).toFixed(2)}</TableCell>
