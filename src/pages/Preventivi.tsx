@@ -156,7 +156,7 @@ export default function Preventivi() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">
-                      {qr.status === "pending" ? "In attesa" : qr.status === "reviewed" ? "In lavorazione" : qr.status}
+                      {qr.status === "pending" ? t("quotes.pending") : qr.status === "reviewed" ? t("quotes.reviewed") : qr.status}
                     </Badge>
                     {(qr.status === "pending" || qr.status === "reviewed") && (
                       <div className="flex gap-1">
