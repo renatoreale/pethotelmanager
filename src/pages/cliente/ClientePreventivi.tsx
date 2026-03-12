@@ -1,0 +1,193 @@
+import { useClienteBookings, useClienteTenant } from "@/hooks/useClienteAuth";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
+import { FileText, CreditCard, Building2, Copy, CheckCircle2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+
+const STATUS_LABELS: Record<string, string> = {
+  preventivo: "In attesa di conferma",
+  confermata: "Confermata",
+  appuntamento_fissato: "Appuntamento fissato",
+  appuntamento_in_fissato: "App. IN fissato",
+  appuntamento_out_fissato: "App. OUT fissato",
+  appuntamento_in_out_fissato: "App. IN-OUT fissati",
+  check_in: "Check-in",
+  in_corso: "In corso",
+  check_out: "Check-out",
+  chiusa: "Chiusa",
+  cancellata: "Cancellata",
+  rimborsata: "Rimborsata",
+  scaduto: "Scaduto",
+};
+
+const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  preventivo: "secondary",
+  confermata: "default",
+  cancellata: "destructive",
+  rimborsata: "destructive",
+  scaduto: "outline",
+  chiusa: "outline",
+};
+
+export default function ClientePreventivi() {
+  const { data: bookings, isLoading } = useClienteBookings();
+  const { data: tenant } = useClienteTenant();
+  const [paymentDialog, setPaymentDialog] = useState<any>(null);
+
+  const handleConfirm = (booking: any) => {
+    setPaymentDialog(booking);
+  };
+
+  const copyIban = () => {
+    if (tenant?.iban) {
+      navigator.clipboard.writeText(tenant.iban);
+      toast.success("IBAN copiato negli appunti");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-8 flex justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
+      <h1 className="text-2xl font-serif font-bold">I Miei Preventivi</h1>
+
+      {(!bookings || bookings.length === 0) && (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <FileText className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+            <p className="text-muted-foreground">Nessun preventivo</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Le tue pratiche appariranno qui quando la pensione creerà un preventivo per te
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="space-y-4">
+        {bookings?.map((b: any) => {
+          const totalPaid = b.payments
+            ?.filter((p: any) => p.payment_type !== "rimborso")
+            .reduce((sum: number, p: any) => sum + Number(p.amount), 0) || 0;
+          const catNames = b.booking_cats?.map((bc: any) => bc.cats?.name).filter(Boolean).join(", ");
+
+          return (
+            <Card key={b.id}>
+              <CardContent className="py-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold">Pratica #{b.booking_number}</p>
+                      <Badge variant={STATUS_VARIANT[b.status] || "default"}>
+                        {STATUS_LABELS[b.status] || b.status}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {format(new Date(b.check_in_date), "dd MMM yyyy", { locale: it })} → {format(new Date(b.check_out_date), "dd MMM yyyy", { locale: it })}
+                    </p>
+                    {catNames && (
+                      <p className="text-xs text-muted-foreground">🐾 {catNames}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="text-lg font-bold">€ {Number(b.total_amount || 0).toFixed(2)}</p>
+                      {totalPaid > 0 && (
+                        <p className="text-xs text-green-600">Pagato: € {totalPaid.toFixed(2)}</p>
+                      )}
+                    </div>
+                    {b.status === "preventivo" && (
+                      <Button size="sm" onClick={() => handleConfirm(b)}>
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Conferma
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Payment Dialog */}
+      <Dialog open={!!paymentDialog} onOpenChange={() => setPaymentDialog(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Conferma Preventivo #{paymentDialog?.booking_number}</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="p-4 rounded-lg bg-muted/50 space-y-2">
+              <p className="text-sm font-medium">Riepilogo</p>
+              <div className="flex justify-between text-sm">
+                <span>Totale</span>
+                <span className="font-bold">€ {Number(paymentDialog?.total_amount || 0).toFixed(2)}</span>
+              </div>
+              {paymentDialog?.deposit_amount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span>Caparra richiesta</span>
+                  <span className="font-medium">€ {Number(paymentDialog.deposit_amount).toFixed(2)}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-sm font-medium">Scegli come pagare</p>
+
+              {/* Stripe payment - placeholder */}
+              <Button className="w-full" variant="default" disabled>
+                <CreditCard className="mr-2 h-4 w-4" />
+                Paga con Carta (presto disponibile)
+              </Button>
+
+              {/* Bank transfer */}
+              {tenant?.iban && (
+                <div className="p-4 rounded-lg border space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <p className="text-sm font-medium">Bonifico Bancario</p>
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    {tenant.iban_holder && (
+                      <p><span className="text-muted-foreground">Intestatario:</span> {tenant.iban_holder}</p>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <p className="flex-1">
+                        <span className="text-muted-foreground">IBAN:</span> {tenant.iban}
+                      </p>
+                      <button onClick={copyIban} className="text-primary hover:text-primary/80">
+                        <Copy className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    {tenant.bank_name && (
+                      <p><span className="text-muted-foreground">Banca:</span> {tenant.bank_name}</p>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Indica nella causale il numero pratica #{paymentDialog?.booking_number}.
+                    La conferma avverrà dopo la verifica del pagamento.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPaymentDialog(null)}>Chiudi</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
