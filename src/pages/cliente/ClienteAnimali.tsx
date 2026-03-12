@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   useClienteProfile,
   useClienteCats,
@@ -16,8 +16,9 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, PawPrint } from "lucide-react";
+import { Plus, Pencil, Trash2, PawPrint, Camera, X } from "lucide-react";
 import { BreedCombobox } from "@/components/BreedCombobox";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CatForm {
   name: string;
