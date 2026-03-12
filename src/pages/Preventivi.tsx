@@ -227,16 +227,16 @@ export default function Preventivi() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>N° Preventivo</TableHead>
-                    <TableHead>Cliente</TableHead>
+                    <TableHead>{t("quotes.quoteNumber")}</TableHead>
+                    <TableHead>{t("bookings.client")}</TableHead>
                     <TableHead>Pets</TableHead>
-                    <TableHead>Casetta</TableHead>
-                    <TableHead>Check-in</TableHead>
-                    <TableHead>Check-out</TableHead>
-                    <TableHead>{stayCalcType === "notti" ? "Notti" : "Giorni"}</TableHead>
-                    <TableHead>Totale</TableHead>
-                    <TableHead>Caparra</TableHead>
-                    <TableHead className="w-[140px]">Azioni</TableHead>
+                    <TableHead>{t("bookings.cageType")}</TableHead>
+                    <TableHead>{t("bookings.checkInDate")}</TableHead>
+                    <TableHead>{t("bookings.checkOutDate")}</TableHead>
+                    <TableHead>{stayCalcType === "notti" ? t("common.nights") : t("common.days")}</TableHead>
+                    <TableHead>{t("common.total")}</TableHead>
+                    <TableHead>{t("quotes.deposit")}</TableHead>
+                    <TableHead className="w-[140px]">{t("common.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
