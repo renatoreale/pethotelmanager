@@ -260,7 +260,7 @@ export function useClientCats(clientId: string | undefined) {
       if (!clientId) return [];
       const { data, error } = await supabase
         .from("cats")
-        .select("id, name, needs_double_cage, pet_type")
+        .select("id, name, needs_double_cage, pet_type, photo_url")
         .eq("client_id", clientId)
         .order("name");
       if (error) throw error;
