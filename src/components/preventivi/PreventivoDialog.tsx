@@ -70,6 +70,13 @@ interface DiscountLine {
 let _idCounter = 0;
 const genId = () => `line-${++_idCounter}-${Date.now()}`;
 
+interface QuotePrefill {
+  client_id: string;
+  check_in_date: string;
+  check_out_date: string;
+  notes?: string;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -79,6 +86,7 @@ interface Props {
   stayCalcType: string;
   countCheckinDay: boolean;
   countCheckoutDay: boolean;
+  prefill?: QuotePrefill | null;
 }
 
 export function PreventivoDialog({
