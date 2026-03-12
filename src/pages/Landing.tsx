@@ -185,7 +185,7 @@ export default function Landing() {
               Piani e Prezzi
             </h2>
             <p className="text-muted-foreground text-lg">
-              Scegli il piano più adatto alla tua pensione. Abbonamento annuale.
+              Scegli il piano più adatto alla tua pensione. Abbonamento annuale o trimestrale.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
@@ -200,6 +200,9 @@ export default function Landing() {
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
                   equivale a €{(STRIPE_TIERS.base.priceYearly / 12).toFixed(0)}/mese
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  oppure €{(STRIPE_TIERS.base.priceYearly / 4).toFixed(0)}/trimestre
                 </p>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -239,6 +242,9 @@ export default function Landing() {
                 <p className="text-sm text-muted-foreground mt-1">
                   equivale a €{(STRIPE_TIERS.pro.priceYearly / 12).toFixed(0)}/mese
                 </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  oppure €{(STRIPE_TIERS.pro.priceYearly / 4).toFixed(0)}/trimestre
+                </p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
@@ -276,6 +282,9 @@ export default function Landing() {
                 <p className="text-sm text-muted-foreground mt-1">
                   equivale a €{(STRIPE_TIERS.gold.priceYearly / 12).toFixed(0)}/mese
                 </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  oppure €{(STRIPE_TIERS.gold.priceYearly / 4).toFixed(0)}/trimestre
+                </p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
@@ -307,6 +316,9 @@ export default function Landing() {
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
                   equivale a €{(STRIPE_TIERS.enterprise.priceYearly / 12).toFixed(0)}/mese
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  oppure €{(STRIPE_TIERS.enterprise.priceYearly / 4).toFixed(0)}/trimestre
                 </p>
               </CardHeader>
               <CardContent className="space-y-6">
