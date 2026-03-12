@@ -43,7 +43,7 @@ export default function Preventivi() {
   const [editing, setEditing] = useState<any>(null);
   const [deleting, setDeleting] = useState<any>(null);
   const [confirming, setConfirming] = useState<any>(null);
-  const [quotePrefill, setQuotePrefill] = useState<{ client_id: string; check_in_date: string; check_out_date: string; notes?: string } | null>(null);
+  const [quotePrefill, setQuotePrefill] = useState<{ client_id: string; check_in_date: string; check_out_date: string; notes?: string; quote_request_id?: string } | null>(null);
   const [rejectingQuote, setRejectingQuote] = useState<any>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
