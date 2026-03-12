@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { FileText, CreditCard, Building2, Copy, Download, Loader2, CheckCircle2 } from "lucide-react";
+import { FileText, CreditCard, Building2, Copy, Download, Loader2, CheckCircle2, Eye } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
