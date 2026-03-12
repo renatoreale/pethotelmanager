@@ -13,6 +13,7 @@ import {
   PawPrint, Calendar, Users, CreditCard, FileText, BarChart3,
   Check, Star, ArrowRight, Shield, Clock, Zap, Building2, Crown, Video, Send } from
 "lucide-react";
+import landingLogo from "@/assets/pethotelmanager_landing_logo.png";
 
 const BASE_FEATURES = [
 "Gestione prenotazioni",
@@ -187,7 +188,7 @@ export default function Landing() {
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-background" />
         <div className="relative flex flex-col items-center text-center px-6 -mt-10">
           <img
-            src="/logo.png"
+            src={landingLogo}
             alt="Pet Hotel Manager"
             className="w-[340px] md:w-[440px] lg:w-[500px] h-auto object-contain drop-shadow-xl"
           />
