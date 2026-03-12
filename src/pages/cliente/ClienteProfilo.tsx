@@ -49,6 +49,7 @@ export default function ClienteProfilo() {
         address: form.address || null,
       } as any);
       toast.success("Profilo aggiornato");
+      navigate("/cliente/dashboard");
     } catch (err: any) {
       toast.error(err.message || "Errore nel salvataggio");
     }
