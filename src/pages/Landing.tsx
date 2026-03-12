@@ -24,7 +24,7 @@ const PRO_FEATURES = [
 "Gestione pagamenti completa",
 "Preventivi e documenti PDF",
 "Occupazione casette",
-"Planning e task",
+
 "Multi-pensione (fino a 3)",
 "Report e statistiche"];
 

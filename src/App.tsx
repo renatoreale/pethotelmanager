@@ -19,7 +19,7 @@ import CheckOut from "./pages/CheckOut";
 import Pagamenti from "./pages/Pagamenti";
 import Clienti from "./pages/Clienti";
 import Gatti from "./pages/Gatti";
-import Planning from "./pages/Planning";
+
 import Utenti from "./pages/Utenti";
 import TemplateEmail from "./pages/TemplateEmail";
 import Pensione from "./pages/Pensione";
@@ -68,7 +68,7 @@ const App = () => (
               <Route path="/gatti" element={<Gatti />} />
               <Route path="/registro-gatti" element={<RegistroGatti />} />
               <Route path="/presenze" element={<Presenze />} />
-              <Route path="/planning" element={<Planning />} />
+              
               <Route path="/utenti" element={<Utenti />} />
               <Route path="/template-email" element={<TemplateEmail />} />
               <Route path="/pensione" element={<Pensione />} />

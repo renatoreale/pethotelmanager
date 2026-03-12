@@ -39,7 +39,7 @@ const registryNav: NavItem[] = [
 
 
 const operationsNav: NavItem[] = [
-{ title: "Planning", url: "/planning", icon: Calendar, resource: "planning" },
+
 { title: "Occupazione Casette", url: "/occupazione", icon: Grid3X3, resource: "occupazione" }];
 
 
