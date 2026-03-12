@@ -221,7 +221,7 @@ export default function ClienteAnimali() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Razza</Label>
-                <Input value={form.breed} onChange={(e) => setForm({ ...form, breed: e.target.value })} />
+                <BreedCombobox value={form.breed} onChange={(v) => setForm({ ...form, breed: v })} petType={form.pet_type || tenant?.pet_type} />
               </div>
               <div className="space-y-2">
                 <Label>Colore</Label>

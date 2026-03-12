@@ -36,6 +36,7 @@ import { useCreateClient, useUpdateClient, type Client } from "@/hooks/useClient
 import { useCreateCat, useCats, useDeleteCat, useUpdateCat } from "@/hooks/useCats";
 import { supabase } from "@/integrations/supabase/client";
 import { usePetLabels, type PetType } from "@/hooks/usePetLabels";
+import { BreedCombobox } from "@/components/BreedCombobox";
 
 const clientSchema = z.object({
   first_name: z.string().trim().min(1, "Nome obbligatorio").max(100),
