@@ -144,6 +144,8 @@ export default function Landing() {
   }, []);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+    setShowNav(false);
     const onScroll = () => setShowNav(window.scrollY > 100);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
