@@ -28,6 +28,7 @@ export function AppLayout() {
   const { isAdmin, isManager, isTitolare } = usePermissions();
   const { data: allTenants } = useAllTenants();
   const { data: tenantConfig } = useTenantConfig();
+  useTenantLocale();
 
   const { isCeo } = usePermissions();
   const tenantOptions = isAdmin
