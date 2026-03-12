@@ -19,7 +19,7 @@ export interface Client {
   updated_at: string;
 }
 
-export type ClientInsert = Omit<Client, "id" | "created_at" | "updated_at">;
+export type ClientInsert = Omit<Client, "id" | "created_at" | "updated_at" | "user_id">;
 export type ClientUpdate = Partial<ClientInsert>;
 
 export function useClients(search?: string) {
