@@ -100,6 +100,7 @@ function AnagraficaTab() {
   const [pec, setPec] = useState<string | null>(null);
   const [titolareName, setTitolareName] = useState<string | null>(null);
   const [petType, setPetType] = useState<string | null>(null);
+  const [locale, setLocale] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -113,6 +114,7 @@ function AnagraficaTab() {
   const currentPec = pec ?? (config as any)?.pec ?? "";
   const currentTitolareName = titolareName ?? (config as any)?.titolare_name ?? "";
   const currentPetType = petType ?? (config as any)?.pet_type ?? "gatti";
+  const currentLocale = locale ?? (config as any)?.locale ?? "it";
   const currentLogoUrl = (config as any)?.logo_url ?? null;
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -160,11 +162,13 @@ function AnagraficaTab() {
         pec: currentPec || null,
         titolare_name: currentTitolareName || null,
         pet_type: currentPetType as "gatti" | "cani" | "entrambi",
+        locale: currentLocale,
       });
       toast.success("Anagrafica salvata");
       setName(null); setEmail(null); setPhone(null); setAddress(null);
       setCap(null); setCity(null);
       setPartitaIva(null); setPec(null); setTitolareName(null); setPetType(null);
+      setLocale(null);
     } catch (err: any) {
       toast.error(err.message || "Errore nel salvataggio");
     }
@@ -247,6 +251,21 @@ function AnagraficaTab() {
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">Determina le etichette nell'interfaccia</p>
+          </div>
+        </div>
+
+        {/* Lingua */}
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Lingua interfaccia / Interface language</Label>
+            <Select value={currentLocale} onValueChange={(v) => setLocale(v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="it">🇮🇹 Italiano</SelectItem>
+                <SelectItem value="en">🇬🇧 English</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">La lingua utilizzata nell'interfaccia del gestionale</p>
           </div>
         </div>
 

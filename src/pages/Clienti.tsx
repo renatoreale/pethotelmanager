@@ -5,37 +5,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Plus, Search, Pencil, Trash2, AlertTriangle, Mail, CheckCircle2, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
+import { useTranslation } from "react-i18next";
 
 export default function Clienti() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -61,9 +47,9 @@ export default function Clienti() {
     if (!deletingClient) return;
     try {
       await deleteClient.mutateAsync(deletingClient.id);
-      toast.success("Cliente eliminato");
+      toast.success(t("clients.deleted"));
     } catch (err: any) {
-      toast.error(err.message || "Errore nell'eliminazione");
+      toast.error(err.message || "Error");
     }
     setDeletingClient(null);
   };
@@ -79,9 +65,9 @@ export default function Clienti() {
       if (data?.error) throw new Error(data.error);
       
       setInviteResult({ link: data.recovery_link, email: inviteClient.email || "" });
-      toast.success(`Invito creato per ${inviteClient.email}`);
+      toast.success(`${t("clients.inviteSuccess")}`);
     } catch (err: any) {
-      toast.error(err.message || "Errore nell'invio dell'invito");
+      toast.error(err.message || "Error");
     } finally {
       setInviting(false);
     }
@@ -90,7 +76,7 @@ export default function Clienti() {
   const copyLink = () => {
     if (inviteResult?.link) {
       navigator.clipboard.writeText(inviteResult.link);
-      toast.success("Link copiato negli appunti");
+      toast.success(t("clients.linkCopied"));
     }
   };
 
@@ -98,13 +84,13 @@ export default function Clienti() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Clienti</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("clients.title")}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Anagrafica clienti · {clients?.length ?? 0} registrati
+            {t("clients.subtitle")} · {clients?.length ?? 0} {t("common.registered")}
           </p>
         </div>
         <Button onClick={handleNew}>
-          <Plus className="mr-2 h-4 w-4" /> Nuovo Cliente
+          <Plus className="mr-2 h-4 w-4" /> {t("clients.newClient")}
         </Button>
       </div>
 
@@ -114,7 +100,7 @@ export default function Clienti() {
             <div className="relative max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Cerca per nome, email, telefono..."
+                placeholder={t("clients.searchPlaceholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -123,23 +109,23 @@ export default function Clienti() {
           </div>
 
           {isLoading ? (
-            <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
+            <div className="py-12 text-center text-muted-foreground">{t("common.loading")}</div>
           ) : !clients?.length ? (
             <div className="py-12 text-center text-muted-foreground">
-              {search ? "Nessun risultato" : "Nessun cliente registrato"}
+              {search ? t("common.noResults") : t("clients.noClients")}
             </div>
           ) : (
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Telefono</TableHead>
-                    <TableHead>Animali</TableHead>
-                    <TableHead>Portale</TableHead>
-                    <TableHead>Stato</TableHead>
-                    <TableHead className="w-[130px]">Azioni</TableHead>
+                    <TableHead>{t("common.name")}</TableHead>
+                    <TableHead>{t("common.email")}</TableHead>
+                    <TableHead>{t("common.phone")}</TableHead>
+                    <TableHead>{t("clients.animals")}</TableHead>
+                    <TableHead>{t("clients.portal")}</TableHead>
+                    <TableHead>{t("common.status")}</TableHead>
+                    <TableHead className="w-[130px]">{t("common.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -164,17 +150,17 @@ export default function Clienti() {
                         {client.user_id ? (
                           <Badge variant="default" className="text-xs gap-1">
                             <CheckCircle2 className="h-3 w-3" />
-                            Attivo
+                            {t("clients.portalActive")}
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-xs">Non invitato</Badge>
+                          <Badge variant="outline" className="text-xs">{t("clients.notInvited")}</Badge>
                         )}
                       </TableCell>
                       <TableCell>
                         {client.is_blacklisted ? (
-                          <Badge variant="destructive" className="text-xs">Blacklist</Badge>
+                          <Badge variant="destructive" className="text-xs">{t("clients.blacklist")}</Badge>
                         ) : (
-                          <Badge variant="secondary" className="text-xs">Attivo</Badge>
+                          <Badge variant="secondary" className="text-xs">{t("common.active")}</Badge>
                         )}
                       </TableCell>
                       <TableCell>
@@ -183,7 +169,7 @@ export default function Clienti() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              title="Invita al portale clienti"
+                              title={t("clients.inviteTitle")}
                               onClick={() => {
                                 setInviteClient(client);
                                 setInviteResult(null);
@@ -218,46 +204,42 @@ export default function Clienti() {
         client={editingClient}
       />
 
-      {/* Delete dialog */}
       <AlertDialog open={!!deletingClient} onOpenChange={() => setDeletingClient(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminare il cliente?</AlertDialogTitle>
+            <AlertDialogTitle>{t("clients.deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {deletingClient && `Stai per eliminare ${deletingClient.first_name} ${deletingClient.last_name}. Verranno eliminati anche tutti i gatti associati. Questa azione non può essere annullata.`}
+              {deletingClient && t("clients.deleteDescription", { name: `${deletingClient.first_name} ${deletingClient.last_name}` })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Elimina
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Invite dialog */}
       <Dialog open={!!inviteClient} onOpenChange={() => { setInviteClient(null); setInviteResult(null); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Invita al Portale Clienti</DialogTitle>
+            <DialogTitle>{t("clients.inviteTitle")}</DialogTitle>
             <DialogDescription>
-              {inviteClient && `Crea un account per ${inviteClient.first_name} ${inviteClient.last_name} (${inviteClient.email})`}
+              {inviteClient && t("clients.inviteDescription", { name: `${inviteClient.first_name} ${inviteClient.last_name}`, email: inviteClient.email })}
             </DialogDescription>
           </DialogHeader>
 
           {!inviteResult ? (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Verrà creato un account e generato un link per impostare la password.
-                Il cliente potrà poi accedere all'area riservata per gestire i propri dati,
-                visualizzare preventivi e richiederne di nuovi.
+                {t("clients.inviteExplanation")}
               </p>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setInviteClient(null)}>Annulla</Button>
+                <Button variant="outline" onClick={() => setInviteClient(null)}>{t("common.cancel")}</Button>
                 <Button onClick={handleInvite} disabled={inviting}>
                   <Mail className="mr-2 h-4 w-4" />
-                  {inviting ? "Creazione in corso..." : "Crea Invito"}
+                  {inviting ? t("clients.creating") : t("clients.createInvite")}
                 </Button>
               </DialogFooter>
             </div>
@@ -265,10 +247,10 @@ export default function Clienti() {
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-green-600">
                 <CheckCircle2 className="h-5 w-5" />
-                <p className="font-medium text-sm">Invito creato con successo!</p>
+                <p className="font-medium text-sm">{t("clients.inviteSuccess")}</p>
               </div>
               <p className="text-xs text-muted-foreground">
-                Invia questo link al cliente per permettergli di impostare la password e accedere al portale:
+                {t("clients.inviteLinkDescription")}
               </p>
               <div className="flex items-center gap-2 p-3 rounded-lg bg-muted text-xs break-all">
                 <span className="flex-1 font-mono">{inviteResult.link}</span>
@@ -278,7 +260,7 @@ export default function Clienti() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => { setInviteClient(null); setInviteResult(null); }}>
-                  Chiudi
+                  {t("common.close")}
                 </Button>
               </DialogFooter>
             </div>

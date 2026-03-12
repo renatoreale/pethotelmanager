@@ -1,0 +1,1 @@
+ALTER TABLE public.tenants ADD COLUMN locale TEXT NOT NULL DEFAULT 'it';

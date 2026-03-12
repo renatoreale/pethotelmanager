@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAllTenants } from "@/hooks/useAdmin";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
+import { useTenantLocale } from "@/hooks/useTenantLocale";
 import { Building2, ChevronDown, Check } from "lucide-react";
 import {
   DropdownMenu,
@@ -27,6 +28,7 @@ export function AppLayout() {
   const { isAdmin, isManager, isTitolare } = usePermissions();
   const { data: allTenants } = useAllTenants();
   const { data: tenantConfig } = useTenantConfig();
+  useTenantLocale();
 
   const { isCeo } = usePermissions();
   const tenantOptions = isAdmin
