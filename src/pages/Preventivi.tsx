@@ -134,7 +134,7 @@ export default function Preventivi() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Inbox className="h-5 w-5 text-orange-600" />
-              <h2 className="text-base font-semibold">Richieste preventivo dai clienti</h2>
+              <h2 className="text-base font-semibold">{t("quotes.incomingRequests")}</h2>
               <Badge variant="secondary">{quoteRequests.length}</Badge>
             </div>
           </CardHeader>
