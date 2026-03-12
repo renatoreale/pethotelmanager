@@ -451,6 +451,7 @@ export type Database = {
           name: string
           needs_double_cage: boolean
           pet_type: Database["public"]["Enums"]["pet_type"] | null
+          photo_url: string | null
           sibling_group_id: string | null
           tenant_id: string
           updated_at: string
@@ -472,6 +473,7 @@ export type Database = {
           name: string
           needs_double_cage?: boolean
           pet_type?: Database["public"]["Enums"]["pet_type"] | null
+          photo_url?: string | null
           sibling_group_id?: string | null
           tenant_id: string
           updated_at?: string
@@ -493,6 +495,7 @@ export type Database = {
           name?: string
           needs_double_cage?: boolean
           pet_type?: Database["public"]["Enums"]["pet_type"] | null
+          photo_url?: string | null
           sibling_group_id?: string | null
           tenant_id?: string
           updated_at?: string
