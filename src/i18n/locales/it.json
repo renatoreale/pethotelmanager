@@ -41,7 +41,14 @@
     "logout": "Esci",
     "notEditable": "Non modificabile",
     "onlyAdminCanEdit": "Modificabile solo dall'amministratore",
-    "registered": "registrati"
+    "registered": "registrati",
+    "error": "Errore",
+    "allOk": "Tutto in ordine ✓",
+    "next4days": "Prossimi 4 giorni",
+    "attention": "Attenzione",
+    "register": "Registra",
+    "saveError": "Errore nel salvataggio",
+    "deleteError": "Errore nell'eliminazione"
   },
   "roles": {
     "admin": "Amministratore",
@@ -98,14 +105,15 @@
     "overbooking": "Overbooking!",
     "available": "disponibili",
     "expiringQuotes": "Preventivi in scadenza",
-    "expiringQuotesDesc": "{{count}} preventivo/i con check-in imminente",
+    "expiringQuotesDesc": "{{count}} preventivo/i in scadenza nei prossimi 3 giorni",
     "missingInAppt": "IN senza app.",
     "missingOutAppt": "OUT senza app.",
-    "missingInApptTitle": "Prenotazioni senza appuntamento IN",
-    "missingOutApptTitle": "Prenotazioni senza appuntamento OUT",
+    "missingInApptTitle": "Check-in senza app.",
+    "missingOutApptTitle": "Check-out senza app.",
     "scheduleAppt": "Fissa appuntamento",
     "dailyBookings": "Prenotazioni del giorno",
-    "noBookingsToday": "Nessuna prenotazione per questa giornata"
+    "dailyBookingsFor": "Prenotazioni — {{date}}",
+    "noBookingsToday": "Nessuna prenotazione per questa data"
   },
   "clients": {
     "title": "Clienti",
@@ -159,7 +167,8 @@
     "behavioralNotes": "Note comportamentali",
     "dietaryNotes": "Note alimentari",
     "needsDouble": "Necessita casetta doppia",
-    "siblingGroup": "Gruppo fratelli"
+    "siblingGroup": "Gruppo fratelli",
+    "newPet": "Nuovo {{pet}}"
   },
   "bookings": {
     "title": "Prenotazioni",
@@ -175,11 +184,17 @@
     "downloadPDF": "Scarica PDF",
     "downloadCustodyForm": "Scarica Modulo di Affido",
     "deleteTitle": "Eliminare la prenotazione?",
-    "deleteDescription": "Stai per eliminare la prenotazione {{number}}. Questa azione non può essere annullata.",
+    "deleteDescription": "Vuoi eliminare definitivamente la prenotazione {{number}}? Questa azione non può essere annullata.",
     "transitionTitle": "Confermi la transizione?",
-    "transitionDescription": "Prenotazione {{number}}: {{action}}",
+    "transitionDescription": "Vuoi procedere con \"{{action}}\" per la prenotazione {{number}}?",
     "booking": "prenotazione",
-    "booking_plural": "prenotazioni"
+    "booking_plural": "prenotazioni",
+    "deleted": "Prenotazione {{number}} eliminata",
+    "transitioned": "Prenotazione {{number}}: {{action}}",
+    "confirmedToSchedule": "Prenotazioni confermate — da fissare",
+    "waitingAppt": "{{count}} prenotazione/i in attesa di appuntamento",
+    "scheduleAppt": "Fissa Appuntamento",
+    "editDates": "Modifica date"
   },
   "quotes": {
     "title": "Preventivi",
@@ -205,10 +220,13 @@
     "pending": "In attesa",
     "reviewed": "In lavorazione",
     "quote": "preventivo",
-    "quote_plural": "preventivi"
+    "quote_plural": "preventivi",
+    "downloadQuotePDF": "Scarica Preventivo PDF",
+    "downloadCustodyForm": "Scarica Modulo Affido"
   },
   "appointments": {
     "title": "Appuntamenti",
+    "subtitle": "Gestisci gli appuntamenti di check-in e check-out",
     "noAppointments": "Nessun appuntamento trovato",
     "time": "Orario",
     "type": "Tipo",
@@ -216,16 +234,30 @@
     "confirmRemoved": "Conferma rimossa",
     "appointmentConfirmed": "Appuntamento confermato",
     "deleted": "Appuntamento eliminato",
+    "updated": "Appuntamento aggiornato",
     "deleteTitle": "Eliminare l'appuntamento?",
-    "deleteDescription": "Stai per eliminare l'appuntamento per {{client}} il {{date}}.",
+    "deleteDescription": "Appuntamento delle {{time}} per {{client}}. Questa azione non può essere annullata.",
     "day": "Giorno",
     "week": "Settimana",
     "month": "Mese",
-    "custom": "Personalizzato",
+    "custom": "Dal – Al",
     "yesterday": "← Ieri",
     "tomorrowNav": "Domani →",
     "prev": "← Prec.",
-    "nextNav": "Succ. →"
+    "nextNav": "Succ. →",
+    "editAppointment": "Modifica Appuntamento",
+    "typeLabel": "Tipo:",
+    "dateLabel": "Data:",
+    "clientLabel": "Cliente:",
+    "currentTime": "Orario attuale:",
+    "selectNewTime": "Seleziona nuovo orario",
+    "noSlotsConfigured": "Nessuno slot configurato per questo giorno.",
+    "current": "attuale",
+    "editDates": "Modifica date",
+    "fromTo": "Dal: {{date}}",
+    "toDate": "Al: {{date}}",
+    "searchPlaceholder": "Cerca per n° prenotazione, cliente, pet, email, telefono...",
+    "confirmedCount": "Confermati"
   },
   "checkIn": {
     "title": "Check-in",
@@ -238,7 +270,8 @@
     "actualDate": "Data effettiva di check-in",
     "addPayment": "Registra pagamento al check-in",
     "petDetails": "Dettagli animale",
-    "verifyData": "Verifica e aggiorna i dati prima del check-in"
+    "verifyData": "Verifica e aggiorna i dati prima del check-in",
+    "error": "Errore durante il check-in: {{message}}"
   },
   "checkOut": {
     "title": "Check-out",
@@ -249,7 +282,8 @@
     "searchPlaceholder": "Cerca cliente, pet o numero prenotazione...",
     "completed": "Check-out completato per {{name}}",
     "actualDate": "Data effettiva di check-out",
-    "addPayment": "Registra pagamento al check-out"
+    "addPayment": "Registra pagamento al check-out",
+    "error": "Errore durante il check-out: {{message}}"
   },
   "attendance": {
     "title": "Presenze in Pensione",
@@ -271,10 +305,11 @@
     "noResults": "Nessun risultato",
     "bookings_count": "{{count}} pren.",
     "transactions": "Transazioni",
+    "transactionsFor": "Transazioni — {{number}}",
     "newTransaction": "Nuova Transazione",
     "editTransaction": "Modifica Transazione",
-    "deleteTransaction": "Elimina transazione",
-    "deleteTransactionConfirm": "Stai per eliminare questa transazione. Questa azione non può essere annullata.",
+    "deleteTransaction": "Eliminare la transazione?",
+    "deleteTransactionConfirm": "Questa azione non può essere annullata.",
     "transactionSaved": "Transazione registrata",
     "transactionUpdated": "Transazione aggiornata",
     "transactionDeleted": "Transazione eliminata",
@@ -286,7 +321,13 @@
     "editTotal": "Modifica totale",
     "totalUpdated": "Totale aggiornato",
     "paid": "Pagato",
-    "total": "Totale"
+    "total": "Totale",
+    "noTransactions": "Nessuna transazione registrata",
+    "amountLabel": "Importo (€)",
+    "typeLabel": "Tipo",
+    "dateLabel": "Data",
+    "methodLabel": "Modalità",
+    "notesLabel": "Note"
   },
   "paymentTypes": {
     "caparra": "Caparra",
@@ -451,7 +492,31 @@
     "noAccount": "Non hai un account?",
     "hasAccount": "Hai già un account?",
     "signUpHere": "Registrati qui",
-    "loginHere": "Accedi qui"
+    "loginHere": "Accedi qui",
+    "appName": "Pet Hotel Manager",
+    "loginSubtitle": "Accedi al gestionale",
+    "loginLoading": "Accesso in corso...",
+    "loginSuccess": "Accesso effettuato",
+    "createAccount": "Crea Account",
+    "registerSubtitle": "Registrati per accedere al gestionale",
+    "registering": "Registrazione...",
+    "registerSuccess": "Registrazione completata! Controlla la tua email per confermare.",
+    "minChars": "Minimo 6 caratteri",
+    "recoverPassword": "Recupera Password",
+    "recoverSubtitle": "Inserisci la tua email per ricevere il link di reset",
+    "sendResetLink": "Invia link di reset",
+    "sending": "Invio...",
+    "resetSent": "Email inviata! Controlla la tua casella.",
+    "resetSentDescription": "Abbiamo inviato un'email a <strong>{{email}}</strong> con le istruzioni per reimpostare la password.",
+    "backToLogin": "Torna al login",
+    "newPassword": "Nuova Password",
+    "newPasswordSubtitle": "Inserisci la tua nuova password",
+    "newPasswordLabel": "Nuova password",
+    "updatePassword": "Aggiorna password",
+    "updating": "Aggiornamento...",
+    "passwordUpdated": "Password aggiornata con successo!",
+    "invalidLink": "Link non valido o scaduto",
+    "hasAccountLogin": "Hai già un account? Accedi"
   },
   "days": {
     "monday": "Lunedì",

@@ -14,24 +14,12 @@ import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import { useAllPayments } from "@/hooks/usePayments";
 import { usePermissions } from "@/hooks/usePermissions";
 import { format, parseISO, startOfMonth, endOfMonth, startOfYear, endOfYear, isToday as isTodayFn, addDays } from "date-fns";
-import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { usePetLabels } from "@/hooks/usePetLabels";
+import { useTranslation } from "react-i18next";
+import { useDateLocale } from "@/hooks/useDateLocale";
 
-const STATUS_LABELS: Record<string, string> = {
-  preventivo: "Preventivo",
-  confermata: "Confermata",
-  appuntamento_in_fissato: "App. IN",
-  appuntamento_out_fissato: "App. OUT",
-  appuntamento_in_out_fissato: "App. IN-OUT",
-  check_in: "Check-in",
-  in_corso: "In corso",
-  check_out: "Check-out",
-  chiusa: "Chiusa",
-  cancellata: "Cancellata",
-  rimborsata: "Rimborsata",
-  scaduto: "Scaduto",
-};
+// Status labels now come from translations
 
 const STATUS_COLORS: Record<string, string> = {
   preventivo: "bg-muted text-muted-foreground",
@@ -49,6 +37,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function Index() {
+  const { t } = useTranslation();
+  const dateLocale = useDateLocale();
   const { data: bookings, isLoading: loadingBookings } = useBookings();
   const { data: tenantConfig } = useTenantConfig();
   const { data: allPayments } = useAllPayments();
@@ -186,8 +176,8 @@ export default function Index() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground text-sm mt-1">Caricamento...</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.title")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t("common.loading")}</p>
         </div>
       </div>
     );
@@ -204,54 +194,54 @@ export default function Index() {
   const PetIcon = pet.iconName === "Cat" ? Cat : pet.iconName === "Dog" ? Dog : PawPrint;
   const kpis = [
     {
-      title: `${pet.pluralCap} in struttura`,
+      title: t("dashboard.petsInStructure", { pets: pet.pluralCap }),
       value: String(s.catsInStructure),
-      subtitle: maxCats > 0 ? `su ${maxCats} posti in struttura` : `su ${totalSlots} posti totali`,
+      subtitle: maxCats > 0 ? t("dashboard.outOf", { total: maxCats }) : t("dashboard.outOfTotal", { total: totalSlots }),
       icon: PetIcon,
       color: "text-primary",
       bg: "bg-primary/10",
       show: true,
     },
     {
-      title: "Prenotazioni attive",
+      title: t("dashboard.activeBookings"),
       value: String(s.activeBookings),
-      subtitle: "confermate o in corso",
+      subtitle: t("dashboard.confirmedOrActive"),
       icon: CalendarCheck,
       color: "text-accent",
       bg: "bg-accent/10",
       show: !isOperatoreRestricted,
     },
     {
-      title: isSelectedToday ? "Check-in oggi" : "Check-in",
+      title: isSelectedToday ? t("dashboard.checkInsToday") : t("dashboard.checkInsOn"),
       value: String(s.checkInsToday),
-      subtitle: isSelectedToday ? "previsti per oggi" : `previsti per il ${format(selectedDate, "dd MMM", { locale: it })}`,
+      subtitle: isSelectedToday ? t("dashboard.expectedToday") : t("dashboard.expectedFor", { date: format(selectedDate, "dd MMM", { locale: dateLocale }) }),
       icon: LogIn,
       color: "text-success",
       bg: "bg-success/10",
       show: true,
     },
     {
-      title: isSelectedToday ? "Check-out oggi" : "Check-out",
+      title: isSelectedToday ? t("dashboard.checkOutsToday") : t("dashboard.checkOutsOn"),
       value: String(s.checkOutsToday),
-      subtitle: isSelectedToday ? "previsti per oggi" : `previsti per il ${format(selectedDate, "dd MMM", { locale: it })}`,
+      subtitle: isSelectedToday ? t("dashboard.expectedToday") : t("dashboard.expectedFor", { date: format(selectedDate, "dd MMM", { locale: dateLocale }) }),
       icon: LogOut,
       color: "text-orange-600 dark:text-orange-400",
       bg: "bg-orange-100 dark:bg-orange-900/30",
       show: true,
     },
     {
-      title: "Incasso anno",
+      title: t("dashboard.yearlyRevenue"),
       value: `€ ${s.yearRevenue.toLocaleString("it-IT", { maximumFractionDigits: 0 })}`,
-      subtitle: format(selectedDate, "yyyy", { locale: it }),
+      subtitle: format(selectedDate, "yyyy", { locale: dateLocale }),
       icon: CreditCard,
       color: "text-primary",
       bg: "bg-primary/10",
       show: canSeeRevenue,
     },
     {
-      title: "Incasso mese",
+      title: t("dashboard.monthlyRevenue"),
       value: `€ ${s.monthRevenue.toLocaleString("it-IT", { maximumFractionDigits: 0 })}`,
-      subtitle: format(selectedDate, "MMMM yyyy", { locale: it }),
+      subtitle: format(selectedDate, "MMMM yyyy", { locale: dateLocale }),
       icon: CreditCard,
       color: "text-warning",
       bg: "bg-warning/10",
@@ -268,9 +258,9 @@ export default function Index() {
     <div className="space-y-8">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.title")}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {isSelectedToday ? "Panoramica operativa" : `Dati del ${format(selectedDate, "dd MMMM yyyy", { locale: it })}`} — {tenantConfig?.name ?? "Pensione"}
+            {isSelectedToday ? t("dashboard.operationalOverview") : t("dashboard.dataFor", { date: format(selectedDate, "dd MMMM yyyy", { locale: dateLocale }) })} — {tenantConfig?.name ?? "Pensione"}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -282,7 +272,7 @@ export default function Index() {
               onClick={() => missingApptRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
             >
               <LogIn className="h-4 w-4" />
-              {s.missingAppointment.length} IN senza app.
+              {s.missingAppointment.length} {t("dashboard.missingInAppt")}
             </Button>
           )}
           {!isOperatoreRestricted && s.missingCheckOutAppt.length > 0 && (
@@ -293,13 +283,13 @@ export default function Index() {
               onClick={() => missingCheckOutRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
             >
               <LogOut className="h-4 w-4" />
-              {s.missingCheckOutAppt.length} OUT senza app.
+              {s.missingCheckOutAppt.length} {t("dashboard.missingOutAppt")}
             </Button>
           )}
           {!isOperatoreRestricted && <AvailabilityCheckDialog />}
           {!isSelectedToday && !isOperatoreRestricted && (
             <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date())}>
-              Oggi
+              {t("common.today")}
             </Button>
           )}
           {!isOperatoreRestricted && (
@@ -307,7 +297,7 @@ export default function Index() {
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
                   <CalendarIcon className="h-4 w-4" />
-                  {format(selectedDate, "dd MMM yyyy", { locale: it })}
+                  {format(selectedDate, "dd MMM yyyy", { locale: dateLocale })}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="end">
@@ -348,7 +338,7 @@ export default function Index() {
       {isOperatoreRestricted && (
         <Card className="border shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base">Domani</CardTitle>
+            <CardTitle className="text-base">{t("common.tomorrow")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
@@ -380,13 +370,13 @@ export default function Index() {
         <Card className="border shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">
-              Occupazione casette {!isSelectedToday && `— ${format(selectedDate, "dd MMM yyyy", { locale: it })}`}
+              {t("dashboard.cageOccupancy")} {!isSelectedToday && `— ${format(selectedDate, "dd MMM yyyy", { locale: dateLocale })}`}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <div className="flex justify-between text-sm mb-1.5">
-                <span className="text-muted-foreground">Singole</span>
+                 <span className="text-muted-foreground">{t("dashboard.single")}</span>
                 <div className="flex items-center gap-1.5">
                   {singoleOverbooking && <AlertCircle className="h-4 w-4 text-[hsl(340,80%,35%)]" />}
                   <span className={cn("font-medium", singoleOverbooking && "text-[hsl(340,80%,35%)]")}>{s.singoleOccupied} / {numSingole}</span>
@@ -396,7 +386,7 @@ export default function Index() {
             </div>
             <div>
               <div className="flex justify-between text-sm mb-1.5">
-                <span className="text-muted-foreground">Doppie</span>
+                <span className="text-muted-foreground">{t("dashboard.double")}</span>
                 <div className="flex items-center gap-1.5">
                   {doppieOverbooking && <AlertCircle className="h-4 w-4 text-[hsl(340,80%,35%)]" />}
                   <span className={cn("font-medium", doppieOverbooking && "text-[hsl(340,80%,35%)]")}>{s.doppieOccupied} / {numDoppie}</span>
@@ -415,12 +405,12 @@ export default function Index() {
           <Card className="border shadow-sm">
             <CardHeader>
               <CardTitle className="text-base">
-                {isSelectedToday ? "Prenotazioni del giorno" : `Prenotazioni — ${format(selectedDate, "dd MMM yyyy", { locale: it })}`}
+                {isSelectedToday ? t("dashboard.dailyBookings") : t("dashboard.dailyBookingsFor", { date: format(selectedDate, "dd MMM yyyy", { locale: dateLocale }) })}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {s.dayBookings.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">Nessuna prenotazione per questa data</p>
+                <p className="text-sm text-muted-foreground text-center py-4">{t("dashboard.noBookingsToday")}</p>
               ) : (
                 <div className="space-y-3">
                   {s.dayBookings.map((b: any) => {
@@ -433,7 +423,7 @@ export default function Index() {
                           <p className="text-xs text-muted-foreground">{catNames} · {b.booking_number}</p>
                         </div>
                         <Badge variant="outline" className={`text-xs ${STATUS_COLORS[b.status] ?? ""}`}>
-                          {STATUS_LABELS[b.status] ?? b.status}
+                          {t(`statuses.${b.status}`, { defaultValue: b.status })}
                         </Badge>
                       </div>
                     );
@@ -449,13 +439,13 @@ export default function Index() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2 text-destructive">
                   <LogIn className="h-5 w-5" />
-                  Check-in senza app. ({s.missingAppointment.length})
+                  {t("dashboard.missingInApptTitle")} ({s.missingAppointment.length})
                 </CardTitle>
-                <p className="text-xs text-muted-foreground">Prossimi 4 giorni</p>
+                <p className="text-xs text-muted-foreground">{t("common.next4days")}</p>
               </CardHeader>
               <CardContent>
                 {s.missingAppointment.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">Tutto in ordine ✓</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">{t("common.allOk")}</p>
                 ) : (
                   <div className="space-y-2">
                     {s.missingAppointment.map((b: any) => {
@@ -469,7 +459,7 @@ export default function Index() {
                               <p className="text-xs text-muted-foreground">{catNames} · {b.booking_number}</p>
                             </div>
                             <span className="text-xs text-muted-foreground">
-                              {format(new Date(b.check_in_date + "T00:00:00"), "dd MMM", { locale: it })}
+                              {format(new Date(b.check_in_date + "T00:00:00"), "dd MMM", { locale: dateLocale })}
                             </span>
                           </div>
                           <Button
@@ -478,9 +468,9 @@ export default function Index() {
                             className="gap-1.5 text-xs mt-1.5 w-full"
                             onClick={() => setAppointmentBooking(b)}
                           >
-                            <CalendarIconAlt className="h-3.5 w-3.5" />
-                            Fissa appuntamento
-                          </Button>
+                             <CalendarIconAlt className="h-3.5 w-3.5" />
+                             {t("dashboard.scheduleAppt")}
+                           </Button>
                         </div>
                       );
                     })}
@@ -495,14 +485,14 @@ export default function Index() {
             <Card className={cn("border shadow-sm h-full", s.missingCheckOutAppt.length > 0 && "border-l-4 border-l-[hsl(25,90%,50%)]")}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2 text-[hsl(25,90%,40%)]">
-                  <LogOut className="h-5 w-5" />
-                  Check-out senza app. ({s.missingCheckOutAppt.length})
-                </CardTitle>
-                <p className="text-xs text-muted-foreground">Prossimi 4 giorni</p>
+                   <LogOut className="h-5 w-5" />
+                   {t("dashboard.missingOutApptTitle")} ({s.missingCheckOutAppt.length})
+                 </CardTitle>
+                 <p className="text-xs text-muted-foreground">{t("common.next4days")}</p>
               </CardHeader>
               <CardContent>
                 {s.missingCheckOutAppt.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">Tutto in ordine ✓</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">{t("common.allOk")}</p>
                 ) : (
                   <div className="space-y-2">
                     {s.missingCheckOutAppt.map((b: any) => {
@@ -516,7 +506,7 @@ export default function Index() {
                               <p className="text-xs text-muted-foreground">{catNames} · {b.booking_number}</p>
                             </div>
                             <span className="text-xs text-muted-foreground">
-                              {format(new Date(b.check_out_date + "T00:00:00"), "dd MMM", { locale: it })}
+                              {format(new Date(b.check_out_date + "T00:00:00"), "dd MMM", { locale: dateLocale })}
                             </span>
                           </div>
                           <Button
@@ -525,9 +515,9 @@ export default function Index() {
                             className="gap-1.5 text-xs mt-1.5 w-full"
                             onClick={() => setAppointmentBooking(b)}
                           >
-                            <CalendarIconAlt className="h-3.5 w-3.5" />
-                            Fissa appuntamento
-                          </Button>
+                             <CalendarIconAlt className="h-3.5 w-3.5" />
+                             {t("dashboard.scheduleAppt")}
+                           </Button>
                         </div>
                       );
                     })}
@@ -551,9 +541,9 @@ export default function Index() {
           <CardContent className="flex items-center gap-3 py-4">
             <AlertTriangle className="h-5 w-5 text-warning shrink-0" />
             <div>
-              <p className="text-sm font-medium">Attenzione</p>
+              <p className="text-sm font-medium">{t("common.attention")}</p>
               <p className="text-xs text-muted-foreground">
-                {s.expiringPreventivi} preventiv{s.expiringPreventivi === 1 ? "o" : "i"} in scadenza nei prossimi 3 giorni
+                {t("dashboard.expiringQuotesDesc", { count: s.expiringPreventivi })}
               </p>
             </div>
           </CardContent>

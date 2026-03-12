@@ -41,7 +41,14 @@
     "logout": "Logout",
     "notEditable": "Not editable",
     "onlyAdminCanEdit": "Only administrators can edit this",
-    "registered": "registered"
+    "registered": "registered",
+    "error": "Error",
+    "allOk": "All good ✓",
+    "next4days": "Next 4 days",
+    "attention": "Attention",
+    "register": "Register",
+    "saveError": "Error saving",
+    "deleteError": "Error deleting"
   },
   "roles": {
     "admin": "Administrator",
@@ -98,14 +105,15 @@
     "overbooking": "Overbooking!",
     "available": "available",
     "expiringQuotes": "Expiring quotes",
-    "expiringQuotesDesc": "{{count}} quote(s) with upcoming check-in",
+    "expiringQuotesDesc": "{{count}} quote(s) expiring in the next 3 days",
     "missingInAppt": "IN w/o appt.",
     "missingOutAppt": "OUT w/o appt.",
-    "missingInApptTitle": "Bookings without IN appointment",
-    "missingOutApptTitle": "Bookings without OUT appointment",
+    "missingInApptTitle": "Check-in w/o appt.",
+    "missingOutApptTitle": "Check-out w/o appt.",
     "scheduleAppt": "Schedule appointment",
     "dailyBookings": "Daily bookings",
-    "noBookingsToday": "No bookings for this day"
+    "dailyBookingsFor": "Bookings — {{date}}",
+    "noBookingsToday": "No bookings for this date"
   },
   "clients": {
     "title": "Clients",
@@ -159,7 +167,8 @@
     "behavioralNotes": "Behavioral notes",
     "dietaryNotes": "Dietary notes",
     "needsDouble": "Needs double cage",
-    "siblingGroup": "Sibling group"
+    "siblingGroup": "Sibling group",
+    "newPet": "New {{pet}}"
   },
   "bookings": {
     "title": "Bookings",
@@ -175,11 +184,17 @@
     "downloadPDF": "Download PDF",
     "downloadCustodyForm": "Download Custody Form",
     "deleteTitle": "Delete booking?",
-    "deleteDescription": "You are about to delete booking {{number}}. This action cannot be undone.",
+    "deleteDescription": "You are about to permanently delete booking {{number}}. This action cannot be undone.",
     "transitionTitle": "Confirm transition?",
-    "transitionDescription": "Booking {{number}}: {{action}}",
+    "transitionDescription": "Proceed with \"{{action}}\" for booking {{number}}?",
     "booking": "booking",
-    "booking_plural": "bookings"
+    "booking_plural": "bookings",
+    "deleted": "Booking {{number}} deleted",
+    "transitioned": "Booking {{number}}: {{action}}",
+    "confirmedToSchedule": "Confirmed bookings — to schedule",
+    "waitingAppt": "{{count}} booking(s) waiting for appointment",
+    "scheduleAppt": "Schedule Appointment",
+    "editDates": "Edit dates"
   },
   "quotes": {
     "title": "Quotes",
@@ -205,10 +220,13 @@
     "pending": "Pending",
     "reviewed": "Under review",
     "quote": "quote",
-    "quote_plural": "quotes"
+    "quote_plural": "quotes",
+    "downloadQuotePDF": "Download Quote PDF",
+    "downloadCustodyForm": "Download Custody Form"
   },
   "appointments": {
     "title": "Appointments",
+    "subtitle": "Manage check-in and check-out appointments",
     "noAppointments": "No appointments found",
     "time": "Time",
     "type": "Type",
@@ -216,16 +234,30 @@
     "confirmRemoved": "Confirmation removed",
     "appointmentConfirmed": "Appointment confirmed",
     "deleted": "Appointment deleted",
+    "updated": "Appointment updated",
     "deleteTitle": "Delete appointment?",
-    "deleteDescription": "You are about to delete the appointment for {{client}} on {{date}}.",
+    "deleteDescription": "Appointment at {{time}} for {{client}}. This action cannot be undone.",
     "day": "Day",
     "week": "Week",
     "month": "Month",
-    "custom": "Custom",
+    "custom": "From – To",
     "yesterday": "← Yesterday",
     "tomorrowNav": "Tomorrow →",
     "prev": "← Prev",
-    "nextNav": "Next →"
+    "nextNav": "Next →",
+    "editAppointment": "Edit Appointment",
+    "typeLabel": "Type:",
+    "dateLabel": "Date:",
+    "clientLabel": "Client:",
+    "currentTime": "Current time:",
+    "selectNewTime": "Select new time",
+    "noSlotsConfigured": "No slots configured for this day.",
+    "current": "current",
+    "editDates": "Edit dates",
+    "fromTo": "From: {{date}}",
+    "toDate": "To: {{date}}",
+    "searchPlaceholder": "Search by booking no., client, pet, email, phone...",
+    "confirmedCount": "Confirmed"
   },
   "checkIn": {
     "title": "Check-in",
@@ -238,7 +270,8 @@
     "actualDate": "Actual check-in date",
     "addPayment": "Record payment at check-in",
     "petDetails": "Pet details",
-    "verifyData": "Verify and update data before check-in"
+    "verifyData": "Verify and update data before check-in",
+    "error": "Error during check-in: {{message}}"
   },
   "checkOut": {
     "title": "Check-out",
@@ -249,7 +282,8 @@
     "searchPlaceholder": "Search client, pet or booking number...",
     "completed": "Check-out completed for {{name}}",
     "actualDate": "Actual check-out date",
-    "addPayment": "Record payment at check-out"
+    "addPayment": "Record payment at check-out",
+    "error": "Error during check-out: {{message}}"
   },
   "attendance": {
     "title": "Facility Attendance",
@@ -271,10 +305,11 @@
     "noResults": "No results",
     "bookings_count": "{{count}} book.",
     "transactions": "Transactions",
+    "transactionsFor": "Transactions — {{number}}",
     "newTransaction": "New Transaction",
     "editTransaction": "Edit Transaction",
-    "deleteTransaction": "Delete transaction",
-    "deleteTransactionConfirm": "You are about to delete this transaction. This action cannot be undone.",
+    "deleteTransaction": "Delete transaction?",
+    "deleteTransactionConfirm": "This action cannot be undone.",
     "transactionSaved": "Transaction recorded",
     "transactionUpdated": "Transaction updated",
     "transactionDeleted": "Transaction deleted",
@@ -286,7 +321,13 @@
     "editTotal": "Edit total",
     "totalUpdated": "Total updated",
     "paid": "Paid",
-    "total": "Total"
+    "total": "Total",
+    "noTransactions": "No transactions recorded",
+    "amountLabel": "Amount (€)",
+    "typeLabel": "Type",
+    "dateLabel": "Date",
+    "methodLabel": "Method",
+    "notesLabel": "Notes"
   },
   "paymentTypes": {
     "caparra": "Deposit",
@@ -451,7 +492,31 @@
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
     "signUpHere": "Sign up here",
-    "loginHere": "Login here"
+    "loginHere": "Login here",
+    "appName": "Pet Hotel Manager",
+    "loginSubtitle": "Sign in to the management system",
+    "loginLoading": "Signing in...",
+    "loginSuccess": "Signed in successfully",
+    "createAccount": "Create Account",
+    "registerSubtitle": "Register to access the management system",
+    "registering": "Registering...",
+    "registerSuccess": "Registration complete! Check your email to confirm.",
+    "minChars": "Minimum 6 characters",
+    "recoverPassword": "Recover Password",
+    "recoverSubtitle": "Enter your email to receive the reset link",
+    "sendResetLink": "Send reset link",
+    "sending": "Sending...",
+    "resetSent": "Email sent! Check your inbox.",
+    "resetSentDescription": "We've sent an email to <strong>{{email}}</strong> with instructions to reset your password.",
+    "backToLogin": "Back to login",
+    "newPassword": "New Password",
+    "newPasswordSubtitle": "Enter your new password",
+    "newPasswordLabel": "New password",
+    "updatePassword": "Update password",
+    "updating": "Updating...",
+    "passwordUpdated": "Password updated successfully!",
+    "invalidLink": "Invalid or expired link",
+    "hasAccountLogin": "Already have an account? Login"
   },
   "days": {
     "monday": "Monday",
