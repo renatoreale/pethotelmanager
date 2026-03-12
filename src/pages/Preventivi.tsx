@@ -176,10 +176,10 @@ export default function Preventivi() {
                               quote_request_id: qr.id,
                             });
                             setDialogOpen(true);
-                            toast.success("Richiesta presa in carico — compila il preventivo");
+                            toast.success(t("quotes.takenCharge"));
                           }}
                         >
-                          {qr.status === "pending" ? "Prendi in carico" : "Crea preventivo"}
+                          {qr.status === "pending" ? t("quotes.takeCharge") : t("quotes.createQuote")}
                         </Button>
                         <Button
                           size="sm"
