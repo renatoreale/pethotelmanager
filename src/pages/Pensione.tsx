@@ -1533,7 +1533,7 @@ function StripeConfigTab() {
                 type="password"
                 value={key}
                 onChange={(e) => setKey(e.target.value)}
-                placeholder="sk_live_... oppure sk_test_..."
+                placeholder="sk_live_..."
                 className="font-mono"
               />
               <Button onClick={handleSave} disabled={saving || !key.trim()}>

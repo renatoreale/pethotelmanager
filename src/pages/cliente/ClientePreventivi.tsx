@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { generateModuloAffidoPDF } from "@/lib/generateModuloAffidoPDF";
 import { useSearchParams } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const STATUS_LABELS: Record<string, string> = {
   preventivo: "In attesa di conferma",
