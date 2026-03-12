@@ -4,11 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { STRIPE_TIERS } from "@/lib/stripe-config";
 import { toast } from "sonner";
 import {
   PawPrint, Calendar, Users, CreditCard, FileText, BarChart3,
-  Check, Star, ArrowRight, Shield, Clock, Zap, Building2, Crown } from
+  Check, Star, ArrowRight, Shield, Clock, Zap, Building2, Crown, Video, Send } from
 "lucide-react";
 
 const BASE_FEATURES = [
