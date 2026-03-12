@@ -316,6 +316,44 @@ export default function Preventivi() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* Reject quote request dialog */}
+      <AlertDialog open={!!rejectingQuote} onOpenChange={() => setRejectingQuote(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Rifiuta richiesta preventivo</AlertDialogTitle>
+            <AlertDialogDescription>
+              {rejectingQuote?.client && `Richiesta di ${rejectingQuote.client.first_name} ${rejectingQuote.client.last_name}`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-2">
+            <Label>Motivazione (visibile al cliente)</Label>
+            <Textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Es: Non abbiamo disponibilità per le date richieste..."
+              rows={3}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={!rejectionReason.trim()}
+              onClick={async () => {
+                await updateQuoteStatus.mutateAsync({
+                  id: rejectingQuote.id,
+                  status: "rejected",
+                  rejection_reason: rejectionReason.trim(),
+                });
+                toast.success("Richiesta rifiutata");
+                setRejectingQuote(null);
+              }}
+            >
+              Rifiuta
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
