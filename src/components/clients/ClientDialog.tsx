@@ -428,10 +428,11 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">Razza</Label>
-                        <Input
-                          placeholder="Europeo"
+                        <BreedCombobox
                           value={cat.breed}
-                          onChange={(e) => updateCat(index, "breed", e.target.value)}
+                          onChange={(v) => updateCat(index, "breed", v)}
+                          petType={cat.pet_type || (pet.petType !== "entrambi" ? pet.petType : undefined)}
+                          placeholder="Europeo"
                         />
                       </div>
                       <div className="space-y-1">
