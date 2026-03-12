@@ -75,6 +75,7 @@ interface QuotePrefill {
   check_in_date: string;
   check_out_date: string;
   notes?: string;
+  quote_request_id?: string;
 }
 
 interface Props {
