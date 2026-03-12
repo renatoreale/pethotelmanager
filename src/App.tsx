@@ -19,7 +19,7 @@ import CheckOut from "./pages/CheckOut";
 import Pagamenti from "./pages/Pagamenti";
 import Clienti from "./pages/Clienti";
 import Gatti from "./pages/Gatti";
-import Planning from "./pages/Planning";
+
 import Utenti from "./pages/Utenti";
 import TemplateEmail from "./pages/TemplateEmail";
 import Pensione from "./pages/Pensione";
