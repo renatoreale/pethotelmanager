@@ -17,6 +17,12 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_ANON_KEY") ?? ""
   );
 
+  const supabaseAdmin = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } }
+  );
+
   try {
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
@@ -27,7 +33,26 @@ serve(async (req) => {
     const { booking_id, amount, description } = await req.json();
     if (!booking_id || !amount) throw new Error("Parametri mancanti");
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+    // Get booking to find tenant_id
+    const { data: booking, error: bookingErr } = await supabaseAdmin
+      .from("bookings")
+      .select("tenant_id")
+      .eq("id", booking_id)
+      .single();
+    if (bookingErr || !booking) throw new Error("Prenotazione non trovata");
+
+    // Get tenant's Stripe secret key
+    const { data: stripeConfig, error: stripeErr } = await supabaseAdmin
+      .from("tenant_stripe_keys")
+      .select("stripe_secret_key")
+      .eq("tenant_id", booking.tenant_id)
+      .single();
+
+    if (stripeErr || !stripeConfig?.stripe_secret_key) {
+      throw new Error("Questa pensione non ha configurato i pagamenti Stripe. Contatta la pensione per assistenza.");
+    }
+
+    const stripe = new Stripe(stripeConfig.stripe_secret_key, {
       apiVersion: "2025-08-27.basil",
     });
 
@@ -40,7 +65,6 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
 
-    // Create a one-time payment session for the deposit amount
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -51,7 +75,7 @@ serve(async (req) => {
             product_data: {
               name: description || `Caparra prenotazione`,
             },
-            unit_amount: Math.round(amount * 100), // cents
+            unit_amount: Math.round(amount * 100),
           },
           quantity: 1,
         },
@@ -60,6 +84,7 @@ serve(async (req) => {
       metadata: {
         booking_id,
         user_id: user.id,
+        tenant_id: booking.tenant_id,
       },
       success_url: `${origin}/cliente/preventivi?payment=success&booking=${booking_id}`,
       cancel_url: `${origin}/cliente/preventivi?payment=cancelled`,

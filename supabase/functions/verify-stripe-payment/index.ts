@@ -24,7 +24,6 @@ serve(async (req) => {
   );
 
   try {
-    // Authenticate user
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
     const { data } = await supabaseClient.auth.getUser(token);
@@ -34,24 +33,7 @@ serve(async (req) => {
     const { booking_id } = await req.json();
     if (!booking_id) throw new Error("booking_id mancante");
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2025-08-27.basil",
-    });
-
-    // Find the checkout session for this booking
-    const sessions = await stripe.checkout.sessions.list({ limit: 10 });
-    const session = sessions.data.find(
-      (s) => s.metadata?.booking_id === booking_id && s.payment_status === "paid"
-    );
-
-    if (!session) {
-      return new Response(JSON.stringify({ confirmed: false, reason: "Pagamento non trovato o non completato" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
-
-    // Check if booking is still in "preventivo" status
+    // Get booking with tenant_id
     const { data: booking, error: bookingError } = await supabaseAdmin
       .from("bookings")
       .select("id, status, tenant_id, deposit_amount, total_amount")
@@ -64,6 +46,34 @@ serve(async (req) => {
 
     if (booking.status !== "preventivo") {
       return new Response(JSON.stringify({ confirmed: true, reason: "Già confermata" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // Get tenant's Stripe secret key
+    const { data: stripeConfig, error: stripeErr } = await supabaseAdmin
+      .from("tenant_stripe_keys")
+      .select("stripe_secret_key")
+      .eq("tenant_id", booking.tenant_id)
+      .single();
+
+    if (stripeErr || !stripeConfig?.stripe_secret_key) {
+      throw new Error("Chiave Stripe non configurata per questa pensione");
+    }
+
+    const stripe = new Stripe(stripeConfig.stripe_secret_key, {
+      apiVersion: "2025-08-27.basil",
+    });
+
+    // Find the checkout session for this booking
+    const sessions = await stripe.checkout.sessions.list({ limit: 10 });
+    const session = sessions.data.find(
+      (s) => s.metadata?.booking_id === booking_id && s.payment_status === "paid"
+    );
+
+    if (!session) {
+      return new Response(JSON.stringify({ confirmed: false, reason: "Pagamento non trovato o non completato" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
