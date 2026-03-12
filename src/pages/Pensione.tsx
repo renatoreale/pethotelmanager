@@ -1457,7 +1457,7 @@ function StripeConfigTab() {
                 <div>
                   <p className="font-medium">Copia la chiave segreta (Secret Key)</p>
                   <p className="text-muted-foreground text-xs mt-0.5">
-                    Dopo la registrazione, vai in <strong>Developers → API Keys</strong> e copia la chiave che inizia con <code className="bg-muted px-1 rounded">sk_live_</code> (produzione) o <code className="bg-muted px-1 rounded">sk_test_</code> (test).
+                    Dopo la registrazione, vai in <strong>Developers → API Keys</strong> e copia la chiave che inizia con <code className="bg-muted px-1 rounded">sk_live_</code>.
                   </p>
                 </div>
               </li>
