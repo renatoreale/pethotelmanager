@@ -163,13 +163,12 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero */}
-      <header className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10" />
-        <nav className="relative max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      {/* Navbar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/favicon.png" alt="Pet Hotel Manager" className="h-10 w-10 rounded-xl object-contain" />
-            <span className="font-serif text-xl font-bold text-foreground">Pet Hotel Manager</span>
+            <img src="/favicon.png" alt="Pet Hotel Manager" className="h-9 w-9 rounded-lg object-contain" />
+            <span className="font-serif text-lg font-bold text-foreground">Pet Hotel Manager</span>
           </div>
           <div className="flex items-center gap-3">
             <a href="#demo">
@@ -180,18 +179,26 @@ export default function Landing() {
             </Link>
             <Button size="sm" onClick={handleStartTrial}>Prova Gratis</Button>
           </div>
-        </nav>
+        </div>
+      </nav>
 
-        <div className="relative max-w-5xl mx-auto px-6 pt-2 pb-28 text-center">
-          <img src="/logo.png" alt="Pet Hotel Manager" className="mx-auto mb-4 h-96 w-auto object-contain" />
-          <Badge className="mb-6 bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">
-            <Zap className="h-3 w-3 mr-1" /> {trialDays} giorni di prova gratuita
+      {/* Hero — logo full viewport */}
+      <header className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-background" />
+        <div className="relative flex flex-col items-center text-center px-6 -mt-10">
+          <img
+            src="/logo.png"
+            alt="Pet Hotel Manager"
+            className="w-[340px] md:w-[440px] lg:w-[500px] h-auto object-contain drop-shadow-xl"
+          />
+          <Badge className="mt-6 mb-4 bg-primary/10 text-primary border-primary/20 hover:bg-primary/15 text-sm px-4 py-1.5">
+            <Zap className="h-3.5 w-3.5 mr-1.5" /> {trialDays} giorni di prova gratuita
           </Badge>
-          <h1 className="text-4xl md:text-6xl font-serif font-bold text-foreground leading-tight mb-6">
-{config?.hero_title?.concat("\n") || "Pet Hotel Manager"}
+          <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground leading-tight mb-3">
+            {config?.hero_title || "Il gestionale completo per la tua"}
             <span className="text-primary block">pensione per animali</span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+          <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-8">
             {config?.hero_description || "Gestisci prenotazioni, pagamenti, clienti e animali in un unico posto. Supporta pensioni per gatti, cani o entrambi."}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -478,7 +485,7 @@ export default function Landing() {
       <footer className="border-t py-8">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>🐾</span> CatHotel Manager © {new Date().getFullYear()}
+            <img src="/favicon.png" alt="" className="h-5 w-5 rounded object-contain" /> Pet Hotel Manager © {new Date().getFullYear()}
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <Link to="/login" className="hover:text-foreground transition-colors">Accedi</Link>
