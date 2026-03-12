@@ -10,7 +10,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Search, CheckCircle2, FileText, Download } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, CheckCircle2, FileText, Download, Inbox } from "lucide-react";
 import { ConfirmPreventivoDialog } from "@/components/preventivi/ConfirmPreventivoDialog";
 import { toast } from "sonner";
 import { format, differenceInDays, parseISO } from "date-fns";
@@ -23,6 +23,7 @@ import {
 import { PreventivoDialog } from "@/components/preventivi/PreventivoDialog";
 import { usePaymentSplits } from "@/hooks/usePaymentSplits";
 import { generatePreventivoPDF } from "@/lib/generatePreventivoPDF";
+import { useQuoteRequests, useUpdateQuoteRequestStatus } from "@/hooks/useQuoteRequests";
 
 export default function Preventivi() {
   const { data: preventivi, isLoading } = usePreventivi();
@@ -32,6 +33,8 @@ export default function Preventivi() {
   const confirmPreventivo = useConfirmPreventivo();
   const { data: tenantConfig } = useTenantConfig();
   const { data: paymentSplits } = usePaymentSplits();
+  const { data: quoteRequests } = useQuoteRequests();
+  const updateQuoteStatus = useUpdateQuoteRequestStatus();
 
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -116,6 +119,56 @@ export default function Preventivi() {
         </div>
         <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Nuovo Preventivo</Button>
       </div>
+
+      {/* Incoming quote requests from clients */}
+      {quoteRequests && quoteRequests.length > 0 && (
+        <Card className="border-orange-200 dark:border-orange-800">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Inbox className="h-5 w-5 text-orange-600" />
+              <h2 className="text-base font-semibold">Richieste preventivo dai clienti</h2>
+              <Badge variant="secondary">{quoteRequests.length}</Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {quoteRequests.map((qr: any) => (
+                <div key={qr.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div className="space-y-1">
+                    <p className="font-medium text-sm">
+                      {qr.client ? `${qr.client.first_name} ${qr.client.last_name}` : "Cliente"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(parseISO(qr.check_in_date), "dd MMM yyyy", { locale: it })} → {format(parseISO(qr.check_out_date), "dd MMM yyyy", { locale: it })}
+                      {" · "}{qr.pet_names || `${qr.num_pets} animale/i`}
+                    </p>
+                    {qr.notes && (
+                      <p className="text-xs text-muted-foreground italic">"{qr.notes}"</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">
+                      {qr.status === "pending" ? "In attesa" : qr.status === "reviewed" ? "In lavorazione" : qr.status}
+                    </Badge>
+                    {qr.status === "pending" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={async () => {
+                          await updateQuoteStatus.mutateAsync({ id: qr.id, status: "reviewed" });
+                          toast.success("Richiesta presa in carico");
+                        }}
+                      >
+                        Prendi in carico
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

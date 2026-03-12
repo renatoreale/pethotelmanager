@@ -1,9 +1,9 @@
-import { useClienteProfile, useClienteCats, useClienteBookings, useClienteTenant } from "@/hooks/useClienteAuth";
+import { useClienteProfile, useClienteCats, useClienteBookings, useClienteTenant, useClienteQuoteRequests } from "@/hooks/useClienteAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { FileText, PawPrint, User, AlertTriangle, CheckCircle2, FilePlus } from "lucide-react";
+import { FileText, PawPrint, User, AlertTriangle, CheckCircle2, FilePlus, Clock, Send } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -21,11 +21,26 @@ const STATUS_LABELS: Record<string, string> = {
   cancellata: "Cancellata",
 };
 
+const QUOTE_STATUS_LABELS: Record<string, string> = {
+  pending: "In attesa",
+  reviewed: "In lavorazione",
+  converted: "Convertita",
+  rejected: "Rifiutata",
+};
+
+const QUOTE_STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  pending: "secondary",
+  reviewed: "default",
+  converted: "default",
+  rejected: "destructive",
+};
+
 export default function ClienteDashboard() {
   const { data: profile } = useClienteProfile();
   const { data: cats } = useClienteCats();
   const { data: bookings } = useClienteBookings();
   const { data: tenant } = useClienteTenant();
+  const { data: quoteRequests } = useClienteQuoteRequests();
 
   // Profile completeness check
   const missingFields: string[] = [];
@@ -38,6 +53,8 @@ export default function ClienteDashboard() {
   const attive = bookings?.filter((b) => 
     ["confermata", "appuntamento_fissato", "appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato", "check_in", "in_corso"].includes(b.status)
   ) || [];
+
+  const pendingRequests = quoteRequests?.filter((q: any) => q.status === "pending") || [];
 
   return (
     <div className="p-4 md:p-8 space-y-6 max-w-5xl mx-auto">
@@ -72,7 +89,7 @@ export default function ClienteDashboard() {
       )}
 
       {/* Overview cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <Card>
           <CardContent className="flex items-center gap-4 py-5">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/30">
@@ -93,6 +110,18 @@ export default function ClienteDashboard() {
             <div>
               <p className="text-2xl font-bold">{attive.length}</p>
               <p className="text-xs text-muted-foreground">Prenotazioni attive</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center gap-4 py-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-100 dark:bg-orange-900/30">
+              <Send className="h-5 w-5 text-orange-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{pendingRequests.length}</p>
+              <p className="text-xs text-muted-foreground">Richieste inviate</p>
             </div>
           </CardContent>
         </Card>
@@ -131,6 +160,35 @@ export default function ClienteDashboard() {
           </Link>
         </Button>
       </div>
+
+      {/* Quote requests */}
+      {quoteRequests && quoteRequests.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Le mie richieste di preventivo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {quoteRequests.slice(0, 5).map((q: any) => (
+                <div key={q.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div>
+                    <p className="font-medium text-sm">
+                      {format(new Date(q.check_in_date), "dd MMM yyyy", { locale: it })} → {format(new Date(q.check_out_date), "dd MMM yyyy", { locale: it })}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      🐾 {q.pet_names || `${q.num_pets} animale/i`}
+                      {q.notes && ` · ${q.notes.substring(0, 50)}${q.notes.length > 50 ? "..." : ""}`}
+                    </p>
+                  </div>
+                  <Badge variant={QUOTE_STATUS_VARIANT[q.status] || "secondary"}>
+                    {QUOTE_STATUS_LABELS[q.status] || q.status}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent bookings */}
       {bookings && bookings.length > 0 && (
