@@ -217,9 +217,13 @@ export default function ClienteAnimali() {
           <Card key={cat.id}>
             <CardContent className="flex items-center justify-between py-4">
               <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-lg">
-                  {cat.pet_type === "cani" ? "🐕" : "🐱"}
-                </div>
+                {cat.photo_url ? (
+                  <img src={cat.photo_url} alt={cat.name} className="h-12 w-12 rounded-full object-cover border-2 border-primary/20" />
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-lg">
+                    {cat.pet_type === "cani" ? "🐕" : "🐱"}
+                  </div>
+                )}
                 <div>
                   <p className="font-medium">{cat.name}</p>
                   <p className="text-xs text-muted-foreground">
