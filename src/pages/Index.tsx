@@ -258,9 +258,9 @@ export default function Index() {
     <div className="space-y-8">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.title")}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {isSelectedToday ? "Panoramica operativa" : `Dati del ${format(selectedDate, "dd MMMM yyyy", { locale: it })}`} — {tenantConfig?.name ?? "Pensione"}
+            {isSelectedToday ? t("dashboard.operationalOverview") : t("dashboard.dataFor", { date: format(selectedDate, "dd MMMM yyyy", { locale: dateLocale }) })} — {tenantConfig?.name ?? "Pensione"}
           </p>
         </div>
         <div className="flex items-center gap-2">
