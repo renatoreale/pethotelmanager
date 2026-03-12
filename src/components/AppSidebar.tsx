@@ -111,9 +111,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground font-serif font-bold text-sm">
-            🐾
-          </div>
+          <img src={petHotelLogo} alt="Pet Hotel Manager" className="h-9 w-9 shrink-0 rounded-lg object-contain" />
           {!collapsed &&
           <div className="flex flex-col">
               <span className="font-serif font-bold text-sm text-sidebar-foreground">
