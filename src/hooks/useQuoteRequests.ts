@@ -24,10 +24,12 @@ export function useQuoteRequests() {
 export function useUpdateQuoteRequestStatus() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+    mutationFn: async ({ id, status, rejection_reason }: { id: string; status: string; rejection_reason?: string }) => {
+      const update: any = { status };
+      if (rejection_reason !== undefined) update.rejection_reason = rejection_reason;
       const { error } = await supabase
         .from("quote_requests")
-        .update({ status })
+        .update(update)
         .eq("id", id);
       if (error) throw error;
     },

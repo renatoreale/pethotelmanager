@@ -154,26 +154,36 @@ export default function Preventivi() {
                       {qr.status === "pending" ? "In attesa" : qr.status === "reviewed" ? "In lavorazione" : qr.status}
                     </Badge>
                     {(qr.status === "pending" || qr.status === "reviewed") && (
-                      <Button
-                        size="sm"
-                        variant={qr.status === "pending" ? "outline" : "default"}
-                        onClick={async () => {
-                          if (qr.status === "pending") {
-                            await updateQuoteStatus.mutateAsync({ id: qr.id, status: "reviewed" });
-                          }
-                          setEditing(null);
-                          setQuotePrefill({
-                            client_id: qr.client_id,
-                            check_in_date: qr.check_in_date,
-                            check_out_date: qr.check_out_date,
-                            notes: qr.notes || undefined,
-                          });
-                          setDialogOpen(true);
-                          toast.success("Richiesta presa in carico — compila il preventivo");
-                        }}
-                      >
-                        {qr.status === "pending" ? "Prendi in carico" : "Crea preventivo"}
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant={qr.status === "pending" ? "outline" : "default"}
+                          onClick={async () => {
+                            if (qr.status === "pending") {
+                              await updateQuoteStatus.mutateAsync({ id: qr.id, status: "reviewed" });
+                            }
+                            setEditing(null);
+                            setQuotePrefill({
+                              client_id: qr.client_id,
+                              check_in_date: qr.check_in_date,
+                              check_out_date: qr.check_out_date,
+                              notes: qr.notes || undefined,
+                            });
+                            setDialogOpen(true);
+                            toast.success("Richiesta presa in carico — compila il preventivo");
+                          }}
+                        >
+                          {qr.status === "pending" ? "Prendi in carico" : "Crea preventivo"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => { setRejectingQuote(qr); setRejectionReason(""); }}
+                        >
+                          <XCircle className="h-4 w-4" />
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>
