@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX clients_tenant_email_unique ON public.clients (tenant_id, email) WHERE email IS NOT NULL AND email != '';
+CREATE UNIQUE INDEX clients_tenant_phone_unique ON public.clients (tenant_id, phone) WHERE phone IS NOT NULL AND phone != '';
