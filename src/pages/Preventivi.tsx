@@ -72,8 +72,8 @@ export default function Preventivi() {
     });
   }, [preventivi, search]);
 
-  const openNew = () => { setEditing(null); setDialogOpen(true); };
-  const openEdit = (p: any) => { setEditing(p); setDialogOpen(true); };
+  const openNew = () => { setEditing(null); setQuotePrefill(null); setDialogOpen(true); };
+  const openEdit = (p: any) => { setEditing(p); setQuotePrefill(null); setDialogOpen(true); };
 
   const handleConfirm = async (depositData: {
     amount: number;
