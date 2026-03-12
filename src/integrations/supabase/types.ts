@@ -1517,6 +1517,7 @@ export type Database = {
         Args: { _tenant_id: string }
         Returns: undefined
       }
+      expire_preventivi: { Args: { _tenant_id?: string }; Returns: number }
       get_appointment_slot_counts: {
         Args: { _appointment_type: string; _date: string; _tenant_id: string }
         Returns: Json
