@@ -277,6 +277,7 @@ export default function Preventivi() {
         stayCalcType={stayCalcType}
         countCheckinDay={countCheckinDay}
         countCheckoutDay={countCheckoutDay}
+        prefill={quotePrefill}
       />
 
       <ConfirmPreventivoDialog
