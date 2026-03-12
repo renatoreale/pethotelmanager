@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ClienteProtectedRoute } from "@/components/cliente/ClienteProtectedRoute";
+import { ClienteLayout } from "@/components/cliente/ClienteLayout";
 import { AppLayout } from "@/components/AppLayout";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -32,6 +34,15 @@ import Landing from "./pages/Landing";
 import RegisterTrial from "./pages/RegisterTrial";
 import Statistiche from "./pages/Statistiche";
 
+// Client portal
+import ClienteLogin from "./pages/cliente/ClienteLogin";
+import ClienteSetPassword from "./pages/cliente/ClienteSetPassword";
+import ClienteDashboard from "./pages/cliente/ClienteDashboard";
+import ClienteProfilo from "./pages/cliente/ClienteProfilo";
+import ClienteAnimali from "./pages/cliente/ClienteAnimali";
+import ClientePreventivi from "./pages/cliente/ClientePreventivi";
+import ClienteRichiestaPreventivo from "./pages/cliente/ClienteRichiestaPreventivo";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -49,6 +60,21 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+
+            {/* Client portal - public */}
+            <Route path="/cliente/login" element={<ClienteLogin />} />
+            <Route path="/cliente/set-password" element={<ClienteSetPassword />} />
+
+            {/* Client portal - protected */}
+            <Route element={<ClienteProtectedRoute />}>
+              <Route element={<ClienteLayout />}>
+                <Route path="/cliente" element={<ClienteDashboard />} />
+                <Route path="/cliente/profilo" element={<ClienteProfilo />} />
+                <Route path="/cliente/animali" element={<ClienteAnimali />} />
+                <Route path="/cliente/preventivi" element={<ClientePreventivi />} />
+                <Route path="/cliente/richiedi-preventivo" element={<ClienteRichiestaPreventivo />} />
+              </Route>
+            </Route>
 
             {/* Protected routes */}
             <Route
