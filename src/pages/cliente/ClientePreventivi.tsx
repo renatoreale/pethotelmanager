@@ -157,6 +157,47 @@ export default function ClientePreventivi() {
     }
   };
 
+  const handleDownloadPreventivo = async (booking: any) => {
+    setGeneratingPreventivoPdf(booking.id);
+    try {
+      if (!tenant) {
+        toast.error("Dati pensione non disponibili");
+        return;
+      }
+
+      // Fetch full booking data with client and cats
+      const { data: fullBooking } = await supabase
+        .from("bookings")
+        .select("*, client:clients(id, first_name, last_name, email, phone), booking_cats(cat_id, cat:cats(id, name))")
+        .eq("id", booking.id)
+        .single();
+
+      if (!fullBooking) {
+        toast.error("Dati preventivo non disponibili");
+        return;
+      }
+
+      // Fetch payment splits for tenant
+      const { data: splits } = await supabase
+        .from("payment_split_configs")
+        .select("*")
+        .eq("tenant_id", tenant.id)
+        .order("sort_order");
+
+      await generatePreventivoPDF(
+        fullBooking as any,
+        tenant as any,
+        (splits ?? []) as any,
+        tenant.stay_calc_type || "notti",
+      );
+      toast.success("Preventivo scaricato");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nella generazione del PDF");
+    } finally {
+      setGeneratingPreventivoPdf(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="p-8 flex justify-center">
