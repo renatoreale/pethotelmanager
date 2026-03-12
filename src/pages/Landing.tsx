@@ -182,7 +182,6 @@ export default function Landing() {
             </Link>
             <Button size="sm" onClick={handleStartTrial}>Prova Gratis</Button>
           </div>
-          </div>
         </nav>
 
         <div className="relative max-w-5xl mx-auto px-6 pt-20 pb-28 text-center">
