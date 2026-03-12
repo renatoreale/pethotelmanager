@@ -485,7 +485,7 @@ export default function Landing() {
       <footer className="border-t py-8">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>🐾</span> CatHotel Manager © {new Date().getFullYear()}
+            <img src="/favicon.png" alt="" className="h-5 w-5 rounded object-contain" /> Pet Hotel Manager © {new Date().getFullYear()}
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <Link to="/login" className="hover:text-foreground transition-colors">Accedi</Link>
