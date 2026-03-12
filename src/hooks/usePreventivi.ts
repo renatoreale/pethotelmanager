@@ -81,9 +81,10 @@ export function useCreatePreventivo() {
       cat_ids: string[];
       price_breakdown?: any;
       pet_type?: "gatti" | "cani" | "entrambi" | null;
+      quote_request_id?: string;
     }) => {
       if (!profile?.tenant_id) throw new Error("Tenant non configurato");
-      const { cat_ids, ...booking } = input;
+      const { cat_ids, quote_request_id, ...booking } = input;
 
       const bookingNumber = await getNextBookingNumber(profile.tenant_id);
 
@@ -99,6 +100,7 @@ export function useCreatePreventivo() {
           units_occupied: booking.units_occupied ?? 1,
           total_amount: booking.total_amount ?? 0,
           deposit_amount: booking.deposit_amount ?? 0,
+          ...(quote_request_id ? { quote_request_id } : {}),
         } as any)
         .select()
         .single();
@@ -115,9 +117,20 @@ export function useCreatePreventivo() {
         if (catsError) throw catsError;
       }
 
+      // If from a quote request, mark it as converted
+      if (quote_request_id) {
+        await supabase
+          .from("quote_requests")
+          .update({ status: "converted" } as any)
+          .eq("id", quote_request_id);
+      }
+
       return newBooking;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["preventivi"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["preventivi"] });
+      qc.invalidateQueries({ queryKey: ["quote-requests"] });
+    },
   });
 }
 

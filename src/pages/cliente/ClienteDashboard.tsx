@@ -169,7 +169,13 @@ export default function ClienteDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {quoteRequests.slice(0, 5).map((q: any) => (
+              {quoteRequests.slice(0, 5).map((q: any) => {
+                // Find linked booking for converted requests
+                const linkedBooking = q.status === "converted" && bookings
+                  ? bookings.find((b: any) => b.quote_request_id === q.id)
+                  : null;
+
+                return (
                 <div key={q.id} className="p-3 rounded-lg bg-muted/50 space-y-1">
                   <div className="flex items-center justify-between">
                     <p className="font-medium text-sm">
@@ -183,6 +189,15 @@ export default function ClienteDashboard() {
                     🐾 {q.pet_names || `${q.num_pets} animale/i`}
                     {q.notes && ` · ${q.notes.substring(0, 50)}${q.notes.length > 50 ? "..." : ""}`}
                   </p>
+                  {q.status === "converted" && linkedBooking && (
+                    <div className="text-xs text-primary mt-1">
+                      <Link to="/cliente/preventivi" className="underline font-medium flex items-center gap-1">
+                        <FileText className="h-3 w-3" />
+                        Vedi preventivo #{linkedBooking.booking_number}
+                        {linkedBooking.total_amount != null && ` · € ${Number(linkedBooking.total_amount).toFixed(2)}`}
+                      </Link>
+                    </div>
+                  )}
                   {q.status === "rejected" && q.rejection_reason && (
                     <div className="text-xs text-destructive mt-1 space-y-1">
                       <p>❌ Motivo: {q.rejection_reason}</p>
@@ -195,7 +210,8 @@ export default function ClienteDashboard() {
                     </div>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
