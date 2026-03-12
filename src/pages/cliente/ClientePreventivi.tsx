@@ -325,6 +325,14 @@ export default function ClientePreventivi() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Booking Detail Dialog */}
+      <ClienteBookingDetailDialog
+        open={!!detailBooking}
+        onOpenChange={(open) => !open && setDetailBooking(null)}
+        booking={detailBooking}
+        tenantId={tenant?.id || ""}
+      />
     </div>
   );
 }
