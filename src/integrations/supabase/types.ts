@@ -1068,6 +1068,7 @@ export type Database = {
           notes: string | null
           num_pets: number
           pet_names: string | null
+          rejection_reason: string | null
           status: string
           tenant_id: string
           updated_at: string
@@ -1081,6 +1082,7 @@ export type Database = {
           notes?: string | null
           num_pets?: number
           pet_names?: string | null
+          rejection_reason?: string | null
           status?: string
           tenant_id: string
           updated_at?: string
@@ -1094,6 +1096,7 @@ export type Database = {
           notes?: string | null
           num_pets?: number
           pet_names?: string | null
+          rejection_reason?: string | null
           status?: string
           tenant_id?: string
           updated_at?: string
