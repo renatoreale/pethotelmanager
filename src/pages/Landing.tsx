@@ -13,6 +13,7 @@ import {
   PawPrint, Calendar, Users, CreditCard, FileText, BarChart3,
   Check, Star, ArrowRight, Shield, Clock, Zap, Building2, Crown, Video, Send } from
 "lucide-react";
+import landingLogo from "@/assets/pethotelmanager_landing_logo.png";
 
 const BASE_FEATURES = [
 "Gestione prenotazioni",
