@@ -541,9 +541,9 @@ export default function Index() {
           <CardContent className="flex items-center gap-3 py-4">
             <AlertTriangle className="h-5 w-5 text-warning shrink-0" />
             <div>
-              <p className="text-sm font-medium">Attenzione</p>
+              <p className="text-sm font-medium">{t("common.attention")}</p>
               <p className="text-xs text-muted-foreground">
-                {s.expiringPreventivi} preventiv{s.expiringPreventivi === 1 ? "o" : "i"} in scadenza nei prossimi 3 giorni
+                {t("dashboard.expiringQuotesDesc", { count: s.expiringPreventivi })}
               </p>
             </div>
           </CardContent>
