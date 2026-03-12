@@ -376,7 +376,7 @@ export default function Index() {
           <CardContent className="space-y-4">
             <div>
               <div className="flex justify-between text-sm mb-1.5">
-                <span className="text-muted-foreground">Singole</span>
+                 <span className="text-muted-foreground">{t("dashboard.single")}</span>
                 <div className="flex items-center gap-1.5">
                   {singoleOverbooking && <AlertCircle className="h-4 w-4 text-[hsl(340,80%,35%)]" />}
                   <span className={cn("font-medium", singoleOverbooking && "text-[hsl(340,80%,35%)]")}>{s.singoleOccupied} / {numSingole}</span>
