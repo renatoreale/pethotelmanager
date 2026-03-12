@@ -101,7 +101,7 @@ export default function Preventivi() {
     if (!deleting) return;
     try {
       await deletePreventivo.mutateAsync(deleting.id);
-      toast.success("Preventivo eliminato");
+      toast.success(t("quotes.deleted"));
     } catch (err: any) {
       toast.error(err.message || "Errore");
     }
