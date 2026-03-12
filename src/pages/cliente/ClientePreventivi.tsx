@@ -48,6 +48,8 @@ export default function ClientePreventivi() {
   const [detailBooking, setDetailBooking] = useState<any>(null);
   const [payingStripe, setPayingStripe] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
+  const [generatingPreventivoPdf, setGeneratingPreventivoPdf] = useState<string | null>(null);
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const verifyAttempted = useRef(false);
