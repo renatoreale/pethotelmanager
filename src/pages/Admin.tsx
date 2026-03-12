@@ -91,6 +91,12 @@ export default function Admin() {
           <TabsTrigger value="cancellazione-globale" className="gap-2">
             <Ban className="h-4 w-4" /> Cancellazione
           </TabsTrigger>
+          <TabsTrigger value="landing" className="gap-2">
+            <Globe className="h-4 w-4" /> Landing Page
+          </TabsTrigger>
+          <TabsTrigger value="trial" className="gap-2">
+            <TrendingUp className="h-4 w-4" /> Trial & Conversioni
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pensioni"><PensioniTab /></TabsContent>
@@ -100,6 +106,8 @@ export default function Admin() {
         <TabsContent value="listino-globale"><GlobalPriceListsTab /></TabsContent>
         <TabsContent value="pagamenti-globali"><GlobalPaymentMethodsTab /></TabsContent>
         <TabsContent value="cancellazione-globale"><GlobalCancellationPolicyTab /></TabsContent>
+        <TabsContent value="landing"><LandingConfigTab /></TabsContent>
+        <TabsContent value="trial"><TrialDashboardTab /></TabsContent>
       </Tabs>
     </div>
   );
