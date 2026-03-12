@@ -129,6 +129,7 @@ export default function Landing() {
   const navigate = useNavigate();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [config, setConfig] = useState<any>(null);
+  const [showNav, setShowNav] = useState(false);
 
   useEffect(() => {
     supabase.from("landing_config").select("*").limit(1).single().then(({ data }) => {
@@ -136,33 +137,11 @@ export default function Landing() {
     });
   }, []);
 
-  const handleStartTrial = () => {
-    navigate("/register-trial");
-  };
-
-  const handleSubscribe = async (priceId: string, planName: string) => {
-    setLoadingPlan(planName);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/register-trial");
-        return;
-      }
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId }
-      });
-      if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
-    } catch (e: any) {
-      toast.error(e.message || "Errore durante il checkout");
-    } finally {
-      setLoadingPlan(null);
-    }
-  };
-
-  const trialDays = config?.trial_days || 14;
-
-  const [showNav, setShowNav] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShowNav(window.scrollY > 100);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setShowNav(window.scrollY > 100);
