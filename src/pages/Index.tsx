@@ -485,10 +485,10 @@ export default function Index() {
             <Card className={cn("border shadow-sm h-full", s.missingCheckOutAppt.length > 0 && "border-l-4 border-l-[hsl(25,90%,50%)]")}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2 text-[hsl(25,90%,40%)]">
-                  <LogOut className="h-5 w-5" />
-                  Check-out senza app. ({s.missingCheckOutAppt.length})
-                </CardTitle>
-                <p className="text-xs text-muted-foreground">Prossimi 4 giorni</p>
+                   <LogOut className="h-5 w-5" />
+                   {t("dashboard.missingOutApptTitle")} ({s.missingCheckOutAppt.length})
+                 </CardTitle>
+                 <p className="text-xs text-muted-foreground">{t("common.next4days")}</p>
               </CardHeader>
               <CardContent>
                 {s.missingCheckOutAppt.length === 0 ? (
