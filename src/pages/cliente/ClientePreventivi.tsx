@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { generateModuloAffidoPDF } from "@/lib/generateModuloAffidoPDF";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ClienteBookingDetailDialog } from "@/components/cliente/ClienteBookingDetailDialog";
 
 const STATUS_LABELS: Record<string, string> = {
   preventivo: "In attesa di conferma",
