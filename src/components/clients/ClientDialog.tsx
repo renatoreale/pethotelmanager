@@ -36,6 +36,7 @@ import { useCreateClient, useUpdateClient, type Client } from "@/hooks/useClient
 import { useCreateCat, useCats, useDeleteCat, useUpdateCat } from "@/hooks/useCats";
 import { supabase } from "@/integrations/supabase/client";
 import { usePetLabels, type PetType } from "@/hooks/usePetLabels";
+import { BreedCombobox } from "@/components/BreedCombobox";
 
 const clientSchema = z.object({
   first_name: z.string().trim().min(1, "Nome obbligatorio").max(100),
@@ -427,10 +428,11 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">Razza</Label>
-                        <Input
-                          placeholder="Europeo"
+                        <BreedCombobox
                           value={cat.breed}
-                          onChange={(e) => updateCat(index, "breed", e.target.value)}
+                          onChange={(v) => updateCat(index, "breed", v)}
+                          petType={cat.pet_type || (pet.petType !== "entrambi" ? pet.petType : undefined)}
+                          placeholder="Europeo"
                         />
                       </div>
                       <div className="space-y-1">

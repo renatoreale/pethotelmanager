@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useClienteProfile, useUpdateClienteProfile } from "@/hooks/useClienteAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { toast } from "sonner";
 import { Save } from "lucide-react";
 
 export default function ClienteProfilo() {
+  const navigate = useNavigate();
   const { data: profile, isLoading } = useClienteProfile();
   const updateProfile = useUpdateClienteProfile();
 
@@ -47,6 +49,7 @@ export default function ClienteProfilo() {
         address: form.address || null,
       } as any);
       toast.success("Profilo aggiornato");
+      navigate("/cliente/dashboard");
     } catch (err: any) {
       toast.error(err.message || "Errore nel salvataggio");
     }
