@@ -70,6 +70,7 @@ export default function Pensione() {
           <TabsTrigger value="pagamenti" className="gap-2"><CreditCard className="h-4 w-4" /> Modalità Pagamento</TabsTrigger>
           <TabsTrigger value="cancellazione" className="gap-2"><Ban className="h-4 w-4" /> Cancellazione</TabsTrigger>
           <TabsTrigger value="preventivo-config" className="gap-2"><FileText className="h-4 w-4" /> Config. Preventivo</TabsTrigger>
+          <TabsTrigger value="stripe" className="gap-2"><KeyRound className="h-4 w-4" /> Stripe</TabsTrigger>
         </TabsList>
 
         <TabsContent value="anagrafica"><AnagraficaTab /></TabsContent>
@@ -79,6 +80,7 @@ export default function Pensione() {
         <TabsContent value="pagamenti"><PaymentMethodsTab /></TabsContent>
         <TabsContent value="cancellazione"><CancellationPolicyTab /></TabsContent>
         <TabsContent value="preventivo-config"><PaymentSplitsTab /></TabsContent>
+        <TabsContent value="stripe"><StripeConfigTab /></TabsContent>
       </Tabs>
     </div>
   );
