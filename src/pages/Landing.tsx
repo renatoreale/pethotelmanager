@@ -199,9 +199,9 @@ export default function Landing() {
       </nav>
 
       {/* Hero — logo full viewport */}
-      <header className="relative min-h-screen flex flex-col items-center justify-center pt-20">
+      <header className="relative min-h-screen flex flex-col items-center justify-start pt-10">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-background" />
-        <div className="relative flex flex-col items-center text-center px-6 mt-10">
+        <div className="relative flex flex-col items-center text-center px-6">
           <img
             src={landingLogo}
             alt="Pet Hotel Manager"
