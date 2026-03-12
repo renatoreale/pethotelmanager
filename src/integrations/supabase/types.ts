@@ -705,6 +705,54 @@ export type Database = {
         }
         Relationships: []
       }
+      landing_config: {
+        Row: {
+          base_plan_features: Json
+          base_plan_price_yearly: number
+          created_at: string
+          cta_text: string
+          hero_description: string
+          hero_subtitle: string
+          hero_title: string
+          id: string
+          pro_plan_features: Json
+          pro_plan_price_yearly: number
+          show_trial_banner: boolean
+          trial_days: number
+          updated_at: string
+        }
+        Insert: {
+          base_plan_features?: Json
+          base_plan_price_yearly?: number
+          created_at?: string
+          cta_text?: string
+          hero_description?: string
+          hero_subtitle?: string
+          hero_title?: string
+          id?: string
+          pro_plan_features?: Json
+          pro_plan_price_yearly?: number
+          show_trial_banner?: boolean
+          trial_days?: number
+          updated_at?: string
+        }
+        Update: {
+          base_plan_features?: Json
+          base_plan_price_yearly?: number
+          created_at?: string
+          cta_text?: string
+          hero_description?: string
+          hero_subtitle?: string
+          hero_title?: string
+          id?: string
+          pro_plan_features?: Json
+          pro_plan_price_yearly?: number
+          show_trial_banner?: boolean
+          trial_days?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payment_methods: {
         Row: {
           created_at: string
@@ -1208,6 +1256,112 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      trial_activity_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          page: string | null
+          trial_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          page?: string | null
+          trial_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          page?: string | null
+          trial_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trial_activity_log_trial_id_fkey"
+            columns: ["trial_id"]
+            isOneToOne: false
+            referencedRelation: "trial_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trial_registrations: {
+        Row: {
+          actions_count: number
+          converted_at: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          is_converted: boolean
+          last_login_at: string | null
+          login_count: number
+          pages_visited: Json
+          pet_type: Database["public"]["Enums"]["pet_type"]
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          tenant_id: string | null
+          trial_end: string
+          trial_start: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actions_count?: number
+          converted_at?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          is_converted?: boolean
+          last_login_at?: string | null
+          login_count?: number
+          pages_visited?: Json
+          pet_type?: Database["public"]["Enums"]["pet_type"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tenant_id?: string | null
+          trial_end: string
+          trial_start?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actions_count?: number
+          converted_at?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          is_converted?: boolean
+          last_login_at?: string | null
+          login_count?: number
+          pages_visited?: Json
+          pet_type?: Database["public"]["Enums"]["pet_type"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tenant_id?: string | null
+          trial_end?: string
+          trial_start?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trial_registrations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
