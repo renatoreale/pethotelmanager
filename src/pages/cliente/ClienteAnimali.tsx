@@ -381,8 +381,8 @@ export default function ClienteAnimali() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Annulla</Button>
-            <Button onClick={handleSave} disabled={!form.name.trim() || createCat.isPending || updateCat.isPending}>
-              {editingId ? "Salva" : "Aggiungi"}
+            <Button onClick={handleSave} disabled={!form.name.trim() || createCat.isPending || updateCat.isPending || uploadingPhoto}>
+              {uploadingPhoto ? "Caricamento..." : editingId ? "Salva" : "Aggiungi"}
             </Button>
           </DialogFooter>
         </DialogContent>
