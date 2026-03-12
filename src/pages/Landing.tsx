@@ -85,7 +85,7 @@ export default function Landing() {
             <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground text-lg">
               🐾
             </div>
-            <span className="font-serif text-xl font-bold text-foreground">PetHotel Manager</span>
+            <span className="font-serif text-xl font-bold text-foreground">Pet Hotel Manager</span>
           </div>
           <div className="flex items-center gap-3">
             <Link to="/login">
