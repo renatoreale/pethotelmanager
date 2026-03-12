@@ -1426,65 +1426,124 @@ function StripeConfigTab() {
   if (isLoading) return <div className="py-12 text-center text-muted-foreground">Caricamento...</div>;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <KeyRound className="h-5 w-5" />
-          Configurazione Stripe
-        </CardTitle>
-        <CardDescription>
-          Inserisci la chiave segreta del tuo account Stripe per ricevere i pagamenti direttamente sul tuo conto.
-          Puoi trovarla nella dashboard Stripe → Developers → API Keys.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Status */}
-        <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/50">
-          {existing ? (
-            <>
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
-              <div>
-                <p className="font-medium text-sm">Chiave Stripe configurata</p>
-                <p className="text-xs text-muted-foreground">
-                  Chiave attuale: {showKey ? existing.stripe_secret_key : `sk_****${existing.stripe_secret_key.slice(-4)}`}
-                  <button onClick={() => setShowKey(!showKey)} className="ml-2 inline-flex items-center text-primary hover:underline">
-                    {showKey ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                  </button>
-                </p>
-              </div>
-            </>
-          ) : (
-            <>
-              <XCircle className="h-5 w-5 text-destructive" />
-              <div>
-                <p className="font-medium text-sm">Chiave Stripe non configurata</p>
-                <p className="text-xs text-muted-foreground">I clienti non potranno pagare con carta fino alla configurazione.</p>
-              </div>
-            </>
-          )}
-        </div>
+    <div className="space-y-6">
+      {/* Guida passo-passo */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <KeyRound className="h-5 w-5" />
+            Configurazione Pagamenti Online
+          </CardTitle>
+          <CardDescription>
+            Per ricevere i pagamenti con carta direttamente sul tuo conto, devi creare un account Stripe gratuito e inserire la tua chiave segreta qui sotto.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Step-by-step instructions */}
+          <div className="space-y-4">
+            <h3 className="font-semibold text-sm">Come configurare Stripe in 3 passi:</h3>
+            <ol className="space-y-3 text-sm">
+              <li className="flex gap-3">
+                <Badge variant="outline" className="h-6 w-6 shrink-0 rounded-full flex items-center justify-center p-0 font-bold">1</Badge>
+                <div>
+                  <p className="font-medium">Crea un account Stripe gratuito</p>
+                  <p className="text-muted-foreground text-xs mt-0.5">
+                    Registrati su Stripe inserendo i dati della tua attività. La registrazione è gratuita, paghi solo una commissione sulle transazioni ricevute.
+                  </p>
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <Badge variant="outline" className="h-6 w-6 shrink-0 rounded-full flex items-center justify-center p-0 font-bold">2</Badge>
+                <div>
+                  <p className="font-medium">Copia la chiave segreta (Secret Key)</p>
+                  <p className="text-muted-foreground text-xs mt-0.5">
+                    Dopo la registrazione, vai in <strong>Developers → API Keys</strong> e copia la chiave che inizia con <code className="bg-muted px-1 rounded">sk_live_</code> (produzione) o <code className="bg-muted px-1 rounded">sk_test_</code> (test).
+                  </p>
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <Badge variant="outline" className="h-6 w-6 shrink-0 rounded-full flex items-center justify-center p-0 font-bold">3</Badge>
+                <div>
+                  <p className="font-medium">Incolla la chiave qui sotto e salva</p>
+                  <p className="text-muted-foreground text-xs mt-0.5">
+                    Una volta salvata, i tuoi clienti potranno pagare la caparra con carta e i fondi arriveranno direttamente sul tuo conto Stripe.
+                  </p>
+                </div>
+              </li>
+            </ol>
+          </div>
 
-        {/* Input */}
-        <div className="space-y-2">
-          <Label>{existing ? "Aggiorna chiave Stripe" : "Chiave segreta Stripe"}</Label>
-          <div className="flex gap-2">
-            <Input
-              type="password"
-              value={key}
-              onChange={(e) => setKey(e.target.value)}
-              placeholder="sk_live_... oppure sk_test_..."
-              className="font-mono"
-            />
-            <Button onClick={handleSave} disabled={saving || !key.trim()}>
-              <Save className="mr-2 h-4 w-4" />
-              {saving ? "Salvataggio..." : "Salva"}
+          <Separator />
+
+          {/* CTA button */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button asChild variant="default" className="gap-2">
+              <a href="https://dashboard.stripe.com/register" target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-4 w-4" />
+                Registrati su Stripe
+              </a>
+            </Button>
+            <Button asChild variant="outline" className="gap-2">
+              <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer">
+                <KeyRound className="h-4 w-4" />
+                Vai alle API Keys
+              </a>
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            La chiave inizia con <code className="bg-muted px-1 rounded">sk_live_</code> (produzione) o <code className="bg-muted px-1 rounded">sk_test_</code> (test).
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {/* Stato e inserimento chiave */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Chiave Stripe</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Status */}
+          <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/50">
+            {existing ? (
+              <>
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="font-medium text-sm">Chiave Stripe configurata</p>
+                  <p className="text-xs text-muted-foreground">
+                    Chiave attuale: {showKey ? existing.stripe_secret_key : `sk_****${existing.stripe_secret_key.slice(-4)}`}
+                    <button onClick={() => setShowKey(!showKey)} className="ml-2 inline-flex items-center text-primary hover:underline">
+                      {showKey ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                    </button>
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <XCircle className="h-5 w-5 text-destructive" />
+                <div>
+                  <p className="font-medium text-sm">Chiave Stripe non configurata</p>
+                  <p className="text-xs text-muted-foreground">I clienti non potranno pagare con carta fino alla configurazione.</p>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Input */}
+          <div className="space-y-2">
+            <Label>{existing ? "Aggiorna chiave Stripe" : "Chiave segreta Stripe"}</Label>
+            <div className="flex gap-2">
+              <Input
+                type="password"
+                value={key}
+                onChange={(e) => setKey(e.target.value)}
+                placeholder="sk_live_... oppure sk_test_..."
+                className="font-mono"
+              />
+              <Button onClick={handleSave} disabled={saving || !key.trim()}>
+                <Save className="mr-2 h-4 w-4" />
+                {saving ? "Salvataggio..." : "Salva"}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
