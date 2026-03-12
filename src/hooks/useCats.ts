@@ -19,6 +19,7 @@ export interface Cat {
   behavioral_notes: string | null;
   needs_double_cage: boolean;
   sibling_group_id: string | null;
+  photo_url: string | null;
   created_at: string;
   updated_at: string;
 }
