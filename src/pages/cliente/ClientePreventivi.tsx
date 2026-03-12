@@ -43,6 +43,7 @@ export default function ClientePreventivi() {
   const { data: bookings, isLoading } = useClienteBookings();
   const { data: tenant } = useClienteTenant();
   const [paymentDialog, setPaymentDialog] = useState<any>(null);
+  const [detailBooking, setDetailBooking] = useState<any>(null);
   const [payingStripe, setPayingStripe] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
