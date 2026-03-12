@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { generateModuloAffidoPDF } from "@/lib/generateModuloAffidoPDF";
 import { useSearchParams } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const STATUS_LABELS: Record<string, string> = {
   preventivo: "In attesa di conferma",
@@ -47,6 +47,22 @@ export default function ClientePreventivi() {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const verifyAttempted = useRef(false);
+
+  // Check if tenant has Stripe configured
+  const { data: tenantHasStripe } = useQuery<boolean>({
+    queryKey: ["tenant-has-stripe", tenant?.id],
+    queryFn: async () => {
+      if (!tenant?.id) return false;
+      const { data, error } = await supabase
+        .from("tenant_stripe_keys" as any)
+        .select("id")
+        .eq("tenant_id", tenant.id)
+        .maybeSingle();
+      if (error) return false;
+      return !!data;
+    },
+    enabled: !!tenant?.id,
+  });
 
   // Auto-verify Stripe payment on return
   useEffect(() => {
@@ -247,20 +263,22 @@ export default function ClientePreventivi() {
             <div className="space-y-3">
               <p className="text-sm font-medium">Scegli come pagare</p>
 
-              {/* Stripe payment */}
-              <Button
-                className="w-full"
-                variant="default"
-                onClick={() => handleStripePayment(paymentDialog)}
-                disabled={payingStripe}
-              >
-                {payingStripe ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <CreditCard className="mr-2 h-4 w-4" />
-                )}
-                {payingStripe ? "Preparazione pagamento..." : "Paga con Carta"}
-              </Button>
+              {/* Stripe payment - only if tenant has Stripe configured */}
+              {tenantHasStripe && (
+                <Button
+                  className="w-full"
+                  variant="default"
+                  onClick={() => handleStripePayment(paymentDialog)}
+                  disabled={payingStripe}
+                >
+                  {payingStripe ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <CreditCard className="mr-2 h-4 w-4" />
+                  )}
+                  {payingStripe ? "Preparazione pagamento..." : "Paga con Carta"}
+                </Button>
+              )}
 
               {/* Bank transfer */}
               {tenant?.iban && (

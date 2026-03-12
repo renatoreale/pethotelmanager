@@ -1457,7 +1457,7 @@ function StripeConfigTab() {
                 <div>
                   <p className="font-medium">Copia la chiave segreta (Secret Key)</p>
                   <p className="text-muted-foreground text-xs mt-0.5">
-                    Dopo la registrazione, vai in <strong>Developers → API Keys</strong> e copia la chiave che inizia con <code className="bg-muted px-1 rounded">sk_live_</code> (produzione) o <code className="bg-muted px-1 rounded">sk_test_</code> (test).
+                    Dopo la registrazione, vai in <strong>Developers → API Keys</strong> e copia la chiave che inizia con <code className="bg-muted px-1 rounded">sk_live_</code>.
                   </p>
                 </div>
               </li>
@@ -1533,7 +1533,7 @@ function StripeConfigTab() {
                 type="password"
                 value={key}
                 onChange={(e) => setKey(e.target.value)}
-                placeholder="sk_live_... oppure sk_test_..."
+                placeholder="sk_live_..."
                 className="font-mono"
               />
               <Button onClick={handleSave} disabled={saving || !key.trim()}>
