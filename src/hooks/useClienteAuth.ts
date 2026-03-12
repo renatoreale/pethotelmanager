@@ -120,6 +120,8 @@ export function useClienteBookings() {
     queryKey: ["cliente-bookings", clientProfile?.id],
     queryFn: async () => {
       if (!clientProfile) return [];
+      // Expire preventivi past validity for this tenant
+      await supabase.rpc("expire_preventivi", { _tenant_id: clientProfile.tenant_id });
       const { data, error } = await supabase
         .from("bookings")
         .select("*, booking_cats(cat_id, cats(name)), payments(amount, payment_type)")
