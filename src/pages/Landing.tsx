@@ -189,7 +189,7 @@ export default function Landing() {
             <Zap className="h-3 w-3 mr-1" /> {trialDays} giorni di prova gratuita
           </Badge>
           <h1 className="text-4xl md:text-6xl font-serif font-bold text-foreground leading-tight mb-6">
-            {config?.hero_title?.concat("\n") || "Il gestionale completo per la tua"}
+{config?.hero_title?.concat("\n") || "Pet Hotel Manager"}
             <span className="text-primary block">pensione per animali</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
