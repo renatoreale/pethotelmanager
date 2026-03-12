@@ -188,6 +188,7 @@ export type Database = {
           notes: string | null
           pet_type: Database["public"]["Enums"]["pet_type"] | null
           price_breakdown: Json | null
+          quote_request_id: string | null
           status: Database["public"]["Enums"]["booking_status"]
           tenant_id: string
           total_amount: number | null
@@ -207,6 +208,7 @@ export type Database = {
           notes?: string | null
           pet_type?: Database["public"]["Enums"]["pet_type"] | null
           price_breakdown?: Json | null
+          quote_request_id?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           tenant_id: string
           total_amount?: number | null
@@ -226,6 +228,7 @@ export type Database = {
           notes?: string | null
           pet_type?: Database["public"]["Enums"]["pet_type"] | null
           price_breakdown?: Json | null
+          quote_request_id?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           tenant_id?: string
           total_amount?: number | null
@@ -238,6 +241,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_quote_request_id_fkey"
+            columns: ["quote_request_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
             referencedColumns: ["id"]
           },
           {
