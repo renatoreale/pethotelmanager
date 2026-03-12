@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { FileText, CreditCard, Building2, Copy, Download, Loader2, CheckCircle2 } from "lucide-react";
+import { FileText, CreditCard, Building2, Copy, Download, Loader2, CheckCircle2, Eye } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { generateModuloAffidoPDF } from "@/lib/generateModuloAffidoPDF";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ClienteBookingDetailDialog } from "@/components/cliente/ClienteBookingDetailDialog";
 
 const STATUS_LABELS: Record<string, string> = {
   preventivo: "In attesa di conferma",
@@ -42,6 +43,7 @@ export default function ClientePreventivi() {
   const { data: bookings, isLoading } = useClienteBookings();
   const { data: tenant } = useClienteTenant();
   const [paymentDialog, setPaymentDialog] = useState<any>(null);
+  const [detailBooking, setDetailBooking] = useState<any>(null);
   const [payingStripe, setPayingStripe] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -214,6 +216,12 @@ export default function ClientePreventivi() {
                           Conferma
                         </Button>
                       )}
+                      {b.status !== "preventivo" && b.status !== "cancellata" && b.status !== "rimborsata" && b.status !== "scaduto" && (
+                        <Button size="sm" variant="outline" onClick={() => setDetailBooking(b)}>
+                          <Eye className="mr-1.5 h-3.5 w-3.5" />
+                          Dettagli
+                        </Button>
+                      )}
                       {canDownloadAffido && (
                         <Button
                           size="sm"
@@ -317,6 +325,14 @@ export default function ClientePreventivi() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Booking Detail Dialog */}
+      <ClienteBookingDetailDialog
+        open={!!detailBooking}
+        onOpenChange={(open) => !open && setDetailBooking(null)}
+        booking={detailBooking}
+        tenantId={tenant?.id || ""}
+      />
     </div>
   );
 }
