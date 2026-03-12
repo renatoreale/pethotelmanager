@@ -209,7 +209,7 @@ export default function Statistiche() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <KpiCard icon={FileText} label="Totale Pratiche" value={totPreventivi} />
+        <KpiCard icon={FileText} label="Totale Preventivi" value={totPreventivi} />
         <KpiCard icon={CalendarCheck} label="Confermati" value={totConfermati} color="text-green-600" />
         <KpiCard icon={TrendingUp} label="Tasso Conversione" value={`${conversionRate}%`} color="text-blue-600" />
         <KpiCard icon={TrendingDown} label="Tasso Cancellazione" value={`${cancellationRate}%`} color="text-red-500" />
