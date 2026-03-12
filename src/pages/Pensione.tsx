@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Settings, Clock, Euro, CreditCard, Plus, Pencil, Trash2, Save, RotateCcw, Ban, Building2, Upload, X, FileText, KeyRound, Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import {
