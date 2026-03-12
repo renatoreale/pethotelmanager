@@ -91,7 +91,7 @@ interface Props {
 
 export function PreventivoDialog({
   open, onOpenChange, editing, onCreate, onUpdate,
-  stayCalcType, countCheckinDay, countCheckoutDay,
+  stayCalcType, countCheckinDay, countCheckoutDay, prefill,
 }: Props) {
   const { data: clients } = useClients();
   const { data: priceLists } = usePriceLists();
