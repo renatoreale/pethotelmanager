@@ -349,11 +349,11 @@ export default function Preventivi() {
                   status: "rejected",
                   rejection_reason: rejectionReason.trim(),
                 });
-                toast.success("Richiesta rifiutata");
+                toast.success(t("quotes.rejected"));
                 setRejectingQuote(null);
               }}
             >
-              Rifiuta
+              {t("quotes.reject")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
