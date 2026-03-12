@@ -263,20 +263,22 @@ export default function ClientePreventivi() {
             <div className="space-y-3">
               <p className="text-sm font-medium">Scegli come pagare</p>
 
-              {/* Stripe payment */}
-              <Button
-                className="w-full"
-                variant="default"
-                onClick={() => handleStripePayment(paymentDialog)}
-                disabled={payingStripe}
-              >
-                {payingStripe ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <CreditCard className="mr-2 h-4 w-4" />
-                )}
-                {payingStripe ? "Preparazione pagamento..." : "Paga con Carta"}
-              </Button>
+              {/* Stripe payment - only if tenant has Stripe configured */}
+              {tenantHasStripe && (
+                <Button
+                  className="w-full"
+                  variant="default"
+                  onClick={() => handleStripePayment(paymentDialog)}
+                  disabled={payingStripe}
+                >
+                  {payingStripe ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <CreditCard className="mr-2 h-4 w-4" />
+                  )}
+                  {payingStripe ? "Preparazione pagamento..." : "Paga con Carta"}
+                </Button>
+              )}
 
               {/* Bank transfer */}
               {tenant?.iban && (
