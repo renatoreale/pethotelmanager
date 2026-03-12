@@ -5,14 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { FileText, CreditCard, Building2, Copy, Download, Loader2, CheckCircle2, Eye } from "lucide-react";
+import { FileText, CreditCard, Building2, Copy, Download, Loader2, CheckCircle2, Eye, Printer, Mail, AlertTriangle } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { generateModuloAffidoPDF } from "@/lib/generateModuloAffidoPDF";
+import { generatePreventivoPDF } from "@/lib/generatePreventivoPDF";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClienteBookingDetailDialog } from "@/components/cliente/ClienteBookingDetailDialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const STATUS_LABELS: Record<string, string> = {
   preventivo: "In attesa di conferma",
@@ -46,6 +48,8 @@ export default function ClientePreventivi() {
   const [detailBooking, setDetailBooking] = useState<any>(null);
   const [payingStripe, setPayingStripe] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
+  const [generatingPreventivoPdf, setGeneratingPreventivoPdf] = useState<string | null>(null);
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const verifyAttempted = useRef(false);
@@ -80,6 +84,7 @@ export default function ClientePreventivi() {
           if (error) throw error;
           if (data?.confirmed) {
             toast.success("Pagamento confermato! Il preventivo è stato accettato.");
+            setShowPaymentSuccess(true);
             queryClient.invalidateQueries({ queryKey: ["cliente-bookings"] });
           } else {
             toast.info(data?.reason || "Pagamento in fase di verifica");
@@ -152,6 +157,47 @@ export default function ClientePreventivi() {
     }
   };
 
+  const handleDownloadPreventivo = async (booking: any) => {
+    setGeneratingPreventivoPdf(booking.id);
+    try {
+      if (!tenant) {
+        toast.error("Dati pensione non disponibili");
+        return;
+      }
+
+      // Fetch full booking data with client and cats
+      const { data: fullBooking } = await supabase
+        .from("bookings")
+        .select("*, client:clients(id, first_name, last_name, email, phone), booking_cats(cat_id, cat:cats(id, name))")
+        .eq("id", booking.id)
+        .single();
+
+      if (!fullBooking) {
+        toast.error("Dati preventivo non disponibili");
+        return;
+      }
+
+      // Fetch payment splits for tenant
+      const { data: splits } = await supabase
+        .from("payment_split_configs")
+        .select("*")
+        .eq("tenant_id", tenant.id)
+        .order("sort_order");
+
+      await generatePreventivoPDF(
+        fullBooking as any,
+        tenant as any,
+        (splits ?? []) as any,
+        tenant.stay_calc_type || "notti",
+      );
+      toast.success("Preventivo scaricato");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nella generazione del PDF");
+    } finally {
+      setGeneratingPreventivoPdf(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="p-8 flex justify-center">
@@ -211,10 +257,25 @@ export default function ClientePreventivi() {
                     </div>
                     <div className="flex flex-col gap-1">
                       {b.status === "preventivo" && (
-                        <Button size="sm" onClick={() => handleConfirm(b)}>
-                          <CreditCard className="mr-1.5 h-3.5 w-3.5" />
-                          Conferma
-                        </Button>
+                        <>
+                          <Button size="sm" onClick={() => handleConfirm(b)}>
+                            <CreditCard className="mr-1.5 h-3.5 w-3.5" />
+                            Conferma
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownloadPreventivo(b)}
+                            disabled={generatingPreventivoPdf === b.id}
+                          >
+                            {generatingPreventivoPdf === b.id ? (
+                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Printer className="mr-1.5 h-3.5 w-3.5" />
+                            )}
+                            Scarica Preventivo
+                          </Button>
+                        </>
                       )}
                       {b.status !== "preventivo" && b.status !== "cancellata" && b.status !== "rimborsata" && b.status !== "scaduto" && (
                         <Button size="sm" variant="outline" onClick={() => setDetailBooking(b)}>
@@ -223,19 +284,34 @@ export default function ClientePreventivi() {
                         </Button>
                       )}
                       {canDownloadAffido && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDownloadAffido(b)}
-                          disabled={generatingPdf === b.id}
-                        >
-                          {generatingPdf === b.id ? (
-                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Download className="mr-1.5 h-3.5 w-3.5" />
-                          )}
-                          Modulo Affido
-                        </Button>
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownloadAffido(b)}
+                            disabled={generatingPdf === b.id}
+                          >
+                            {generatingPdf === b.id ? (
+                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Download className="mr-1.5 h-3.5 w-3.5" />
+                            )}
+                            Modulo Affido
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownloadPreventivo(b)}
+                            disabled={generatingPreventivoPdf === b.id}
+                          >
+                            {generatingPreventivoPdf === b.id ? (
+                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Printer className="mr-1.5 h-3.5 w-3.5" />
+                            )}
+                            Scarica Preventivo
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -318,10 +394,46 @@ export default function ClientePreventivi() {
                 </div>
               )}
             </div>
+
+            {/* Signing reminder */}
+            <Alert className="border-primary/30 bg-primary/5">
+              <Mail className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                <strong>Importante:</strong> per confermare il preventivo, scarica il documento, firmalo e invialo via email a{" "}
+                <strong>{tenant?.email || "la pensione"}</strong>.
+              </AlertDescription>
+            </Alert>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setPaymentDialog(null)}>Chiudi</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Success Dialog with signing reminder */}
+      <Dialog open={showPaymentSuccess} onOpenChange={setShowPaymentSuccess}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              Pagamento confermato
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Il pagamento è stato registrato con successo e il preventivo è stato confermato.
+            </p>
+            <Alert className="border-primary/30 bg-primary/5">
+              <Mail className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                <strong>Promemoria:</strong> scarica il preventivo, firmalo e invialo via email a{" "}
+                <strong>{tenant?.email || "la pensione"}</strong> per completare la procedura.
+              </AlertDescription>
+            </Alert>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPaymentSuccess(false)}>Ho capito</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
