@@ -1274,6 +1274,7 @@ export type Database = {
           iban: string | null
           iban_holder: string | null
           id: string
+          locale: string
           logo_url: string | null
           max_cats: number
           name: string
@@ -1308,6 +1309,7 @@ export type Database = {
           iban?: string | null
           iban_holder?: string | null
           id?: string
+          locale?: string
           logo_url?: string | null
           max_cats?: number
           name: string
@@ -1342,6 +1344,7 @@ export type Database = {
           iban?: string | null
           iban_holder?: string | null
           id?: string
+          locale?: string
           logo_url?: string | null
           max_cats?: number
           name?: string
