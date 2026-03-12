@@ -439,7 +439,7 @@ export default function Index() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2 text-destructive">
                   <LogIn className="h-5 w-5" />
-                  Check-in senza app. ({s.missingAppointment.length})
+                  {t("dashboard.missingInApptTitle")} ({s.missingAppointment.length})
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">Prossimi 4 giorni</p>
               </CardHeader>
