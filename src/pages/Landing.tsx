@@ -4,11 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { STRIPE_TIERS } from "@/lib/stripe-config";
 import { toast } from "sonner";
 import {
   PawPrint, Calendar, Users, CreditCard, FileText, BarChart3,
-  Check, Star, ArrowRight, Shield, Clock, Zap, Building2, Crown } from
+  Check, Star, ArrowRight, Shield, Clock, Zap, Building2, Crown, Video, Send } from
 "lucide-react";
 
 const BASE_FEATURES = [
@@ -45,6 +48,81 @@ const SHOWCASE_FEATURES = [
 { icon: BarChart3, title: "Occupazione in Tempo Reale", desc: "Visualizza la disponibilità delle casette su griglia giornaliera e pianifica al meglio." },
 { icon: Building2, title: "Multi-Pensione", desc: "Gestisci più sedi da un'unica dashboard con isolamento completo dei dati." }];
 
+
+function DemoRequestForm() {
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", phone: "", pensione_name: "", message: "" });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.email.trim()) {
+      toast.error("Nome e email sono obbligatori");
+      return;
+    }
+    setSending(true);
+    try {
+      const { error } = await supabase.functions.invoke("request-demo", { body: form });
+      if (error) throw error;
+      setSent(true);
+      toast.success("Richiesta inviata! Ti contatteremo a breve.");
+    } catch {
+      toast.error("Errore nell'invio. Riprova più tardi.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (sent) {
+    return (
+      <Card className="border-2 border-primary/20">
+        <CardContent className="py-12 text-center space-y-4">
+          <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            <Check className="h-7 w-7 text-primary" />
+          </div>
+          <h3 className="text-xl font-semibold text-foreground">Richiesta Inviata!</h3>
+          <p className="text-muted-foreground">Ti contatteremo a breve per fissare la demo.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border-2 border-primary/20">
+      <CardHeader>
+        <CardTitle className="text-lg">Prenota la tua demo</CardTitle>
+        <CardDescription>Compila il form e ti ricontatteremo entro 24h</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="demo-name">Nome e Cognome *</Label>
+            <Input id="demo-name" required maxLength={100} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Mario Rossi" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="demo-email">Email *</Label>
+            <Input id="demo-email" type="email" required maxLength={255} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="mario@example.com" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="demo-phone">Telefono</Label>
+            <Input id="demo-phone" type="tel" maxLength={20} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+39 333 1234567" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="demo-pensione">Nome della tua Pensione</Label>
+            <Input id="demo-pensione" maxLength={100} value={form.pensione_name} onChange={(e) => setForm({ ...form, pensione_name: e.target.value })} placeholder="La Pensione dei Mici" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="demo-message">Messaggio</Label>
+            <Textarea id="demo-message" maxLength={500} rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Di cosa hai bisogno? Quanti animali gestisci?" />
+          </div>
+          <Button type="submit" className="w-full gap-2" size="lg" disabled={sending}>
+            <Send className="h-4 w-4" /> {sending ? "Invio in corso..." : "Richiedi Demo Gratuita"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -96,6 +174,9 @@ export default function Landing() {
             <span className="font-serif text-xl font-bold text-foreground">Pet Hotel Manager</span>
           </div>
           <div className="flex items-center gap-3">
+            <a href="#demo">
+              <Button variant="ghost" size="sm">Demo Gratuita</Button>
+            </a>
             <Link to="/login">
               <Button variant="ghost" size="sm">Accedi</Button>
             </Link>
@@ -347,8 +428,34 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Demo Live Request */}
+      <section id="demo" className="py-24">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+                <Video className="h-7 w-7 text-primary" />
+              </div>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+                Richiedi una Demo Live Gratuita
+              </h2>
+              <p className="text-muted-foreground text-lg mb-4">
+                Vuoi vedere Pet Hotel Manager in azione? Prenota una demo live gratuita con il nostro team.
+                Ti mostreremo tutte le funzionalità e risponderemo alle tue domande.
+              </p>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Demo personalizzata di 30 minuti</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Nessun impegno di acquisto</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Risposte a tutte le tue domande</li>
+              </ul>
+            </div>
+            <DemoRequestForm />
+          </div>
+        </div>
+      </section>
+
       {/* CTA finale */}
-      <section className="py-24">
+      <section className="py-24 bg-card/50">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-6">
             Pronto a semplificare la gestione?
@@ -357,9 +464,14 @@ export default function Landing() {
             Registrati ora e prova gratuitamente per {trialDays} giorni. Ti assegneremo una pensione demo
             già configurata con dati di esempio.
           </p>
-          <Button size="lg" className="text-base px-10 py-6 gap-2" onClick={handleStartTrial}>
-            Inizia ora — è gratis <ArrowRight className="h-4 w-4" />
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button size="lg" className="text-base px-10 py-6 gap-2" onClick={handleStartTrial}>
+              Inizia ora — è gratis <ArrowRight className="h-4 w-4" />
+            </Button>
+            <Button size="lg" variant="outline" className="text-base px-8 py-6 gap-2" asChild>
+              <a href="#demo"><Video className="h-4 w-4" /> Richiedi una demo</a>
+            </Button>
+          </div>
         </div>
       </section>
 
