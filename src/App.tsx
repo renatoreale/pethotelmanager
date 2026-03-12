@@ -74,6 +74,7 @@ const App = () => (
               <Route path="/template-email" element={<TemplateEmail />} />
               <Route path="/pensione" element={<Pensione />} />
               <Route path="/occupazione" element={<OccupazioneCasette />} />
+              <Route path="/statistiche" element={<Statistiche />} />
               <Route path="/admin" element={<Admin />} />
             </Route>
 

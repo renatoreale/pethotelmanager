@@ -39,8 +39,8 @@ const registryNav: NavItem[] = [
 
 
 const operationsNav: NavItem[] = [
-
-{ title: "Occupazione Casette", url: "/occupazione", icon: Grid3X3, resource: "occupazione" }];
+{ title: "Occupazione Casette", url: "/occupazione", icon: Grid3X3, resource: "occupazione" },
+{ title: "Statistiche", url: "/statistiche", icon: BarChart3, resource: "statistiche" }];
 
 
 const adminNav: NavItem[] = [
