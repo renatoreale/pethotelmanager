@@ -37,6 +37,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function Index() {
+  const { t } = useTranslation();
+  const dateLocale = useDateLocale();
   const { data: bookings, isLoading: loadingBookings } = useBookings();
   const { data: tenantConfig } = useTenantConfig();
   const { data: allPayments } = useAllPayments();
