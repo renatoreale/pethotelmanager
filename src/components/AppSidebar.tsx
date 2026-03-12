@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, FileText, CalendarCheck, Calendar, LogIn, LogOut,
   CreditCard, Users, Cat, ClipboardList, Shield, Mail, Building2,
-  Power, Grid3X3, Settings2, PawPrint } from
+  Power, Grid3X3, Settings2, PawPrint, BarChart3 } from
 "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -39,8 +39,8 @@ const registryNav: NavItem[] = [
 
 
 const operationsNav: NavItem[] = [
-
-{ title: "Occupazione Casette", url: "/occupazione", icon: Grid3X3, resource: "occupazione" }];
+{ title: "Occupazione Casette", url: "/occupazione", icon: Grid3X3, resource: "occupazione" },
+{ title: "Statistiche", url: "/statistiche", icon: BarChart3, resource: "statistiche" }];
 
 
 const adminNav: NavItem[] = [
