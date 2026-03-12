@@ -110,8 +110,8 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="p-4 flex justify-center">
-        <img src={petHotelLogo} alt="Pet Hotel Manager" className="h-36 w-36 shrink-0 rounded-lg object-contain" />
+      <SidebarHeader className="p-4 flex items-center justify-center">
+        <img src={petHotelLogo} alt="Pet Hotel Manager" className="h-36 w-36 shrink-0 rounded-lg object-contain mx-auto" />
       </SidebarHeader>
 
       <SidebarContent className="px-2">
