@@ -81,7 +81,7 @@ const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> 
     preventivi: [], prenotazioni: [], appuntamenti: [],
     "check-in": ["read"], "check-out": ["read"], pagamenti: [],
     clienti: [], gatti: [], presenze: ["read"], "registro-gatti": [], planning: [],
-    occupazione: [], utenti: [], "template-email": [], pensione: [], admin: [],
+    occupazione: [], statistiche: [], utenti: [], "template-email": [], pensione: [], admin: [],
   },
 };
 
