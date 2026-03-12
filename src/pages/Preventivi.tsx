@@ -309,14 +309,14 @@ export default function Preventivi() {
       <AlertDialog open={!!deleting} onOpenChange={() => setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminare il preventivo?</AlertDialogTitle>
+            <AlertDialogTitle>{t("quotes.deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {deleting && `Stai per eliminare "${deleting.booking_number}". Questa azione non può essere annullata.`}
+              {deleting && t("quotes.deleteDescription", { number: deleting.booking_number })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annulla</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Elimina</AlertDialogAction>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
