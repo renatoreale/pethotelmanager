@@ -30,6 +30,7 @@ import OccupazioneCasette from "./pages/OccupazioneCasette";
 import Admin from "./pages/Admin";
 import Landing from "./pages/Landing";
 import RegisterTrial from "./pages/RegisterTrial";
+import Statistiche from "./pages/Statistiche";
 
 const queryClient = new QueryClient();
 
