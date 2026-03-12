@@ -49,7 +49,82 @@ const SHOWCASE_FEATURES = [
 { icon: Building2, title: "Multi-Pensione", desc: "Gestisci più sedi da un'unica dashboard con isolamento completo dei dati." }];
 
 
-export default function Landing() {
+function DemoRequestForm() {
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", phone: "", pensione_name: "", message: "" });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.email.trim()) {
+      toast.error("Nome e email sono obbligatori");
+      return;
+    }
+    setSending(true);
+    try {
+      const { error } = await supabase.functions.invoke("request-demo", { body: form });
+      if (error) throw error;
+      setSent(true);
+      toast.success("Richiesta inviata! Ti contatteremo a breve.");
+    } catch {
+      toast.error("Errore nell'invio. Riprova più tardi.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (sent) {
+    return (
+      <Card className="border-2 border-primary/20">
+        <CardContent className="py-12 text-center space-y-4">
+          <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            <Check className="h-7 w-7 text-primary" />
+          </div>
+          <h3 className="text-xl font-semibold text-foreground">Richiesta Inviata!</h3>
+          <p className="text-muted-foreground">Ti contatteremo a breve per fissare la demo.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border-2 border-primary/20">
+      <CardHeader>
+        <CardTitle className="text-lg">Prenota la tua demo</CardTitle>
+        <CardDescription>Compila il form e ti ricontatteremo entro 24h</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="demo-name">Nome e Cognome *</Label>
+            <Input id="demo-name" required maxLength={100} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Mario Rossi" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="demo-email">Email *</Label>
+            <Input id="demo-email" type="email" required maxLength={255} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="mario@example.com" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="demo-phone">Telefono</Label>
+            <Input id="demo-phone" type="tel" maxLength={20} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+39 333 1234567" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="demo-pensione">Nome della tua Pensione</Label>
+            <Input id="demo-pensione" maxLength={100} value={form.pensione_name} onChange={(e) => setForm({ ...form, pensione_name: e.target.value })} placeholder="La Pensione dei Mici" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="demo-message">Messaggio</Label>
+            <Textarea id="demo-message" maxLength={500} rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Di cosa hai bisogno? Quanti animali gestisci?" />
+          </div>
+          <Button type="submit" className="w-full gap-2" size="lg" disabled={sending}>
+            <Send className="h-4 w-4" /> {sending ? "Invio in corso..." : "Richiedi Demo Gratuita"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+
   const navigate = useNavigate();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [config, setConfig] = useState<any>(null);
