@@ -740,6 +740,7 @@ export function PreventivoDialog({
           cat_ids: selectedCats,
           price_breakdown: priceBreakdown,
           pet_type: savePetType ?? undefined,
+          quote_request_id: prefill?.quote_request_id ?? undefined,
         });
         toast.success("Preventivo creato");
       }
