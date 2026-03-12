@@ -139,20 +139,32 @@ export default function ClienteAnimali() {
     };
 
     try {
+      setUploadingPhoto(true);
       if (editingId) {
+        const photoUrl = await uploadPhoto(editingId);
+        if (photoUrl !== undefined) payload.photo_url = photoUrl;
         await updateCat.mutateAsync({ id: editingId, ...payload });
         toast.success("Animale aggiornato");
       } else {
-        await createCat.mutateAsync({
+        const result = await createCat.mutateAsync({
           ...payload,
           client_id: profile.id,
           tenant_id: profile.tenant_id,
         });
+        // Upload photo after creation
+        if (photoFile && result?.id) {
+          const photoUrl = await uploadPhoto(result.id);
+          if (photoUrl) {
+            await updateCat.mutateAsync({ id: result.id, photo_url: photoUrl });
+          }
+        }
         toast.success("Animale aggiunto");
       }
       setDialogOpen(false);
     } catch (err: any) {
       toast.error(err.message || "Errore nel salvataggio");
+    } finally {
+      setUploadingPhoto(false);
     }
   };
 
