@@ -41,6 +41,7 @@ export default function Preventivi() {
   const [editing, setEditing] = useState<any>(null);
   const [deleting, setDeleting] = useState<any>(null);
   const [confirming, setConfirming] = useState<any>(null);
+  const [quotePrefill, setQuotePrefill] = useState<{ client_id: string; check_in_date: string; check_out_date: string; notes?: string } | null>(null);
 
   // Stay config
   const stayCalcType = (tenantConfig as any)?.stay_calc_type ?? "notti";
@@ -71,8 +72,8 @@ export default function Preventivi() {
     });
   }, [preventivi, search]);
 
-  const openNew = () => { setEditing(null); setDialogOpen(true); };
-  const openEdit = (p: any) => { setEditing(p); setDialogOpen(true); };
+  const openNew = () => { setEditing(null); setQuotePrefill(null); setDialogOpen(true); };
+  const openEdit = (p: any) => { setEditing(p); setQuotePrefill(null); setDialogOpen(true); };
 
   const handleConfirm = async (depositData: {
     amount: number;
@@ -150,16 +151,26 @@ export default function Preventivi() {
                     <Badge variant="secondary">
                       {qr.status === "pending" ? "In attesa" : qr.status === "reviewed" ? "In lavorazione" : qr.status}
                     </Badge>
-                    {qr.status === "pending" && (
+                    {(qr.status === "pending" || qr.status === "reviewed") && (
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant={qr.status === "pending" ? "outline" : "default"}
                         onClick={async () => {
-                          await updateQuoteStatus.mutateAsync({ id: qr.id, status: "reviewed" });
-                          toast.success("Richiesta presa in carico");
+                          if (qr.status === "pending") {
+                            await updateQuoteStatus.mutateAsync({ id: qr.id, status: "reviewed" });
+                          }
+                          setEditing(null);
+                          setQuotePrefill({
+                            client_id: qr.client_id,
+                            check_in_date: qr.check_in_date,
+                            check_out_date: qr.check_out_date,
+                            notes: qr.notes || undefined,
+                          });
+                          setDialogOpen(true);
+                          toast.success("Richiesta presa in carico — compila il preventivo");
                         }}
                       >
-                        Prendi in carico
+                        {qr.status === "pending" ? "Prendi in carico" : "Crea preventivo"}
                       </Button>
                     )}
                   </div>
@@ -266,6 +277,7 @@ export default function Preventivi() {
         stayCalcType={stayCalcType}
         countCheckinDay={countCheckinDay}
         countCheckoutDay={countCheckoutDay}
+        prefill={quotePrefill}
       />
 
       <ConfirmPreventivoDialog

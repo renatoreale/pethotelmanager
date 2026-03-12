@@ -70,6 +70,13 @@ interface DiscountLine {
 let _idCounter = 0;
 const genId = () => `line-${++_idCounter}-${Date.now()}`;
 
+interface QuotePrefill {
+  client_id: string;
+  check_in_date: string;
+  check_out_date: string;
+  notes?: string;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -79,11 +86,12 @@ interface Props {
   stayCalcType: string;
   countCheckinDay: boolean;
   countCheckoutDay: boolean;
+  prefill?: QuotePrefill | null;
 }
 
 export function PreventivoDialog({
   open, onOpenChange, editing, onCreate, onUpdate,
-  stayCalcType, countCheckinDay, countCheckoutDay,
+  stayCalcType, countCheckinDay, countCheckoutDay, prefill,
 }: Props) {
   const { data: clients } = useClients();
   const { data: priceLists } = usePriceLists();
@@ -284,6 +292,26 @@ export function PreventivoDialog({
         setDiscounts([]);
       }
       setDepositManuallySet(false);
+    } else if (prefill) {
+      setClientId(prefill.client_id);
+      const prefillClient = clients?.find((c: any) => c.id === prefill.client_id);
+      setClientSearch(prefillClient ? `${prefillClient.first_name} ${prefillClient.last_name}` : "");
+      setCheckInDate(prefill.check_in_date ? parseISO(prefill.check_in_date) : undefined);
+      setCheckOutDate(prefill.check_out_date ? parseISO(prefill.check_out_date) : undefined);
+      setNotes(prefill.notes || "");
+      setSelectedCats([]);
+      setUnitsOccupied(1);
+      setCageUnits(["singola"]);
+      setCageUnitsGatti(["singola"]);
+      setCageUnitsCani(["singola"]);
+      setUnitsGatti(1);
+      setUnitsCani(1);
+      setTotalAmount(0);
+      setDepositAmount(0);
+      setSeasonPeriods([]);
+      setExtraServices([]);
+      setDiscounts([]);
+      setDepositManuallySet(false);
     } else {
       setClientId("");
       setUnitsOccupied(1);
@@ -303,7 +331,13 @@ export function PreventivoDialog({
       setDiscounts([]);
       setDepositManuallySet(false);
     }
-    setClientSearch("");
+    const targetId = editing?.client_id ?? prefill?.client_id;
+    if (targetId) {
+      const found = clients?.find((c: any) => c.id === targetId);
+      setClientSearch(found ? `${found.first_name} ${found.last_name}` : "");
+    } else {
+      setClientSearch("");
+    }
     setClientDropdownOpen(false);
   };
 
@@ -318,7 +352,7 @@ export function PreventivoDialog({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  useEffect(() => { if (open) resetForm(); }, [open, editing]);
+  useEffect(() => { if (open) resetForm(); }, [open, editing, prefill]);
 
   useEffect(() => {
     if (checkInDate && checkOutDate && checkOutDate < checkInDate) {
