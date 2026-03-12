@@ -1460,6 +1460,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_availability: {
+        Args: { _check_in: string; _check_out: string; _tenant_id: string }
+        Returns: {
+          cage_pool_type: string
+          max_occupied: number
+          total_capacity: number
+        }[]
+      }
       copy_global_templates_to_tenant: {
         Args: { _tenant_id: string }
         Returns: undefined
