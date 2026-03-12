@@ -331,7 +331,13 @@ export function PreventivoDialog({
       setDiscounts([]);
       setDepositManuallySet(false);
     }
-    setClientSearch(editing ? (clients?.find((c: any) => c.id === editing.client_id) ? `${clients.find((c: any) => c.id === editing.client_id)!.first_name} ${clients.find((c: any) => c.id === editing.client_id)!.last_name}` : "") : prefill ? (clients?.find((c: any) => c.id === prefill.client_id) ? `${clients.find((c: any) => c.id === prefill.client_id)!.first_name} ${clients.find((c: any) => c.id === prefill.client_id)!.last_name}` : "") : "");
+    const targetId = editing?.client_id ?? prefill?.client_id;
+    if (targetId) {
+      const found = clients?.find((c: any) => c.id === targetId);
+      setClientSearch(found ? `${found.first_name} ${found.last_name}` : "");
+    } else {
+      setClientSearch("");
+    }
     setClientDropdownOpen(false);
   };
 
