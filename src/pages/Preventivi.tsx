@@ -112,7 +112,7 @@ export default function Preventivi() {
     if (!tenantConfig) return;
     try {
       await generatePreventivoPDF(p, tenantConfig as any, paymentSplits ?? [], stayCalcType);
-      toast.success("PDF generato");
+      toast.success(t("quotes.pdfGenerated"));
     } catch (err: any) {
       toast.error(err.message || "Errore nella generazione del PDF");
     }
