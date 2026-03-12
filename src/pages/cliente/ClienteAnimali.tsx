@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, PawPrint } from "lucide-react";
+import { BreedCombobox } from "@/components/BreedCombobox";
 
 interface CatForm {
   name: string;
