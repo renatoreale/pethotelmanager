@@ -205,7 +205,7 @@ export default function Preventivi() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Cerca per cliente o numero..."
+                placeholder={t("quotes.searchPlaceholder") || "Cerca per cliente o numero..."}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10"
