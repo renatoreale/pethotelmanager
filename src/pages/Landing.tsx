@@ -183,7 +183,7 @@ export default function Landing() {
         </nav>
 
         <div className="relative max-w-5xl mx-auto px-6 pt-20 pb-28 text-center">
-          <img src="/logo.png" alt="Pet Hotel Manager" className="mx-auto mb-8 h-32 w-auto object-contain" />
+          <img src="/logo.png" alt="Pet Hotel Manager" className="mx-auto mb-8 h-96 w-auto object-contain" />
           <Badge className="mb-6 bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">
             <Zap className="h-3 w-3 mr-1" /> {trialDays} giorni di prova gratuita
           </Badge>
