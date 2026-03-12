@@ -132,7 +132,10 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-serif">
+          <DialogTitle className="font-serif flex items-center gap-3">
+            {cat?.photo_url && (
+              <img src={cat.photo_url} alt={cat.name} className="h-10 w-10 rounded-full object-cover border-2 border-primary/20" />
+            )}
             {isEditing ? `Modifica ${pet.singularCap}` : `Nuovo ${pet.singularCap}`}
           </DialogTitle>
         </DialogHeader>
