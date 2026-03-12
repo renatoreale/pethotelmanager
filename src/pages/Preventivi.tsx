@@ -16,7 +16,6 @@ import { Plus, Pencil, Trash2, Search, CheckCircle2, FileText, Download, Inbox, 
 import { ConfirmPreventivoDialog } from "@/components/preventivi/ConfirmPreventivoDialog";
 import { toast } from "sonner";
 import { format, differenceInDays, parseISO } from "date-fns";
-import { it } from "date-fns/locale";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import {
   usePreventivi, useCreatePreventivo, useUpdatePreventivo,
@@ -26,6 +25,8 @@ import { PreventivoDialog } from "@/components/preventivi/PreventivoDialog";
 import { usePaymentSplits } from "@/hooks/usePaymentSplits";
 import { generatePreventivoPDF } from "@/lib/generatePreventivoPDF";
 import { useQuoteRequests, useUpdateQuoteRequestStatus } from "@/hooks/useQuoteRequests";
+import { useTranslation } from "react-i18next";
+import { useDateLocale } from "@/hooks/useDateLocale";
 
 export default function Preventivi() {
   const { data: preventivi, isLoading } = usePreventivi();
