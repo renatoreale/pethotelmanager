@@ -292,6 +292,26 @@ export function PreventivoDialog({
         setDiscounts([]);
       }
       setDepositManuallySet(false);
+    } else if (prefill) {
+      setClientId(prefill.client_id);
+      const prefillClient = clients?.find((c: any) => c.id === prefill.client_id);
+      setClientSearch(prefillClient ? `${prefillClient.first_name} ${prefillClient.last_name}` : "");
+      setCheckInDate(prefill.check_in_date ? parseISO(prefill.check_in_date) : undefined);
+      setCheckOutDate(prefill.check_out_date ? parseISO(prefill.check_out_date) : undefined);
+      setNotes(prefill.notes || "");
+      setSelectedCats([]);
+      setUnitsOccupied(1);
+      setCageUnits(["singola"]);
+      setCageUnitsGatti(["singola"]);
+      setCageUnitsCani(["singola"]);
+      setUnitsGatti(1);
+      setUnitsCani(1);
+      setTotalAmount(0);
+      setDepositAmount(0);
+      setSeasonPeriods([]);
+      setExtraServices([]);
+      setDiscounts([]);
+      setDepositManuallySet(false);
     } else {
       setClientId("");
       setUnitsOccupied(1);
@@ -311,7 +331,7 @@ export function PreventivoDialog({
       setDiscounts([]);
       setDepositManuallySet(false);
     }
-    setClientSearch("");
+    setClientSearch(editing ? (clients?.find((c: any) => c.id === editing.client_id) ? `${clients.find((c: any) => c.id === editing.client_id)!.first_name} ${clients.find((c: any) => c.id === editing.client_id)!.last_name}` : "") : prefill ? (clients?.find((c: any) => c.id === prefill.client_id) ? `${clients.find((c: any) => c.id === prefill.client_id)!.first_name} ${clients.find((c: any) => c.id === prefill.client_id)!.last_name}` : "") : "");
     setClientDropdownOpen(false);
   };
 
