@@ -257,10 +257,25 @@ export default function ClientePreventivi() {
                     </div>
                     <div className="flex flex-col gap-1">
                       {b.status === "preventivo" && (
-                        <Button size="sm" onClick={() => handleConfirm(b)}>
-                          <CreditCard className="mr-1.5 h-3.5 w-3.5" />
-                          Conferma
-                        </Button>
+                        <>
+                          <Button size="sm" onClick={() => handleConfirm(b)}>
+                            <CreditCard className="mr-1.5 h-3.5 w-3.5" />
+                            Conferma
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownloadPreventivo(b)}
+                            disabled={generatingPreventivoPdf === b.id}
+                          >
+                            {generatingPreventivoPdf === b.id ? (
+                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Printer className="mr-1.5 h-3.5 w-3.5" />
+                            )}
+                            Scarica Preventivo
+                          </Button>
+                        </>
                       )}
                       {b.status !== "preventivo" && b.status !== "cancellata" && b.status !== "rimborsata" && b.status !== "scaduto" && (
                         <Button size="sm" variant="outline" onClick={() => setDetailBooking(b)}>
@@ -269,19 +284,34 @@ export default function ClientePreventivi() {
                         </Button>
                       )}
                       {canDownloadAffido && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDownloadAffido(b)}
-                          disabled={generatingPdf === b.id}
-                        >
-                          {generatingPdf === b.id ? (
-                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Download className="mr-1.5 h-3.5 w-3.5" />
-                          )}
-                          Modulo Affido
-                        </Button>
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownloadAffido(b)}
+                            disabled={generatingPdf === b.id}
+                          >
+                            {generatingPdf === b.id ? (
+                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Download className="mr-1.5 h-3.5 w-3.5" />
+                            )}
+                            Modulo Affido
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownloadPreventivo(b)}
+                            disabled={generatingPreventivoPdf === b.id}
+                          >
+                            {generatingPreventivoPdf === b.id ? (
+                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Printer className="mr-1.5 h-3.5 w-3.5" />
+                            )}
+                            Scarica Preventivo
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>
