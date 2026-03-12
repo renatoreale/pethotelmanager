@@ -216,11 +216,11 @@ export default function Preventivi() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
+            <div className="py-12 text-center text-muted-foreground">{t("common.loading")}</div>
           ) : !filtered.length ? (
             <div className="py-12 text-center text-muted-foreground">
               <FileText className="mx-auto h-12 w-12 mb-4 opacity-30" />
-              Nessun preventivo trovato
+              {t("quotes.noQuotes")}
             </div>
           ) : (
             <div className="rounded-md border">
