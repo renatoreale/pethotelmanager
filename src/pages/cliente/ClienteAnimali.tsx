@@ -257,6 +257,52 @@ export default function ClienteAnimali() {
           </DialogHeader>
 
           <div className="space-y-4">
+            {/* Photo upload */}
+            <div className="space-y-2">
+              <Label>Foto</Label>
+              <div className="flex items-center gap-4">
+                {(photoPreview || existingPhotoUrl) ? (
+                  <div className="relative">
+                    <img
+                      src={photoPreview || existingPhotoUrl!}
+                      alt="Anteprima"
+                      className="h-20 w-20 rounded-full object-cover border-2 border-primary/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { setPhotoFile(null); setPhotoPreview(null); setExistingPhotoUrl(null); }}
+                      className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted border-2 border-dashed border-muted-foreground/30">
+                    <Camera className="h-6 w-6 text-muted-foreground/50" />
+                  </div>
+                )}
+                <div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Camera className="mr-2 h-4 w-4" />
+                    {(photoPreview || existingPhotoUrl) ? "Cambia foto" : "Carica foto"}
+                  </Button>
+                  <p className="text-[10px] text-muted-foreground mt-1">JPG, PNG. Max 5MB</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handlePhotoSelect}
+                  />
+                </div>
+              </div>
+            </div>
+
             {isEntrambi && (
               <div className="space-y-2">
                 <Label>Tipo *</Label>
