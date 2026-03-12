@@ -42,6 +42,8 @@ export default function Preventivi() {
   const [deleting, setDeleting] = useState<any>(null);
   const [confirming, setConfirming] = useState<any>(null);
   const [quotePrefill, setQuotePrefill] = useState<{ client_id: string; check_in_date: string; check_out_date: string; notes?: string } | null>(null);
+  const [rejectingQuote, setRejectingQuote] = useState<any>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   // Stay config
   const stayCalcType = (tenantConfig as any)?.stay_calc_type ?? "notti";
