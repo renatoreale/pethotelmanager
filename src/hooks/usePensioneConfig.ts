@@ -53,6 +53,7 @@ export function useUpdateTenantConfig() {
       bollo_amount?: number;
       preventivo_validity_days?: number;
       preventivo_footer_text?: string | null;
+      locale?: string;
     }) => {
       const { id, ...rest } = updates;
       const { data, error } = await supabase
