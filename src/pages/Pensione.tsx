@@ -258,8 +258,8 @@ function AnagraficaTab() {
         <div className="grid gap-6 sm:grid-cols-2">
           <div className="space-y-2">
             <Label>Lingua interfaccia / Interface language</Label>
-            <Select value={currentLocale} onValueChange={(v) => setLocale(v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select value={currentLocale} onValueChange={(v) => setLocale(v)} disabled>
+              <SelectTrigger disabled><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="it">🇮🇹 Italiano</SelectItem>
                 <SelectItem value="en">🇬🇧 English</SelectItem>
