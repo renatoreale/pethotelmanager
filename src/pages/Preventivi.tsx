@@ -324,17 +324,17 @@ export default function Preventivi() {
       <AlertDialog open={!!rejectingQuote} onOpenChange={() => setRejectingQuote(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Rifiuta richiesta preventivo</AlertDialogTitle>
+            <AlertDialogTitle>{t("quotes.rejectTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {rejectingQuote?.client && `Richiesta di ${rejectingQuote.client.first_name} ${rejectingQuote.client.last_name}`}
+              {rejectingQuote?.client && `${rejectingQuote.client.first_name} ${rejectingQuote.client.last_name}`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-2 py-2">
-            <Label>Motivazione (visibile al cliente)</Label>
+            <Label>{t("quotes.rejectReason")}</Label>
             <Textarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              placeholder="Es: Non abbiamo disponibilità per le date richieste..."
+              placeholder={t("quotes.rejectPlaceholder")}
               rows={3}
             />
           </div>
