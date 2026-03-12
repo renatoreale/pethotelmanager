@@ -23,6 +23,7 @@ import {
 import { PreventivoDialog } from "@/components/preventivi/PreventivoDialog";
 import { usePaymentSplits } from "@/hooks/usePaymentSplits";
 import { generatePreventivoPDF } from "@/lib/generatePreventivoPDF";
+import { useQuoteRequests, useUpdateQuoteRequestStatus } from "@/hooks/useQuoteRequests";
 
 export default function Preventivi() {
   const { data: preventivi, isLoading } = usePreventivi();
