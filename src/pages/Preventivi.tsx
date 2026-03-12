@@ -93,7 +93,7 @@ export default function Preventivi() {
       id: confirming.id,
       deposit: depositData,
     });
-    toast.success("Preventivo confermato → Prenotazione con caparra registrata");
+    toast.success(t("quotes.confirmed"));
     setConfirming(null);
   };
 
