@@ -242,6 +242,9 @@ export default function Landing() {
                 <p className="text-sm text-muted-foreground mt-1">
                   equivale a €{(STRIPE_TIERS.pro.priceYearly / 12).toFixed(0)}/mese
                 </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  oppure €{(STRIPE_TIERS.pro.priceYearly / 4).toFixed(0)}/trimestre
+                </p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
