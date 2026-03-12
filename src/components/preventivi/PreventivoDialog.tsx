@@ -950,6 +950,9 @@ export function PreventivoDialog({
                         <div key={cat.id} className="flex items-center gap-2 rounded-md border p-2 cursor-pointer hover:bg-accent"
                           onClick={() => toggleCat(cat.id)}>
                           <Checkbox checked={selectedCats.includes(cat.id)} />
+                          {cat.photo_url ? (
+                            <img src={cat.photo_url} alt={cat.name} className="h-8 w-8 rounded-full object-cover border border-border shrink-0" />
+                          ) : null}
                           <span className="text-sm font-medium">{cat.name}</span>
                           {cat.pet_type === "cani" && <Badge variant="outline" className="text-xs gap-1"><Dog className="h-3 w-3" />Cane</Badge>}
                           {cat.pet_type === "gatti" && <Badge variant="outline" className="text-xs gap-1"><Cat className="h-3 w-3" />Gatto</Badge>}
