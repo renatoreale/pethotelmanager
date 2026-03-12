@@ -1514,6 +1514,10 @@ export type Database = {
         Args: { _tenant_id: string }
         Returns: undefined
       }
+      get_appointment_slot_counts: {
+        Args: { _appointment_type: string; _date: string; _tenant_id: string }
+        Returns: Json
+      }
       get_client_id: { Args: { _user_id: string }; Returns: string }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
