@@ -410,7 +410,7 @@ export default function Index() {
             </CardHeader>
             <CardContent>
               {s.dayBookings.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">Nessuna prenotazione per questa data</p>
+                <p className="text-sm text-muted-foreground text-center py-4">{t("dashboard.noBookingsToday")}</p>
               ) : (
                 <div className="space-y-3">
                   {s.dayBookings.map((b: any) => {
