@@ -84,6 +84,7 @@ export default function ClientePreventivi() {
           if (error) throw error;
           if (data?.confirmed) {
             toast.success("Pagamento confermato! Il preventivo è stato accettato.");
+            setShowPaymentSuccess(true);
             queryClient.invalidateQueries({ queryKey: ["cliente-bookings"] });
           } else {
             toast.info(data?.reason || "Pagamento in fase di verifica");
