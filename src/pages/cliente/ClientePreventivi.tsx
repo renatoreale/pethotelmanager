@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { FileText, CreditCard, Building2, Copy, Download, Loader2, CheckCircle2, Eye, Printer, Mail, AlertTriangle } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
@@ -246,6 +246,11 @@ export default function ClientePreventivi() {
                     </p>
                     {catNames && (
                       <p className="text-xs text-muted-foreground">🐾 {catNames}</p>
+                    )}
+                    {b.status === "preventivo" && tenant?.preventivo_validity_days && (
+                      <p className="text-xs text-destructive font-medium">
+                        ⏳ Scade il {format(addDays(new Date(b.created_at), tenant.preventivo_validity_days), "dd MMM yyyy", { locale: it })}
+                      </p>
                     )}
                   </div>
                   <div className="flex items-center gap-3">
