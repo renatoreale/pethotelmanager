@@ -346,7 +346,7 @@ export function PreventivoDialog({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  useEffect(() => { if (open) resetForm(); }, [open, editing]);
+  useEffect(() => { if (open) resetForm(); }, [open, editing, prefill]);
 
   useEffect(() => {
     if (checkInDate && checkOutDate && checkOutDate < checkInDate) {
