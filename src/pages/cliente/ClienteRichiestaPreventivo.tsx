@@ -1,20 +1,24 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useClienteProfile, useClienteCats, useCreateQuoteRequest } from "@/hooks/useClienteAuth";
+import { useClienteProfile, useClienteCats, useCreateQuoteRequest, useClienteTenant } from "@/hooks/useClienteAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Send, AlertTriangle } from "lucide-react";
+import { Send, AlertTriangle, XCircle, CheckCircle2 } from "lucide-react";
 import { format, addDays } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function ClienteRichiestaPreventivo() {
   const navigate = useNavigate();
   const { data: profile } = useClienteProfile();
   const { data: cats } = useClienteCats();
+  const { data: tenant } = useClienteTenant();
   const createRequest = useCreateQuoteRequest();
 
   const today = format(new Date(), "yyyy-MM-dd");
@@ -26,6 +30,34 @@ export default function ClienteRichiestaPreventivo() {
     notes: "",
   });
   const [selectedCats, setSelectedCats] = useState<string[]>([]);
+
+  // Availability check via RPC
+  const { data: availability } = useQuery({
+    queryKey: ["cliente-availability", profile?.tenant_id, form.check_in_date, form.check_out_date],
+    queryFn: async () => {
+      if (!profile?.tenant_id || form.check_out_date <= form.check_in_date) return null;
+      const { data, error } = await supabase.rpc("check_availability", {
+        _tenant_id: profile.tenant_id,
+        _check_in: form.check_in_date,
+        _check_out: form.check_out_date,
+      });
+      if (error) throw error;
+      return data as { cage_pool_type: string; max_occupied: number; total_capacity: number }[];
+    },
+    enabled: !!profile?.tenant_id && form.check_out_date > form.check_in_date,
+  });
+
+  const availabilityStatus = useMemo(() => {
+    if (!availability) return null;
+    const singola = availability.find((a) => a.cage_pool_type === "singola");
+    const doppia = availability.find((a) => a.cage_pool_type === "doppia");
+    const freeSingole = (singola?.total_capacity ?? 0) - (singola?.max_occupied ?? 0);
+    const freeDoppie = (doppia?.total_capacity ?? 0) - (doppia?.max_occupied ?? 0);
+    const totalFree = freeSingole + freeDoppie;
+    return { freeSingole, freeDoppie, totalFree };
+  }, [availability]);
+
+  const noAvailability = availabilityStatus !== null && availabilityStatus.totalFree <= 0;
 
   const toggleCat = (catId: string) => {
     setSelectedCats((prev) =>
@@ -120,6 +152,36 @@ export default function ClienteRichiestaPreventivo() {
                   />
                 </div>
               </div>
+
+              {/* Availability alert */}
+              {availabilityStatus && (
+                noAvailability ? (
+                  <Alert className="border-destructive/50 bg-destructive/10 text-destructive">
+                    <XCircle className="h-4 w-4" />
+                    <AlertDescription className="ml-2">
+                      <p className="font-medium">
+                        Spiacenti, non ci sono casette disponibili per le date selezionate.
+                      </p>
+                      {tenant?.phone && (
+                        <p className="text-sm mt-1">
+                          Contattaci al{" "}
+                          <a href={`tel:${tenant.phone}`} className="underline font-semibold">{tenant.phone}</a>{" "}
+                          per trovare una soluzione insieme.
+                        </p>
+                      )}
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <Alert className="border-green-500/50 bg-green-50 dark:bg-green-950/30 text-green-800 dark:text-green-200">
+                    <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    <AlertDescription className="ml-2 font-medium">
+                      Disponibilità confermata per le date selezionate
+                      {availabilityStatus.freeSingole > 0 && ` · ${availabilityStatus.freeSingole} singol${availabilityStatus.freeSingole === 1 ? "a" : "e"}`}
+                      {availabilityStatus.freeDoppie > 0 && ` · ${availabilityStatus.freeDoppie} doppi${availabilityStatus.freeDoppie === 1 ? "a" : "e"}`}
+                    </AlertDescription>
+                  </Alert>
+                )
+              )}
 
               <div className="space-y-3">
                 <Label>Seleziona i tuoi animali *</Label>
