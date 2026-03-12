@@ -459,7 +459,7 @@ export default function Index() {
                               <p className="text-xs text-muted-foreground">{catNames} · {b.booking_number}</p>
                             </div>
                             <span className="text-xs text-muted-foreground">
-                              {format(new Date(b.check_in_date + "T00:00:00"), "dd MMM", { locale: it })}
+                              {format(new Date(b.check_in_date + "T00:00:00"), "dd MMM", { locale: dateLocale })}
                             </span>
                           </div>
                           <Button
