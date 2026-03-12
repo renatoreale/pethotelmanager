@@ -22,15 +22,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, Pencil, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, AlertTriangle, Mail, CheckCircle2, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export default function Clienti() {
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [deletingClient, setDeletingClient] = useState<Client | null>(null);
+  const [inviteClient, setInviteClient] = useState<Client | null>(null);
+  const [inviting, setInviting] = useState(false);
+  const [inviteResult, setInviteResult] = useState<{ link: string; email: string } | null>(null);
 
   const { data: clients, isLoading } = useClients(search);
   const deleteClient = useDeleteClient();
@@ -54,6 +66,32 @@ export default function Clienti() {
       toast.error(err.message || "Errore nell'eliminazione");
     }
     setDeletingClient(null);
+  };
+
+  const handleInvite = async () => {
+    if (!inviteClient) return;
+    setInviting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("invite-client", {
+        body: { client_id: inviteClient.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      setInviteResult({ link: data.recovery_link, email: inviteClient.email || "" });
+      toast.success(`Invito creato per ${inviteClient.email}`);
+    } catch (err: any) {
+      toast.error(err.message || "Errore nell'invio dell'invito");
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const copyLink = () => {
+    if (inviteResult?.link) {
+      navigator.clipboard.writeText(inviteResult.link);
+      toast.success("Link copiato negli appunti");
+    }
   };
 
   return (
@@ -99,8 +137,9 @@ export default function Clienti() {
                     <TableHead>Email</TableHead>
                     <TableHead>Telefono</TableHead>
                     <TableHead>Animali</TableHead>
+                    <TableHead>Portale</TableHead>
                     <TableHead>Stato</TableHead>
-                    <TableHead className="w-[100px]">Azioni</TableHead>
+                    <TableHead className="w-[130px]">Azioni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -122,6 +161,16 @@ export default function Clienti() {
                           : "—"}
                       </TableCell>
                       <TableCell>
+                        {client.user_id ? (
+                          <Badge variant="default" className="text-xs gap-1">
+                            <CheckCircle2 className="h-3 w-3" />
+                            Attivo
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs">Non invitato</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         {client.is_blacklisted ? (
                           <Badge variant="destructive" className="text-xs">Blacklist</Badge>
                         ) : (
@@ -130,6 +179,19 @@ export default function Clienti() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
+                          {!client.user_id && client.email && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Invita al portale clienti"
+                              onClick={() => {
+                                setInviteClient(client);
+                                setInviteResult(null);
+                              }}
+                            >
+                              <Mail className="h-4 w-4 text-primary" />
+                            </Button>
+                          )}
                           <Button variant="ghost" size="icon" onClick={() => handleEdit(client)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -156,6 +218,7 @@ export default function Clienti() {
         client={editingClient}
       />
 
+      {/* Delete dialog */}
       <AlertDialog open={!!deletingClient} onOpenChange={() => setDeletingClient(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -172,6 +235,56 @@ export default function Clienti() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Invite dialog */}
+      <Dialog open={!!inviteClient} onOpenChange={() => { setInviteClient(null); setInviteResult(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Invita al Portale Clienti</DialogTitle>
+            <DialogDescription>
+              {inviteClient && `Crea un account per ${inviteClient.first_name} ${inviteClient.last_name} (${inviteClient.email})`}
+            </DialogDescription>
+          </DialogHeader>
+
+          {!inviteResult ? (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Verrà creato un account e generato un link per impostare la password.
+                Il cliente potrà poi accedere all'area riservata per gestire i propri dati,
+                visualizzare preventivi e richiederne di nuovi.
+              </p>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setInviteClient(null)}>Annulla</Button>
+                <Button onClick={handleInvite} disabled={inviting}>
+                  <Mail className="mr-2 h-4 w-4" />
+                  {inviting ? "Creazione in corso..." : "Crea Invito"}
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle2 className="h-5 w-5" />
+                <p className="font-medium text-sm">Invito creato con successo!</p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Invia questo link al cliente per permettergli di impostare la password e accedere al portale:
+              </p>
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-muted text-xs break-all">
+                <span className="flex-1 font-mono">{inviteResult.link}</span>
+                <Button variant="ghost" size="icon" className="shrink-0" onClick={copyLink}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { setInviteClient(null); setInviteResult(null); }}>
+                  Chiudi
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,13 +1,15 @@
 import { useClienteBookings, useClienteTenant } from "@/hooks/useClienteAuth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { FileText, CreditCard, Building2, Copy, CheckCircle2 } from "lucide-react";
+import { FileText, CreditCard, Building2, Copy, Download, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { generateModuloAffidoPDF } from "@/lib/generateModuloAffidoPDF";
 
 const STATUS_LABELS: Record<string, string> = {
   preventivo: "In attesa di conferma",
@@ -38,6 +40,8 @@ export default function ClientePreventivi() {
   const { data: bookings, isLoading } = useClienteBookings();
   const { data: tenant } = useClienteTenant();
   const [paymentDialog, setPaymentDialog] = useState<any>(null);
+  const [payingStripe, setPayingStripe] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
 
   const handleConfirm = (booking: any) => {
     setPaymentDialog(booking);
@@ -47,6 +51,53 @@ export default function ClientePreventivi() {
     if (tenant?.iban) {
       navigator.clipboard.writeText(tenant.iban);
       toast.success("IBAN copiato negli appunti");
+    }
+  };
+
+  const handleStripePayment = async (booking: any) => {
+    setPayingStripe(true);
+    try {
+      const amount = booking.deposit_amount > 0 ? Number(booking.deposit_amount) : Number(booking.total_amount || 0);
+      const { data, error } = await supabase.functions.invoke("create-client-payment", {
+        body: {
+          booking_id: booking.id,
+          amount,
+          description: `Caparra pratica #${booking.booking_number}`,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.url) {
+        window.open(data.url, "_blank");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Errore nel pagamento");
+    } finally {
+      setPayingStripe(false);
+    }
+  };
+
+  const handleDownloadAffido = async (booking: any) => {
+    setGeneratingPdf(booking.id);
+    try {
+      // Fetch full booking with appointments
+      const { data: fullBooking } = await supabase
+        .from("bookings")
+        .select("*, booking_cats(cat_id, cats(id, name)), appointments(*)")
+        .eq("id", booking.id)
+        .single();
+
+      if (!fullBooking || !tenant) {
+        toast.error("Dati non disponibili");
+        return;
+      }
+
+      await generateModuloAffidoPDF(fullBooking as any, tenant as any);
+      toast.success("Modulo di affido scaricato");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nella generazione del PDF");
+    } finally {
+      setGeneratingPdf(null);
     }
   };
 
@@ -80,6 +131,7 @@ export default function ClientePreventivi() {
             ?.filter((p: any) => p.payment_type !== "rimborso")
             .reduce((sum: number, p: any) => sum + Number(p.amount), 0) || 0;
           const catNames = b.booking_cats?.map((bc: any) => bc.cats?.name).filter(Boolean).join(", ");
+          const canDownloadAffido = ["confermata", "appuntamento_fissato", "appuntamento_in_fissato", "appuntamento_out_fissato", "appuntamento_in_out_fissato", "check_in", "in_corso"].includes(b.status);
 
           return (
             <Card key={b.id}>
@@ -99,19 +151,36 @@ export default function ClientePreventivi() {
                       <p className="text-xs text-muted-foreground">🐾 {catNames}</p>
                     )}
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
                     <div className="text-right">
                       <p className="text-lg font-bold">€ {Number(b.total_amount || 0).toFixed(2)}</p>
                       {totalPaid > 0 && (
                         <p className="text-xs text-green-600">Pagato: € {totalPaid.toFixed(2)}</p>
                       )}
                     </div>
-                    {b.status === "preventivo" && (
-                      <Button size="sm" onClick={() => handleConfirm(b)}>
-                        <CreditCard className="mr-2 h-4 w-4" />
-                        Conferma
-                      </Button>
-                    )}
+                    <div className="flex flex-col gap-1">
+                      {b.status === "preventivo" && (
+                        <Button size="sm" onClick={() => handleConfirm(b)}>
+                          <CreditCard className="mr-1.5 h-3.5 w-3.5" />
+                          Conferma
+                        </Button>
+                      )}
+                      {canDownloadAffido && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDownloadAffido(b)}
+                          disabled={generatingPdf === b.id}
+                        >
+                          {generatingPdf === b.id ? (
+                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Download className="mr-1.5 h-3.5 w-3.5" />
+                          )}
+                          Modulo Affido
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -145,10 +214,19 @@ export default function ClientePreventivi() {
             <div className="space-y-3">
               <p className="text-sm font-medium">Scegli come pagare</p>
 
-              {/* Stripe payment - placeholder */}
-              <Button className="w-full" variant="default" disabled>
-                <CreditCard className="mr-2 h-4 w-4" />
-                Paga con Carta (presto disponibile)
+              {/* Stripe payment */}
+              <Button
+                className="w-full"
+                variant="default"
+                onClick={() => handleStripePayment(paymentDialog)}
+                disabled={payingStripe}
+              >
+                {payingStripe ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <CreditCard className="mr-2 h-4 w-4" />
+                )}
+                {payingStripe ? "Preparazione pagamento..." : "Paga con Carta"}
               </Button>
 
               {/* Bank transfer */}
