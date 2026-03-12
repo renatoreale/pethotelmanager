@@ -29,6 +29,8 @@ import { useTranslation } from "react-i18next";
 import { useDateLocale } from "@/hooks/useDateLocale";
 
 export default function Preventivi() {
+  const { t } = useTranslation();
+  const dateLocale = useDateLocale();
   const { data: preventivi, isLoading } = usePreventivi();
   const createPreventivo = useCreatePreventivo();
   const updatePreventivo = useUpdatePreventivo();
