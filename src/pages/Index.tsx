@@ -441,7 +441,7 @@ export default function Index() {
                   <LogIn className="h-5 w-5" />
                   {t("dashboard.missingInApptTitle")} ({s.missingAppointment.length})
                 </CardTitle>
-                <p className="text-xs text-muted-foreground">Prossimi 4 giorni</p>
+                <p className="text-xs text-muted-foreground">{t("common.next4days")}</p>
               </CardHeader>
               <CardContent>
                 {s.missingAppointment.length === 0 ? (
