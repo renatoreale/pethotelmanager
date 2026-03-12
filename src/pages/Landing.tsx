@@ -149,6 +149,32 @@ export default function Landing() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const handleStartTrial = () => {
+    navigate("/register-trial");
+  };
+
+  const handleSubscribe = async (priceId: string, planName: string) => {
+    setLoadingPlan(planName);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/register-trial");
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { priceId }
+      });
+      if (error) throw error;
+      if (data?.url) window.open(data.url, "_blank");
+    } catch (e: any) {
+      toast.error(e.message || "Errore durante il checkout");
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
+  const trialDays = config?.trial_days || 14;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navbar */}
