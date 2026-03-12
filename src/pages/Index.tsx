@@ -289,7 +289,7 @@ export default function Index() {
           {!isOperatoreRestricted && <AvailabilityCheckDialog />}
           {!isSelectedToday && !isOperatoreRestricted && (
             <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date())}>
-              Oggi
+              {t("common.today")}
             </Button>
           )}
           {!isOperatoreRestricted && (
