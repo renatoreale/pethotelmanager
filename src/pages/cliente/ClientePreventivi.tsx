@@ -394,10 +394,46 @@ export default function ClientePreventivi() {
                 </div>
               )}
             </div>
+
+            {/* Signing reminder */}
+            <Alert className="border-primary/30 bg-primary/5">
+              <Mail className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                <strong>Importante:</strong> per confermare il preventivo, scarica il documento, firmalo e invialo via email a{" "}
+                <strong>{tenant?.email || "la pensione"}</strong>.
+              </AlertDescription>
+            </Alert>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setPaymentDialog(null)}>Chiudi</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Success Dialog with signing reminder */}
+      <Dialog open={showPaymentSuccess} onOpenChange={setShowPaymentSuccess}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              Pagamento confermato
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Il pagamento è stato registrato con successo e il preventivo è stato confermato.
+            </p>
+            <Alert className="border-primary/30 bg-primary/5">
+              <Mail className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                <strong>Promemoria:</strong> scarica il preventivo, firmalo e invialo via email a{" "}
+                <strong>{tenant?.email || "la pensione"}</strong> per completare la procedura.
+              </AlertDescription>
+            </Alert>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPaymentSuccess(false)}>Ho capito</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
