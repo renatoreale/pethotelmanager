@@ -1372,3 +1372,119 @@ function PaymentMethodsTab() {
     </>
   );
 }
+
+// ── STRIPE CONFIG TAB ──
+function StripeConfigTab() {
+  const { profile } = useAuth();
+  const [key, setKey] = useState("");
+  const [showKey, setShowKey] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const qc = useQueryClient();
+
+  const tenantId = profile?.tenant_id;
+
+  const { data: existing, isLoading } = useQuery({
+    queryKey: ["tenant-stripe-key", tenantId],
+    queryFn: async () => {
+      if (!tenantId) return null;
+      const { data, error } = await supabase
+        .from("tenant_stripe_keys" as any)
+        .select("id, stripe_secret_key, updated_at")
+        .eq("tenant_id", tenantId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { id: string; stripe_secret_key: string; updated_at: string } | null;
+    },
+    enabled: !!tenantId,
+  });
+
+  const handleSave = async () => {
+    if (!tenantId || !key.trim()) return;
+    setSaving(true);
+    try {
+      if (existing) {
+        const { error } = await supabase
+          .from("tenant_stripe_keys" as any)
+          .update({ stripe_secret_key: key.trim() })
+          .eq("tenant_id", tenantId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("tenant_stripe_keys" as any)
+          .insert({ tenant_id: tenantId, stripe_secret_key: key.trim() });
+        if (error) throw error;
+      }
+      toast.success("Chiave Stripe salvata con successo");
+      setKey("");
+      qc.invalidateQueries({ queryKey: ["tenant-stripe-key"] });
+    } catch (err: any) {
+      toast.error(err.message || "Errore nel salvataggio");
+    }
+    setSaving(false);
+  };
+
+  if (isLoading) return <div className="py-12 text-center text-muted-foreground">Caricamento...</div>;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <KeyRound className="h-5 w-5" />
+          Configurazione Stripe
+        </CardTitle>
+        <CardDescription>
+          Inserisci la chiave segreta del tuo account Stripe per ricevere i pagamenti direttamente sul tuo conto.
+          Puoi trovarla nella dashboard Stripe → Developers → API Keys.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Status */}
+        <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/50">
+          {existing ? (
+            <>
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <div>
+                <p className="font-medium text-sm">Chiave Stripe configurata</p>
+                <p className="text-xs text-muted-foreground">
+                  Chiave attuale: {showKey ? existing.stripe_secret_key : `sk_****${existing.stripe_secret_key.slice(-4)}`}
+                  <button onClick={() => setShowKey(!showKey)} className="ml-2 inline-flex items-center text-primary hover:underline">
+                    {showKey ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                  </button>
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <XCircle className="h-5 w-5 text-destructive" />
+              <div>
+                <p className="font-medium text-sm">Chiave Stripe non configurata</p>
+                <p className="text-xs text-muted-foreground">I clienti non potranno pagare con carta fino alla configurazione.</p>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Input */}
+        <div className="space-y-2">
+          <Label>{existing ? "Aggiorna chiave Stripe" : "Chiave segreta Stripe"}</Label>
+          <div className="flex gap-2">
+            <Input
+              type="password"
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              placeholder="sk_live_... oppure sk_test_..."
+              className="font-mono"
+            />
+            <Button onClick={handleSave} disabled={saving || !key.trim()}>
+              <Save className="mr-2 h-4 w-4" />
+              {saving ? "Salvataggio..." : "Salva"}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            La chiave inizia con <code className="bg-muted px-1 rounded">sk_live_</code> (produzione) o <code className="bg-muted px-1 rounded">sk_test_</code> (test).
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
