@@ -423,7 +423,7 @@ export default function Index() {
                           <p className="text-xs text-muted-foreground">{catNames} · {b.booking_number}</p>
                         </div>
                         <Badge variant="outline" className={`text-xs ${STATUS_COLORS[b.status] ?? ""}`}>
-                          {STATUS_LABELS[b.status] ?? b.status}
+                          {t(`statuses.${b.status}`, { defaultValue: b.status })}
                         </Badge>
                       </div>
                     );
