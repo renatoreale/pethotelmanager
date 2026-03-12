@@ -42,6 +42,7 @@ const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> 
     "registro-gatti": ["read", "write", "delete"],
     planning: ["read", "write", "delete"],
     occupazione: ["read", "write", "delete"],
+    statistiche: ["read", "write", "delete"],
     utenti: ["read", "write", "delete"],
     "template-email": ["read", "write", "delete"],
     pensione: ["read", "write", "delete"],
