@@ -164,7 +164,7 @@ export function useClienteTenant() {
       if (!clientProfile?.tenant_id) return null;
       const { data, error } = await supabase
         .from("tenants")
-        .select("id, name, logo_url, phone, email, address, city, cap, iban, bank_name, iban_holder, pet_type")
+        .select("id, name, logo_url, phone, email, address, city, cap, iban, bank_name, iban_holder, pet_type, stay_calc_type")
         .eq("id", clientProfile.tenant_id)
         .single();
       if (error) throw error;
