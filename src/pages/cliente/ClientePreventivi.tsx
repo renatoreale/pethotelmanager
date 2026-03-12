@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { FileText, CreditCard, Building2, Copy, Download, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { FileText, CreditCard, Building2, Copy, Download, Loader2, CheckCircle2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { generateModuloAffidoPDF } from "@/lib/generateModuloAffidoPDF";
+import { useSearchParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
 const STATUS_LABELS: Record<string, string> = {
   preventivo: "In attesa di conferma",
