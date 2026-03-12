@@ -162,11 +162,13 @@ function AnagraficaTab() {
         pec: currentPec || null,
         titolare_name: currentTitolareName || null,
         pet_type: currentPetType as "gatti" | "cani" | "entrambi",
+        locale: currentLocale,
       });
       toast.success("Anagrafica salvata");
       setName(null); setEmail(null); setPhone(null); setAddress(null);
       setCap(null); setCity(null);
       setPartitaIva(null); setPec(null); setTitolareName(null); setPetType(null);
+      setLocale(null);
     } catch (err: any) {
       toast.error(err.message || "Errore nel salvataggio");
     }
