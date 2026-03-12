@@ -19,20 +19,7 @@ import { usePetLabels } from "@/hooks/usePetLabels";
 import { useTranslation } from "react-i18next";
 import { useDateLocale } from "@/hooks/useDateLocale";
 
-const STATUS_LABELS: Record<string, string> = {
-  preventivo: "Preventivo",
-  confermata: "Confermata",
-  appuntamento_in_fissato: "App. IN",
-  appuntamento_out_fissato: "App. OUT",
-  appuntamento_in_out_fissato: "App. IN-OUT",
-  check_in: "Check-in",
-  in_corso: "In corso",
-  check_out: "Check-out",
-  chiusa: "Chiusa",
-  cancellata: "Cancellata",
-  rimborsata: "Rimborsata",
-  scaduto: "Scaduto",
-};
+// Status labels now come from translations
 
 const STATUS_COLORS: Record<string, string> = {
   preventivo: "bg-muted text-muted-foreground",
