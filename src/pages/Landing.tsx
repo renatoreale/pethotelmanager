@@ -185,7 +185,7 @@ export default function Landing() {
               Piani e Prezzi
             </h2>
             <p className="text-muted-foreground text-lg">
-              Scegli il piano più adatto alla tua pensione. Abbonamento annuale.
+              Scegli il piano più adatto alla tua pensione. Abbonamento annuale o trimestrale.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
