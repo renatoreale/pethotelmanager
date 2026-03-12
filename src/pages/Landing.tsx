@@ -350,8 +350,34 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Demo Live Request */}
+      <section id="demo" className="py-24">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+                <Video className="h-7 w-7 text-primary" />
+              </div>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+                Richiedi una Demo Live Gratuita
+              </h2>
+              <p className="text-muted-foreground text-lg mb-4">
+                Vuoi vedere Pet Hotel Manager in azione? Prenota una demo live gratuita con il nostro team.
+                Ti mostreremo tutte le funzionalità e risponderemo alle tue domande.
+              </p>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Demo personalizzata di 30 minuti</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Nessun impegno di acquisto</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Risposte a tutte le tue domande</li>
+              </ul>
+            </div>
+            <DemoRequestForm />
+          </div>
+        </div>
+      </section>
+
       {/* CTA finale */}
-      <section className="py-24">
+      <section className="py-24 bg-card/50">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-6">
             Pronto a semplificare la gestione?
@@ -360,9 +386,14 @@ export default function Landing() {
             Registrati ora e prova gratuitamente per {trialDays} giorni. Ti assegneremo una pensione demo
             già configurata con dati di esempio.
           </p>
-          <Button size="lg" className="text-base px-10 py-6 gap-2" onClick={handleStartTrial}>
-            Inizia ora — è gratis <ArrowRight className="h-4 w-4" />
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button size="lg" className="text-base px-10 py-6 gap-2" onClick={handleStartTrial}>
+              Inizia ora — è gratis <ArrowRight className="h-4 w-4" />
+            </Button>
+            <Button size="lg" variant="outline" className="text-base px-8 py-6 gap-2" asChild>
+              <a href="#demo"><Video className="h-4 w-4" /> Richiedi una demo</a>
+            </Button>
+          </div>
         </div>
       </section>
 
