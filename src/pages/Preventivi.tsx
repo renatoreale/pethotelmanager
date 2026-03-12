@@ -33,6 +33,8 @@ export default function Preventivi() {
   const confirmPreventivo = useConfirmPreventivo();
   const { data: tenantConfig } = useTenantConfig();
   const { data: paymentSplits } = usePaymentSplits();
+  const { data: quoteRequests } = useQuoteRequests();
+  const updateQuoteStatus = useUpdateQuoteRequestStatus();
 
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
