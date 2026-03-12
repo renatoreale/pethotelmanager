@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   useClienteProfile,
   useClienteCats,
@@ -16,8 +16,9 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, PawPrint } from "lucide-react";
+import { Plus, Pencil, Trash2, PawPrint, Camera, X } from "lucide-react";
 import { BreedCombobox } from "@/components/BreedCombobox";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CatForm {
   name: string;
@@ -51,12 +52,20 @@ export default function ClienteAnimali() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<CatForm>(emptyForm);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [existingPhotoUrl, setExistingPhotoUrl] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEntrambi = tenant?.pet_type === "entrambi";
 
   const openNew = () => {
     setEditingId(null);
     setForm({ ...emptyForm, pet_type: tenant?.pet_type === "cani" ? "cani" : "gatti" });
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setExistingPhotoUrl(null);
     setDialogOpen(true);
   };
 
@@ -76,7 +85,39 @@ export default function ClienteAnimali() {
       behavioral_notes: cat.behavioral_notes || "",
       pet_type: cat.pet_type || "",
     });
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setExistingPhotoUrl(cat.photo_url || null);
     setDialogOpen(true);
+  };
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("L'immagine non può superare i 5MB");
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      toast.error("Seleziona un file immagine valido");
+      return;
+    }
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const uploadPhoto = async (catId: string): Promise<string | null> => {
+    if (!photoFile) return existingPhotoUrl;
+    const ext = photoFile.name.split(".").pop() || "jpg";
+    const path = `${profile!.tenant_id}/${catId}.${ext}`;
+    const { error } = await supabase.storage
+      .from("cat-photos")
+      .upload(path, photoFile, { upsert: true });
+    if (error) throw error;
+    const { data: urlData } = supabase.storage
+      .from("cat-photos")
+      .getPublicUrl(path);
+    return urlData.publicUrl + "?t=" + Date.now();
   };
 
   const handleSave = async () => {
@@ -98,20 +139,32 @@ export default function ClienteAnimali() {
     };
 
     try {
+      setUploadingPhoto(true);
       if (editingId) {
+        const photoUrl = await uploadPhoto(editingId);
+        if (photoUrl !== undefined) payload.photo_url = photoUrl;
         await updateCat.mutateAsync({ id: editingId, ...payload });
         toast.success("Animale aggiornato");
       } else {
-        await createCat.mutateAsync({
+        const result = await createCat.mutateAsync({
           ...payload,
           client_id: profile.id,
           tenant_id: profile.tenant_id,
         });
+        // Upload photo after creation
+        if (photoFile && result?.id) {
+          const photoUrl = await uploadPhoto(result.id);
+          if (photoUrl) {
+            await updateCat.mutateAsync({ id: result.id, photo_url: photoUrl });
+          }
+        }
         toast.success("Animale aggiunto");
       }
       setDialogOpen(false);
     } catch (err: any) {
       toast.error(err.message || "Errore nel salvataggio");
+    } finally {
+      setUploadingPhoto(false);
     }
   };
 
@@ -164,9 +217,13 @@ export default function ClienteAnimali() {
           <Card key={cat.id}>
             <CardContent className="flex items-center justify-between py-4">
               <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-lg">
-                  {cat.pet_type === "cani" ? "🐕" : "🐱"}
-                </div>
+                {cat.photo_url ? (
+                  <img src={cat.photo_url} alt={cat.name} className="h-12 w-12 rounded-full object-cover border-2 border-primary/20" />
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-lg">
+                    {cat.pet_type === "cani" ? "🐕" : "🐱"}
+                  </div>
+                )}
                 <div>
                   <p className="font-medium">{cat.name}</p>
                   <p className="text-xs text-muted-foreground">
@@ -200,6 +257,52 @@ export default function ClienteAnimali() {
           </DialogHeader>
 
           <div className="space-y-4">
+            {/* Photo upload */}
+            <div className="space-y-2">
+              <Label>Foto</Label>
+              <div className="flex items-center gap-4">
+                {(photoPreview || existingPhotoUrl) ? (
+                  <div className="relative">
+                    <img
+                      src={photoPreview || existingPhotoUrl!}
+                      alt="Anteprima"
+                      className="h-20 w-20 rounded-full object-cover border-2 border-primary/20"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { setPhotoFile(null); setPhotoPreview(null); setExistingPhotoUrl(null); }}
+                      className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted border-2 border-dashed border-muted-foreground/30">
+                    <Camera className="h-6 w-6 text-muted-foreground/50" />
+                  </div>
+                )}
+                <div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Camera className="mr-2 h-4 w-4" />
+                    {(photoPreview || existingPhotoUrl) ? "Cambia foto" : "Carica foto"}
+                  </Button>
+                  <p className="text-[10px] text-muted-foreground mt-1">JPG, PNG. Max 5MB</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handlePhotoSelect}
+                  />
+                </div>
+              </div>
+            </div>
+
             {isEntrambi && (
               <div className="space-y-2">
                 <Label>Tipo *</Label>
@@ -278,8 +381,8 @@ export default function ClienteAnimali() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Annulla</Button>
-            <Button onClick={handleSave} disabled={!form.name.trim() || createCat.isPending || updateCat.isPending}>
-              {editingId ? "Salva" : "Aggiungi"}
+            <Button onClick={handleSave} disabled={!form.name.trim() || createCat.isPending || updateCat.isPending || uploadingPhoto}>
+              {uploadingPhoto ? "Caricamento..." : editingId ? "Salva" : "Aggiungi"}
             </Button>
           </DialogFooter>
         </DialogContent>

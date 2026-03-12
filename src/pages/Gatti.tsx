@@ -124,14 +124,16 @@ export default function Gatti() {
                          </TableCell>
                        )}
                        <TableCell className="font-medium">
-                         <div className="flex items-center gap-2">
-                           {pet.petType === "entrambi"
-                             ? cat.pet_type === "cani" ? <Dog className="h-4 w-4 text-primary shrink-0" /> : <CatIcon className="h-4 w-4 text-primary shrink-0" />
-                             : <PetIcon className="h-4 w-4 text-primary shrink-0" />
-                           }
-                           {cat.name}
-                         </div>
-                       </TableCell>
+                          <div className="flex items-center gap-2">
+                            {cat.photo_url ? (
+                              <img src={cat.photo_url} alt={cat.name} className="h-8 w-8 rounded-full object-cover border border-border shrink-0" />
+                            ) : pet.petType === "entrambi"
+                              ? cat.pet_type === "cani" ? <Dog className="h-4 w-4 text-primary shrink-0" /> : <CatIcon className="h-4 w-4 text-primary shrink-0" />
+                              : <PetIcon className="h-4 w-4 text-primary shrink-0" />
+                            }
+                            {cat.name}
+                          </div>
+                        </TableCell>
                       <TableCell className="text-muted-foreground">
                         {cat.clients ? `${cat.clients.last_name} ${cat.clients.first_name}` : "—"}
                       </TableCell>
