@@ -370,7 +370,7 @@ export default function Index() {
         <Card className="border shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">
-              Occupazione casette {!isSelectedToday && `— ${format(selectedDate, "dd MMM yyyy", { locale: it })}`}
+              {t("dashboard.cageOccupancy")} {!isSelectedToday && `— ${format(selectedDate, "dd MMM yyyy", { locale: dateLocale })}`}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
