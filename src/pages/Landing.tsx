@@ -198,9 +198,6 @@ export default function Landing() {
             Pet Hotel Manager
             <span className="text-primary block">pensione per animali</span>
           </h1>
-            {config?.hero_title || "Il gestionale completo per la tua"}
-            <span className="text-primary block">pensione per animali</span>
-          </h1>
           <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-8">
             {config?.hero_description || "Gestisci prenotazioni, pagamenti, clienti e animali in un unico posto. Supporta pensioni per gatti, cani o entrambi."}
           </p>
