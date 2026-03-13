@@ -45,6 +45,18 @@ export default function RegisterTrial() {
       if (authError) throw authError;
       if (!authData.user) throw new Error("Registrazione fallita");
 
+      const isExistingUser =
+        Array.isArray(authData.user.identities) && authData.user.identities.length === 0;
+
+      if (isExistingUser) {
+        toast.info(
+          "Questa email risulta già registrata: accedi oppure usa 'Password dimenticata?' per ricevere l'email di reset.",
+          { duration: 8000 }
+        );
+        navigate("/login");
+        return;
+      }
+
       toast.success(
         `Registrazione completata! Controlla la tua email per confermare l'account. Avrai ${trialDays} giorni di prova gratuita.`,
         { duration: 8000 }
