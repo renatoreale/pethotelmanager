@@ -15,6 +15,7 @@ export interface Client {
   is_blacklisted: boolean;
   blacklist_reason: string | null;
   user_id: string | null;
+  portal_activated: boolean;
   created_at: string;
   updated_at: string;
 }
