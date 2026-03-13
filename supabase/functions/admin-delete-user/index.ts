@@ -84,7 +84,44 @@ Deno.serve(async (req) => {
     // Delete related data first, then auth user
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Clean up related tables before deleting auth user
+    // Find client record linked to this user
+    const { data: clientData } = await adminClient
+      .from("clients")
+      .select("id")
+      .eq("user_id", user_id);
+
+    if (clientData && clientData.length > 0) {
+      const clientIds = clientData.map((c: any) => c.id);
+
+      // Find bookings for these clients
+      const { data: bookingData } = await adminClient
+        .from("bookings")
+        .select("id")
+        .in("client_id", clientIds);
+
+      if (bookingData && bookingData.length > 0) {
+        const bookingIds = bookingData.map((b: any) => b.id);
+
+        // Delete booking-related records
+        await adminClient.from("payments").delete().in("booking_id", bookingIds);
+        await adminClient.from("appointments").delete().in("booking_id", bookingIds);
+        await adminClient.from("booking_cats").delete().in("booking_id", bookingIds);
+        await adminClient.from("cat_registry").delete().in("booking_id", bookingIds);
+        await adminClient.from("documents").delete().in("booking_id", bookingIds);
+        await adminClient.from("bookings").delete().in("id", bookingIds);
+      }
+
+      // Delete quote requests
+      await adminClient.from("quote_requests").delete().in("client_id", clientIds);
+
+      // Delete cats
+      await adminClient.from("cats").delete().in("client_id", clientIds);
+
+      // Delete clients
+      await adminClient.from("clients").delete().in("id", clientIds);
+    }
+
+    // Clean up user-level tables
     await adminClient.from("trial_registrations").delete().eq("user_id", user_id);
     await adminClient.from("user_roles").delete().eq("user_id", user_id);
     await adminClient.from("profiles").delete().eq("user_id", user_id);
