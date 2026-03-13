@@ -149,3 +149,64 @@ export const preventiviHelpSections: HelpSection[] = [
     ],
   },
 ];
+
+export const preventiviDialogHelpSections: HelpSection[] = [
+  {
+    title: "Compilare il preventivo",
+    steps: [
+      {
+        title: "Seleziona il cliente",
+        description:
+          "Cerca il cliente digitando nome o cognome nel campo di ricerca. Se non esiste, clicca su \"Nuovo cliente\" per crearlo al volo.",
+        tip: "Il cliente appena creato verrà selezionato automaticamente.",
+      },
+      {
+        title: "Seleziona gli animali",
+        description:
+          "Spunta gli animali del cliente che soggiorneranno. Il sistema determina automaticamente tipo e numero di casette (singola/doppia) in base ai gruppi fratelli.",
+        tip: "Se un animale necessita di casetta doppia, il sistema lo gestisce automaticamente.",
+      },
+      {
+        title: "Imposta le date di soggiorno",
+        description:
+          "Clicca sui campi Check-in e Check-out per selezionare le date dal calendario. La durata del soggiorno viene calcolata in automatico.",
+      },
+      {
+        title: "Verifica il calcolo del prezzo",
+        description:
+          "Il riquadro \"Calcolo automatico prezzo\" mostra il dettaglio per periodo stagionale, i supplementi per gatto extra e gli eventuali servizi aggiuntivi.",
+        tip: "Se ci sono gap nelle date o discrepanze nei giorni, comparirà un alert arancione.",
+      },
+    ],
+  },
+  {
+    title: "Servizi extra",
+    steps: [
+      {
+        title: "Aggiungi un servizio extra",
+        description:
+          "Nella sezione Extra, seleziona un servizio dal menù a tendina oppure inserisci una voce personalizzata. Specifica quantità e importo.",
+      },
+      {
+        title: "Rimuovi un servizio",
+        description:
+          "Clicca sulla X rossa accanto al servizio extra per rimuoverlo dal preventivo.",
+      },
+    ],
+  },
+  {
+    title: "Note e salvataggio",
+    steps: [
+      {
+        title: "Aggiungi note",
+        description:
+          "Usa il campo Note per aggiungere informazioni aggiuntive visibili nel preventivo e nel PDF.",
+      },
+      {
+        title: "Salva il preventivo",
+        description:
+          "Clicca su \"Salva\" per creare o aggiornare il preventivo. Verrà assegnato automaticamente un numero progressivo (es. PRV-2026-001).",
+      },
+    ],
+  },
+];
