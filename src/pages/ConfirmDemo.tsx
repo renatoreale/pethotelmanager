@@ -146,7 +146,7 @@ export default function ConfirmDemo() {
             <Button className="w-full" onClick={() => window.location.href = "mailto:info@pethotelmanager.com?subject=Interesse%20acquisto%20licenza"}>
               Contattaci
             </Button>
-            <Button variant="outline" className="w-full" onClick={() => navigate("/")}>
+            <Button variant="outline" className="w-full" onClick={() => navigate("/landing#piani")}>
               Scopri i piani disponibili
             </Button>
           </CardContent>
