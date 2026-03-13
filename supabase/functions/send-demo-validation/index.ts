@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.12";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,26 +12,47 @@ serve(async (req) => {
   }
 
   try {
-    const { email, firstName, lastName, token } = await req.json();
+    const { email, firstName, lastName, phone } = await req.json();
 
-    if (!email || !token) {
-      return new Response(JSON.stringify({ error: "Email e token sono obbligatori" }), {
+    if (!email || !firstName) {
+      return new Response(JSON.stringify({ error: "Nome e email sono obbligatori" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
-    if (!SUPABASE_URL || !LOVABLE_API_KEY) {
-      throw new Error("Missing required environment variables");
+    // Use service role to bypass RLS
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Insert demo lead
+    const { data: lead, error: insertError } = await supabase
+      .from("demo_leads")
+      .insert({
+        full_name: firstName,
+        last_name: lastName,
+        phone: phone || null,
+        email,
+        privacy_accepted: true,
+      })
+      .select("token")
+      .single();
+
+    if (insertError) {
+      console.error("Insert error:", insertError);
+      return new Response(JSON.stringify({ error: "Errore nel salvataggio della richiesta" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Get frontend URL from request origin or referer
+    // Build confirmation URL from request origin
     const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, "") || "";
     const frontendUrl = origin || "https://id-preview--b7862e24-c51d-4bcc-b2f3-fb7cea3d3cd5.lovable.app";
-    const confirmUrl = `${frontendUrl}/confirm-demo?token=${token}`;
+    const confirmUrl = `${frontendUrl}/confirm-demo?token=${lead.token}`;
 
     const emailBody = `
       <!DOCTYPE html>
@@ -45,7 +67,7 @@ serve(async (req) => {
           </tr>
           <tr>
             <td style="padding-bottom:16px;">
-              <p style="margin:0;font-size:16px;color:#333;">Ciao <strong>${firstName || ""} ${lastName || ""}</strong>,</p>
+              <p style="margin:0;font-size:16px;color:#333;">Ciao <strong>${firstName} ${lastName || ""}</strong>,</p>
             </td>
           </tr>
           <tr>
@@ -89,6 +111,7 @@ serve(async (req) => {
       </html>
     `;
 
+    // Send validation email
     const res = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
       method: "POST",
       headers: {
@@ -105,19 +128,15 @@ serve(async (req) => {
     if (!res.ok) {
       const errText = await res.text();
       console.error("Email send failed:", errText);
-      return new Response(JSON.stringify({ error: "Errore nell'invio dell'email" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
     }
 
-    // Also notify admin
+    // Notify admin
     const NOTIFICATION_EMAIL = Deno.env.get("NOTIFICATION_EMAIL");
     if (NOTIFICATION_EMAIL) {
       const adminBody = `
         <h2>Nuova Richiesta Demo</h2>
         <table style="border-collapse:collapse;width:100%;max-width:600px;">
-          <tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #eee;">Nome</td><td style="padding:8px;border-bottom:1px solid #eee;">${firstName} ${lastName}</td></tr>
+          <tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #eee;">Nome</td><td style="padding:8px;border-bottom:1px solid #eee;">${firstName} ${lastName || ""}</td></tr>
           <tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #eee;">Email</td><td style="padding:8px;border-bottom:1px solid #eee;">${email}</td></tr>
           ${phone ? `<tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #eee;">Telefono</td><td style="padding:8px;border-bottom:1px solid #eee;">${phone}</td></tr>` : ''}
         </table>
@@ -130,7 +149,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           to: NOTIFICATION_EMAIL,
-          subject: `[Demo Request] ${firstName} ${lastName} - ${email}`,
+          subject: `[Demo Request] ${firstName} ${lastName || ""} - ${email}`,
           html: adminBody,
         }),
       });
