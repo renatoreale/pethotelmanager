@@ -66,19 +66,12 @@ export default function Clienti() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       
-      setInviteResult({ link: data.recovery_link, email: inviteClient.email || "" });
       toast.success(`${t("clients.inviteSuccess")}`);
+      setInviteClient(null);
     } catch (err: any) {
       toast.error(err.message || "Error");
     } finally {
       setInviting(false);
-    }
-  };
-
-  const copyLink = () => {
-    if (inviteResult?.link) {
-      navigator.clipboard.writeText(inviteResult.link);
-      toast.success(t("clients.linkCopied"));
     }
   };
 
