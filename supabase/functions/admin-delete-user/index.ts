@@ -121,7 +121,17 @@ Deno.serve(async (req) => {
       await adminClient.from("clients").delete().in("id", clientIds);
     }
 
-    // Clean up user-level tables
+    // Nullify FK references that don't cascade
+    await adminClient.from("bookings").update({ created_by: null }).eq("created_by", user_id);
+    await adminClient.from("payments").update({ created_by: null }).eq("created_by", user_id);
+    await adminClient.from("cage_overrides").update({ created_by: null }).eq("created_by", user_id);
+    await adminClient.from("planning_tasks").update({ assigned_to: null }).eq("assigned_to", user_id);
+    await adminClient.from("planning_tasks").update({ completed_by: null }).eq("completed_by", user_id);
+    await adminClient.from("email_log").update({ created_by: null }).eq("created_by", user_id);
+    await adminClient.from("documents").update({ created_by: null }).eq("created_by", user_id);
+    await adminClient.from("audit_log").update({ user_id: null }).eq("user_id", user_id);
+
+    // Clean up user-level tables (these have CASCADE but let's be explicit)
     await adminClient.from("trial_registrations").delete().eq("user_id", user_id);
     await adminClient.from("user_roles").delete().eq("user_id", user_id);
     await adminClient.from("profiles").delete().eq("user_id", user_id);
