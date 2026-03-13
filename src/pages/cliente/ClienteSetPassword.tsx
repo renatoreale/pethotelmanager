@@ -42,6 +42,18 @@ export default function ClienteSetPassword() {
     if (error) {
       toast.error(error.message);
     } else {
+      // Mark portal as activated
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase
+            .from("clients")
+            .update({ portal_activated: true })
+            .eq("user_id", user.id);
+        }
+      } catch (e) {
+        console.error("Failed to mark portal as activated:", e);
+      }
       toast.success("Password impostata con successo!");
       navigate("/cliente", { replace: true });
     }
