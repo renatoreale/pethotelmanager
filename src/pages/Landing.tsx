@@ -188,8 +188,24 @@ export default function Landing() {
 
   const trialDays = config?.trial_days || 14;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Pet Hotel Manager",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "Software gestionale completo per pensioni per cani e gatti. Gestisci prenotazioni, pagamenti, clienti e animali.",
+    "offers": {
+      "@type": "AggregateOffer",
+      "priceCurrency": "EUR",
+      "lowPrice": STRIPE_TIERS.base.priceYearly,
+      "highPrice": STRIPE_TIERS.enterprise.priceYearly,
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {/* Navbar */}
       <nav className={`fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b transition-transform duration-300 ${showNav ? "translate-y-0" : "-translate-y-full"}`}>
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
