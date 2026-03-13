@@ -23,9 +23,7 @@ serve(async (req) => {
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
-    // Use service role to bypass RLS
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Insert demo lead
@@ -49,9 +47,9 @@ serve(async (req) => {
       });
     }
 
-    // Build confirmation URL from request origin
+    // Build confirmation URL
     const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, "") || "";
-    const frontendUrl = origin || "https://id-preview--b7862e24-c51d-4bcc-b2f3-fb7cea3d3cd5.lovable.app";
+    const frontendUrl = origin || "https://pethotelmanager.lovable.app";
     const confirmUrl = `${frontendUrl}/confirm-demo?token=${lead.token}`;
 
     const emailBody = `
@@ -111,23 +109,23 @@ serve(async (req) => {
       </html>
     `;
 
-    // Send validation email
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-      },
-      body: JSON.stringify({
+    // Enqueue validation email via pgmq transactional queue
+    const { error: enqueueError } = await supabase.rpc('enqueue_email', {
+      queue_name: 'transactional_emails',
+      payload: {
         to: email,
-        subject: "Conferma la tua richiesta demo - Pet Hotel Manager",
+        from: 'Pet Hotel Manager <noreply@notify.pethotelmanager.com>',
+        sender_domain: 'notify.pethotelmanager.com',
+        subject: 'Conferma la tua richiesta demo - Pet Hotel Manager',
         html: emailBody,
-      }),
+        purpose: 'transactional',
+        label: 'demo_validation',
+        queued_at: new Date().toISOString(),
+      },
     });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error("Email send failed:", errText);
+    if (enqueueError) {
+      console.error("Enqueue error:", enqueueError);
     }
 
     // Notify admin
@@ -141,17 +139,18 @@ serve(async (req) => {
           ${phone ? `<tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #eee;">Telefono</td><td style="padding:8px;border-bottom:1px solid #eee;">${phone}</td></tr>` : ''}
         </table>
       `;
-      await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-        },
-        body: JSON.stringify({
+      await supabase.rpc('enqueue_email', {
+        queue_name: 'transactional_emails',
+        payload: {
           to: NOTIFICATION_EMAIL,
+          from: 'Pet Hotel Manager <noreply@notify.pethotelmanager.com>',
+          sender_domain: 'notify.pethotelmanager.com',
           subject: `[Demo Request] ${firstName} ${lastName || ""} - ${email}`,
           html: adminBody,
-        }),
+          purpose: 'transactional',
+          label: 'demo_admin_notification',
+          queued_at: new Date().toISOString(),
+        },
       });
     }
 
