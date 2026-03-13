@@ -146,7 +146,7 @@ export default function RegisterTrial() {
       <Card className="w-full max-w-md border-none shadow-lg">
         <CardHeader className="text-center">
           <Link to="/landing" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 self-start">
-            <ArrowLeft className="h-4 w-4" /> Torna alla landing
+            <ArrowLeft className="h-4 w-4" /> Torna alla Home
           </Link>
           <img src={petHotelLogo} alt="Pet Hotel Manager" className="mx-auto mb-4 h-20 w-20 rounded-xl object-contain" />
           <CardTitle className="text-2xl font-serif">Prova Gratuita</CardTitle>
