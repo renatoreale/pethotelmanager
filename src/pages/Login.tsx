@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { MailCheck } from "lucide-react";
 
 const DEMO_EMAIL = "demo@pethotelmanager.com";
 const DEMO_PASSWORD = "DemoTest2026!";
@@ -19,6 +20,7 @@ export default function Login() {
   const [email, setEmail] = useState(isDemo ? DEMO_EMAIL : "");
   const [password, setPassword] = useState(isDemo ? DEMO_PASSWORD : "");
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +33,25 @@ export default function Login() {
       navigate("/");
     }
     setLoading(false);
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      toast.error(t("auth.resendEnterEmail"));
+      return;
+    }
+    setResending(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/login` },
+    });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success(t("auth.resendSuccess"));
+    }
+    setResending(false);
   };
 
   return (
@@ -61,6 +82,18 @@ export default function Login() {
               <Link to="/forgot-password" className="text-muted-foreground hover:underline">{t("auth.forgotPassword")}</Link>
             </div>
           </form>
+          <div className="mt-4 border-t pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full gap-2 text-muted-foreground"
+              onClick={handleResendConfirmation}
+              disabled={resending}
+            >
+              <MailCheck className="h-4 w-4" />
+              {resending ? t("auth.sending") : t("auth.resendConfirmation")}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

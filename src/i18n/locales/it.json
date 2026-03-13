@@ -516,7 +516,10 @@
     "updating": "Aggiornamento...",
     "passwordUpdated": "Password aggiornata con successo!",
     "invalidLink": "Link non valido o scaduto",
-    "hasAccountLogin": "Hai già un account? Accedi"
+    "hasAccountLogin": "Hai già un account? Accedi",
+    "resendConfirmation": "Reinvia email di conferma",
+    "resendSuccess": "Email di conferma reinviata! Controlla la tua casella.",
+    "resendEnterEmail": "Inserisci prima la tua email nel campo sopra"
   },
   "days": {
     "monday": "Lunedì",
