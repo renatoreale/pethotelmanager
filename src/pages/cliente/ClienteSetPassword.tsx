@@ -88,38 +88,48 @@ export default function ClienteSetPassword() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          // Mark portal as activated in Supabase
-          await supabase
-            .from("clients")
-            .update({ portal_activated: true })
-            .eq("user_id", user.id);
-
           const { data: client } = await supabase
             .from("clients")
-            .select("id")
+            .select("id, portal_activated")
             .eq("user_id", user.id)
             .single();
 
           if (client) {
-            // Activate invite + delete password reset record in MySQL
-            try {
-              await Promise.all([
-                supabase.functions.invoke("mysql-demo-leads", {
-                  body: { action: "activate_invite", client_id: client.id },
-                }),
-                supabase.functions.invoke("mysql-demo-leads", {
+            if (isPasswordReset) {
+              // Password reset — just delete the reset record from MySQL
+              try {
+                await supabase.functions.invoke("mysql-demo-leads", {
                   body: { action: "delete_password_reset", client_id: client.id },
-                }),
-              ]);
-            } catch (e) {
-              console.error("MySQL post-activation failed:", e);
+                });
+              } catch (e) {
+                console.error("MySQL delete_password_reset failed:", e);
+              }
+            } else {
+              // First-time activation
+              await supabase
+                .from("clients")
+                .update({ portal_activated: true })
+                .eq("user_id", user.id);
+
+              try {
+                await Promise.all([
+                  supabase.functions.invoke("mysql-demo-leads", {
+                    body: { action: "activate_invite", client_id: client.id },
+                  }),
+                  supabase.functions.invoke("mysql-demo-leads", {
+                    body: { action: "delete_password_reset", client_id: client.id },
+                  }),
+                ]);
+              } catch (e) {
+                console.error("MySQL post-activation failed:", e);
+              }
             }
           }
         }
       } catch (e) {
-        console.error("Failed to mark portal as activated:", e);
+        console.error("Failed post-password update:", e);
       }
-      toast.success("Password impostata con successo!");
+      toast.success(isPasswordReset ? "Password aggiornata con successo!" : "Password impostata con successo!");
       navigate("/cliente", { replace: true });
     }
     setLoading(false);
