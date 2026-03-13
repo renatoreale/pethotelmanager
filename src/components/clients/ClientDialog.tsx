@@ -107,6 +107,30 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   const defaultAnimalType: PetType | undefined = pet.petType === "entrambi" ? undefined : pet.petType;
   const [cats, setCats] = useState<InlineCat[]>([emptyCat(defaultAnimalType)]);
   const [saving, setSaving] = useState(false);
+  const [resending, setResending] = useState(false);
+
+  const handleResendInvite = async () => {
+    if (!client?.id) return;
+    setResending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("invite-client", {
+        body: { client_id: client.id, action: "resend" },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      if (data?.recovery_link) {
+        await navigator.clipboard.writeText(data.recovery_link);
+        toast.success("Nuovo link generato e copiato negli appunti!");
+      } else {
+        toast.success("Nuovo invito generato");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Errore nel reinvio dell'invito");
+    } finally {
+      setResending(false);
+    }
+  };
 
   // Load existing cats when editing
   useEffect(() => {
