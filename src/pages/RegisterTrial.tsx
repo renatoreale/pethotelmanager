@@ -35,28 +35,14 @@ export default function RegisterTrial() {
     setLoading(true);
 
     try {
-      const { data: lead, error: insertError } = await (supabase
-        .from("demo_leads") as any)
-        .insert({
-          full_name: firstName,
-          last_name: lastName,
-          phone,
-          email,
-          privacy_accepted: privacyAccepted,
-        })
-        .select("token")
-        .single();
-
-      if (insertError) throw insertError;
-
-      // Send validation email via edge function
-      const { error: fnError } = await supabase.functions.invoke("send-demo-validation", {
-        body: { email, firstName, lastName, token: lead.token },
+      // Send to edge function which handles both insert and email
+      const { data, error: fnError } = await supabase.functions.invoke("send-demo-validation", {
+        body: { email, firstName, lastName, phone },
       });
 
       if (fnError) {
-        console.error("Email send error:", fnError);
-        toast.error("Errore nell'invio dell'email di conferma. Riprova.");
+        console.error("Edge function error:", fnError);
+        toast.error("Errore nell'invio della richiesta. Riprova.");
         return;
       }
 
