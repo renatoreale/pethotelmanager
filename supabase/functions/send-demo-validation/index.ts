@@ -51,6 +51,29 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, "") || "";
     const frontendUrl = origin || "https://pethotelmanager.lovable.app";
     const confirmUrl = `${frontendUrl}/confirm-demo?token=${lead.token}`;
+    const requestRunId =
+      req.headers.get("x-lovable-run-id") ||
+      req.headers.get("x-run-id") ||
+      req.headers.get("x-request-id") ||
+      req.headers.get("sb-request-id") ||
+      crypto.randomUUID();
+
+    const debugHeaders = Array.from(req.headers.entries()).filter(([key]) =>
+      key.includes("run") ||
+      key.includes("request") ||
+      key.includes("trace") ||
+      key.includes("sb") ||
+      key.includes("lovable")
+    );
+
+    console.log("send-demo-validation run context", {
+      requestRunId,
+      xLovableRunId: req.headers.get("x-lovable-run-id"),
+      xRunId: req.headers.get("x-run-id"),
+      xRequestId: req.headers.get("x-request-id"),
+      sbRequestId: req.headers.get("sb-request-id"),
+      debugHeaders,
+    });
 
     const emailBody = `
       <!DOCTYPE html>
@@ -109,15 +132,22 @@ serve(async (req) => {
       </html>
     `;
 
+    const validationText = `Ciao ${firstName}${lastName ? ` ${lastName}` : ''},\n\n` +
+      `Grazie per aver richiesto la prova gratuita di Pet Hotel Manager.\n` +
+      `Conferma la tua richiesta aprendo questo link: ${confirmUrl}\n\n` +
+      `Se non hai richiesto una demo, ignora questa email.`;
+
     // Enqueue validation email via pgmq transactional queue
     const { error: enqueueError } = await supabase.rpc('enqueue_email', {
       queue_name: 'transactional_emails',
       payload: {
+        run_id: requestRunId,
         to: email,
         from: 'Pet Hotel Manager <noreply@notify.pethotelmanager.com>',
         sender_domain: 'notify.pethotelmanager.com',
         subject: 'Conferma la tua richiesta demo - Pet Hotel Manager',
         html: emailBody,
+        text: validationText,
         purpose: 'transactional',
         label: 'demo_validation',
         queued_at: new Date().toISOString(),
@@ -139,14 +169,22 @@ serve(async (req) => {
           ${phone ? `<tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #eee;">Telefono</td><td style="padding:8px;border-bottom:1px solid #eee;">${phone}</td></tr>` : ''}
         </table>
       `;
+      const adminText =
+        `Nuova richiesta demo\n\n` +
+        `Nome: ${firstName} ${lastName || ''}\n` +
+        `Email: ${email}\n` +
+        `${phone ? `Telefono: ${phone}\n` : ''}`;
+
       await supabase.rpc('enqueue_email', {
         queue_name: 'transactional_emails',
         payload: {
+          run_id: requestRunId,
           to: NOTIFICATION_EMAIL,
           from: 'Pet Hotel Manager <noreply@notify.pethotelmanager.com>',
           sender_domain: 'notify.pethotelmanager.com',
           subject: `[Demo Request] ${firstName} ${lastName || ""} - ${email}`,
           html: adminBody,
+          text: adminText,
           purpose: 'transactional',
           label: 'demo_admin_notification',
           queued_at: new Date().toISOString(),
@@ -166,3 +204,4 @@ serve(async (req) => {
     });
   }
 });
+
