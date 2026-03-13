@@ -65,22 +65,28 @@ serve(async (req) => {
       )
     `);
 
-    // Add columns if missing (for existing client_invites tables)
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS password_resets (
+        id VARCHAR(36) NOT NULL DEFAULT (UUID()) PRIMARY KEY,
+        client_id VARCHAR(36) NOT NULL,
+        tenant_id VARCHAR(36) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        user_id VARCHAR(36),
+        recovery_link TEXT,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Add columns if missing (for existing tables)
     for (const col of ["recovery_link TEXT", "activated TINYINT(1) NOT NULL DEFAULT 0"]) {
       try {
         await client.execute(`ALTER TABLE client_invites ADD COLUMN ${col}`);
-      } catch (_) {
-        // column already exists
-      }
+      } catch (_) {}
     }
-
-    // Add columns if missing (for existing tables)
     for (const col of ["activation_link TEXT", "expires_at DATETIME"]) {
       try {
         await client.execute(`ALTER TABLE demo_leads ADD COLUMN ${col}`);
-      } catch (_) {
-        // column already exists
-      }
+      } catch (_) {}
     }
 
     if (action === "insert") {
@@ -177,6 +183,37 @@ serve(async (req) => {
         `UPDATE client_invites SET activated = 1 WHERE client_id = ? ORDER BY created_at DESC LIMIT 1`,
         [client_id]
       );
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "delete_invites") {
+      const { client_id } = params;
+      await client.execute(`DELETE FROM client_invites WHERE client_id = ?`, [client_id]);
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "insert_password_reset") {
+      const { client_id, tenant_id, email, user_id, recovery_link } = params;
+      await client.execute(
+        `INSERT INTO password_resets (client_id, tenant_id, email, user_id, recovery_link)
+         VALUES (?, ?, ?, ?, ?)`,
+        [client_id, tenant_id, email, user_id || null, recovery_link || null]
+      );
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "delete_password_reset") {
+      const { client_id } = params;
+      await client.execute(`DELETE FROM password_resets WHERE client_id = ?`, [client_id]);
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
