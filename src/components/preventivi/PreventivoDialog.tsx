@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { HelpButton } from "@/components/HelpButton";
+import { preventiviDialogHelpSections } from "@/components/help/preventiviHelp";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -861,7 +863,14 @@ export function PreventivoDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{editing ? "Modifica Preventivo" : "Nuovo Preventivo"}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            {editing ? "Modifica Preventivo" : "Nuovo Preventivo"}
+            <HelpButton
+              pageTitle="Guida — Compilazione Preventivo"
+              pageDescription="Come compilare correttamente il modulo di preventivo."
+              sections={preventiviDialogHelpSections}
+            />
+          </DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-2">
 
