@@ -29,7 +29,7 @@ serve(async (req) => {
 
     client = await getClient();
 
-    // Auto-create table if not exists
+    // Auto-create tables if not exists
     await client.execute(`
       CREATE TABLE IF NOT EXISTS demo_leads (
         id VARCHAR(36) NOT NULL DEFAULT (UUID()) PRIMARY KEY,
@@ -46,6 +46,19 @@ serve(async (req) => {
         message TEXT,
         activation_link TEXT,
         expires_at DATETIME,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS client_invites (
+        id VARCHAR(36) NOT NULL DEFAULT (UUID()) PRIMARY KEY,
+        client_id VARCHAR(36) NOT NULL,
+        tenant_id VARCHAR(36) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        first_name VARCHAR(255),
+        last_name VARCHAR(255),
+        user_id VARCHAR(36),
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -129,6 +142,19 @@ serve(async (req) => {
       
       const wasAlready = lead.confirmed === 1;
       return new Response(JSON.stringify({ status: "confirmed", was_already_confirmed: wasAlready, data: lead }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "insert_invite") {
+      const { client_id, tenant_id, email, first_name, last_name, user_id } = params;
+      await client.execute(
+        `INSERT INTO client_invites (client_id, tenant_id, email, first_name, last_name, user_id)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [client_id, tenant_id, email, first_name || null, last_name || null, user_id || null]
+      );
+      return new Response(JSON.stringify({ success: true }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
