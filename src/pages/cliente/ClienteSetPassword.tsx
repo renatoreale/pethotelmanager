@@ -197,8 +197,8 @@ export default function ClienteSetPassword() {
       <Card className="w-full max-w-md border-none shadow-xl">
         <CardHeader className="text-center">
           <img src={petHotelLogo} alt="Pet Hotel Manager" className="mx-auto mb-4 h-14 w-14 rounded-xl object-contain" />
-          <CardTitle className="text-2xl font-serif">Imposta Password</CardTitle>
-          <CardDescription>Scegli una password per accedere alla tua area riservata</CardDescription>
+          <CardTitle className="text-2xl font-serif">{isPasswordReset ? "Reimposta Password" : "Imposta Password"}</CardTitle>
+          <CardDescription>{isPasswordReset ? "Scegli una nuova password per il tuo account" : "Scegli una password per accedere alla tua area riservata"}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSetPassword} className="space-y-4">
