@@ -237,41 +237,18 @@ export default function Clienti() {
             </DialogDescription>
           </DialogHeader>
 
-          {!inviteResult ? (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                {t("clients.inviteExplanation")}
-              </p>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setInviteClient(null)}>{t("common.cancel")}</Button>
-                <Button onClick={handleInvite} disabled={inviting}>
-                  <Mail className="mr-2 h-4 w-4" />
-                  {inviting ? t("clients.creating") : t("clients.createInvite")}
-                </Button>
-              </DialogFooter>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-green-600">
-                <CheckCircle2 className="h-5 w-5" />
-                <p className="font-medium text-sm">{t("clients.inviteSuccess")}</p>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {t("clients.inviteLinkDescription")}
-              </p>
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-muted text-xs break-all">
-                <span className="flex-1 font-mono">{inviteResult.link}</span>
-                <Button variant="ghost" size="icon" className="shrink-0" onClick={copyLink}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => { setInviteClient(null); setInviteResult(null); }}>
-                  {t("common.close")}
-                </Button>
-              </DialogFooter>
-            </div>
-          )}
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {t("clients.inviteExplanation")}
+            </p>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setInviteClient(null)}>{t("common.cancel")}</Button>
+              <Button onClick={handleInvite} disabled={inviting}>
+                <Mail className="mr-2 h-4 w-4" />
+                {inviting ? t("clients.creating") : t("clients.createInvite")}
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
