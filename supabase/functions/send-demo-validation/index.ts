@@ -27,13 +27,9 @@ serve(async (req) => {
       throw new Error("Missing required environment variables");
     }
 
-    // Build the confirmation URL - use the site URL
-    const siteUrl = SUPABASE_URL.replace('.supabase.co', '').includes('localhost')
-      ? 'http://localhost:5173'
-      : `https://${Deno.env.get("SUPABASE_URL")?.split('//')[1]?.split('.')[0]}-preview--b7862e24-c51d-4bcc-b2f3-fb7cea3d3cd5.lovable.app`;
-
-    // We need to use the actual frontend URL. Let's use a simpler approach.
-    const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://id-preview--b7862e24-c51d-4bcc-b2f3-fb7cea3d3cd5.lovable.app";
+    // Get frontend URL from request origin or referer
+    const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, "") || "";
+    const frontendUrl = origin || "https://id-preview--b7862e24-c51d-4bcc-b2f3-fb7cea3d3cd5.lovable.app";
     const confirmUrl = `${frontendUrl}/confirm-demo?token=${token}`;
 
     const emailBody = `
