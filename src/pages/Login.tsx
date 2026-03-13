@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +8,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
+const DEMO_EMAIL = "demo@pethotelmanager.com";
+const DEMO_PASSWORD = "DemoTest2026!";
+
 export default function Login() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [searchParams] = useSearchParams();
+  const isDemo = searchParams.get("demo") === "true";
+  const [email, setEmail] = useState(isDemo ? DEMO_EMAIL : "");
+  const [password, setPassword] = useState(isDemo ? DEMO_PASSWORD : "");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
