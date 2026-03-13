@@ -227,7 +227,7 @@ export default function Clienti() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={!!inviteClient} onOpenChange={() => { setInviteClient(null); setInviteResult(null); }}>
+      <Dialog open={!!inviteClient} onOpenChange={() => { setInviteClient(null); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{t("clients.inviteTitle")}</DialogTitle>
