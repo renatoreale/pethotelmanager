@@ -1,24 +1,23 @@
 import { useState, useEffect } from "react";
 import petHotelLogo from "@/assets/pethotelmanager_logo.png";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Clock, Copy, Check, LogIn } from "lucide-react";
-
-const DEMO_EMAIL = "demo@pethotelmanager.com";
-const DEMO_PASSWORD = "DemoTest2026!";
+import { ArrowLeft, Clock, CheckCircle2, Mail } from "lucide-react";
 
 export default function RegisterTrial() {
-  const navigate = useNavigate();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showCredentials, setShowCredentials] = useState(false);
-  const [copied, setCopied] = useState<"email" | "password" | null>(null);
+  const [submitted, setSubmitted] = useState(false);
   const [trialDays, setTrialDays] = useState(3);
 
   useEffect(() => {
@@ -29,28 +28,40 @@ export default function RegisterTrial() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!privacyAccepted) {
+      toast.error("Devi accettare l'informativa sulla privacy per continuare.");
+      return;
+    }
     setLoading(true);
 
     try {
-      // Save lead info
-      await supabase.from("demo_leads").insert({
-        full_name: fullName,
-        email,
+      // Save lead
+      const { data: lead, error: insertError } = await supabase
+        .from("demo_leads")
+        .insert({
+          full_name: firstName,
+          last_name: lastName,
+          phone,
+          email,
+          privacy_accepted: privacyAccepted,
+        })
+        .select("token")
+        .single();
+
+      if (insertError) throw insertError;
+
+      // Send validation email via edge function
+      const { error: fnError } = await supabase.functions.invoke("send-demo-validation", {
+        body: { email, firstName, lastName, token: lead.token },
       });
 
-      // Auto-login with demo credentials
-      setShowCredentials(true);
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email: DEMO_EMAIL,
-        password: DEMO_PASSWORD,
-      });
-
-      if (loginError) {
-        toast.error("Login automatico fallito. Usa le credenziali mostrate per accedere manualmente.");
-      } else {
-        toast.success("Accesso alla demo in corso...");
-        setTimeout(() => navigate("/"), 1500);
+      if (fnError) {
+        console.error("Email send error:", fnError);
+        toast.error("Errore nell'invio dell'email di conferma. Riprova.");
+        return;
       }
+
+      setSubmitted(true);
     } catch (e: any) {
       toast.error(e.message || "Errore durante la registrazione");
     } finally {
@@ -58,66 +69,30 @@ export default function RegisterTrial() {
     }
   };
 
-  const handleCopy = async (text: string, type: "email" | "password") => {
-    await navigator.clipboard.writeText(text);
-    setCopied(type);
-    setTimeout(() => setCopied(null), 2000);
-  };
-
-  if (showCredentials) {
+  if (submitted) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <Card className="w-full max-w-md border-none shadow-lg">
           <CardHeader className="text-center">
-            <img src={petHotelLogo} alt="Pet Hotel Manager" className="mx-auto mb-4 h-20 w-20 rounded-xl object-contain" />
-            <CardTitle className="text-2xl font-serif">Credenziali Demo</CardTitle>
-            <CardDescription>
-              Usa queste credenziali per accedere alla pensione demo "La Zampa Felice" preconfigurata con dati di esempio
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+              <Mail className="h-8 w-8 text-primary" />
+            </div>
+            <CardTitle className="text-2xl font-serif">Controlla la tua email!</CardTitle>
+            <CardDescription className="text-base">
+              Abbiamo inviato un'email di conferma a <strong>{email}</strong>.
+              Clicca sul link nell'email per attivare l'accesso alla demo gratuita.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Email</Label>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 rounded bg-background px-3 py-2 text-sm font-mono border">
-                    {DEMO_EMAIL}
-                  </code>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-9 w-9 shrink-0"
-                    onClick={() => handleCopy(DEMO_EMAIL, "email")}
-                  >
-                    {copied === "email" ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Password</Label>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 rounded bg-background px-3 py-2 text-sm font-mono border">
-                    {DEMO_PASSWORD}
-                  </code>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-9 w-9 shrink-0"
-                    onClick={() => handleCopy(DEMO_PASSWORD, "password")}
-                  >
-                    {copied === "password" ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                  </Button>
-                </div>
+            <div className="rounded-lg border bg-muted/50 p-4 text-sm text-muted-foreground">
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <p>Se non trovi l'email, controlla la cartella spam o posta indesiderata.</p>
               </div>
             </div>
-
-            <p className="text-xs text-muted-foreground text-center">
-              La prova dura {trialDays} giorni. Tutti i dati sono condivisi con gli altri utenti demo.
-            </p>
-
-            <Button className="w-full gap-2" asChild>
-              <Link to="/login">
-                <LogIn className="h-4 w-4" /> Vai al Login
+            <Button variant="outline" className="w-full" asChild>
+              <Link to="/landing">
+                <ArrowLeft className="h-4 w-4 mr-2" /> Torna alla landing
               </Link>
             </Button>
           </CardContent>
@@ -141,16 +116,36 @@ export default function RegisterTrial() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Nome completo</Label>
-              <Input id="fullName" type="text" placeholder="Mario Rossi" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">Nome *</Label>
+                <Input id="firstName" type="text" placeholder="Mario" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Cognome *</Label>
+                <Input id="lastName" type="text" placeholder="Rossi" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">La tua email</Label>
+              <Label htmlFor="phone">Telefono</Label>
+              <Input id="phone" type="tel" placeholder="+39 333 1234567" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email *</Label>
               <Input id="email" type="email" placeholder="nome@email.it" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Caricamento..." : "Accedi alla demo"}
+            <div className="flex items-start space-x-2">
+              <Checkbox
+                id="privacy"
+                checked={privacyAccepted}
+                onCheckedChange={(checked) => setPrivacyAccepted(checked === true)}
+              />
+              <Label htmlFor="privacy" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                Acconsento al trattamento dei miei dati personali ai sensi del GDPR (Reg. UE 2016/679) per la gestione della richiesta demo. I dati saranno utilizzati esclusivamente per fornire l'accesso alla prova gratuita. *
+              </Label>
+            </div>
+            <Button type="submit" className="w-full" disabled={loading || !privacyAccepted}>
+              {loading ? "Invio in corso..." : "Richiedi la demo gratuita"}
             </Button>
             <div className="text-center text-sm">
               <Link to="/login" className="text-primary hover:underline">

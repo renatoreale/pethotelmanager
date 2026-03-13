@@ -579,22 +579,40 @@ export type Database = {
       }
       demo_leads: {
         Row: {
+          confirmed: boolean
+          confirmed_at: string | null
           created_at: string
           email: string
           full_name: string
           id: string
+          last_name: string | null
+          phone: string | null
+          privacy_accepted: boolean
+          token: string | null
         }
         Insert: {
+          confirmed?: boolean
+          confirmed_at?: string | null
           created_at?: string
           email: string
           full_name: string
           id?: string
+          last_name?: string | null
+          phone?: string | null
+          privacy_accepted?: boolean
+          token?: string | null
         }
         Update: {
+          confirmed?: boolean
+          confirmed_at?: string | null
           created_at?: string
           email?: string
           full_name?: string
           id?: string
+          last_name?: string | null
+          phone?: string | null
+          privacy_accepted?: boolean
+          token?: string | null
         }
         Relationships: []
       }
