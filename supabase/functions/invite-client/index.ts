@@ -68,6 +68,30 @@ Deno.serve(async (req) => {
 
     if (linkErr) throw linkErr;
 
+    // Save a copy to MySQL
+    try {
+      const mysqlUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/mysql-demo-leads`;
+      await fetch(mysqlUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        },
+        body: JSON.stringify({
+          action: "insert_invite",
+          client_id,
+          tenant_id: client.tenant_id,
+          email: client.email,
+          first_name: client.first_name,
+          last_name: client.last_name,
+          user_id: authData.user.id,
+        }),
+      });
+    } catch (mysqlErr) {
+      console.error("MySQL invite copy failed:", mysqlErr);
+      // Non-blocking: don't fail the invite if MySQL copy fails
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
