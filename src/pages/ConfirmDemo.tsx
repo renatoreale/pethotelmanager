@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Clock } from "lucide-react";
 import petHotelLogo from "@/assets/pethotelmanager_logo.png";
 
 const DEMO_EMAIL = "demo@pethotelmanager.com";
@@ -13,7 +13,7 @@ const DEMO_PASSWORD = "DemoTest2026!";
 export default function ConfirmDemo() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState<"loading" | "success" | "error" | "already">("loading");
+  const [status, setStatus] = useState<"loading" | "success" | "error" | "already" | "expired">("loading");
 
   useEffect(() => {
     const token = searchParams.get("token");
@@ -39,8 +39,12 @@ export default function ConfirmDemo() {
           return;
         }
 
+        if (data?.status === "expired") {
+          setStatus("expired");
+          return;
+        }
+
         if (data?.status === "confirmed") {
-          // Check if it was already confirmed before this call
           if (data?.was_already_confirmed) {
             setStatus("already");
           } else {
@@ -60,7 +64,7 @@ export default function ConfirmDemo() {
             toast.success("Accesso alla demo in corso...");
             setTimeout(() => navigate("/"), 1500);
           }
-        } else {
+        } else if (data?.status !== "expired") {
           setStatus("error");
         }
       } catch (err) {
@@ -105,9 +109,21 @@ export default function ConfirmDemo() {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
                 <CheckCircle2 className="h-8 w-8 text-blue-600" />
               </div>
-              <CardTitle className="text-xl font-serif">Già attivato</CardTitle>
+              <CardTitle className="text-xl font-serif">Bentornato!</CardTitle>
               <CardDescription>
-                Il tuo accesso demo è già stato attivato. Puoi accedere direttamente.
+                Il tuo accesso demo è attivo. Accesso automatico in corso...
+              </CardDescription>
+            </>
+          )}
+
+          {status === "expired" && (
+            <>
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
+                <Clock className="h-8 w-8 text-amber-600" />
+              </div>
+              <CardTitle className="text-xl font-serif">Periodo di prova terminato</CardTitle>
+              <CardDescription>
+                Il tuo periodo di prova gratuita di 3 giorni è scaduto. Se ti è piaciuto il servizio, puoi acquistare una licenza o contattarci per maggiori informazioni.
               </CardDescription>
             </>
           )}
@@ -119,19 +135,35 @@ export default function ConfirmDemo() {
               </div>
               <CardTitle className="text-xl font-serif">Link non valido</CardTitle>
               <CardDescription>
-                Il link di attivazione non è valido o è scaduto. Contattaci per assistenza.
+                Il link di attivazione non è valido. Contattaci per assistenza.
               </CardDescription>
             </>
           )}
         </CardHeader>
+
+        {status === "expired" && (
+          <CardContent className="space-y-3">
+            <Button className="w-full" onClick={() => window.location.href = "mailto:info@pethotelmanager.com?subject=Interesse%20acquisto%20licenza"}>
+              Contattaci
+            </Button>
+            <Button variant="outline" className="w-full" onClick={() => navigate("/")}>
+              Scopri i piani disponibili
+            </Button>
+          </CardContent>
+        )}
+
         {(status === "already" || status === "error") && (
           <CardContent className="space-y-3">
-            <Button className="w-full" onClick={() => navigate("/login?demo=true")}>
-              Accedi con le credenziali demo
-            </Button>
-            <Button variant="outline" className="w-full" onClick={() => navigate("/register-trial")}>
-              Richiedi una nuova demo
-            </Button>
+            {status === "error" && (
+              <>
+                <Button className="w-full" onClick={() => navigate("/login?demo=true")}>
+                  Accedi con le credenziali demo
+                </Button>
+                <Button variant="outline" className="w-full" onClick={() => navigate("/register-trial")}>
+                  Richiedi una nuova demo
+                </Button>
+              </>
+            )}
           </CardContent>
         )}
       </Card>
