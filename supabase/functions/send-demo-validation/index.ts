@@ -51,6 +51,7 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, "") || "";
     const frontendUrl = origin || "https://pethotelmanager.lovable.app";
     const confirmUrl = `${frontendUrl}/confirm-demo?token=${lead.token}`;
+    const requestRunId = crypto.randomUUID();
 
     const emailBody = `
       <!DOCTYPE html>
@@ -113,6 +114,7 @@ serve(async (req) => {
     const { error: enqueueError } = await supabase.rpc('enqueue_email', {
       queue_name: 'transactional_emails',
       payload: {
+        run_id: requestRunId,
         to: email,
         from: 'Pet Hotel Manager <noreply@notify.pethotelmanager.com>',
         sender_domain: 'notify.pethotelmanager.com',
@@ -142,6 +144,7 @@ serve(async (req) => {
       await supabase.rpc('enqueue_email', {
         queue_name: 'transactional_emails',
         payload: {
+          run_id: requestRunId,
           to: NOTIFICATION_EMAIL,
           from: 'Pet Hotel Manager <noreply@notify.pethotelmanager.com>',
           sender_domain: 'notify.pethotelmanager.com',
@@ -166,3 +169,4 @@ serve(async (req) => {
     });
   }
 });
+
