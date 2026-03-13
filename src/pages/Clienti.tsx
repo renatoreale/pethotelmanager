@@ -156,13 +156,18 @@ export default function Clienti() {
                           : "—"}
                       </TableCell>
                       <TableCell>
-                        {client.user_id ? (
+                        {client.user_id && client.portal_activated ? (
                           <Badge variant="default" className="text-xs gap-1">
                             <CheckCircle2 className="h-3 w-3" />
-                            {t("clients.portalActive")}
+                            Attivo
+                          </Badge>
+                        ) : client.user_id ? (
+                          <Badge variant="secondary" className="text-xs gap-1">
+                            <Mail className="h-3 w-3" />
+                            Inviato
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-xs">{t("clients.notInvited")}</Badge>
+                          <Badge variant="outline" className="text-xs">Non inviato</Badge>
                         )}
                       </TableCell>
                       <TableCell>
