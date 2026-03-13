@@ -4,13 +4,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { Users, CheckCircle2, Clock, Send, Loader2 } from "lucide-react";
+import { Users, CheckCircle2, Clock, Send, Loader2, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
 
 export function DemoLeadsTab() {
   const queryClient = useQueryClient();
+  const [activationModal, setActivationModal] = useState<{ open: boolean; lead: any | null }>({ open: false, lead: null });
 
   const { data: leads, isLoading } = useQuery({
     queryKey: ["demo-leads"],
@@ -25,22 +28,32 @@ export function DemoLeadsTab() {
   });
 
   const approveMutation = useMutation({
-    mutationFn: async (leadId: string) => {
-      const { data, error } = await supabase.functions.invoke("approve-demo-lead", {
-        body: { leadId },
-      });
+    mutationFn: async (lead: any) => {
+      // Mark as confirmed directly
+      const { error } = await supabase
+        .from("demo_leads")
+        .update({ confirmed: true, confirmed_at: new Date().toISOString() })
+        .eq("id", lead.id);
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      return data;
+      return lead;
     },
-    onSuccess: (data) => {
-      toast.success(`Email di attivazione inviata a ${data.email}`);
+    onSuccess: (lead) => {
+      const baseUrl = window.location.origin;
+      const link = `${baseUrl}/confirm-demo?token=${lead.token}`;
+      setActivationModal({ open: true, lead: { ...lead, activationLink: link } });
       queryClient.invalidateQueries({ queryKey: ["demo-leads"] });
     },
     onError: (error: any) => {
-      toast.error(error.message || "Errore nell'invio dell'email");
+      toast.error(error.message || "Errore nell'approvazione");
     },
   });
+
+  const handleCopyLink = () => {
+    if (activationModal.lead?.activationLink) {
+      navigator.clipboard.writeText(activationModal.lead.activationLink);
+      toast.success("Link copiato negli appunti!");
+    }
+  };
 
   const confirmedCount = leads?.filter(l => l.confirmed).length ?? 0;
   const totalCount = leads?.length ?? 0;
@@ -86,7 +99,7 @@ export function DemoLeadsTab() {
       <Card>
         <CardHeader>
           <CardTitle>Richieste Demo</CardTitle>
-          <CardDescription>Approva le richieste per inviare l'email con il link di attivazione</CardDescription>
+          <CardDescription>Approva le richieste e invia manualmente il link di attivazione</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -129,25 +142,30 @@ export function DemoLeadsTab() {
                         {format(new Date(lead.created_at), "dd MMM yyyy HH:mm", { locale: it })}
                       </TableCell>
                       <TableCell>
-                        {!lead.confirmed && (
+                        {!lead.confirmed ? (
                           <Button
                             size="sm"
-                            onClick={() => approveMutation.mutate(lead.id)}
+                            onClick={() => approveMutation.mutate(lead)}
                             disabled={approveMutation.isPending}
                           >
                             {approveMutation.isPending ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                              <><Send className="h-4 w-4 mr-1" /> Invia Email</>
+                              <><Send className="h-4 w-4 mr-1" /> Approva</>
                             )}
                           </Button>
-                        )}
-                        {lead.confirmed && (
-                          <span className="text-xs text-muted-foreground">
-                            {lead.confirmed_at
-                              ? format(new Date(lead.confirmed_at), "dd MMM yyyy HH:mm", { locale: it })
-                              : "Email inviata"}
-                          </span>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const baseUrl = window.location.origin;
+                              const link = `${baseUrl}/confirm-demo?token=${lead.token}`;
+                              setActivationModal({ open: true, lead: { ...lead, activationLink: link } });
+                            }}
+                          >
+                            <Copy className="h-4 w-4 mr-1" /> Link
+                          </Button>
                         )}
                       </TableCell>
                     </TableRow>
@@ -158,6 +176,44 @@ export function DemoLeadsTab() {
           )}
         </CardContent>
       </Card>
+
+      {/* Activation Link Modal */}
+      <Dialog open={activationModal.open} onOpenChange={(open) => setActivationModal({ open, lead: open ? activationModal.lead : null })}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Attiva Demo</DialogTitle>
+          </DialogHeader>
+          {activationModal.lead && (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Invia questo link a <strong>{activationModal.lead.full_name} {activationModal.lead.last_name}</strong> ({activationModal.lead.email}) per permettergli di accedere alla demo:
+              </p>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+                <span className="text-sm font-medium text-green-700">Richiesta approvata!</span>
+              </div>
+              <div className="relative">
+                <div className="rounded-md border bg-muted p-3 pr-10 text-xs break-all font-mono">
+                  {activationModal.lead.activationLink}
+                </div>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="absolute right-1 top-1"
+                  onClick={handleCopyLink}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={() => setActivationModal({ open: false, lead: null })}>
+                  Chiudi
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
