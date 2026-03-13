@@ -272,9 +272,16 @@ export default function Prenotazioni() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Prenotazioni</h1>
-        <p className="text-muted-foreground text-sm mt-1">Gestisci il workflow delle prenotazioni confermate</p>
+      <div className="flex items-center gap-2">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Prenotazioni</h1>
+          <p className="text-muted-foreground text-sm mt-1">Gestisci il workflow delle prenotazioni confermate</p>
+        </div>
+        <HelpButton
+          pageTitle="Guida — Prenotazioni"
+          pageDescription="Come gestire il workflow completo delle prenotazioni: appuntamenti, pagamenti, check-in e check-out."
+          sections={prenotazioniHelpSections}
+        />
       </div>
 
       <Card>
