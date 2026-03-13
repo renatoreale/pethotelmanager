@@ -14,7 +14,6 @@ const ROUTE_RESOURCE_MAP: Record<string, Resource> = {
   "/clienti": "clienti",
   "/gatti": "gatti",
   "/registro-gatti": "registro-gatti",
-  
   "/occupazione": "occupazione",
   "/statistiche": "statistiche",
   "/utenti": "utenti",
@@ -24,10 +23,11 @@ const ROUTE_RESOURCE_MAP: Record<string, Resource> = {
 };
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, profileLoading } = useAuth();
-  const { canRead } = usePermissions();
+  const { user, loading, profileLoading, roles } = useAuth();
+  const { canRead, primaryRole } = usePermissions();
   const location = useLocation();
 
+  // Wait for auth AND profile/roles to fully load
   if (loading || profileLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -43,10 +43,48 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
-  // Check page-level permissions
+  // If roles are loaded but empty, user has no role assigned — don't redirect loop
+  if (roles.length === 0 || !primaryRole) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="text-center max-w-md space-y-4">
+          <div className="text-5xl">🔒</div>
+          <h1 className="text-xl font-bold text-foreground">Accesso non configurato</h1>
+          <p className="text-muted-foreground">
+            Il tuo account non ha ancora un ruolo assegnato. Contatta l'amministratore per ricevere i permessi di accesso.
+          </p>
+          <button
+            onClick={async () => {
+              const { supabase } = await import("@/integrations/supabase/client");
+              await supabase.auth.signOut();
+              window.location.href = "/login";
+            }}
+            className="text-primary hover:underline text-sm"
+          >
+            Torna al login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Check page-level permissions — avoid redirecting to the same page
   const resource = ROUTE_RESOURCE_MAP[location.pathname];
   if (resource && !canRead(resource)) {
-    // Redirect to dashboard if user doesn't have permission
+    if (location.pathname === "/") {
+      // Already on dashboard but no read permission — show message instead of loop
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-background px-4">
+          <div className="text-center max-w-md space-y-4">
+            <div className="text-5xl">🚫</div>
+            <h1 className="text-xl font-bold text-foreground">Accesso limitato</h1>
+            <p className="text-muted-foreground">
+              Non hai i permessi per accedere a questa pagina.
+            </p>
+          </div>
+        </div>
+      );
+    }
     return <Navigate to="/" replace />;
   }
 
