@@ -222,8 +222,8 @@ export default function Landing() {
             <Zap className="h-3.5 w-3.5 mr-1.5" /> {trialDays} giorni di prova gratuita
           </Badge>
           <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground leading-tight mb-3">
-            Pet Hotel Manager
-            <span className="text-primary block">pensione per animali</span>
+            Software Gestionale per
+            <span className="text-primary block">Pensioni per Cani e Gatti</span>
           </h1>
           <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-8">
             {config?.hero_description || "Gestisci prenotazioni, pagamenti, clienti e animali in un unico posto. Supporta pensioni per gatti, cani o entrambi."}
