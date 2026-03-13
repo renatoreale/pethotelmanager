@@ -70,36 +70,36 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="pensioni" className="space-y-4">
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="pensioni" className="gap-2">
-            <Building2 className="h-4 w-4" /> Pensioni
+        <TabsList className="h-auto flex flex-wrap gap-1 bg-muted/50 p-1">
+          <TabsTrigger value="pensioni" className="gap-1.5 text-xs px-2.5 py-1.5">
+            <Building2 className="h-3.5 w-3.5 hidden sm:block" /> Pensioni
           </TabsTrigger>
-          <TabsTrigger value="utenti" className="gap-2">
-            <Users className="h-4 w-4" /> Utenti & Ruoli
+          <TabsTrigger value="utenti" className="gap-1.5 text-xs px-2.5 py-1.5">
+            <Users className="h-3.5 w-3.5 hidden sm:block" /> Utenti & Ruoli
           </TabsTrigger>
-          <TabsTrigger value="permessi" className="gap-2">
-            <ShieldCheck className="h-4 w-4" /> Permessi
+          <TabsTrigger value="permessi" className="gap-1.5 text-xs px-2.5 py-1.5">
+            <ShieldCheck className="h-3.5 w-3.5 hidden sm:block" /> Permessi
           </TabsTrigger>
-          <TabsTrigger value="slot-globali" className="gap-2">
-            <Clock className="h-4 w-4" /> Slot Globali
+          <TabsTrigger value="slot-globali" className="gap-1.5 text-xs px-2.5 py-1.5">
+            <Clock className="h-3.5 w-3.5 hidden sm:block" /> Slot
           </TabsTrigger>
-          <TabsTrigger value="listino-globale" className="gap-2">
-            <Euro className="h-4 w-4" /> Listino Globale
+          <TabsTrigger value="listino-globale" className="gap-1.5 text-xs px-2.5 py-1.5">
+            <Euro className="h-3.5 w-3.5 hidden sm:block" /> Listino
           </TabsTrigger>
-          <TabsTrigger value="pagamenti-globali" className="gap-2">
-            <CreditCard className="h-4 w-4" /> Pagamenti Globali
+          <TabsTrigger value="pagamenti-globali" className="gap-1.5 text-xs px-2.5 py-1.5">
+            <CreditCard className="h-3.5 w-3.5 hidden sm:block" /> Pagamenti
           </TabsTrigger>
-          <TabsTrigger value="cancellazione-globale" className="gap-2">
-            <Ban className="h-4 w-4" /> Cancellazione
+          <TabsTrigger value="cancellazione-globale" className="gap-1.5 text-xs px-2.5 py-1.5">
+            <Ban className="h-3.5 w-3.5 hidden sm:block" /> Cancellazione
           </TabsTrigger>
-          <TabsTrigger value="landing" className="gap-2">
-            <Globe className="h-4 w-4" /> Landing Page
+          <TabsTrigger value="landing" className="gap-1.5 text-xs px-2.5 py-1.5">
+            <Globe className="h-3.5 w-3.5 hidden sm:block" /> Landing
           </TabsTrigger>
-          <TabsTrigger value="trial" className="gap-2">
-            <TrendingUp className="h-4 w-4" /> Gestione Utenze
+          <TabsTrigger value="trial" className="gap-1.5 text-xs px-2.5 py-1.5">
+            <TrendingUp className="h-3.5 w-3.5 hidden sm:block" /> Utenze
           </TabsTrigger>
-          <TabsTrigger value="demo-leads" className="gap-2">
-            <UserCheck className="h-4 w-4" /> Richieste Demo
+          <TabsTrigger value="demo-leads" className="gap-1.5 text-xs px-2.5 py-1.5">
+            <UserCheck className="h-3.5 w-3.5 hidden sm:block" /> Demo
           </TabsTrigger>
         </TabsList>
 
