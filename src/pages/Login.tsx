@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { MailCheck } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import petHotelLogo from "@/assets/pethotelmanager_logo.png";
 
 const DEMO_EMAIL = "demo@pethotelmanager.com";
 const DEMO_PASSWORD = "DemoTest2026!";
