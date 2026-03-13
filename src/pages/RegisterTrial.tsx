@@ -178,6 +178,9 @@ export default function RegisterTrial() {
               <Input id="email" type="email" placeholder="nome@email.it" value={email} onChange={(e) => { setEmail(e.target.value); setErrors(p => ({...p, email: ""})); }} required className={errors.email ? "border-destructive" : ""} />
               {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
             </div>
+            <p className="text-sm text-muted-foreground text-center bg-muted/50 rounded-md p-2">
+              ⚠️ Inserisci dati veritieri: le credenziali di accesso verranno inviate all'email indicata.
+            </p>
             <div className="flex items-start space-x-2">
               <Checkbox
                 id="privacy"
