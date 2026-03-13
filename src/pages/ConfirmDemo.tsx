@@ -24,7 +24,7 @@ export default function ConfirmDemo() {
 
     const confirmLead = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke("mysql-demo-leads", {
+        const { data, error } = await supabase.functions.invoke("send-demo-validation", {
           body: { action: "confirm_by_token", token },
         });
 
