@@ -68,9 +68,7 @@ export default function ClienteSetPassword() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted px-4">
       <Card className="w-full max-w-md border-none shadow-xl">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground text-2xl">
-            🐾
-          </div>
+          <img src={petHotelLogo} alt="Pet Hotel Manager" className="mx-auto mb-4 h-14 w-14 rounded-xl object-contain" />
           <CardTitle className="text-2xl font-serif">Imposta Password</CardTitle>
           <CardDescription>Scegli una password per accedere alla tua area riservata</CardDescription>
         </CardHeader>
