@@ -23,7 +23,7 @@ const ROUTE_RESOURCE_MAP: Record<string, Resource> = {
 };
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, profileLoading, roles } = useAuth();
+  const { user, loading, profileLoading, roles, trialExpired } = useAuth();
   const { canRead, primaryRole } = usePermissions();
   const location = useLocation();
 
