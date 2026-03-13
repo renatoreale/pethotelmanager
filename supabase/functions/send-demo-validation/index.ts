@@ -58,12 +58,21 @@ serve(async (req) => {
       req.headers.get("sb-request-id") ||
       crypto.randomUUID();
 
+    const debugHeaders = Array.from(req.headers.entries()).filter(([key]) =>
+      key.includes("run") ||
+      key.includes("request") ||
+      key.includes("trace") ||
+      key.includes("sb") ||
+      key.includes("lovable")
+    );
+
     console.log("send-demo-validation run context", {
       requestRunId,
       xLovableRunId: req.headers.get("x-lovable-run-id"),
       xRunId: req.headers.get("x-run-id"),
       xRequestId: req.headers.get("x-request-id"),
       sbRequestId: req.headers.get("sb-request-id"),
+      debugHeaders,
     });
 
     const emailBody = `
