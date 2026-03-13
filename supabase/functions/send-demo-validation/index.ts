@@ -110,6 +110,11 @@ serve(async (req) => {
       </html>
     `;
 
+    const validationText = `Ciao ${firstName}${lastName ? ` ${lastName}` : ''},\n\n` +
+      `Grazie per aver richiesto la prova gratuita di Pet Hotel Manager.\n` +
+      `Conferma la tua richiesta aprendo questo link: ${confirmUrl}\n\n` +
+      `Se non hai richiesto una demo, ignora questa email.`;
+
     // Enqueue validation email via pgmq transactional queue
     const { error: enqueueError } = await supabase.rpc('enqueue_email', {
       queue_name: 'transactional_emails',
@@ -120,6 +125,7 @@ serve(async (req) => {
         sender_domain: 'notify.pethotelmanager.com',
         subject: 'Conferma la tua richiesta demo - Pet Hotel Manager',
         html: emailBody,
+        text: validationText,
         purpose: 'transactional',
         label: 'demo_validation',
         queued_at: new Date().toISOString(),
