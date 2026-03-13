@@ -531,6 +531,8 @@ export default function Landing() {
             <img src={landingLogo} alt="Pet Hotel Manager" className="h-8 w-auto object-contain" /> Pet Hotel Manager © {new Date().getFullYear()}
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
+            <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+            <Link to="/termini" className="hover:text-foreground transition-colors">Termini</Link>
             <Link to="/login" className="hover:text-foreground transition-colors">Accedi</Link>
             <a href="#pricing" className="hover:text-foreground transition-colors">Prezzi</a>
           </div>
