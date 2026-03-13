@@ -172,18 +172,18 @@ export default function Clienti() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          {!client.user_id && client.email && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              title={t("clients.inviteTitle")}
-                              onClick={() => {
-                                setInviteClient(client);
-                              }}
-                            >
-                              <Mail className="h-4 w-4 text-primary" />
-                            </Button>
-                          )}
+                          <div className="w-8 flex justify-center">
+                            {!client.user_id && client.email && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title={t("clients.inviteTitle")}
+                                onClick={() => setInviteClient(client)}
+                              >
+                                <Mail className="h-4 w-4 text-primary" />
+                              </Button>
+                            )}
+                          </div>
                           <Button variant="ghost" size="icon" onClick={() => handleEdit(client)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
