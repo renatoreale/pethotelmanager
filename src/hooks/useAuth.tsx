@@ -38,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [userTenants, setUserTenants] = useState<UserTenant[]>([]);
+  const [profileLoading, setProfileLoading] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
