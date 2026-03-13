@@ -144,21 +144,25 @@ export default function RegisterTrial() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="firstName">Nome *</Label>
-                <Input id="firstName" type="text" placeholder="Mario" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+              <Label htmlFor="firstName">Nome *</Label>
+                <Input id="firstName" type="text" placeholder="Mario" value={firstName} onChange={(e) => { setFirstName(e.target.value); setErrors(p => ({...p, firstName: ""})); }} required className={errors.firstName ? "border-destructive" : ""} />
+                {errors.firstName && <p className="text-xs text-destructive">{errors.firstName}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName">Cognome *</Label>
-                <Input id="lastName" type="text" placeholder="Rossi" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                <Input id="lastName" type="text" placeholder="Rossi" value={lastName} onChange={(e) => { setLastName(e.target.value); setErrors(p => ({...p, lastName: ""})); }} required className={errors.lastName ? "border-destructive" : ""} />
+                {errors.lastName && <p className="text-xs text-destructive">{errors.lastName}</p>}
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Telefono</Label>
-              <Input id="phone" type="tel" placeholder="+39 333 1234567" value={phone} onChange={(e) => setPhone(e.target.value)} />
+              <Label htmlFor="phone">Telefono *</Label>
+              <Input id="phone" type="tel" placeholder="+39 333 1234567" value={phone} onChange={(e) => { setPhone(e.target.value); setErrors(p => ({...p, phone: ""})); }} required className={errors.phone ? "border-destructive" : ""} />
+              {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email *</Label>
-              <Input id="email" type="email" placeholder="nome@email.it" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Input id="email" type="email" placeholder="nome@email.it" value={email} onChange={(e) => { setEmail(e.target.value); setErrors(p => ({...p, email: ""})); }} required className={errors.email ? "border-destructive" : ""} />
+              {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
             </div>
             <div className="flex items-start space-x-2">
               <Checkbox
