@@ -14,6 +14,8 @@ import {
 import { Plus, Search, Pencil, Trash2, AlertTriangle, Mail, CheckCircle2, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { HelpButton } from "@/components/HelpButton";
+import { clientiHelpSections } from "@/components/help/clientiHelp";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -83,11 +85,18 @@ export default function Clienti() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t("clients.title")}</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {t("clients.subtitle")} · {clients?.length ?? 0} {t("common.registered")}
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{t("clients.title")}</h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              {t("clients.subtitle")} · {clients?.length ?? 0} {t("common.registered")}
+            </p>
+          </div>
+          <HelpButton
+            pageTitle="Guida — Clienti"
+            pageDescription="Come gestire l'anagrafica clienti, invitare al portale e utilizzare la blacklist."
+            sections={clientiHelpSections}
+          />
         </div>
         <Button onClick={handleNew}>
           <Plus className="mr-2 h-4 w-4" /> {t("clients.newClient")}
