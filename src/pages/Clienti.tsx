@@ -14,6 +14,8 @@ import {
 import { Plus, Search, Pencil, Trash2, AlertTriangle, Mail, CheckCircle2, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { HelpButton } from "@/components/HelpButton";
+import { clientiHelpSections } from "@/components/help/clientiHelp";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
