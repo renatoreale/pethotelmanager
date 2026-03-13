@@ -45,24 +45,28 @@ serve(async (req) => {
         pensione_name VARCHAR(255),
         message TEXT,
         activation_link TEXT,
+        expires_at DATETIME,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    // Add activation_link column if missing (for existing tables)
-    try {
-      await client.execute("ALTER TABLE demo_leads ADD COLUMN activation_link TEXT");
-    } catch (_) {
-      // column already exists
+    // Add columns if missing (for existing tables)
+    for (const col of ["activation_link TEXT", "expires_at DATETIME"]) {
+      try {
+        await client.execute(`ALTER TABLE demo_leads ADD COLUMN ${col}`);
+      } catch (_) {
+        // column already exists
+      }
     }
 
     if (action === "insert") {
       const { full_name, last_name, email, phone, lead_type, pensione_name, message, base_url } = params;
       const token = crypto.randomUUID();
       const activationLink = base_url ? `${base_url}/confirm-demo?token=${token}` : null;
+      // expires_at = NOW() + 3 days
       await client.execute(
-        `INSERT INTO demo_leads (full_name, last_name, email, phone, privacy_accepted, lead_type, pensione_name, message, token, activation_link)
-         VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?)`,
+        `INSERT INTO demo_leads (full_name, last_name, email, phone, privacy_accepted, lead_type, pensione_name, message, token, activation_link, expires_at)
+         VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 3 DAY))`,
         [full_name, last_name || null, email, phone || null, lead_type || "prova_gratuita", pensione_name || null, message || null, token, activationLink]
       );
       return new Response(JSON.stringify({ success: true }), {
@@ -85,7 +89,6 @@ serve(async (req) => {
         "UPDATE demo_leads SET confirmed = 1, confirmed_at = NOW() WHERE id = ?",
         [id]
       );
-      // Fetch the updated row to return the token
       const rows = await client.query("SELECT * FROM demo_leads WHERE id = ?", [id]);
       return new Response(JSON.stringify({ success: true, data: rows[0] || null }), {
         status: 200,
@@ -95,19 +98,36 @@ serve(async (req) => {
 
     if (action === "confirm_by_token") {
       const { token } = params;
-      await client.execute(
-        "UPDATE demo_leads SET confirmed = 1, confirmed_at = NOW() WHERE token = ? AND confirmed = 0",
-        [token]
-      );
+      
+      // First, find the lead by token
       const rows = await client.query("SELECT * FROM demo_leads WHERE token = ?", [token]);
+      
       if (!rows.length) {
         return new Response(JSON.stringify({ status: "not_found" }), {
           status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      
       const lead = rows[0] as any;
-      const wasAlready = lead.confirmed === 1 && lead.confirmed_at !== null;
+      
+      // Check if expired
+      if (lead.expires_at && new Date(lead.expires_at) < new Date()) {
+        return new Response(JSON.stringify({ status: "expired", data: lead }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      
+      // If not yet confirmed, confirm now
+      if (!lead.confirmed) {
+        await client.execute(
+          "UPDATE demo_leads SET confirmed = 1, confirmed_at = NOW() WHERE token = ?",
+          [token]
+        );
+      }
+      
+      const wasAlready = lead.confirmed === 1;
       return new Response(JSON.stringify({ status: "confirmed", was_already_confirmed: wasAlready, data: lead }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
