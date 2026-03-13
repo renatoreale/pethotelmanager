@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { email, firstName, lastName, phone, leadType, pensioneName, message } = await req.json();
+    const { email, firstName, lastName, phone, leadType, pensioneName, message, baseUrl } = await req.json();
 
     const resolvedLeadType = leadType === "demo_live" ? "demo_live" : "prova_gratuita";
 
