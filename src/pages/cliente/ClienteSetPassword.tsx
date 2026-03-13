@@ -86,32 +86,34 @@ export default function ClienteSetPassword() {
     if (error) {
       toast.error(error.message);
     } else {
-      // Mark portal as activated in Supabase
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
+          // Mark portal as activated in Supabase
           await supabase
             .from("clients")
             .update({ portal_activated: true })
             .eq("user_id", user.id);
 
-          // Mark as activated in MySQL too
           const { data: client } = await supabase
             .from("clients")
-            .select("id, tenant_id, email, first_name, last_name")
+            .select("id")
             .eq("user_id", user.id)
             .single();
 
           if (client) {
+            // Activate invite + delete password reset record in MySQL
             try {
-              await supabase.functions.invoke("mysql-demo-leads", {
-                body: {
-                  action: "activate_invite",
-                  client_id: client.id,
-                },
-              });
+              await Promise.all([
+                supabase.functions.invoke("mysql-demo-leads", {
+                  body: { action: "activate_invite", client_id: client.id },
+                }),
+                supabase.functions.invoke("mysql-demo-leads", {
+                  body: { action: "delete_password_reset", client_id: client.id },
+                }),
+              ]);
             } catch (e) {
-              console.error("MySQL activate failed:", e);
+              console.error("MySQL post-activation failed:", e);
             }
           }
         }
