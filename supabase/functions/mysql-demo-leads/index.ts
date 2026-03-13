@@ -93,6 +93,27 @@ serve(async (req) => {
       });
     }
 
+    if (action === "confirm_by_token") {
+      const { token } = params;
+      await client.execute(
+        "UPDATE demo_leads SET confirmed = 1, confirmed_at = NOW() WHERE token = ? AND confirmed = 0",
+        [token]
+      );
+      const rows = await client.query("SELECT * FROM demo_leads WHERE token = ?", [token]);
+      if (!rows.length) {
+        return new Response(JSON.stringify({ status: "not_found" }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const lead = rows[0] as any;
+      const wasAlready = lead.confirmed === 1 && lead.confirmed_at !== null;
+      return new Response(JSON.stringify({ status: "confirmed", was_already_confirmed: wasAlready, data: lead }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Azione non valida" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

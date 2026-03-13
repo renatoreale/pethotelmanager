@@ -23,50 +23,49 @@ export default function ConfirmDemo() {
     }
 
     const confirmLead = async () => {
-      // Confirm the lead via token
-      const { data, error } = await (supabase
-        .from("demo_leads") as any)
-        .update({ confirmed: true, confirmed_at: new Date().toISOString() })
-        .eq("token", token)
-        .eq("confirmed", false)
-        .select()
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase.functions.invoke("mysql-demo-leads", {
+          body: { action: "confirm_by_token", token },
+        });
 
-      if (error) {
-        console.error("Confirm error:", error);
-        setStatus("error");
-        return;
-      }
+        if (error) {
+          console.error("Confirm error:", error);
+          setStatus("error");
+          return;
+        }
 
-      if (!data) {
-        const { data: existing } = await (supabase
-          .from("demo_leads") as any)
-          .select("confirmed")
-          .eq("token", token)
-          .maybeSingle();
+        if (data?.status === "not_found") {
+          setStatus("error");
+          return;
+        }
 
-        if (existing?.confirmed) {
-          setStatus("already");
+        if (data?.status === "confirmed") {
+          // Check if it was already confirmed before this call
+          if (data?.was_already_confirmed) {
+            setStatus("already");
+          } else {
+            setStatus("success");
+          }
+
+          // Auto-login with demo credentials
+          const { error: loginError } = await supabase.auth.signInWithPassword({
+            email: DEMO_EMAIL,
+            password: DEMO_PASSWORD,
+          });
+
+          if (loginError) {
+            toast.info("Usa le credenziali demo per accedere.");
+            setTimeout(() => navigate("/login?demo=true"), 2000);
+          } else {
+            toast.success("Accesso alla demo in corso...");
+            setTimeout(() => navigate("/"), 1500);
+          }
         } else {
           setStatus("error");
         }
-        return;
-      }
-
-      setStatus("success");
-
-      // Auto-login with demo credentials
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email: DEMO_EMAIL,
-        password: DEMO_PASSWORD,
-      });
-
-      if (loginError) {
-        toast.info("Usa le credenziali demo per accedere.");
-        setTimeout(() => navigate("/login?demo=true"), 2000);
-      } else {
-        toast.success("Accesso alla demo in corso...");
-        setTimeout(() => navigate("/"), 1500);
+      } catch (err) {
+        console.error("Confirm error:", err);
+        setStatus("error");
       }
     };
 
