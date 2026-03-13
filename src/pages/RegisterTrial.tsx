@@ -65,12 +65,33 @@ export default function RegisterTrial() {
     });
   }, []);
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate all fields
+    const newErrors: Record<string, string> = {};
+    const fnErr = validateName(firstName);
+    if (fnErr) newErrors.firstName = fnErr;
+    const lnErr = validateName(lastName);
+    if (lnErr) newErrors.lastName = lnErr;
+    const emErr = validateEmail(email);
+    if (emErr) newErrors.email = emErr;
+    const phErr = validatePhone(phone);
+    if (phErr) newErrors.phone = phErr;
+    
     if (!privacyAccepted) {
       toast.error("Devi accettare l'informativa sulla privacy per continuare.");
       return;
     }
+    
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      toast.error("Correggi i campi evidenziati");
+      return;
+    }
+    
     setLoading(true);
 
     try {
