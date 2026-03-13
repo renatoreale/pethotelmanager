@@ -10,6 +10,42 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { ArrowLeft, Clock, CheckCircle2, Loader2 } from "lucide-react";
 
+const DISPOSABLE_DOMAINS = [
+  "mailinator.com","guerrillamail.com","tempmail.com","throwaway.email",
+  "yopmail.com","sharklasers.com","guerrillamailblock.com","grr.la",
+  "dispostable.com","trashmail.com","fakeinbox.com","tempail.com",
+  "maildrop.cc","10minutemail.com","temp-mail.org","getnada.com",
+  "mohmal.com","emailondeck.com","mintemail.com","discard.email",
+  "mailnesia.com","tempr.email","bupmail.com","tmail.ws",
+  "test.com","example.com","test.it","prova.com","prova.it"
+];
+
+function validateName(name: string): string | null {
+  const trimmed = name.trim();
+  if (trimmed.length < 2) return "Inserisci almeno 2 caratteri";
+  if (!/^[a-zA-ZÀ-ÿ' -]+$/.test(trimmed)) return "Caratteri non validi";
+  if (/(.)\1{3,}/.test(trimmed)) return "Nome non valido";
+  return null;
+}
+
+function validateEmail(email: string): string | null {
+  const trimmed = email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return "Email non valida";
+  const domain = trimmed.split("@")[1];
+  if (DISPOSABLE_DOMAINS.includes(domain)) return "Usa un indirizzo email reale, non temporaneo";
+  if (/^(test|prova|fake|asdf|qwerty)/i.test(trimmed.split("@")[0])) return "Inserisci un'email reale";
+  return null;
+}
+
+function validatePhone(phone: string): string | null {
+  const digits = phone.replace(/[\s\-\+\(\)]/g, "");
+  if (digits.length < 9 || digits.length > 13) return "Inserisci un numero di telefono valido";
+  if (!/^(\+?39)?[0-9]{9,10}$/.test(digits) && !/^(\+?39)?3[0-9]{8,9}$/.test(digits))
+    return "Formato telefono non valido";
+  if (/^(.)\1+$/.test(digits.slice(-9))) return "Numero di telefono non valido";
+  return null;
+}
+
 const DEMO_EMAIL = "demo@pethotelmanager.com";
 const DEMO_PASSWORD = "DemoTest2026!";
 
@@ -29,12 +65,33 @@ export default function RegisterTrial() {
     });
   }, []);
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate all fields
+    const newErrors: Record<string, string> = {};
+    const fnErr = validateName(firstName);
+    if (fnErr) newErrors.firstName = fnErr;
+    const lnErr = validateName(lastName);
+    if (lnErr) newErrors.lastName = lnErr;
+    const emErr = validateEmail(email);
+    if (emErr) newErrors.email = emErr;
+    const phErr = validatePhone(phone);
+    if (phErr) newErrors.phone = phErr;
+    
     if (!privacyAccepted) {
       toast.error("Devi accettare l'informativa sulla privacy per continuare.");
       return;
     }
+    
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      toast.error("Correggi i campi evidenziati");
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -87,21 +144,25 @@ export default function RegisterTrial() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="firstName">Nome *</Label>
-                <Input id="firstName" type="text" placeholder="Mario" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+              <Label htmlFor="firstName">Nome *</Label>
+                <Input id="firstName" type="text" placeholder="Mario" value={firstName} onChange={(e) => { setFirstName(e.target.value); setErrors(p => ({...p, firstName: ""})); }} required className={errors.firstName ? "border-destructive" : ""} />
+                {errors.firstName && <p className="text-xs text-destructive">{errors.firstName}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName">Cognome *</Label>
-                <Input id="lastName" type="text" placeholder="Rossi" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                <Input id="lastName" type="text" placeholder="Rossi" value={lastName} onChange={(e) => { setLastName(e.target.value); setErrors(p => ({...p, lastName: ""})); }} required className={errors.lastName ? "border-destructive" : ""} />
+                {errors.lastName && <p className="text-xs text-destructive">{errors.lastName}</p>}
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Telefono</Label>
-              <Input id="phone" type="tel" placeholder="+39 333 1234567" value={phone} onChange={(e) => setPhone(e.target.value)} />
+              <Label htmlFor="phone">Telefono *</Label>
+              <Input id="phone" type="tel" placeholder="+39 333 1234567" value={phone} onChange={(e) => { setPhone(e.target.value); setErrors(p => ({...p, phone: ""})); }} required className={errors.phone ? "border-destructive" : ""} />
+              {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email *</Label>
-              <Input id="email" type="email" placeholder="nome@email.it" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Input id="email" type="email" placeholder="nome@email.it" value={email} onChange={(e) => { setEmail(e.target.value); setErrors(p => ({...p, email: ""})); }} required className={errors.email ? "border-destructive" : ""} />
+              {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
             </div>
             <div className="flex items-start space-x-2">
               <Checkbox

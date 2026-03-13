@@ -14,8 +14,47 @@ serve(async (req) => {
   try {
     const { email, firstName, lastName, phone } = await req.json();
 
-    if (!email || !firstName) {
-      return new Response(JSON.stringify({ error: "Nome e email sono obbligatori" }), {
+    // Server-side validation
+    const DISPOSABLE_DOMAINS = [
+      "mailinator.com","guerrillamail.com","tempmail.com","throwaway.email",
+      "yopmail.com","sharklasers.com","dispostable.com","trashmail.com",
+      "fakeinbox.com","maildrop.cc","10minutemail.com","temp-mail.org",
+      "getnada.com","mohmal.com","emailondeck.com","discard.email",
+      "test.com","example.com","test.it","prova.com","prova.it"
+    ];
+
+    if (!firstName || !lastName || firstName.trim().length < 2 || lastName.trim().length < 2) {
+      return new Response(JSON.stringify({ error: "Nome e cognome devono avere almeno 2 caratteri" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      return new Response(JSON.stringify({ error: "Email non valida" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const domain = email.trim().toLowerCase().split("@")[1];
+    if (DISPOSABLE_DOMAINS.includes(domain)) {
+      return new Response(JSON.stringify({ error: "Usa un indirizzo email reale" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!phone) {
+      return new Response(JSON.stringify({ error: "Il telefono è obbligatorio" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const digits = phone.replace(/[\s\-\+\(\)]/g, "");
+    if (digits.length < 9 || digits.length > 13) {
+      return new Response(JSON.stringify({ error: "Numero di telefono non valido" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
