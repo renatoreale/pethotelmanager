@@ -577,6 +577,27 @@ export type Database = {
           },
         ]
       }
+      demo_leads: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           booking_id: string | null
