@@ -188,7 +188,7 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-3">
             <a href="#demo">
-              <Button variant="ghost" size="sm">Demo Gratuita</Button>
+              <Button variant="ghost" size="sm">Demo Live Gratuita</Button>
             </a>
             <Link to="/login">
               <Button variant="ghost" size="sm">Accedi</Button>
