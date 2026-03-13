@@ -215,7 +215,7 @@ export default function Landing() {
         <div className="relative flex flex-col items-center text-center px-6">
           <img
             src={landingLogo}
-            alt="Pet Hotel Manager"
+            alt="Pet Hotel Manager - Software gestionale per pensioni per cani e gatti"
             className="w-[340px] md:w-[440px] lg:w-[500px] h-auto object-contain drop-shadow-xl"
           />
           <Badge className="mt-6 mb-4 bg-primary/10 text-primary border-primary/20 hover:bg-primary/15 text-sm px-4 py-1.5">
