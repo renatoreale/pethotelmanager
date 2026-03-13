@@ -147,6 +147,12 @@ serve(async (req) => {
           ${phone ? `<tr><td style="padding:8px;font-weight:bold;border-bottom:1px solid #eee;">Telefono</td><td style="padding:8px;border-bottom:1px solid #eee;">${phone}</td></tr>` : ''}
         </table>
       `;
+      const adminText =
+        `Nuova richiesta demo\n\n` +
+        `Nome: ${firstName} ${lastName || ''}\n` +
+        `Email: ${email}\n` +
+        `${phone ? `Telefono: ${phone}\n` : ''}`;
+
       await supabase.rpc('enqueue_email', {
         queue_name: 'transactional_emails',
         payload: {
@@ -156,6 +162,7 @@ serve(async (req) => {
           sender_domain: 'notify.pethotelmanager.com',
           subject: `[Demo Request] ${firstName} ${lastName || ""} - ${email}`,
           html: adminBody,
+          text: adminText,
           purpose: 'transactional',
           label: 'demo_admin_notification',
           queued_at: new Date().toISOString(),
