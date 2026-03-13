@@ -156,21 +156,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Check trial expiration
-    if (activeTenantId) {
-      const { data: trialData } = await supabase
-        .from("trial_registrations")
-        .select("trial_end, is_converted")
-        .eq("user_id", userId)
-        .maybeSingle();
+    const { data: trialData } = await supabase
+      .from("trial_registrations")
+      .select("trial_end, is_converted")
+      .eq("user_id", userId)
+      .maybeSingle();
 
-      if (trialData && !trialData.is_converted) {
-        setTrialEnd(trialData.trial_end);
-        const now = new Date();
-        const end = new Date(trialData.trial_end);
-        if (now > end) {
-          setTrialExpired(true);
-          toast.error("Il periodo di prova è scaduto. Contatta il supporto per attivare un abbonamento.", { duration: 10000 });
+    if (trialData && !trialData.is_converted) {
+      setTrialEnd(trialData.trial_end);
+      const now = new Date();
+      const end = new Date(trialData.trial_end);
+      if (now > end) {
+        setTrialExpired(true);
+        // Auto-ban the expired trial user
+        try {
+          await supabase.functions.invoke("admin-ban-user", {
+            body: { user_id: userId, ban: true, auto_expire: true },
+          });
+        } catch (e) {
+          console.error("Failed to auto-ban expired trial user:", e);
         }
+        toast.error("Il periodo di prova è scaduto. Il tuo account è stato disattivato. Contatta il supporto per attivare un abbonamento.", { duration: 10000 });
+        // Sign out after a brief delay so user can see the message
+        setTimeout(async () => {
+          await supabase.auth.signOut();
+        }, 3000);
       }
     }
   }

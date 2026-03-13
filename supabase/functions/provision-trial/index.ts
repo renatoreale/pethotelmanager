@@ -6,6 +6,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const DEMO_TENANT_SLUG = "la-zampa-felice";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -16,7 +18,6 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Authenticate user
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -62,8 +63,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    const petType = metadata.pet_type || "gatti";
     const fullName = metadata.full_name || user.email;
+
+    // Find demo tenant
+    const { data: demoTenant, error: tenantError } = await adminClient
+      .from("tenants")
+      .select("id")
+      .eq("slug", DEMO_TENANT_SLUG)
+      .single();
+
+    if (tenantError || !demoTenant) {
+      console.error("Demo tenant not found:", tenantError);
+      return new Response(JSON.stringify({ error: "Demo tenant not found" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const tenantId = demoTenant.id;
 
     // Get trial days from landing_config
     const { data: landingConfig } = await adminClient
@@ -73,44 +90,24 @@ Deno.serve(async (req) => {
       .single();
     const trialDays = landingConfig?.trial_days || 3;
 
-    // 1. Create tenant
-    const slug = `trial-${user.id.substring(0, 8)}-${Date.now()}`;
-    const { data: tenant, error: tenantError } = await adminClient
-      .from("tenants")
-      .insert({
-        name: `Pensione di ${fullName}`,
-        slug,
-        pet_type: petType,
-      })
-      .select("id")
-      .single();
-
-    if (tenantError) {
-      console.error("Error creating tenant:", tenantError);
-      return new Response(JSON.stringify({ error: "Failed to create tenant" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // 2. Assign titolare role
+    // 1. Assign titolare role on demo tenant
     const { error: roleError } = await adminClient.from("user_roles").insert({
       user_id: user.id,
       role: "titolare",
-      tenant_id: tenant.id,
+      tenant_id: tenantId,
     });
 
     if (roleError) {
       console.error("Error assigning role:", roleError);
     }
 
-    // 3. Update profile with tenant_id
+    // 2. Update profile with demo tenant_id
     await adminClient
       .from("profiles")
-      .update({ tenant_id: tenant.id, full_name: fullName })
+      .update({ tenant_id: tenantId, full_name: fullName })
       .eq("user_id", user.id);
 
-    // 4. Create trial_registration
+    // 3. Create trial_registration
     const trialStart = new Date();
     const trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
 
@@ -120,8 +117,8 @@ Deno.serve(async (req) => {
         user_id: user.id,
         email: user.email!,
         full_name: fullName,
-        pet_type: petType,
-        tenant_id: tenant.id,
+        pet_type: metadata.pet_type || "gatti",
+        tenant_id: tenantId,
         trial_start: trialStart.toISOString(),
         trial_end: trialEnd.toISOString(),
       });
@@ -130,11 +127,8 @@ Deno.serve(async (req) => {
       console.error("Error creating trial registration:", trialError);
     }
 
-    // 5. Copy global templates to the new tenant
-    await adminClient.rpc("copy_global_templates_to_tenant", { _tenant_id: tenant.id });
-
     return new Response(
-      JSON.stringify({ success: true, tenant_id: tenant.id, trial_end: trialEnd.toISOString() }),
+      JSON.stringify({ success: true, tenant_id: tenantId, trial_end: trialEnd.toISOString() }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
