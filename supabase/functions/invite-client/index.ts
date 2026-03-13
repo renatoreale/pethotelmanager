@@ -5,6 +5,19 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+async function callMySQL(action: string, params: Record<string, any>) {
+  const mysqlUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/mysql-demo-leads`;
+  const res = await fetch(mysqlUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+    },
+    body: JSON.stringify({ action, ...params }),
+  });
+  return res.json();
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -16,7 +29,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Verify caller is authenticated
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
     const { data: { user: caller } } = await supabaseAdmin.auth.getUser(token);
@@ -25,10 +37,9 @@ Deno.serve(async (req) => {
     const { client_id, action } = await req.json();
     if (!client_id) throw new Error("client_id richiesto");
 
-    // Get client data
     const { data: client, error: clientErr } = await supabaseAdmin
       .from("clients")
-      .select("email, first_name, last_name, user_id, tenant_id")
+      .select("email, first_name, last_name, user_id, tenant_id, portal_activated")
       .eq("id", client_id)
       .single();
 
@@ -41,49 +52,64 @@ Deno.serve(async (req) => {
     if (action === "resend") {
       if (!client.user_id) throw new Error("Il cliente non ha ancora un account. Crea prima l'invito.");
 
-      // Generate a new recovery link
       const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
         type: "recovery",
         email: client.email,
-        options: {
-          redirectTo: `${origin}/cliente/set-password`,
-        },
+        options: { redirectTo: `${origin}/cliente/set-password` },
       });
-
       if (linkErr) throw linkErr;
-
       const recoveryLink = linkData?.properties?.action_link;
 
-      // Save to MySQL
+      // Delete old invites and insert new one in MySQL
       try {
-        const mysqlUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/mysql-demo-leads`;
-        await fetch(mysqlUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-          },
-          body: JSON.stringify({
-            action: "insert_invite",
-            client_id,
-            tenant_id: client.tenant_id,
-            email: client.email,
-            first_name: client.first_name,
-            last_name: client.last_name,
-            user_id: client.user_id,
-            recovery_link: recoveryLink,
-          }),
+        await callMySQL("delete_invites", { client_id });
+        await callMySQL("insert_invite", {
+          client_id,
+          tenant_id: client.tenant_id,
+          email: client.email,
+          first_name: client.first_name,
+          last_name: client.last_name,
+          user_id: client.user_id,
+          recovery_link: recoveryLink,
         });
-      } catch (mysqlErr) {
-        console.error("MySQL resend invite copy failed:", mysqlErr);
+      } catch (e) {
+        console.error("MySQL resend error:", e);
       }
 
       return new Response(
-        JSON.stringify({
-          success: true,
+        JSON.stringify({ success: true, recovery_link: recoveryLink, message: `Nuovo link generato per ${client.email}` }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // --- RESET PASSWORD ---
+    if (action === "reset_password") {
+      if (!client.user_id) throw new Error("Il cliente non ha ancora un account.");
+      if (!client.portal_activated) throw new Error("Il cliente non ha ancora attivato il portale.");
+
+      const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+        type: "recovery",
+        email: client.email,
+        options: { redirectTo: `${origin}/cliente/set-password` },
+      });
+      if (linkErr) throw linkErr;
+      const recoveryLink = linkData?.properties?.action_link;
+
+      // Save reset request to MySQL
+      try {
+        await callMySQL("insert_password_reset", {
+          client_id,
+          tenant_id: client.tenant_id,
+          email: client.email,
+          user_id: client.user_id,
           recovery_link: recoveryLink,
-          message: `Nuovo link generato per ${client.email}`,
-        }),
+        });
+      } catch (e) {
+        console.error("MySQL reset password error:", e);
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, recovery_link: recoveryLink, message: `Link reset password generato per ${client.email}` }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -91,7 +117,6 @@ Deno.serve(async (req) => {
     // --- CREATE INVITE ---
     if (client.user_id) throw new Error("Il cliente ha già un account attivo");
 
-    // Create auth user (email pre-confirmed)
     const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
       email: client.email,
       email_confirm: true,
@@ -100,60 +125,38 @@ Deno.serve(async (req) => {
         is_client: true,
       },
     });
-
     if (authErr) throw authErr;
 
-    // Link user_id to client record
     const { error: updateErr } = await supabaseAdmin
       .from("clients")
       .update({ user_id: authData.user.id })
       .eq("id", client_id);
-
     if (updateErr) throw updateErr;
 
-    // Generate password recovery link
     const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
       email: client.email,
-      options: {
-        redirectTo: `${origin}/cliente/set-password`,
-      },
+      options: { redirectTo: `${origin}/cliente/set-password` },
     });
-
     if (linkErr) throw linkErr;
-
     const recoveryLink = linkData?.properties?.action_link;
 
-    // Save a copy to MySQL
     try {
-      const mysqlUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/mysql-demo-leads`;
-      await fetch(mysqlUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-        },
-        body: JSON.stringify({
-          action: "insert_invite",
-          client_id,
-          tenant_id: client.tenant_id,
-          email: client.email,
-          first_name: client.first_name,
-          last_name: client.last_name,
-          user_id: authData.user.id,
-          recovery_link: recoveryLink,
-        }),
+      await callMySQL("insert_invite", {
+        client_id,
+        tenant_id: client.tenant_id,
+        email: client.email,
+        first_name: client.first_name,
+        last_name: client.last_name,
+        user_id: authData.user.id,
+        recovery_link: recoveryLink,
       });
-    } catch (mysqlErr) {
-      console.error("MySQL invite copy failed:", mysqlErr);
+    } catch (e) {
+      console.error("MySQL invite copy failed:", e);
     }
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        recovery_link: recoveryLink,
-        message: `Account creato per ${client.email}`,
-      }),
+      JSON.stringify({ success: true, recovery_link: recoveryLink, message: `Account creato per ${client.email}` }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error: any) {
