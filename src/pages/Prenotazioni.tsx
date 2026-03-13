@@ -1,4 +1,6 @@
 import { useState, useMemo, Fragment } from "react";
+import { HelpButton } from "@/components/HelpButton";
+import { prenotazioniHelpSections } from "@/components/help/prenotazioniHelp";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
