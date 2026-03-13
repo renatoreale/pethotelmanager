@@ -412,23 +412,40 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               )}
             </div>
 
-            {/* Resend invite */}
+            {/* Portal actions */}
             {isEditing && client?.user_id && client?.email && (
               <div className="border rounded-lg p-3 bg-muted/30 flex items-center justify-between">
                 <div className="text-sm">
                   <p className="font-medium">Portale Clienti</p>
-                  <p className="text-muted-foreground text-xs">Account attivo per {client.email}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {client.portal_activated
+                      ? `Account attivo per ${client.email}`
+                      : `Invito inviato a ${client.email}`}
+                  </p>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleResendInvite}
-                  disabled={resending}
-                >
-                  <RefreshCw className={`mr-1 h-3 w-3 ${resending ? "animate-spin" : ""}`} />
-                  {resending ? "Invio..." : "Rimanda Invito"}
-                </Button>
+                {client.portal_activated ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResetPassword}
+                    disabled={resending}
+                  >
+                    <KeyRound className={`mr-1 h-3 w-3 ${resending ? "animate-spin" : ""}`} />
+                    {resending ? "Invio..." : "Resetta Password"}
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResendInvite}
+                    disabled={resending}
+                  >
+                    <RefreshCw className={`mr-1 h-3 w-3 ${resending ? "animate-spin" : ""}`} />
+                    {resending ? "Invio..." : "Rimanda Invito"}
+                  </Button>
+                )}
               </div>
             )}
 
