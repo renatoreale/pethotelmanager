@@ -1,25 +1,24 @@
 import { useState, useEffect } from "react";
 import petHotelLogo from "@/assets/pethotelmanager_logo.png";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft, Clock } from "lucide-react";
+import { ArrowLeft, Clock, Copy, Check, LogIn } from "lucide-react";
+
+const DEMO_EMAIL = "demo@pethotelmanager.com";
+const DEMO_PASSWORD = "DemoTest2026!";
 
 export default function RegisterTrial() {
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [petType, setPetType] = useState<"gatti" | "cani" | "entrambi">("gatti");
   const [loading, setLoading] = useState(false);
-  const [trialDays, setTrialDays] = useState(14);
+  const [showCredentials, setShowCredentials] = useState(false);
+  const [copied, setCopied] = useState<"email" | "password" | null>(null);
+  const [trialDays, setTrialDays] = useState(3);
 
   useEffect(() => {
     supabase.from("landing_config").select("trial_days").limit(1).single().then(({ data }) => {
@@ -27,47 +26,93 @@ export default function RegisterTrial() {
     });
   }, []);
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // 1. Sign up
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Save lead info
+      await supabase.from("demo_leads").insert({
+        full_name: fullName,
         email,
-        password,
-        options: {
-          data: { full_name: fullName, is_trial: true, pet_type: petType },
-          emailRedirectTo: `${window.location.origin}/login`,
-        },
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Registrazione fallita");
-
-      const isExistingUser =
-        Array.isArray(authData.user.identities) && authData.user.identities.length === 0;
-
-      if (isExistingUser) {
-        toast.info(
-          "Questa email risulta già registrata: accedi oppure usa 'Password dimenticata?' per ricevere l'email di reset.",
-          { duration: 8000 }
-        );
-        navigate("/login");
-        return;
-      }
-
-      toast.success(
-        `Registrazione completata! Controlla la tua email per confermare l'account. Avrai ${trialDays} giorni di prova gratuita.`,
-        { duration: 8000 }
-      );
-      navigate("/login");
+      setShowCredentials(true);
+      toast.success("Ecco le credenziali per accedere alla demo!");
     } catch (e: any) {
       toast.error(e.message || "Errore durante la registrazione");
     } finally {
       setLoading(false);
     }
   };
+
+  const handleCopy = async (text: string, type: "email" | "password") => {
+    await navigator.clipboard.writeText(text);
+    setCopied(type);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  if (showCredentials) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <Card className="w-full max-w-md border-none shadow-lg">
+          <CardHeader className="text-center">
+            <img src={petHotelLogo} alt="Pet Hotel Manager" className="mx-auto mb-4 h-20 w-20 rounded-xl object-contain" />
+            <CardTitle className="text-2xl font-serif">Credenziali Demo</CardTitle>
+            <CardDescription>
+              Usa queste credenziali per accedere alla pensione demo "La Zampa Felice" preconfigurata con dati di esempio
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Email</Label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 rounded bg-background px-3 py-2 text-sm font-mono border">
+                    {DEMO_EMAIL}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 shrink-0"
+                    onClick={() => handleCopy(DEMO_EMAIL, "email")}
+                  >
+                    {copied === "email" ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Password</Label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 rounded bg-background px-3 py-2 text-sm font-mono border">
+                    {DEMO_PASSWORD}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 shrink-0"
+                    onClick={() => handleCopy(DEMO_PASSWORD, "password")}
+                  >
+                    {copied === "password" ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground text-center">
+              La prova dura {trialDays} giorni. Tutti i dati sono condivisi con gli altri utenti demo.
+            </p>
+
+            <Button className="w-full gap-2" asChild>
+              <Link to="/login">
+                <LogIn className="h-4 w-4" /> Vai al Login
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -83,32 +128,17 @@ export default function RegisterTrial() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleRegister} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="fullName">Nome completo</Label>
               <Input id="fullName" type="text" placeholder="Mario Rossi" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="nome@pensione.it" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" placeholder="Minimo 6 caratteri" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
-            </div>
-            <div className="space-y-2">
-              <Label>Tipo di animali gestiti</Label>
-              <Select value={petType} onValueChange={(v: any) => setPetType(v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="gatti">🐱 Solo gatti</SelectItem>
-                  <SelectItem value="cani">🐶 Solo cani</SelectItem>
-                  <SelectItem value="entrambi">🐾 Gatti e cani</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="email">La tua email</Label>
+              <Input id="email" type="email" placeholder="nome@email.it" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Registrazione..." : "Inizia la prova gratuita"}
+              {loading ? "Caricamento..." : "Accedi alla demo"}
             </Button>
             <div className="text-center text-sm">
               <Link to="/login" className="text-primary hover:underline">

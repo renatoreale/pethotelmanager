@@ -483,8 +483,8 @@ export default function Landing() {
             Pronto a semplificare la gestione?
           </h2>
           <p className="text-lg text-muted-foreground mb-8">
-            Registrati ora e prova gratuitamente per {trialDays} giorni. Ti assegneremo una pensione demo
-            già configurata con dati di esempio.
+            Accedi subito alla pensione demo "La Zampa Felice" con dati di esempio già configurati.
+            Nessuna registrazione complicata, basta inserire il tuo nome e la tua email.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="text-base px-10 py-6 gap-2" onClick={handleStartTrial}>
