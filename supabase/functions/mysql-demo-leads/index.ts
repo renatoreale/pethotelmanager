@@ -44,16 +44,26 @@ serve(async (req) => {
         lead_type VARCHAR(50) NOT NULL DEFAULT 'prova_gratuita',
         pensione_name VARCHAR(255),
         message TEXT,
+        activation_link TEXT,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
+    // Add activation_link column if missing (for existing tables)
+    try {
+      await client.execute("ALTER TABLE demo_leads ADD COLUMN activation_link TEXT");
+    } catch (_) {
+      // column already exists
+    }
+
     if (action === "insert") {
-      const { full_name, last_name, email, phone, lead_type, pensione_name, message } = params;
+      const { full_name, last_name, email, phone, lead_type, pensione_name, message, base_url } = params;
+      const token = crypto.randomUUID();
+      const activationLink = base_url ? `${base_url}/confirm-demo?token=${token}` : null;
       await client.execute(
-        `INSERT INTO demo_leads (full_name, last_name, email, phone, privacy_accepted, lead_type, pensione_name, message)
-         VALUES (?, ?, ?, ?, 1, ?, ?, ?)`,
-        [full_name, last_name || null, email, phone || null, lead_type || "prova_gratuita", pensione_name || null, message || null]
+        `INSERT INTO demo_leads (full_name, last_name, email, phone, privacy_accepted, lead_type, pensione_name, message, token, activation_link)
+         VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?)`,
+        [full_name, last_name || null, email, phone || null, lead_type || "prova_gratuita", pensione_name || null, message || null, token, activationLink]
       );
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
