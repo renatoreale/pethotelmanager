@@ -89,6 +89,7 @@ serve(async (req) => {
         lead_type: resolvedLeadType,
         pensione_name: pensioneName?.trim() || null,
         message: message?.trim() || null,
+        base_url: baseUrl || null,
       }),
     });
 
