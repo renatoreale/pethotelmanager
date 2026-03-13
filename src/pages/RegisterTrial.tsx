@@ -10,6 +10,42 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { ArrowLeft, Clock, CheckCircle2, Loader2 } from "lucide-react";
 
+const DISPOSABLE_DOMAINS = [
+  "mailinator.com","guerrillamail.com","tempmail.com","throwaway.email",
+  "yopmail.com","sharklasers.com","guerrillamailblock.com","grr.la",
+  "dispostable.com","trashmail.com","fakeinbox.com","tempail.com",
+  "maildrop.cc","10minutemail.com","temp-mail.org","getnada.com",
+  "mohmal.com","emailondeck.com","mintemail.com","discard.email",
+  "mailnesia.com","tempr.email","bupmail.com","tmail.ws",
+  "test.com","example.com","test.it","prova.com","prova.it"
+];
+
+function validateName(name: string): string | null {
+  const trimmed = name.trim();
+  if (trimmed.length < 2) return "Inserisci almeno 2 caratteri";
+  if (!/^[a-zA-ZÀ-ÿ' -]+$/.test(trimmed)) return "Caratteri non validi";
+  if (/(.)\1{3,}/.test(trimmed)) return "Nome non valido";
+  return null;
+}
+
+function validateEmail(email: string): string | null {
+  const trimmed = email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return "Email non valida";
+  const domain = trimmed.split("@")[1];
+  if (DISPOSABLE_DOMAINS.includes(domain)) return "Usa un indirizzo email reale, non temporaneo";
+  if (/^(test|prova|fake|asdf|qwerty)/i.test(trimmed.split("@")[0])) return "Inserisci un'email reale";
+  return null;
+}
+
+function validatePhone(phone: string): string | null {
+  const digits = phone.replace(/[\s\-\+\(\)]/g, "");
+  if (digits.length < 9 || digits.length > 13) return "Inserisci un numero di telefono valido";
+  if (!/^(\+?39)?[0-9]{9,10}$/.test(digits) && !/^(\+?39)?3[0-9]{8,9}$/.test(digits))
+    return "Formato telefono non valido";
+  if (/^(.)\1+$/.test(digits.slice(-9))) return "Numero di telefono non valido";
+  return null;
+}
+
 const DEMO_EMAIL = "demo@pethotelmanager.com";
 const DEMO_PASSWORD = "DemoTest2026!";
 
