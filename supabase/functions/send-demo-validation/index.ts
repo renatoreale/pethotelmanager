@@ -12,7 +12,9 @@ serve(async (req) => {
   }
 
   try {
-    const { email, firstName, lastName, phone } = await req.json();
+    const { email, firstName, lastName, phone, leadType, pensioneName, message } = await req.json();
+
+    const resolvedLeadType = leadType === "demo_live" ? "demo_live" : "prova_gratuita";
 
     // Server-side validation
     const DISPOSABLE_DOMAINS = [
@@ -23,8 +25,16 @@ serve(async (req) => {
       "test.com","example.com","test.it","prova.com","prova.it"
     ];
 
-    if (!firstName || !lastName || firstName.trim().length < 2 || lastName.trim().length < 2) {
-      return new Response(JSON.stringify({ error: "Nome e cognome devono avere almeno 2 caratteri" }), {
+    if (!firstName || firstName.trim().length < 2) {
+      return new Response(JSON.stringify({ error: "Il nome deve avere almeno 2 caratteri" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // lastName is required for prova_gratuita, optional for demo_live
+    if (resolvedLeadType === "prova_gratuita" && (!lastName || lastName.trim().length < 2)) {
+      return new Response(JSON.stringify({ error: "Il cognome deve avere almeno 2 caratteri" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -45,19 +55,21 @@ serve(async (req) => {
       });
     }
 
-    if (!phone) {
-      return new Response(JSON.stringify({ error: "Il telefono è obbligatorio" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const digits = phone.replace(/[\s\-\+\(\)]/g, "");
-    if (digits.length < 9 || digits.length > 13) {
-      return new Response(JSON.stringify({ error: "Numero di telefono non valido" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Phone validation (required for prova_gratuita, optional for demo_live)
+    if (resolvedLeadType === "prova_gratuita") {
+      if (!phone) {
+        return new Response(JSON.stringify({ error: "Il telefono è obbligatorio" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const digits = phone.replace(/[\s\-\+\(\)]/g, "");
+      if (digits.length < 9 || digits.length > 13) {
+        return new Response(JSON.stringify({ error: "Numero di telefono non valido" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -65,17 +77,21 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Insert demo lead as NOT confirmed (pending admin approval)
+    const insertData: Record<string, unknown> = {
+      full_name: firstName.trim(),
+      last_name: lastName?.trim() || null,
+      phone: phone || null,
+      email: email.trim().toLowerCase(),
+      privacy_accepted: true,
+      confirmed: false,
+      lead_type: resolvedLeadType,
+      pensione_name: pensioneName?.trim() || null,
+      message: message?.trim() || null,
+    };
+
     const { error: insertError } = await supabase
       .from("demo_leads")
-      .insert({
-        full_name: firstName,
-        last_name: lastName,
-        phone: phone || null,
-        email,
-        privacy_accepted: true,
-        confirmed: false,
-      });
+      .insert(insertData);
 
     if (insertError) {
       console.error("Insert error:", insertError);
