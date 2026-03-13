@@ -27,6 +27,8 @@ import { generatePreventivoPDF } from "@/lib/generatePreventivoPDF";
 import { useQuoteRequests, useUpdateQuoteRequestStatus } from "@/hooks/useQuoteRequests";
 import { useTranslation } from "react-i18next";
 import { useDateLocale } from "@/hooks/useDateLocale";
+import { HelpButton } from "@/components/HelpButton";
+import { preventiviHelpSections } from "@/components/help/preventiviHelp";
 
 export default function Preventivi() {
   const { t } = useTranslation();
