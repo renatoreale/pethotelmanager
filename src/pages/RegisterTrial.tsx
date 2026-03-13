@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import petHotelLogo from "@/assets/pethotelmanager_logo.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,16 +8,19 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Clock, CheckCircle2, Mail } from "lucide-react";
+import { ArrowLeft, Clock, CheckCircle2, Loader2 } from "lucide-react";
+
+const DEMO_EMAIL = "demo@pethotelmanager.com";
+const DEMO_PASSWORD = "DemoTest2026!";
 
 export default function RegisterTrial() {
+  const navigate = useNavigate();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [trialDays, setTrialDays] = useState(3);
 
   useEffect(() => {
@@ -35,56 +38,37 @@ export default function RegisterTrial() {
     setLoading(true);
 
     try {
-      // Send to edge function which handles both insert and email
-      const { data, error: fnError } = await supabase.functions.invoke("send-demo-validation", {
+      // Save lead via edge function (no email sent)
+      const { error: fnError } = await supabase.functions.invoke("send-demo-validation", {
         body: { email, firstName, lastName, phone },
       });
 
       if (fnError) {
         console.error("Edge function error:", fnError);
-        toast.error("Errore nell'invio della richiesta. Riprova.");
+        toast.error("Errore nel salvataggio. Riprova.");
+        setLoading(false);
         return;
       }
 
-      setSubmitted(true);
+      // Auto-login with demo credentials
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: DEMO_EMAIL,
+        password: DEMO_PASSWORD,
+      });
+
+      if (loginError) {
+        toast.info("Accedi con le credenziali demo: " + DEMO_EMAIL);
+        navigate("/login?demo=true");
+      } else {
+        toast.success("Benvenuto nella demo! Accesso in corso...");
+        setTimeout(() => navigate("/"), 1000);
+      }
     } catch (e: any) {
       toast.error(e.message || "Errore durante la registrazione");
     } finally {
       setLoading(false);
     }
   };
-
-  if (submitted) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4">
-        <Card className="w-full max-w-md border-none shadow-lg">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-              <Mail className="h-8 w-8 text-primary" />
-            </div>
-            <CardTitle className="text-2xl font-serif">Controlla la tua email!</CardTitle>
-            <CardDescription className="text-base">
-              Abbiamo inviato un'email di conferma a <strong>{email}</strong>.
-              Clicca sul link nell'email per attivare l'accesso alla demo gratuita.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-lg border bg-muted/50 p-4 text-sm text-muted-foreground">
-              <div className="flex items-start gap-2">
-                <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-                <p>Se non trovi l'email, controlla la cartella spam o posta indesiderata.</p>
-              </div>
-            </div>
-            <Button variant="outline" className="w-full" asChild>
-              <Link to="/landing">
-                <ArrowLeft className="h-4 w-4 mr-2" /> Torna alla landing
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -130,7 +114,11 @@ export default function RegisterTrial() {
               </Label>
             </div>
             <Button type="submit" className="w-full" disabled={loading || !privacyAccepted}>
-              {loading ? "Invio in corso..." : "Richiedi la demo gratuita"}
+              {loading ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Accesso in corso...</>
+              ) : (
+                "Accedi alla demo gratuita"
+              )}
             </Button>
             <div className="text-center text-sm">
               <Link to="/login" className="text-primary hover:underline">
