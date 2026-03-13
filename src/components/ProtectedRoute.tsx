@@ -24,11 +24,11 @@ const ROUTE_RESOURCE_MAP: Record<string, Resource> = {
 };
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, profileLoading } = useAuth();
   const { canRead } = usePermissions();
   const location = useLocation();
 
-  if (loading) {
+  if (loading || profileLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
