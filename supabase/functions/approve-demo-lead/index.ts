@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
 
     // Enqueue the email
     const { error: enqueueError } = await adminClient.rpc("enqueue_email", {
-      queue_name: "transactional_email_queue",
+      queue_name: "transactional_emails",
       payload: emailPayload,
     });
 
