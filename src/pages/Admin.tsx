@@ -70,7 +70,7 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="pensioni" className="space-y-4">
-        <TabsList className="flex-wrap">
+        <TabsList className="h-auto flex flex-wrap gap-1 bg-muted/50 p-1">
           <TabsTrigger value="pensioni" className="gap-2">
             <Building2 className="h-4 w-4" /> Pensioni
           </TabsTrigger>
