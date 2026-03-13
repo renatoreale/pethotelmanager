@@ -65,22 +65,28 @@ serve(async (req) => {
       )
     `);
 
-    // Add columns if missing (for existing client_invites tables)
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS password_resets (
+        id VARCHAR(36) NOT NULL DEFAULT (UUID()) PRIMARY KEY,
+        client_id VARCHAR(36) NOT NULL,
+        tenant_id VARCHAR(36) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        user_id VARCHAR(36),
+        recovery_link TEXT,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Add columns if missing (for existing tables)
     for (const col of ["recovery_link TEXT", "activated TINYINT(1) NOT NULL DEFAULT 0"]) {
       try {
         await client.execute(`ALTER TABLE client_invites ADD COLUMN ${col}`);
-      } catch (_) {
-        // column already exists
-      }
+      } catch (_) {}
     }
-
-    // Add columns if missing (for existing tables)
     for (const col of ["activation_link TEXT", "expires_at DATETIME"]) {
       try {
         await client.execute(`ALTER TABLE demo_leads ADD COLUMN ${col}`);
-      } catch (_) {
-        // column already exists
-      }
+      } catch (_) {}
     }
 
     if (action === "insert") {
