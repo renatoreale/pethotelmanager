@@ -27,6 +27,7 @@ import { GlobalPaymentMethodsTab } from "@/components/admin/GlobalPaymentMethods
 import { GlobalCancellationPolicyTab } from "@/components/admin/GlobalCancellationPolicyTab";
 import { LandingConfigTab } from "@/components/admin/LandingConfigTab";
 import { TrialDashboardTab } from "@/components/admin/TrialDashboardTab";
+import { DemoLeadsTab } from "@/components/admin/DemoLeadsTab";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Database } from "@/integrations/supabase/types";
