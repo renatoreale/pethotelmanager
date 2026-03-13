@@ -15,13 +15,14 @@ export default function ClienteSetPassword() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"checking" | "ready" | "already_activated" | "expired">("checking");
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
 
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
       if (event === "PASSWORD_RECOVERY") {
-        // Recovery token worked — check if already activated
+        // Recovery token worked — always allow setting password
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const { data: client } = await supabase
@@ -31,8 +32,8 @@ export default function ClienteSetPassword() {
             .single();
 
           if (client?.portal_activated) {
-            setStatus("already_activated");
-            return;
+            // This is a password reset (account already active)
+            setIsPasswordReset(true);
           }
         }
         setStatus("ready");
@@ -43,7 +44,6 @@ export default function ClienteSetPassword() {
     timeout = setTimeout(async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // User is signed in (from a previous click) — check portal_activated
         const { data: client } = await supabase
           .from("clients")
           .select("portal_activated")
@@ -53,7 +53,6 @@ export default function ClienteSetPassword() {
         if (client?.portal_activated) {
           setStatus("already_activated");
         } else if (client) {
-          // Not yet activated — allow setting password
           setStatus("ready");
         } else {
           setStatus("expired");
@@ -89,38 +88,48 @@ export default function ClienteSetPassword() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          // Mark portal as activated in Supabase
-          await supabase
-            .from("clients")
-            .update({ portal_activated: true })
-            .eq("user_id", user.id);
-
           const { data: client } = await supabase
             .from("clients")
-            .select("id")
+            .select("id, portal_activated")
             .eq("user_id", user.id)
             .single();
 
           if (client) {
-            // Activate invite + delete password reset record in MySQL
-            try {
-              await Promise.all([
-                supabase.functions.invoke("mysql-demo-leads", {
-                  body: { action: "activate_invite", client_id: client.id },
-                }),
-                supabase.functions.invoke("mysql-demo-leads", {
+            if (isPasswordReset) {
+              // Password reset — just delete the reset record from MySQL
+              try {
+                await supabase.functions.invoke("mysql-demo-leads", {
                   body: { action: "delete_password_reset", client_id: client.id },
-                }),
-              ]);
-            } catch (e) {
-              console.error("MySQL post-activation failed:", e);
+                });
+              } catch (e) {
+                console.error("MySQL delete_password_reset failed:", e);
+              }
+            } else {
+              // First-time activation
+              await supabase
+                .from("clients")
+                .update({ portal_activated: true })
+                .eq("user_id", user.id);
+
+              try {
+                await Promise.all([
+                  supabase.functions.invoke("mysql-demo-leads", {
+                    body: { action: "activate_invite", client_id: client.id },
+                  }),
+                  supabase.functions.invoke("mysql-demo-leads", {
+                    body: { action: "delete_password_reset", client_id: client.id },
+                  }),
+                ]);
+              } catch (e) {
+                console.error("MySQL post-activation failed:", e);
+              }
             }
           }
         }
       } catch (e) {
-        console.error("Failed to mark portal as activated:", e);
+        console.error("Failed post-password update:", e);
       }
-      toast.success("Password impostata con successo!");
+      toast.success(isPasswordReset ? "Password aggiornata con successo!" : "Password impostata con successo!");
       navigate("/cliente", { replace: true });
     }
     setLoading(false);
@@ -188,8 +197,8 @@ export default function ClienteSetPassword() {
       <Card className="w-full max-w-md border-none shadow-xl">
         <CardHeader className="text-center">
           <img src={petHotelLogo} alt="Pet Hotel Manager" className="mx-auto mb-4 h-14 w-14 rounded-xl object-contain" />
-          <CardTitle className="text-2xl font-serif">Imposta Password</CardTitle>
-          <CardDescription>Scegli una password per accedere alla tua area riservata</CardDescription>
+          <CardTitle className="text-2xl font-serif">{isPasswordReset ? "Reimposta Password" : "Imposta Password"}</CardTitle>
+          <CardDescription>{isPasswordReset ? "Scegli una nuova password per il tuo account" : "Scegli una password per accedere alla tua area riservata"}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSetPassword} className="space-y-4">
