@@ -189,6 +189,37 @@ serve(async (req) => {
       });
     }
 
+    if (action === "delete_invites") {
+      const { client_id } = params;
+      await client.execute(`DELETE FROM client_invites WHERE client_id = ?`, [client_id]);
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "insert_password_reset") {
+      const { client_id, tenant_id, email, user_id, recovery_link } = params;
+      await client.execute(
+        `INSERT INTO password_resets (client_id, tenant_id, email, user_id, recovery_link)
+         VALUES (?, ?, ?, ?, ?)`,
+        [client_id, tenant_id, email, user_id || null, recovery_link || null]
+      );
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "delete_password_reset") {
+      const { client_id } = params;
+      await client.execute(`DELETE FROM password_resets WHERE client_id = ?`, [client_id]);
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Azione non valida" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
