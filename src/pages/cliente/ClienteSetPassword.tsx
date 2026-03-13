@@ -19,10 +19,12 @@ export default function ClienteSetPassword() {
 
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
+    let recoveryHandled = false;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
       if (event === "PASSWORD_RECOVERY") {
-        // Recovery token worked — always allow setting password
+        recoveryHandled = true;
+        clearTimeout(timeout);
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const { data: client } = await supabase
@@ -32,7 +34,6 @@ export default function ClienteSetPassword() {
             .single();
 
           if (client?.portal_activated) {
-            // This is a password reset (account already active)
             setIsPasswordReset(true);
           }
         }
@@ -42,6 +43,7 @@ export default function ClienteSetPassword() {
 
     // If no PASSWORD_RECOVERY event fires within 3s, check if user is already signed in
     timeout = setTimeout(async () => {
+      if (recoveryHandled) return;
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: client } = await supabase
