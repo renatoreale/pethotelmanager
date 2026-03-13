@@ -247,7 +247,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-              Tutto quello che ti serve
+              Funzionalità del gestionale per pensioni animali
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Un unico strumento per gestire ogni aspetto della tua pensione per animali
