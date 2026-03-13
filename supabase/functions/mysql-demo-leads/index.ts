@@ -159,11 +159,11 @@ serve(async (req) => {
     }
 
     if (action === "insert_invite") {
-      const { client_id, tenant_id, email, first_name, last_name, user_id } = params;
+      const { client_id, tenant_id, email, first_name, last_name, user_id, recovery_link } = params;
       await client.execute(
-        `INSERT INTO client_invites (client_id, tenant_id, email, first_name, last_name, user_id)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [client_id, tenant_id, email, first_name || null, last_name || null, user_id || null]
+        `INSERT INTO client_invites (client_id, tenant_id, email, first_name, last_name, user_id, recovery_link, activated)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 0)`,
+        [client_id, tenant_id, email, first_name || null, last_name || null, user_id || null, recovery_link || null]
       );
       return new Response(JSON.stringify({ success: true }), {
         status: 200,

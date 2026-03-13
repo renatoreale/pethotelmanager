@@ -68,6 +68,8 @@ Deno.serve(async (req) => {
 
     if (linkErr) throw linkErr;
 
+    const recoveryLink = linkData?.properties?.action_link;
+
     // Save a copy to MySQL
     try {
       const mysqlUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/mysql-demo-leads`;
@@ -85,17 +87,17 @@ Deno.serve(async (req) => {
           first_name: client.first_name,
           last_name: client.last_name,
           user_id: authData.user.id,
+          recovery_link: recoveryLink,
         }),
       });
     } catch (mysqlErr) {
       console.error("MySQL invite copy failed:", mysqlErr);
-      // Non-blocking: don't fail the invite if MySQL copy fails
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        recovery_link: linkData?.properties?.action_link,
+        recovery_link: recoveryLink,
         message: `Account creato per ${client.email}`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
