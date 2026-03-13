@@ -67,7 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfileAndRoles(session.user.id);
+        setProfileLoading(true);
+        fetchProfileAndRoles(session.user.id).then(() => setProfileLoading(false));
       }
       setLoading(false);
     });
