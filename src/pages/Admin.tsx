@@ -112,6 +112,7 @@ export default function Admin() {
         <TabsContent value="cancellazione-globale"><GlobalCancellationPolicyTab /></TabsContent>
         <TabsContent value="landing"><LandingConfigTab /></TabsContent>
         <TabsContent value="trial"><TrialDashboardTab /></TabsContent>
+        <TabsContent value="demo-leads"><DemoLeadsTab /></TabsContent>
       </Tabs>
     </div>
   );
