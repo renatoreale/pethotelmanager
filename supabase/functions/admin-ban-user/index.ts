@@ -36,19 +36,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { data: roles } = await userClient
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id);
-
-    if (!roles?.some((r) => r.role === "admin")) {
-      return new Response(JSON.stringify({ error: "Only admins can ban/unban users" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { user_id, ban } = await req.json();
+    const { user_id, ban, auto_expire } = await req.json();
     if (!user_id) {
       return new Response(JSON.stringify({ error: "user_id is required" }), {
         status: 400,
@@ -58,14 +46,42 @@ Deno.serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
+    // Allow auto-expire: trial user banning themselves
+    if (auto_expire && user_id === user.id) {
+      // Verify trial is actually expired
+      const { data: trialData } = await adminClient
+        .from("trial_registrations")
+        .select("trial_end, is_converted")
+        .eq("user_id", user_id)
+        .maybeSingle();
+
+      if (!trialData || trialData.is_converted || new Date(trialData.trial_end) > new Date()) {
+        return new Response(JSON.stringify({ error: "Trial not expired" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } else {
+      // Normal admin check
+      const { data: roles } = await userClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id);
+
+      if (!roles?.some((r) => r.role === "admin")) {
+        return new Response(JSON.stringify({ error: "Only admins can ban/unban users" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     if (ban) {
-      // Ban user by setting ban_duration to a very long time
       const { error } = await adminClient.auth.admin.updateUserById(user_id, {
-        ban_duration: "876000h", // ~100 years
+        ban_duration: "876000h",
       });
       if (error) throw error;
     } else {
-      // Unban user
       const { error } = await adminClient.auth.admin.updateUserById(user_id, {
         ban_duration: "none",
       });
