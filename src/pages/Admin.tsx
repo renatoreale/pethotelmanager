@@ -95,7 +95,7 @@ export default function Admin() {
             <Globe className="h-4 w-4" /> Landing Page
           </TabsTrigger>
           <TabsTrigger value="trial" className="gap-2">
-            <TrendingUp className="h-4 w-4" /> Trial & Conversioni
+            <TrendingUp className="h-4 w-4" /> Gestione Utenze
           </TabsTrigger>
         </TabsList>
 
