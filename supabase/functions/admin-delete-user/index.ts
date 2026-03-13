@@ -81,9 +81,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Delete user with service role
+    // Delete related data first, then auth user
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
+    // Clean up related tables before deleting auth user
+    await adminClient.from("trial_registrations").delete().eq("user_id", user_id);
+    await adminClient.from("user_roles").delete().eq("user_id", user_id);
+    await adminClient.from("profiles").delete().eq("user_id", user_id);
+
+    // Delete from auth.users so email can be re-used
     const { error: deleteError } = await adminClient.auth.admin.deleteUser(user_id);
 
     if (deleteError) {
