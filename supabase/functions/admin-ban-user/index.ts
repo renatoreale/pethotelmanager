@@ -41,56 +41,38 @@ Deno.serve(async (req) => {
       .select("role")
       .eq("user_id", user.id);
 
-    const hasPermission = roles?.some(
-      (r) => r.role === "admin" || r.role === "titolare"
-    );
-    if (!hasPermission) {
-      return new Response(JSON.stringify({ error: "Insufficient permissions" }), {
+    if (!roles?.some((r) => r.role === "admin")) {
+      return new Response(JSON.stringify({ error: "Only admins can ban/unban users" }), {
         status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { user_id, ban } = await req.json();
+    if (!user_id) {
+      return new Response(JSON.stringify({ error: "user_id is required" }), {
+        status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // List all auth users with full details
-    const allUsers: any[] = [];
-    let page = 1;
-    const perPage = 1000;
-    while (true) {
-      const { data: { users: authUsers }, error: listError } =
-        await adminClient.auth.admin.listUsers({ page, perPage });
-      if (listError) throw listError;
-      if (!authUsers || authUsers.length === 0) break;
-      allUsers.push(...authUsers);
-      if (authUsers.length < perPage) break;
-      page++;
+    if (ban) {
+      // Ban user by setting ban_duration to a very long time
+      const { error } = await adminClient.auth.admin.updateUserById(user_id, {
+        ban_duration: "876000h", // ~100 years
+      });
+      if (error) throw error;
+    } else {
+      // Unban user
+      const { error } = await adminClient.auth.admin.updateUserById(user_id, {
+        ban_duration: "none",
+      });
+      if (error) throw error;
     }
 
-    // Return detailed user info
-    const emails: Record<string, string> = {};
-    const userDetails: Record<string, {
-      email: string;
-      created_at: string;
-      confirmed_at: string | null;
-      banned_until: string | null;
-      last_sign_in_at: string | null;
-      user_metadata: Record<string, any>;
-    }> = {};
-
-    for (const u of allUsers) {
-      emails[u.id] = u.email || "";
-      userDetails[u.id] = {
-        email: u.email || "",
-        created_at: u.created_at,
-        confirmed_at: u.email_confirmed_at || null,
-        banned_until: u.banned_until || null,
-        last_sign_in_at: u.last_sign_in_at || null,
-        user_metadata: u.user_metadata || {},
-      };
-    }
-
-    return new Response(JSON.stringify({ emails, userDetails }), {
+    return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
