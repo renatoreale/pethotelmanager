@@ -32,7 +32,6 @@ serve(async (req) => {
       });
     }
 
-    // lastName is required for prova_gratuita, optional for demo_live
     if (resolvedLeadType === "prova_gratuita" && (!lastName || lastName.trim().length < 2)) {
       return new Response(JSON.stringify({ error: "Il cognome deve avere almeno 2 caratteri" }), {
         status: 400,
@@ -55,7 +54,6 @@ serve(async (req) => {
       });
     }
 
-    // Phone validation (required for prova_gratuita, optional for demo_live)
     if (resolvedLeadType === "prova_gratuita") {
       if (!phone) {
         return new Response(JSON.stringify({ error: "Il telefono è obbligatorio" }), {
@@ -72,29 +70,31 @@ serve(async (req) => {
       }
     }
 
+    // Write to MySQL via mysql-demo-leads function
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const mysqlRes = await fetch(`${SUPABASE_URL}/functions/v1/mysql-demo-leads`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+      body: JSON.stringify({
+        action: "insert",
+        full_name: firstName.trim(),
+        last_name: lastName?.trim() || null,
+        email: email.trim().toLowerCase(),
+        phone: phone || null,
+        lead_type: resolvedLeadType,
+        pensione_name: pensioneName?.trim() || null,
+        message: message?.trim() || null,
+      }),
+    });
 
-    const insertData: Record<string, unknown> = {
-      full_name: firstName.trim(),
-      last_name: lastName?.trim() || null,
-      phone: phone || null,
-      email: email.trim().toLowerCase(),
-      privacy_accepted: true,
-      confirmed: false,
-      lead_type: resolvedLeadType,
-      pensione_name: pensioneName?.trim() || null,
-      message: message?.trim() || null,
-    };
-
-    const { error: insertError } = await supabase
-      .from("demo_leads")
-      .insert(insertData);
-
-    if (insertError) {
-      console.error("Insert error:", insertError);
+    if (!mysqlRes.ok) {
+      const errText = await mysqlRes.text();
+      console.error("MySQL insert error:", errText);
       return new Response(JSON.stringify({ error: "Errore nel salvataggio della richiesta" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

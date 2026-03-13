@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Users, CheckCircle2, Clock, Send, Loader2, Copy, Video, Play } from "lucide-react";
@@ -14,36 +14,49 @@ import { useState } from "react";
 
 type LeadType = "all" | "demo_live" | "prova_gratuita";
 
+interface DemoLead {
+  id: string;
+  full_name: string;
+  last_name: string | null;
+  email: string;
+  phone: string | null;
+  confirmed: number | boolean;
+  confirmed_at: string | null;
+  token: string | null;
+  lead_type: string;
+  pensione_name: string | null;
+  message: string | null;
+  created_at: string;
+}
+
 export function DemoLeadsTab() {
   const queryClient = useQueryClient();
-  const [activationModal, setActivationModal] = useState<{ open: boolean; lead: any | null }>({ open: false, lead: null });
+  const [activationModal, setActivationModal] = useState<{ open: boolean; lead: (DemoLead & { activationLink?: string }) | null }>({ open: false, lead: null });
   const [activeTab, setActiveTab] = useState<LeadType>("all");
 
   const { data: leads, isLoading } = useQuery({
     queryKey: ["demo-leads"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("demo_leads")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.functions.invoke("mysql-demo-leads", {
+        body: { action: "list" },
+      });
       if (error) throw error;
-      return data;
+      return (data?.data || []) as DemoLead[];
     },
   });
 
   const approveMutation = useMutation({
-    mutationFn: async (lead: any) => {
-      const { error } = await supabase
-        .from("demo_leads")
-        .update({ confirmed: true, confirmed_at: new Date().toISOString() })
-        .eq("id", lead.id);
+    mutationFn: async (lead: DemoLead) => {
+      const { data, error } = await supabase.functions.invoke("mysql-demo-leads", {
+        body: { action: "approve", id: lead.id },
+      });
       if (error) throw error;
-      return lead;
+      return data?.data || lead;
     },
-    onSuccess: (lead) => {
+    onSuccess: (updatedLead) => {
       const baseUrl = window.location.origin;
-      const link = `${baseUrl}/confirm-demo?token=${lead.token}`;
-      setActivationModal({ open: true, lead: { ...lead, activationLink: link } });
+      const link = `${baseUrl}/confirm-demo?token=${updatedLead.token}`;
+      setActivationModal({ open: true, lead: { ...updatedLead, activationLink: link } });
       queryClient.invalidateQueries({ queryKey: ["demo-leads"] });
     },
     onError: (error: any) => {
@@ -58,20 +71,19 @@ export function DemoLeadsTab() {
     }
   };
 
+  const isConfirmed = (lead: DemoLead) => lead.confirmed === 1 || lead.confirmed === true;
+
   const filteredLeads = leads?.filter((l) => {
     if (activeTab === "all") return true;
-    const leadType = (l as any).lead_type || "prova_gratuita";
-    return leadType === activeTab;
+    return (l.lead_type || "prova_gratuita") === activeTab;
   });
 
-  const demoLiveCount = leads?.filter((l) => (l as any).lead_type === "demo_live").length ?? 0;
-  const provaGratuitaCount = leads?.filter((l) => (l as any).lead_type !== "demo_live").length ?? 0;
-  const confirmedCount = filteredLeads?.filter((l) => l.confirmed).length ?? 0;
-  const totalFiltered = filteredLeads?.length ?? 0;
+  const demoLiveCount = leads?.filter((l) => l.lead_type === "demo_live").length ?? 0;
+  const provaGratuitaCount = leads?.filter((l) => l.lead_type !== "demo_live").length ?? 0;
+  const pendingCount = leads?.filter((l) => !isConfirmed(l)).length ?? 0;
 
-  const renderLeadTypeBadge = (lead: any) => {
-    const type = lead.lead_type || "prova_gratuita";
-    if (type === "demo_live") {
+  const renderLeadTypeBadge = (lead: DemoLead) => {
+    if (lead.lead_type === "demo_live") {
       return (
         <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
           <Video className="h-3 w-3 mr-1" /> Demo Live
@@ -126,7 +138,7 @@ export function DemoLeadsTab() {
             <div className="flex items-center gap-3">
               <Clock className="h-8 w-8 text-orange-500" />
               <div>
-                <p className="text-2xl font-bold">{(leads?.length ?? 0) - (leads?.filter(l => l.confirmed).length ?? 0)}</p>
+                <p className="text-2xl font-bold">{pendingCount}</p>
                 <p className="text-sm text-muted-foreground">In attesa</p>
               </div>
             </div>
@@ -137,7 +149,7 @@ export function DemoLeadsTab() {
       <Card>
         <CardHeader>
           <CardTitle>Richieste Demo</CardTitle>
-          <CardDescription>Approva le richieste e invia manualmente il link di attivazione</CardDescription>
+          <CardDescription>Gestione richieste demo live e prove gratuite (database MySQL esterno)</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as LeadType)} className="mb-4">
@@ -176,9 +188,9 @@ export function DemoLeadsTab() {
                       <TableCell>{lead.last_name || "-"}</TableCell>
                       <TableCell>{lead.email}</TableCell>
                       <TableCell>{lead.phone || "-"}</TableCell>
-                      <TableCell>{(lead as any).pensione_name || "-"}</TableCell>
+                      <TableCell>{lead.pensione_name || "-"}</TableCell>
                       <TableCell>
-                        {lead.confirmed ? (
+                        {isConfirmed(lead) ? (
                           <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
                             <CheckCircle2 className="h-3 w-3 mr-1" /> Approvata
                           </Badge>
@@ -192,7 +204,7 @@ export function DemoLeadsTab() {
                         {format(new Date(lead.created_at), "dd MMM yyyy HH:mm", { locale: it })}
                       </TableCell>
                       <TableCell>
-                        {!lead.confirmed ? (
+                        {!isConfirmed(lead) ? (
                           <Button
                             size="sm"
                             onClick={() => approveMutation.mutate(lead)}
