@@ -132,6 +132,29 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!client?.id) return;
+    setResending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("invite-client", {
+        body: { client_id: client.id, action: "reset_password" },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      if (data?.recovery_link) {
+        await navigator.clipboard.writeText(data.recovery_link);
+        toast.success("Link reset password generato e copiato negli appunti!");
+      } else {
+        toast.success("Reset password generato");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Errore nel reset della password");
+    } finally {
+      setResending(false);
+    }
+  };
+
   // Load existing cats when editing
   useEffect(() => {
     if (isEditing && existingCats && existingCats.length > 0) {
