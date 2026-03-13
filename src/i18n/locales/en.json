@@ -516,7 +516,10 @@
     "updating": "Updating...",
     "passwordUpdated": "Password updated successfully!",
     "invalidLink": "Invalid or expired link",
-    "hasAccountLogin": "Already have an account? Login"
+    "hasAccountLogin": "Already have an account? Login",
+    "resendConfirmation": "Resend confirmation email",
+    "resendSuccess": "Confirmation email resent! Check your inbox.",
+    "resendEnterEmail": "Please enter your email in the field above first"
   },
   "days": {
     "monday": "Monday",
