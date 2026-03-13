@@ -51,7 +51,20 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, "") || "";
     const frontendUrl = origin || "https://pethotelmanager.lovable.app";
     const confirmUrl = `${frontendUrl}/confirm-demo?token=${lead.token}`;
-    const requestRunId = crypto.randomUUID();
+    const requestRunId =
+      req.headers.get("x-lovable-run-id") ||
+      req.headers.get("x-run-id") ||
+      req.headers.get("x-request-id") ||
+      req.headers.get("sb-request-id") ||
+      crypto.randomUUID();
+
+    console.log("send-demo-validation run context", {
+      requestRunId,
+      xLovableRunId: req.headers.get("x-lovable-run-id"),
+      xRunId: req.headers.get("x-run-id"),
+      xRequestId: req.headers.get("x-request-id"),
+      sbRequestId: req.headers.get("sb-request-id"),
+    });
 
     const emailBody = `
       <!DOCTYPE html>
