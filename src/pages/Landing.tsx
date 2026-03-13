@@ -117,7 +117,7 @@ function DemoRequestForm() {
             <Textarea id="demo-message" maxLength={500} rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Di cosa hai bisogno? Quanti animali gestisci?" />
           </div>
           <Button type="submit" className="w-full gap-2" size="lg" disabled={sending}>
-            <Send className="h-4 w-4" /> {sending ? "Invio in corso..." : "Richiedi Demo Gratuita"}
+            <Send className="h-4 w-4" /> {sending ? "Invio in corso..." : "Richiedi Demo Live Gratuita"}
           </Button>
         </form>
       </CardContent>
@@ -188,7 +188,7 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-3">
             <a href="#demo">
-              <Button variant="ghost" size="sm">Demo Gratuita</Button>
+              <Button variant="ghost" size="sm">Demo Live Gratuita</Button>
             </a>
             <Link to="/login">
               <Button variant="ghost" size="sm">Accedi</Button>
