@@ -72,6 +72,7 @@ function DemoRequestForm() {
           pensioneName: form.pensione_name,
           message: form.message,
           leadType: "demo_live",
+          baseUrl: window.location.origin,
         },
       });
       if (error) throw error;

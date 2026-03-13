@@ -92,7 +92,7 @@ export default function RegisterTrial() {
 
     try {
       const { error: fnError } = await supabase.functions.invoke("send-demo-validation", {
-        body: { email, firstName, lastName, phone },
+        body: { email, firstName, lastName, phone, baseUrl: window.location.origin },
       });
 
       if (fnError) {
