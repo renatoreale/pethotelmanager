@@ -164,7 +164,7 @@ Deno.serve(async (req) => {
       }
 
       try {
-        await sendLovableEmail(
+        const sendResponse = await sendLovableEmail(
           {
             run_id: payload.run_id,
             to: payload.to,
@@ -191,6 +191,11 @@ Deno.serve(async (req) => {
           template_name: payload.label || queue,
           recipient_email: payload.to,
           status: 'sent',
+          metadata: {
+            queue,
+            queue_message_id: msg.msg_id,
+            send_response: sendResponse ?? null,
+          },
         })
 
         // Delete from queue
