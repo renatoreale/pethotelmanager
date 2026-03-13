@@ -31,7 +31,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Plus, Trash2, Cat, Dog, PawPrint } from "lucide-react";
+import { Plus, Trash2, Cat, Dog, PawPrint, RefreshCw } from "lucide-react";
 import { useCreateClient, useUpdateClient, type Client } from "@/hooks/useClients";
 import { useCreateCat, useCats, useDeleteCat, useUpdateCat } from "@/hooks/useCats";
 import { supabase } from "@/integrations/supabase/client";
@@ -107,6 +107,30 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   const defaultAnimalType: PetType | undefined = pet.petType === "entrambi" ? undefined : pet.petType;
   const [cats, setCats] = useState<InlineCat[]>([emptyCat(defaultAnimalType)]);
   const [saving, setSaving] = useState(false);
+  const [resending, setResending] = useState(false);
+
+  const handleResendInvite = async () => {
+    if (!client?.id) return;
+    setResending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("invite-client", {
+        body: { client_id: client.id, action: "resend" },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      if (data?.recovery_link) {
+        await navigator.clipboard.writeText(data.recovery_link);
+        toast.success("Nuovo link generato e copiato negli appunti!");
+      } else {
+        toast.success("Nuovo invito generato");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Errore nel reinvio dell'invito");
+    } finally {
+      setResending(false);
+    }
+  };
 
   // Load existing cats when editing
   useEffect(() => {
@@ -364,6 +388,26 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                 )} />
               )}
             </div>
+
+            {/* Resend invite */}
+            {isEditing && client?.user_id && client?.email && (
+              <div className="border rounded-lg p-3 bg-muted/30 flex items-center justify-between">
+                <div className="text-sm">
+                  <p className="font-medium">Portale Clienti</p>
+                  <p className="text-muted-foreground text-xs">Account attivo per {client.email}</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResendInvite}
+                  disabled={resending}
+                >
+                  <RefreshCw className={`mr-1 h-3 w-3 ${resending ? "animate-spin" : ""}`} />
+                  {resending ? "Invio..." : "Rimanda Invito"}
+                </Button>
+              </div>
+            )}
 
             {/* Cats Section */}
             <Separator />

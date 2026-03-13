@@ -59,9 +59,20 @@ serve(async (req) => {
         first_name VARCHAR(255),
         last_name VARCHAR(255),
         user_id VARCHAR(36),
+        recovery_link TEXT,
+        activated TINYINT(1) NOT NULL DEFAULT 0,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Add columns if missing (for existing client_invites tables)
+    for (const col of ["recovery_link TEXT", "activated TINYINT(1) NOT NULL DEFAULT 0"]) {
+      try {
+        await client.execute(`ALTER TABLE client_invites ADD COLUMN ${col}`);
+      } catch (_) {
+        // column already exists
+      }
+    }
 
     // Add columns if missing (for existing tables)
     for (const col of ["activation_link TEXT", "expires_at DATETIME"]) {
@@ -148,11 +159,11 @@ serve(async (req) => {
     }
 
     if (action === "insert_invite") {
-      const { client_id, tenant_id, email, first_name, last_name, user_id } = params;
+      const { client_id, tenant_id, email, first_name, last_name, user_id, recovery_link } = params;
       await client.execute(
-        `INSERT INTO client_invites (client_id, tenant_id, email, first_name, last_name, user_id)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [client_id, tenant_id, email, first_name || null, last_name || null, user_id || null]
+        `INSERT INTO client_invites (client_id, tenant_id, email, first_name, last_name, user_id, recovery_link, activated)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 0)`,
+        [client_id, tenant_id, email, first_name || null, last_name || null, user_id || null, recovery_link || null]
       );
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
