@@ -147,6 +147,19 @@ serve(async (req) => {
       });
     }
 
+    if (action === "insert_invite") {
+      const { client_id, tenant_id, email, first_name, last_name, user_id } = params;
+      await client.execute(
+        `INSERT INTO client_invites (client_id, tenant_id, email, first_name, last_name, user_id)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [client_id, tenant_id, email, first_name || null, last_name || null, user_id || null]
+      );
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Azione non valida" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
