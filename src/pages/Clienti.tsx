@@ -179,7 +179,6 @@ export default function Clienti() {
                               title={t("clients.inviteTitle")}
                               onClick={() => {
                                 setInviteClient(client);
-                                setInviteResult(null);
                               }}
                             >
                               <Mail className="h-4 w-4 text-primary" />
