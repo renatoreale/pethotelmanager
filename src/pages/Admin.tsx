@@ -98,6 +98,9 @@ export default function Admin() {
           <TabsTrigger value="trial" className="gap-2">
             <TrendingUp className="h-4 w-4" /> Gestione Utenze
           </TabsTrigger>
+          <TabsTrigger value="demo-leads" className="gap-2">
+            <UserCheck className="h-4 w-4" /> Richieste Demo
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pensioni"><PensioniTab /></TabsContent>
