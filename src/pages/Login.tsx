@@ -77,23 +77,10 @@ export default function Login() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? t("auth.loginLoading") : t("auth.loginButton")}
             </Button>
-            <div className="flex justify-between text-sm">
-              <Link to="/register" className="text-primary hover:underline">{t("auth.register")}</Link>
+            <div className="flex justify-end text-sm">
               <Link to="/forgot-password" className="text-muted-foreground hover:underline">{t("auth.forgotPassword")}</Link>
             </div>
           </form>
-          <div className="mt-4 border-t pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full gap-2 text-muted-foreground"
-              onClick={handleResendConfirmation}
-              disabled={resending}
-            >
-              <MailCheck className="h-4 w-4" />
-              {resending ? t("auth.sending") : t("auth.resendConfirmation")}
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </div>
