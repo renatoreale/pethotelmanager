@@ -188,8 +188,24 @@ export default function Landing() {
 
   const trialDays = config?.trial_days || 14;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Pet Hotel Manager",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "Software gestionale completo per pensioni per cani e gatti. Gestisci prenotazioni, pagamenti, clienti e animali.",
+    "offers": {
+      "@type": "AggregateOffer",
+      "priceCurrency": "EUR",
+      "lowPrice": STRIPE_TIERS.base.priceYearly,
+      "highPrice": STRIPE_TIERS.enterprise.priceYearly,
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {/* Navbar */}
       <nav className={`fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b transition-transform duration-300 ${showNav ? "translate-y-0" : "-translate-y-full"}`}>
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
@@ -215,15 +231,15 @@ export default function Landing() {
         <div className="relative flex flex-col items-center text-center px-6">
           <img
             src={landingLogo}
-            alt="Pet Hotel Manager"
+            alt="Pet Hotel Manager - Software gestionale per pensioni per cani e gatti"
             className="w-[340px] md:w-[440px] lg:w-[500px] h-auto object-contain drop-shadow-xl"
           />
           <Badge className="mt-6 mb-4 bg-primary/10 text-primary border-primary/20 hover:bg-primary/15 text-sm px-4 py-1.5">
             <Zap className="h-3.5 w-3.5 mr-1.5" /> {trialDays} giorni di prova gratuita
           </Badge>
           <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground leading-tight mb-3">
-            Pet Hotel Manager
-            <span className="text-primary block">pensione per animali</span>
+            Software Gestionale per
+            <span className="text-primary block">Pensioni per Cani e Gatti</span>
           </h1>
           <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-8">
             {config?.hero_description || "Gestisci prenotazioni, pagamenti, clienti e animali in un unico posto. Supporta pensioni per gatti, cani o entrambi."}
@@ -247,7 +263,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-              Tutto quello che ti serve
+              Funzionalità del gestionale per pensioni animali
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Un unico strumento per gestire ogni aspetto della tua pensione per animali
