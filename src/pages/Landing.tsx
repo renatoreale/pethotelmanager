@@ -63,7 +63,17 @@ function DemoRequestForm() {
     }
     setSending(true);
     try {
-      const { error } = await supabase.functions.invoke("request-demo", { body: form });
+      const { error } = await supabase.functions.invoke("send-demo-validation", {
+        body: {
+          firstName: form.name,
+          lastName: "",
+          email: form.email,
+          phone: form.phone,
+          pensioneName: form.pensione_name,
+          message: form.message,
+          leadType: "demo_live",
+        },
+      });
       if (error) throw error;
       setSent(true);
       toast.success("Richiesta inviata! Ti contatteremo a breve.");

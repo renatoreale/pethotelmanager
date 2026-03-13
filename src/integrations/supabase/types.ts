@@ -586,6 +586,9 @@ export type Database = {
           full_name: string
           id: string
           last_name: string | null
+          lead_type: string
+          message: string | null
+          pensione_name: string | null
           phone: string | null
           privacy_accepted: boolean
           token: string | null
@@ -598,6 +601,9 @@ export type Database = {
           full_name: string
           id?: string
           last_name?: string | null
+          lead_type?: string
+          message?: string | null
+          pensione_name?: string | null
           phone?: string | null
           privacy_accepted?: boolean
           token?: string | null
@@ -610,6 +616,9 @@ export type Database = {
           full_name?: string
           id?: string
           last_name?: string | null
+          lead_type?: string
+          message?: string | null
+          pensione_name?: string | null
           phone?: string | null
           privacy_accepted?: boolean
           token?: string | null

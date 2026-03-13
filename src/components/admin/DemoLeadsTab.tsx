@@ -5,15 +5,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { Users, CheckCircle2, Clock, Send, Loader2, Copy } from "lucide-react";
+import { Users, CheckCircle2, Clock, Send, Loader2, Copy, Video, Play } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+
+type LeadType = "all" | "demo_live" | "prova_gratuita";
 
 export function DemoLeadsTab() {
   const queryClient = useQueryClient();
   const [activationModal, setActivationModal] = useState<{ open: boolean; lead: any | null }>({ open: false, lead: null });
+  const [activeTab, setActiveTab] = useState<LeadType>("all");
 
   const { data: leads, isLoading } = useQuery({
     queryKey: ["demo-leads"],
@@ -29,7 +33,6 @@ export function DemoLeadsTab() {
 
   const approveMutation = useMutation({
     mutationFn: async (lead: any) => {
-      // Mark as confirmed directly
       const { error } = await supabase
         .from("demo_leads")
         .update({ confirmed: true, confirmed_at: new Date().toISOString() })
@@ -55,18 +58,42 @@ export function DemoLeadsTab() {
     }
   };
 
-  const confirmedCount = leads?.filter(l => l.confirmed).length ?? 0;
-  const totalCount = leads?.length ?? 0;
+  const filteredLeads = leads?.filter((l) => {
+    if (activeTab === "all") return true;
+    const leadType = (l as any).lead_type || "prova_gratuita";
+    return leadType === activeTab;
+  });
+
+  const demoLiveCount = leads?.filter((l) => (l as any).lead_type === "demo_live").length ?? 0;
+  const provaGratuitaCount = leads?.filter((l) => (l as any).lead_type !== "demo_live").length ?? 0;
+  const confirmedCount = filteredLeads?.filter((l) => l.confirmed).length ?? 0;
+  const totalFiltered = filteredLeads?.length ?? 0;
+
+  const renderLeadTypeBadge = (lead: any) => {
+    const type = lead.lead_type || "prova_gratuita";
+    if (type === "demo_live") {
+      return (
+        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
+          <Video className="h-3 w-3 mr-1" /> Demo Live
+        </Badge>
+      );
+    }
+    return (
+      <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">
+        <Play className="h-3 w-3 mr-1" /> Prova Gratuita
+      </Badge>
+    );
+  };
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <Users className="h-8 w-8 text-primary" />
               <div>
-                <p className="text-2xl font-bold">{totalCount}</p>
+                <p className="text-2xl font-bold">{leads?.length ?? 0}</p>
                 <p className="text-sm text-muted-foreground">Richieste totali</p>
               </div>
             </div>
@@ -75,10 +102,21 @@ export function DemoLeadsTab() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="h-8 w-8 text-green-500" />
+              <Video className="h-8 w-8 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold">{confirmedCount}</p>
-                <p className="text-sm text-muted-foreground">Approvate</p>
+                <p className="text-2xl font-bold">{demoLiveCount}</p>
+                <p className="text-sm text-muted-foreground">Demo Live</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <Play className="h-8 w-8 text-purple-500" />
+              <div>
+                <p className="text-2xl font-bold">{provaGratuitaCount}</p>
+                <p className="text-sm text-muted-foreground">Prova Gratuita</p>
               </div>
             </div>
           </CardContent>
@@ -88,8 +126,8 @@ export function DemoLeadsTab() {
             <div className="flex items-center gap-3">
               <Clock className="h-8 w-8 text-orange-500" />
               <div>
-                <p className="text-2xl font-bold">{totalCount - confirmedCount}</p>
-                <p className="text-sm text-muted-foreground">In attesa di approvazione</p>
+                <p className="text-2xl font-bold">{(leads?.length ?? 0) - (leads?.filter(l => l.confirmed).length ?? 0)}</p>
+                <p className="text-sm text-muted-foreground">In attesa</p>
               </div>
             </div>
           </CardContent>
@@ -102,31 +140,43 @@ export function DemoLeadsTab() {
           <CardDescription>Approva le richieste e invia manualmente il link di attivazione</CardDescription>
         </CardHeader>
         <CardContent>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as LeadType)} className="mb-4">
+            <TabsList>
+              <TabsTrigger value="all">Tutte ({leads?.length ?? 0})</TabsTrigger>
+              <TabsTrigger value="demo_live">Demo Live ({demoLiveCount})</TabsTrigger>
+              <TabsTrigger value="prova_gratuita">Prova Gratuita ({provaGratuitaCount})</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
           {isLoading ? (
             <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
-          ) : !leads?.length ? (
-            <div className="py-12 text-center text-muted-foreground">Nessuna richiesta demo</div>
+          ) : !filteredLeads?.length ? (
+            <div className="py-12 text-center text-muted-foreground">Nessuna richiesta</div>
           ) : (
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Tipo</TableHead>
                     <TableHead>Nome</TableHead>
                     <TableHead>Cognome</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Telefono</TableHead>
+                    <TableHead>Pensione</TableHead>
                     <TableHead>Stato</TableHead>
-                    <TableHead>Data richiesta</TableHead>
+                    <TableHead>Data</TableHead>
                     <TableHead>Azioni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {leads.map((lead) => (
+                  {filteredLeads.map((lead) => (
                     <TableRow key={lead.id}>
+                      <TableCell>{renderLeadTypeBadge(lead)}</TableCell>
                       <TableCell className="font-medium">{lead.full_name}</TableCell>
                       <TableCell>{lead.last_name || "-"}</TableCell>
                       <TableCell>{lead.email}</TableCell>
                       <TableCell>{lead.phone || "-"}</TableCell>
+                      <TableCell>{(lead as any).pensione_name || "-"}</TableCell>
                       <TableCell>
                         {lead.confirmed ? (
                           <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
