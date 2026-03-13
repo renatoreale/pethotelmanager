@@ -17,12 +17,12 @@ const corsHeaders = {
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Conferma la tua email',
-  invite: 'Sei stato invitato su PetHotelManager',
-  magiclink: 'Il tuo link di accesso',
-  recovery: 'Reimposta la tua password',
-  email_change: 'Conferma il cambio email',
-  reauthentication: 'Il tuo codice di verifica',
+  signup: 'Confirm your email',
+  invite: "You've been invited",
+  magiclink: 'Your login link',
+  recovery: 'Reset your password',
+  email_change: 'Confirm your new email',
+  reauthentication: 'Your verification code',
 }
 
 // Template mapping
@@ -36,10 +36,10 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "PetHotelManager"
+const SITE_NAME = "pethotelmanager"
 const SENDER_DOMAIN = "notify.pethotelmanager.com"
 const ROOT_DOMAIN = "pethotelmanager.com"
-const FROM_DOMAIN = "notify.pethotelmanager.com" // Domain shown in From address (may be root or sender subdomain)
+const FROM_DOMAIN = "pethotelmanager.com" // Domain shown in From address (may be root or sender subdomain)
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
