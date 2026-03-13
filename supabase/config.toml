@@ -5,3 +5,5 @@ project_id = "ukvlnokihyghgbssamea"
     verify_jwt = false
   [functions.process-email-queue]
     verify_jwt = false
+  [functions.send-demo-validation]
+    verify_jwt = false
