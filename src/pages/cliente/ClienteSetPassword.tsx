@@ -7,22 +7,66 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import petHotelLogo from "@/assets/pethotelmanager_logo.png";
+import { XCircle, Loader2 } from "lucide-react";
 
 export default function ClienteSetPassword() {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [status, setStatus] = useState<"checking" | "ready" | "already_activated" | "expired">("checking");
 
   useEffect(() => {
-    // Listen for PASSWORD_RECOVERY event from the recovery link
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
       if (event === "PASSWORD_RECOVERY") {
-        setReady(true);
+        // Recovery token worked — check if already activated
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: client } = await supabase
+            .from("clients")
+            .select("portal_activated")
+            .eq("user_id", user.id)
+            .single();
+
+          if (client?.portal_activated) {
+            setStatus("already_activated");
+            return;
+          }
+        }
+        setStatus("ready");
       }
     });
-    return () => subscription.unsubscribe();
+
+    // If no PASSWORD_RECOVERY event fires within 3s, check if user is already signed in
+    timeout = setTimeout(async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // User is signed in (from a previous click) — check portal_activated
+        const { data: client } = await supabase
+          .from("clients")
+          .select("portal_activated")
+          .eq("user_id", user.id)
+          .single();
+
+        if (client?.portal_activated) {
+          setStatus("already_activated");
+        } else if (client) {
+          // Not yet activated — allow setting password
+          setStatus("ready");
+        } else {
+          setStatus("expired");
+        }
+      } else {
+        setStatus("expired");
+      }
+    }, 3000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const handleSetPassword = async (e: React.FormEvent) => {
@@ -42,7 +86,7 @@ export default function ClienteSetPassword() {
     if (error) {
       toast.error(error.message);
     } else {
-      // Mark portal as activated
+      // Mark portal as activated in Supabase
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
@@ -50,6 +94,26 @@ export default function ClienteSetPassword() {
             .from("clients")
             .update({ portal_activated: true })
             .eq("user_id", user.id);
+
+          // Mark as activated in MySQL too
+          const { data: client } = await supabase
+            .from("clients")
+            .select("id, tenant_id, email, first_name, last_name")
+            .eq("user_id", user.id)
+            .single();
+
+          if (client) {
+            try {
+              await supabase.functions.invoke("mysql-demo-leads", {
+                body: {
+                  action: "activate_invite",
+                  client_id: client.id,
+                },
+              });
+            } catch (e) {
+              console.error("MySQL activate failed:", e);
+            }
+          }
         }
       } catch (e) {
         console.error("Failed to mark portal as activated:", e);
@@ -60,15 +124,56 @@ export default function ClienteSetPassword() {
     setLoading(false);
   };
 
-  if (!ready) {
+  if (status === "checking") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted px-4">
         <Card className="w-full max-w-md border-none shadow-xl">
           <CardHeader className="text-center">
             <img src={petHotelLogo} alt="Pet Hotel Manager" className="mx-auto mb-4 h-14 w-14 rounded-xl object-contain" />
-            <CardTitle className="text-xl">Caricamento...</CardTitle>
+            <Loader2 className="mx-auto h-8 w-8 text-primary animate-spin mb-2" />
+            <CardTitle className="text-xl">Verifica in corso...</CardTitle>
             <CardDescription>
-              Verifica del link in corso. Se il link è scaduto, contatta la tua pensione per richiederne uno nuovo.
+              Stiamo verificando il tuo link di invito.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  if (status === "already_activated") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted px-4">
+        <Card className="w-full max-w-md border-none shadow-xl">
+          <CardHeader className="text-center">
+            <img src={petHotelLogo} alt="Pet Hotel Manager" className="mx-auto mb-4 h-14 w-14 rounded-xl object-contain" />
+            <CardTitle className="text-xl font-serif">Account già attivo</CardTitle>
+            <CardDescription>
+              Hai già impostato la password. Usa le tue credenziali per accedere all'area riservata.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button className="w-full" onClick={() => navigate("/cliente/login")}>
+              Accedi al Portale
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (status === "expired") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted px-4">
+        <Card className="w-full max-w-md border-none shadow-xl">
+          <CardHeader className="text-center">
+            <img src={petHotelLogo} alt="Pet Hotel Manager" className="mx-auto mb-4 h-14 w-14 rounded-xl object-contain" />
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+              <XCircle className="h-6 w-6 text-destructive" />
+            </div>
+            <CardTitle className="text-xl font-serif">Link scaduto</CardTitle>
+            <CardDescription>
+              Questo link non è più valido. Contatta la tua pensione per richiedere un nuovo invito.
             </CardDescription>
           </CardHeader>
         </Card>
