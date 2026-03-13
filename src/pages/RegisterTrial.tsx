@@ -37,8 +37,8 @@ export default function RegisterTrial() {
         email,
         password,
         options: {
-          data: { full_name: fullName },
-          emailRedirectTo: window.location.origin,
+          data: { full_name: fullName, is_trial: true, pet_type: petType },
+          emailRedirectTo: `${window.location.origin}/login`,
         },
       });
 

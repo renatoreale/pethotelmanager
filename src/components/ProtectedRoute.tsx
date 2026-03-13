@@ -23,7 +23,7 @@ const ROUTE_RESOURCE_MAP: Record<string, Resource> = {
 };
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, profileLoading, roles } = useAuth();
+  const { user, loading, profileLoading, roles, trialExpired } = useAuth();
   const { canRead, primaryRole } = usePermissions();
   const location = useLocation();
 
@@ -41,6 +41,36 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Trial expired — block access
+  if (trialExpired) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="text-center max-w-md space-y-4">
+          <div className="text-5xl">⏰</div>
+          <h1 className="text-xl font-bold text-foreground">Periodo di prova scaduto</h1>
+          <p className="text-muted-foreground">
+            Il tuo periodo di prova gratuita è terminato. Per continuare ad utilizzare Pet Hotel Manager, attiva un abbonamento.
+          </p>
+          <div className="flex flex-col gap-2">
+            <a href="mailto:marketing@pethotelmanager.com" className="text-primary hover:underline text-sm">
+              Contatta il supporto per attivare un piano
+            </a>
+            <button
+              onClick={async () => {
+                const { supabase } = await import("@/integrations/supabase/client");
+                await supabase.auth.signOut();
+                window.location.href = "/login";
+              }}
+              className="text-muted-foreground hover:underline text-sm"
+            >
+              Esci
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // If roles are loaded but empty, user has no role assigned — don't redirect loop

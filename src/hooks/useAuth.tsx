@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 type UserRole = "admin" | "ceo" | "titolare" | "manager" | "operatore";
 
@@ -15,6 +16,8 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   profileLoading: boolean;
+  trialExpired: boolean;
+  trialEnd: string | null;
   profile: {
     id: string;
     full_name: string | null;
@@ -39,6 +42,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [userTenants, setUserTenants] = useState<UserTenant[]>([]);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [trialExpired, setTrialExpired] = useState(false);
+  const [trialEnd, setTrialEnd] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -50,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           setProfileLoading(true);
           setTimeout(async () => {
-            await fetchProfileAndRoles(session.user.id);
+            await fetchProfileAndRoles(session.user);
             setProfileLoading(false);
           }, 0);
         } else {
@@ -58,6 +63,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRoles([]);
           setUserTenants([]);
           setProfileLoading(false);
+          setTrialExpired(false);
+          setTrialEnd(null);
         }
         setLoading(false);
       }
@@ -68,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         setProfileLoading(true);
-        fetchProfileAndRoles(session.user.id).then(() => setProfileLoading(false));
+        fetchProfileAndRoles(session.user).then(() => setProfileLoading(false));
       }
       setLoading(false);
     });
@@ -76,21 +83,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  async function fetchProfileAndRoles(userId: string) {
+  async function fetchProfileAndRoles(authUser: User) {
+    const userId = authUser.id;
+    
     const [profileRes, rolesRes, tenantsRes] = await Promise.all([
       supabase.from("profiles").select("id, full_name, tenant_id, avatar_url").eq("user_id", userId).single(),
       supabase.from("user_roles").select("role, tenant_id").eq("user_id", userId),
       supabase.from("tenants").select("id, name"),
     ]);
 
+    // If no roles and user has is_trial metadata, auto-provision
+    if ((!rolesRes.data || rolesRes.data.length === 0) && authUser.user_metadata?.is_trial) {
+      console.log("[useAuth] Trial user with no roles, provisioning...");
+      try {
+        const { data, error } = await supabase.functions.invoke("provision-trial");
+        if (error) {
+          console.error("Provision trial error:", error);
+        } else if (data?.success) {
+          console.log("[useAuth] Trial provisioned, refetching...");
+          // Refetch after provisioning
+          const [p2, r2, t2] = await Promise.all([
+            supabase.from("profiles").select("id, full_name, tenant_id, avatar_url").eq("user_id", userId).single(),
+            supabase.from("user_roles").select("role, tenant_id").eq("user_id", userId),
+            supabase.from("tenants").select("id, name"),
+          ]);
+          return applyProfileData(userId, p2, r2, t2);
+        }
+      } catch (e) {
+        console.error("Provision trial exception:", e);
+      }
+    }
+
+    await applyProfileData(userId, profileRes, rolesRes, tenantsRes);
+  }
+
+  async function applyProfileData(userId: string, profileRes: any, rolesRes: any, tenantsRes: any) {
     if (profileRes.data) {
       setProfile(profileRes.data);
     }
 
-    // Each user has a single role (simplified model)
     const userRoles: UserRole[] = [];
     const tenantList: UserTenant[] = [];
-    const tenantLookup = new Map(tenantsRes.data?.map((t) => [t.id, t.name]) || []);
+    const tenantLookup = new Map(tenantsRes.data?.map((t: any) => [t.id, t.name]) || []);
 
     if (rolesRes.data) {
       for (const r of rolesRes.data) {
@@ -99,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (r.tenant_id && !tenantList.find(t => t.id === r.tenant_id)) {
           tenantList.push({
             id: r.tenant_id,
-            name: tenantLookup.get(r.tenant_id) || "Pensione",
+            name: (tenantLookup.get(r.tenant_id) as string) || "Pensione",
           });
         }
       }
@@ -120,6 +154,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile({ ...profileRes.data, tenant_id: activeTenantId });
       }
     }
+
+    // Check trial expiration
+    if (activeTenantId) {
+      const { data: trialData } = await supabase
+        .from("trial_registrations")
+        .select("trial_end, is_converted")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (trialData && !trialData.is_converted) {
+        setTrialEnd(trialData.trial_end);
+        const now = new Date();
+        const end = new Date(trialData.trial_end);
+        if (now > end) {
+          setTrialExpired(true);
+          toast.error("Il periodo di prova è scaduto. Contatta il supporto per attivare un abbonamento.", { duration: 10000 });
+        }
+      }
+    }
   }
 
   const switchTenant = useCallback(async (tenantId: string) => {
@@ -136,7 +189,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setProfile({ ...profile, tenant_id: tenantId });
-    // Invalidate all queries so they refetch with the new tenant context
     queryClient.invalidateQueries();
   }, [profile, queryClient]);
 
@@ -151,11 +203,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
     setRoles([]);
     setUserTenants([]);
+    setTrialExpired(false);
+    setTrialEnd(null);
   };
 
   return (
     <AuthContext.Provider value={{ 
-      user, session, loading, profileLoading, profile, roles, 
+      user, session, loading, profileLoading, trialExpired, trialEnd,
+      profile, roles, 
       userTenants, activeTenant,
       hasRole, switchTenant, signOut 
     }}>
