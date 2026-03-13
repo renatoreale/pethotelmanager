@@ -31,6 +31,8 @@ import Presenze from "./pages/Presenze";
 import OccupazioneCasette from "./pages/OccupazioneCasette";
 import Admin from "./pages/Admin";
 import Landing from "./pages/Landing";
+import Privacy from "./pages/Privacy";
+import Termini from "./pages/Termini";
 import RegisterTrial from "./pages/RegisterTrial";
 import ConfirmDemo from "./pages/ConfirmDemo";
 import Statistiche from "./pages/Statistiche";
@@ -56,6 +58,8 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/landing" element={<Landing />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/termini" element={<Termini />} />
             <Route path="/register-trial" element={<RegisterTrial />} />
             <Route path="/confirm-demo" element={<ConfirmDemo />} />
             <Route path="/login" element={<Login />} />
