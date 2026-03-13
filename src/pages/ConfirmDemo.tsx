@@ -24,8 +24,8 @@ export default function ConfirmDemo() {
 
     const confirmLead = async () => {
       // Check token and confirm
-      const { data, error } = await supabase
-        .from("demo_leads")
+      const { data, error } = await (supabase
+        .from("demo_leads") as any)
         .update({ confirmed: true, confirmed_at: new Date().toISOString() })
         .eq("token", token)
         .eq("confirmed", false)
@@ -39,9 +39,8 @@ export default function ConfirmDemo() {
       }
 
       if (!data) {
-        // Maybe already confirmed
-        const { data: existing } = await supabase
-          .from("demo_leads")
+        const { data: existing } = await (supabase
+          .from("demo_leads") as any)
           .select("confirmed")
           .eq("token", token)
           .maybeSingle();

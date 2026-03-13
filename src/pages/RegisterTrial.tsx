@@ -35,9 +35,8 @@ export default function RegisterTrial() {
     setLoading(true);
 
     try {
-      // Save lead
-      const { data: lead, error: insertError } = await supabase
-        .from("demo_leads")
+      const { data: lead, error: insertError } = await (supabase
+        .from("demo_leads") as any)
         .insert({
           full_name: firstName,
           last_name: lastName,
