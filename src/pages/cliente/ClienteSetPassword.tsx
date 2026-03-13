@@ -15,13 +15,14 @@ export default function ClienteSetPassword() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"checking" | "ready" | "already_activated" | "expired">("checking");
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
 
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
       if (event === "PASSWORD_RECOVERY") {
-        // Recovery token worked — check if already activated
+        // Recovery token worked — always allow setting password
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const { data: client } = await supabase
@@ -31,8 +32,8 @@ export default function ClienteSetPassword() {
             .single();
 
           if (client?.portal_activated) {
-            setStatus("already_activated");
-            return;
+            // This is a password reset (account already active)
+            setIsPasswordReset(true);
           }
         }
         setStatus("ready");
@@ -43,7 +44,6 @@ export default function ClienteSetPassword() {
     timeout = setTimeout(async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // User is signed in (from a previous click) — check portal_activated
         const { data: client } = await supabase
           .from("clients")
           .select("portal_activated")
@@ -53,7 +53,6 @@ export default function ClienteSetPassword() {
         if (client?.portal_activated) {
           setStatus("already_activated");
         } else if (client) {
-          // Not yet activated — allow setting password
           setStatus("ready");
         } else {
           setStatus("expired");
