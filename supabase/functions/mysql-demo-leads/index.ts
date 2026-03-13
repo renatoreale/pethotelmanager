@@ -171,6 +171,18 @@ serve(async (req) => {
       });
     }
 
+    if (action === "activate_invite") {
+      const { client_id } = params;
+      await client.execute(
+        `UPDATE client_invites SET activated = 1 WHERE client_id = ? ORDER BY created_at DESC LIMIT 1`,
+        [client_id]
+      );
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Azione non valida" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
