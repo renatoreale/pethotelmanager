@@ -65,7 +65,7 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Insert demo lead (confirmed immediately since no email validation)
+    // Insert demo lead as NOT confirmed (pending admin approval)
     const { error: insertError } = await supabase
       .from("demo_leads")
       .insert({
@@ -74,8 +74,7 @@ serve(async (req) => {
         phone: phone || null,
         email,
         privacy_accepted: true,
-        confirmed: true,
-        confirmed_at: new Date().toISOString(),
+        confirmed: false,
       });
 
     if (insertError) {

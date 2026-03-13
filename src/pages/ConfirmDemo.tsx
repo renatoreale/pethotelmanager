@@ -23,7 +23,7 @@ export default function ConfirmDemo() {
     }
 
     const confirmLead = async () => {
-      // Check token and confirm
+      // Confirm the lead via token
       const { data, error } = await (supabase
         .from("demo_leads") as any)
         .update({ confirmed: true, confirmed_at: new Date().toISOString() })
@@ -62,11 +62,8 @@ export default function ConfirmDemo() {
       });
 
       if (loginError) {
-        // Redirect to login with pre-filled credentials
         toast.info("Usa le credenziali demo per accedere.");
-        setTimeout(() => {
-          navigate(`/login?demo=true`);
-        }, 2000);
+        setTimeout(() => navigate("/login?demo=true"), 2000);
       } else {
         toast.success("Accesso alla demo in corso...");
         setTimeout(() => navigate("/"), 1500);
@@ -87,8 +84,8 @@ export default function ConfirmDemo() {
               <div className="mx-auto mb-4">
                 <Loader2 className="h-10 w-10 text-primary animate-spin" />
               </div>
-              <CardTitle className="text-xl font-serif">Conferma in corso...</CardTitle>
-              <CardDescription>Stiamo verificando la tua richiesta demo.</CardDescription>
+              <CardTitle className="text-xl font-serif">Attivazione in corso...</CardTitle>
+              <CardDescription>Stiamo attivando il tuo accesso alla demo.</CardDescription>
             </>
           )}
 
@@ -97,7 +94,7 @@ export default function ConfirmDemo() {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
                 <CheckCircle2 className="h-8 w-8 text-green-600" />
               </div>
-              <CardTitle className="text-xl font-serif">Richiesta confermata!</CardTitle>
+              <CardTitle className="text-xl font-serif">Demo attivata!</CardTitle>
               <CardDescription>
                 Accesso automatico in corso... Verrai reindirizzato alla dashboard demo.
               </CardDescription>
@@ -109,9 +106,9 @@ export default function ConfirmDemo() {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
                 <CheckCircle2 className="h-8 w-8 text-blue-600" />
               </div>
-              <CardTitle className="text-xl font-serif">Già confermato</CardTitle>
+              <CardTitle className="text-xl font-serif">Già attivato</CardTitle>
               <CardDescription>
-                Questa richiesta demo è già stata confermata.
+                Il tuo accesso demo è già stato attivato. Puoi accedere direttamente.
               </CardDescription>
             </>
           )}
@@ -123,7 +120,7 @@ export default function ConfirmDemo() {
               </div>
               <CardTitle className="text-xl font-serif">Link non valido</CardTitle>
               <CardDescription>
-                Il link di conferma non è valido o è scaduto. Richiedi una nuova demo.
+                Il link di attivazione non è valido o è scaduto. Contattaci per assistenza.
               </CardDescription>
             </>
           )}
