@@ -13,6 +13,7 @@ const DEMO_EMAIL = "demo@pethotelmanager.com";
 const DEMO_PASSWORD = "DemoTest2026!";
 
 export default function RegisterTrial() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
