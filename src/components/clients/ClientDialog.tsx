@@ -31,7 +31,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Plus, Trash2, Cat, Dog, PawPrint } from "lucide-react";
+import { Plus, Trash2, Cat, Dog, PawPrint, RefreshCw } from "lucide-react";
 import { useCreateClient, useUpdateClient, type Client } from "@/hooks/useClients";
 import { useCreateCat, useCats, useDeleteCat, useUpdateCat } from "@/hooks/useCats";
 import { supabase } from "@/integrations/supabase/client";

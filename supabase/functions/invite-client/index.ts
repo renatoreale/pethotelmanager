@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
     const { data: { user: caller } } = await supabaseAdmin.auth.getUser(token);
     if (!caller) throw new Error("Non autorizzato");
 
-    const { client_id } = await req.json();
+    const { client_id, action } = await req.json();
     if (!client_id) throw new Error("client_id richiesto");
 
     // Get client data
@@ -34,6 +34,61 @@ Deno.serve(async (req) => {
 
     if (clientErr || !client) throw new Error("Cliente non trovato");
     if (!client.email) throw new Error("Il cliente non ha un indirizzo email");
+
+    const origin = req.headers.get("origin") || "";
+
+    // --- RESEND INVITE ---
+    if (action === "resend") {
+      if (!client.user_id) throw new Error("Il cliente non ha ancora un account. Crea prima l'invito.");
+
+      // Generate a new recovery link
+      const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+        type: "recovery",
+        email: client.email,
+        options: {
+          redirectTo: `${origin}/cliente/set-password`,
+        },
+      });
+
+      if (linkErr) throw linkErr;
+
+      const recoveryLink = linkData?.properties?.action_link;
+
+      // Save to MySQL
+      try {
+        const mysqlUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/mysql-demo-leads`;
+        await fetch(mysqlUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({
+            action: "insert_invite",
+            client_id,
+            tenant_id: client.tenant_id,
+            email: client.email,
+            first_name: client.first_name,
+            last_name: client.last_name,
+            user_id: client.user_id,
+            recovery_link: recoveryLink,
+          }),
+        });
+      } catch (mysqlErr) {
+        console.error("MySQL resend invite copy failed:", mysqlErr);
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          recovery_link: recoveryLink,
+          message: `Nuovo link generato per ${client.email}`,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // --- CREATE INVITE ---
     if (client.user_id) throw new Error("Il cliente ha già un account attivo");
 
     // Create auth user (email pre-confirmed)
@@ -56,8 +111,7 @@ Deno.serve(async (req) => {
 
     if (updateErr) throw updateErr;
 
-    // Generate password recovery link for the client to set their password
-    const origin = req.headers.get("origin") || "";
+    // Generate password recovery link
     const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
       email: client.email,
