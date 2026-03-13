@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import petHotelLogo from "@/assets/pethotelmanager_logo.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ const DEMO_EMAIL = "demo@pethotelmanager.com";
 const DEMO_PASSWORD = "DemoTest2026!";
 
 export default function RegisterTrial() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,8 +38,19 @@ export default function RegisterTrial() {
         email,
       });
 
+      // Auto-login with demo credentials
       setShowCredentials(true);
-      toast.success("Ecco le credenziali per accedere alla demo!");
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: DEMO_EMAIL,
+        password: DEMO_PASSWORD,
+      });
+
+      if (loginError) {
+        toast.error("Login automatico fallito. Usa le credenziali mostrate per accedere manualmente.");
+      } else {
+        toast.success("Accesso alla demo in corso...");
+        setTimeout(() => navigate("/"), 1500);
+      }
     } catch (e: any) {
       toast.error(e.message || "Errore durante la registrazione");
     } finally {
