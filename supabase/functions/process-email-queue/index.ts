@@ -223,6 +223,11 @@ Deno.serve(async (req) => {
           recipient_email: payload.to,
           status: 'failed',
           error_message: errorMsg.slice(0, 1000),
+          metadata: {
+            queue,
+            queue_message_id: msg.msg_id,
+            read_count: msg.read_ct,
+          },
         })
 
         if (isRateLimited(error)) {
