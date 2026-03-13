@@ -30,7 +30,7 @@ export default function Clienti() {
   const [deletingClient, setDeletingClient] = useState<Client | null>(null);
   const [inviteClient, setInviteClient] = useState<Client | null>(null);
   const [inviting, setInviting] = useState(false);
-  const [inviteResult, setInviteResult] = useState<{ link: string; email: string } | null>(null);
+  
 
   const { data: clients, isLoading } = useClients(search);
   const deleteClient = useDeleteClient();
