@@ -21,7 +21,7 @@ export default function Register() {
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email, password,
-      options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin },
+      options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}/login` },
     });
     if (error) {
       toast.error(error.message);

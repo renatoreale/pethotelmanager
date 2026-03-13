@@ -14,6 +14,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  profileLoading: boolean;
   profile: {
     id: string;
     full_name: string | null;
@@ -37,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [userTenants, setUserTenants] = useState<UserTenant[]>([]);
+  const [profileLoading, setProfileLoading] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -46,13 +48,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
+          setProfileLoading(true);
           setTimeout(async () => {
             await fetchProfileAndRoles(session.user.id);
+            setProfileLoading(false);
           }, 0);
         } else {
           setProfile(null);
           setRoles([]);
           setUserTenants([]);
+          setProfileLoading(false);
         }
         setLoading(false);
       }
@@ -62,7 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfileAndRoles(session.user.id);
+        setProfileLoading(true);
+        fetchProfileAndRoles(session.user.id).then(() => setProfileLoading(false));
       }
       setLoading(false);
     });
@@ -149,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ 
-      user, session, loading, profile, roles, 
+      user, session, loading, profileLoading, profile, roles, 
       userTenants, activeTenant,
       hasRole, switchTenant, signOut 
     }}>
