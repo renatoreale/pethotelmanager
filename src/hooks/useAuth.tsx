@@ -133,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (r.tenant_id && !tenantList.find(t => t.id === r.tenant_id)) {
           tenantList.push({
             id: r.tenant_id,
-            name: tenantLookup.get(r.tenant_id) || "Pensione",
+            name: (tenantLookup.get(r.tenant_id) as string) || "Pensione",
           });
         }
       }
