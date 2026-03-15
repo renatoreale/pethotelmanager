@@ -102,6 +102,9 @@ export default function Admin() {
           <TabsTrigger value="demo-leads" className="gap-1.5 text-xs px-2.5 py-1.5">
             <UserCheck className="h-3.5 w-3.5 hidden sm:block" /> Demo
           </TabsTrigger>
+          <TabsTrigger value="database" className="gap-1.5 text-xs px-2.5 py-1.5">
+            <Database className="h-3.5 w-3.5 hidden sm:block" /> Database
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pensioni"><PensioniTab /></TabsContent>
