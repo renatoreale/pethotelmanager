@@ -80,28 +80,6 @@ const BENEFITS = [
   },
 ];
 
-/* ── Testimonianze ── */
-const TESTIMONIALS = [
-  {
-    name: "Maria Conti",
-    role: "Titolare, Pensione Il Giardino dei Mici",
-    text: "Prima usavo Excel e WhatsApp per tutto. Ora gestisco 40 gatti senza stress. Ho eliminato completamente gli overbooking.",
-    rating: 5,
-  },
-  {
-    name: "Luca Ferretti",
-    role: "Gestore, Dog Paradise Resort",
-    text: "I preventivi automatici mi fanno risparmiare almeno 2 ore al giorno. I clienti ricevono tutto in tempo reale, molto più professionale.",
-    rating: 5,
-  },
-  {
-    name: "Giulia Romano",
-    role: "Proprietaria, La Casa degli Animali",
-    text: "Gestisco 3 sedi da un'unica dashboard. Prima era un incubo coordinare tutto, ora è tutto centralizzato e chiaro.",
-    rating: 5,
-  },
-];
-
 /* ── Problemi (sezione "Prima di PHM") ── */
 const PAIN_POINTS = [
   { icon: X, text: "Prenotazioni su carta, Excel o WhatsApp" },
