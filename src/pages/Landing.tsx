@@ -10,11 +10,43 @@ import { Label } from "@/components/ui/label";
 import { STRIPE_TIERS } from "@/lib/stripe-config";
 import { toast } from "sonner";
 import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
+import {
   PawPrint, Calendar, Users, CreditCard, FileText, BarChart3,
   Check, Star, ArrowRight, Shield, Clock, Zap, Building2, Crown, Video, Send,
-  X, AlertTriangle, Heart, TrendingUp, Phone
+  X, AlertTriangle, Heart, TrendingUp, Phone, Monitor
 } from "lucide-react";
 import landingLogo from "@/assets/pethotelmanager_landing_logo.png";
+
+import screenshotDashboard from "@/assets/screenshots/dashboard.png";
+import screenshotAppuntamenti from "@/assets/screenshots/appuntamenti.png";
+import screenshotAppuntamenti2 from "@/assets/screenshots/appuntamenti2.png";
+import screenshotPreventivi from "@/assets/screenshots/preventivi.png";
+import screenshotOccupazione from "@/assets/screenshots/occupazione.png";
+import screenshotPrenotazioni from "@/assets/screenshots/prenotazioni.png";
+import screenshotRegistro from "@/assets/screenshots/registro.png";
+import screenshotAreaCliente from "@/assets/screenshots/area-cliente.png";
+import screenshotAreaCliente2 from "@/assets/screenshots/area-cliente2.png";
+import screenshotCheckin from "@/assets/screenshots/checkin.png";
+
+const SCREENSHOTS = [
+  { src: screenshotDashboard, alt: "Dashboard operativa", desc: "Dashboard operativa — panoramica completa su prenotazioni, presenze, check-in/out e incassi in un colpo d'occhio." },
+  { src: screenshotPreventivi, alt: "Gestione preventivi", desc: "Gestione preventivi — crea e invia preventivi ai clienti, gestisci le richieste dal portale clienti." },
+  { src: screenshotPrenotazioni, alt: "Gestione prenotazioni", desc: "Gestione prenotazioni — workflow completo dalla conferma al check-out, con azioni rapide e filtri per stato." },
+  { src: screenshotAppuntamenti, alt: "Calendario appuntamenti", desc: "Calendario appuntamenti — pianifica check-in e check-out con vista lista e prenotazioni da fissare." },
+  { src: screenshotAppuntamenti2, alt: "Vista calendario mensile", desc: "Vista calendario mensile — tutti gli appuntamenti di check-in e check-out a colpo d'occhio." },
+  { src: screenshotOccupazione, alt: "Occupazione casette", desc: "Occupazione casette — griglia visuale con occupazione giornaliera per singole e doppie, divise per tipo di animale." },
+  { src: screenshotCheckin, alt: "Check-in dettagliato", desc: "Check-in — accettazione animali con riepilogo soggiorno, pagamenti e transazioni per ogni prenotazione." },
+  { src: screenshotRegistro, alt: "Registro animali", desc: "Registro animali — traccia ingressi e uscite con microchip, razza, sesso e stato di presenza." },
+  { src: screenshotAreaCliente, alt: "Area riservata cliente", desc: "Area riservata cliente — il tuo cliente può vedere prenotazioni, richiedere preventivi e gestire i propri animali." },
+  { src: screenshotAreaCliente2, alt: "Preventivi cliente", desc: "Portale cliente — dettaglio pratiche con stato pagamenti, download preventivi e moduli di affido." },
+];
 
 /* ── Feature lists per pricing ── */
 const STARTER_FEATURES = [
