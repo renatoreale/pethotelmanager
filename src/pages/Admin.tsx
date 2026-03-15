@@ -103,7 +103,7 @@ export default function Admin() {
             <UserCheck className="h-3.5 w-3.5 hidden sm:block" /> Demo
           </TabsTrigger>
           <TabsTrigger value="database" className="gap-1.5 text-xs px-2.5 py-1.5">
-            <Database className="h-3.5 w-3.5 hidden sm:block" /> Database
+            <DatabaseIcon className="h-3.5 w-3.5 hidden sm:block" /> Database
           </TabsTrigger>
         </TabsList>
 
