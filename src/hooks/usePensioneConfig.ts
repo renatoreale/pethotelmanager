@@ -1,10 +1,11 @@
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 
 // ── Tenant config (casette) ──
 export function useTenantConfig() {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["tenant-config", profile?.tenant_id],
     queryFn: async () => {
@@ -23,6 +24,7 @@ export function useTenantConfig() {
 
 export function useUpdateTenantConfig() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (updates: {
       id: string;
@@ -77,6 +79,7 @@ export function useUpdateTenantConfig() {
 // ── Slot configs ──
 export function useSlotConfigs() {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["slot-configs", profile?.tenant_id],
     queryFn: async () => {
@@ -96,6 +99,7 @@ export function useSlotConfigs() {
 
 export function useUpsertSlotConfig() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (slot: {
       id?: string;
@@ -125,6 +129,7 @@ export function useUpsertSlotConfig() {
 
 export function useDeleteSlotConfig() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("slot_configs").delete().eq("id", id);
@@ -139,6 +144,7 @@ export type TariffType = "stagionale" | "extra_giornaliero" | "extra_km" | "extr
 
 export function usePriceLists() {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["price-lists", profile?.tenant_id],
     queryFn: async () => {
@@ -156,6 +162,7 @@ export function usePriceLists() {
 
 export function useUpsertPriceList() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (price: {
       id?: string;
@@ -190,6 +197,7 @@ export function useUpsertPriceList() {
 
 export function useDeletePriceList() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("price_lists").delete().eq("id", id);

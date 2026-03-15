@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export interface Client {
@@ -25,6 +25,7 @@ export type ClientUpdate = Partial<ClientInsert>;
 
 export function useClients(search?: string) {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["clients", profile?.tenant_id, search],
     queryFn: async () => {
@@ -50,6 +51,7 @@ export function useClients(search?: string) {
 }
 
 export function useClient(id: string | undefined) {
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["clients", id],
     queryFn: async () => {
@@ -68,6 +70,7 @@ export function useClient(id: string | undefined) {
 
 export function useCreateClient() {
   const queryClient = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (client: ClientInsert) => {
       const { data, error } = await supabase
@@ -84,6 +87,7 @@ export function useCreateClient() {
 
 export function useUpdateClient() {
   const queryClient = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async ({ id, ...updates }: ClientUpdate & { id: string }) => {
       const { data, error } = await supabase
@@ -101,6 +105,7 @@ export function useUpdateClient() {
 
 export function useDeleteClient() {
   const queryClient = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("clients").delete().eq("id", id);

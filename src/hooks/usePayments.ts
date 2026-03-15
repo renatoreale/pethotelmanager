@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 
@@ -12,6 +12,7 @@ export interface PaymentMethod {
 
 export function usePaymentMethods() {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["payment-methods", profile?.tenant_id],
     queryFn: async () => {
@@ -31,6 +32,7 @@ export function usePaymentMethods() {
 
 export function useAllPaymentMethods() {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["payment-methods-all", profile?.tenant_id],
     queryFn: async () => {
@@ -50,6 +52,7 @@ export function useAllPaymentMethods() {
 export function useCreatePaymentMethod() {
   const qc = useQueryClient();
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (input: { name: string; sort_order?: number }) => {
       if (!profile?.tenant_id) throw new Error("Tenant non configurato");
@@ -70,6 +73,7 @@ export function useCreatePaymentMethod() {
 
 export function useTogglePaymentMethod() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
       const { error } = await supabase
@@ -87,6 +91,7 @@ export function useTogglePaymentMethod() {
 
 export function useUpdatePaymentMethod() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
       const { data, error } = await supabase
@@ -107,6 +112,7 @@ export function useUpdatePaymentMethod() {
 
 export function useDeletePaymentMethod() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -138,6 +144,7 @@ export interface Payment {
 }
 
 export function useBookingPayments(bookingId: string | undefined) {
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["booking-payments", bookingId],
     queryFn: async () => {
@@ -157,6 +164,7 @@ export function useBookingPayments(bookingId: string | undefined) {
 export function useCreatePayment() {
   const qc = useQueryClient();
   const { user, profile } = useAuth();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (input: {
       booking_id: string;
@@ -191,6 +199,7 @@ export function useCreatePayment() {
 
 export function useUpdatePayment() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async ({ id, ...updates }: {
       id: string;
@@ -218,6 +227,7 @@ export function useUpdatePayment() {
 
 export function useDeletePayment() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -238,6 +248,7 @@ export function useDeletePayment() {
 
 export function useAllPayments() {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["payments-all", profile?.tenant_id],
     queryFn: async () => {
@@ -256,6 +267,7 @@ export function useAllPayments() {
 
 export function useAllBookingsWithPayments() {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["bookings-with-payments", profile?.tenant_id],
     queryFn: async () => {

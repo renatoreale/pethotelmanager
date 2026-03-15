@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 
@@ -16,6 +16,7 @@ export interface PaymentSplitConfig {
 
 export function usePaymentSplits() {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["payment-splits", profile?.tenant_id],
     queryFn: async () => {
@@ -34,6 +35,7 @@ export function usePaymentSplits() {
 
 export function useUpsertPaymentSplit() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (split: {
       id?: string;
@@ -70,6 +72,7 @@ export function useUpsertPaymentSplit() {
 
 export function useDeletePaymentSplit() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase

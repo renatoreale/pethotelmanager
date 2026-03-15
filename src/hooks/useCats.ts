@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export interface Cat {
@@ -29,6 +29,7 @@ export type CatUpdate = Partial<CatInsert>;
 
 export function useCats(clientId?: string, search?: string) {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["cats", profile?.tenant_id, clientId, search],
     queryFn: async () => {
@@ -57,6 +58,7 @@ export function useCats(clientId?: string, search?: string) {
 }
 
 export function useCat(id: string | undefined) {
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["cats", id],
     queryFn: async () => {
@@ -75,6 +77,7 @@ export function useCat(id: string | undefined) {
 
 export function useCreateCat() {
   const queryClient = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (cat: CatInsert) => {
       const { data, error } = await supabase
@@ -91,6 +94,7 @@ export function useCreateCat() {
 
 export function useUpdateCat() {
   const queryClient = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async ({ id, ...updates }: CatUpdate & { id: string }) => {
       const { data, error } = await supabase
@@ -108,6 +112,7 @@ export function useUpdateCat() {
 
 export function useDeleteCat() {
   const queryClient = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("cats").delete().eq("id", id);

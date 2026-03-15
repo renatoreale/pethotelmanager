@@ -1,9 +1,10 @@
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 
 export function useCatRegistry() {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["cat-registry", profile?.tenant_id],
     queryFn: async () => {
@@ -22,6 +23,7 @@ export function useCatRegistry() {
 
 export function useInsertCatRegistry() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (entries: {
       tenant_id: string;
@@ -47,6 +49,7 @@ export function useInsertCatRegistry() {
 
 export function useUpdateCatRegistryCheckout() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async ({ bookingId, checkOutDate, reason }: { bookingId: string; checkOutDate: string; reason?: string }) => {
       const { error } = await supabase

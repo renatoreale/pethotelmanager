@@ -115,6 +115,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
+        </SupabaseClientProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
