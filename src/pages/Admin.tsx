@@ -20,7 +20,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Building2, Users, ShieldCheck, Plus, Pencil, Trash2, Save, Clock, Euro, CreditCard, Ban, Globe, TrendingUp, UserCheck } from "lucide-react";
+import { Building2, Users, ShieldCheck, Plus, Pencil, Trash2, Save, Clock, Euro, CreditCard, Ban, Globe, TrendingUp, UserCheck, Database as DatabaseIcon } from "lucide-react";
 import { GlobalSlotConfigsTab } from "@/components/admin/GlobalSlotConfigsTab";
 import { GlobalPriceListsTab } from "@/components/admin/GlobalPriceListsTab";
 import { GlobalPaymentMethodsTab } from "@/components/admin/GlobalPaymentMethodsTab";
@@ -28,6 +28,7 @@ import { GlobalCancellationPolicyTab } from "@/components/admin/GlobalCancellati
 import { LandingConfigTab } from "@/components/admin/LandingConfigTab";
 import { TrialDashboardTab } from "@/components/admin/TrialDashboardTab";
 import { DemoLeadsTab } from "@/components/admin/DemoLeadsTab";
+import { DatabaseConfigTab } from "@/components/admin/DatabaseConfigTab";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Database } from "@/integrations/supabase/types";
@@ -101,6 +102,9 @@ export default function Admin() {
           <TabsTrigger value="demo-leads" className="gap-1.5 text-xs px-2.5 py-1.5">
             <UserCheck className="h-3.5 w-3.5 hidden sm:block" /> Demo
           </TabsTrigger>
+          <TabsTrigger value="database" className="gap-1.5 text-xs px-2.5 py-1.5">
+            <DatabaseIcon className="h-3.5 w-3.5 hidden sm:block" /> Database
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pensioni"><PensioniTab /></TabsContent>
@@ -113,6 +117,7 @@ export default function Admin() {
         <TabsContent value="landing"><LandingConfigTab /></TabsContent>
         <TabsContent value="trial"><TrialDashboardTab /></TabsContent>
         <TabsContent value="demo-leads"><DemoLeadsTab /></TabsContent>
+        <TabsContent value="database"><DatabaseConfigTab /></TabsContent>
       </Tabs>
     </div>
   );
