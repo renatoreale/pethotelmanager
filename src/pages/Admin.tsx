@@ -117,6 +117,7 @@ export default function Admin() {
         <TabsContent value="landing"><LandingConfigTab /></TabsContent>
         <TabsContent value="trial"><TrialDashboardTab /></TabsContent>
         <TabsContent value="demo-leads"><DemoLeadsTab /></TabsContent>
+        <TabsContent value="database"><DatabaseConfigTab /></TabsContent>
       </Tabs>
     </div>
   );
