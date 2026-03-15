@@ -10,11 +10,43 @@ import { Label } from "@/components/ui/label";
 import { STRIPE_TIERS } from "@/lib/stripe-config";
 import { toast } from "sonner";
 import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
+import {
   PawPrint, Calendar, Users, CreditCard, FileText, BarChart3,
   Check, Star, ArrowRight, Shield, Clock, Zap, Building2, Crown, Video, Send,
-  X, AlertTriangle, Heart, TrendingUp, Phone
+  X, AlertTriangle, Heart, TrendingUp, Phone, Monitor
 } from "lucide-react";
 import landingLogo from "@/assets/pethotelmanager_landing_logo.png";
+
+import screenshotDashboard from "@/assets/screenshots/dashboard.png";
+import screenshotAppuntamenti from "@/assets/screenshots/appuntamenti.png";
+import screenshotAppuntamenti2 from "@/assets/screenshots/appuntamenti2.png";
+import screenshotPreventivi from "@/assets/screenshots/preventivi.png";
+import screenshotOccupazione from "@/assets/screenshots/occupazione.png";
+import screenshotPrenotazioni from "@/assets/screenshots/prenotazioni.png";
+import screenshotRegistro from "@/assets/screenshots/registro.png";
+import screenshotAreaCliente from "@/assets/screenshots/area-cliente.png";
+import screenshotAreaCliente2 from "@/assets/screenshots/area-cliente2.png";
+import screenshotCheckin from "@/assets/screenshots/checkin.png";
+
+const SCREENSHOTS = [
+  { src: screenshotDashboard, alt: "Dashboard operativa", desc: "Dashboard operativa — panoramica completa su prenotazioni, presenze, check-in/out e incassi in un colpo d'occhio." },
+  { src: screenshotPreventivi, alt: "Gestione preventivi", desc: "Gestione preventivi — crea e invia preventivi ai clienti, gestisci le richieste dal portale clienti." },
+  { src: screenshotPrenotazioni, alt: "Gestione prenotazioni", desc: "Gestione prenotazioni — workflow completo dalla conferma al check-out, con azioni rapide e filtri per stato." },
+  { src: screenshotAppuntamenti, alt: "Calendario appuntamenti", desc: "Calendario appuntamenti — pianifica check-in e check-out con vista lista e prenotazioni da fissare." },
+  { src: screenshotAppuntamenti2, alt: "Vista calendario mensile", desc: "Vista calendario mensile — tutti gli appuntamenti di check-in e check-out a colpo d'occhio." },
+  { src: screenshotOccupazione, alt: "Occupazione casette", desc: "Occupazione casette — griglia visuale con occupazione giornaliera per singole e doppie, divise per tipo di animale." },
+  { src: screenshotCheckin, alt: "Check-in dettagliato", desc: "Check-in — accettazione animali con riepilogo soggiorno, pagamenti e transazioni per ogni prenotazione." },
+  { src: screenshotRegistro, alt: "Registro animali", desc: "Registro animali — traccia ingressi e uscite con microchip, razza, sesso e stato di presenza." },
+  { src: screenshotAreaCliente, alt: "Area riservata cliente", desc: "Area riservata cliente — il tuo cliente può vedere prenotazioni, richiedere preventivi e gestire i propri animali." },
+  { src: screenshotAreaCliente2, alt: "Preventivi cliente", desc: "Portale cliente — dettaglio pratiche con stato pagamenti, download preventivi e moduli di affido." },
+];
 
 /* ── Feature lists per pricing ── */
 const STARTER_FEATURES = [
@@ -361,7 +393,51 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ══════════ 4. SOCIAL PROOF — Numeri + Testimonianze ══════════ */}
+      {/* ══════════ 3b. SCREENSHOT CAROUSEL ══════════ */}
+      <section className="py-24 bg-card/50">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
+              <Monitor className="h-3.5 w-3.5 mr-1.5" /> Scopri l'interfaccia
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+              Un'occhiata al software
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Ecco come si presenta Pet Hotel Manager nel quotidiano.
+            </p>
+          </div>
+          <Carousel
+            opts={{ loop: true, align: "center" }}
+            plugins={[Autoplay({ delay: 5000, stopOnInteraction: true })]}
+            className="w-full"
+          >
+            <CarouselContent>
+              {SCREENSHOTS.map((s, i) => (
+                <CarouselItem key={i} className="md:basis-4/5 lg:basis-3/4">
+                  <div className="p-2">
+                    <div className="rounded-xl border-2 border-border overflow-hidden shadow-lg bg-background">
+                      <img
+                        src={s.src}
+                        alt={s.alt}
+                        className="w-full h-auto"
+                        loading="lazy"
+                      />
+                    </div>
+                    <p className="text-center text-sm text-muted-foreground mt-4 max-w-xl mx-auto">
+                      {s.desc}
+                    </p>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="-left-4 md:-left-6" />
+            <CarouselNext className="-right-4 md:-right-6" />
+          </Carousel>
+        </div>
+      </section>
+
+
       <section className="py-20 bg-card/50">
         <div className="max-w-6xl mx-auto px-6">
           {/* Numeri */}
