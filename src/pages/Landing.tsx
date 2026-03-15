@@ -208,6 +208,50 @@ function DemoRequestForm() {
   );
 }
 
+      {/* ══════════ 3b. SCREENSHOT CAROUSEL ══════════ */}
+      <section className="py-24 bg-card/50">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
+              <Monitor className="h-3.5 w-3.5 mr-1.5" /> Scopri l'interfaccia
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+              Un'occhiata al software
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Ecco come si presenta Pet Hotel Manager nel quotidiano.
+            </p>
+          </div>
+          <Carousel
+            opts={{ loop: true, align: "center" }}
+            plugins={[Autoplay({ delay: 5000, stopOnInteraction: true })]}
+            className="w-full"
+          >
+            <CarouselContent>
+              {SCREENSHOTS.map((s, i) => (
+                <CarouselItem key={i} className="md:basis-4/5 lg:basis-3/4">
+                  <div className="p-2">
+                    <div className="rounded-xl border-2 border-border overflow-hidden shadow-lg bg-background">
+                      <img
+                        src={s.src}
+                        alt={s.alt}
+                        className="w-full h-auto"
+                        loading="lazy"
+                      />
+                    </div>
+                    <p className="text-center text-sm text-muted-foreground mt-4 max-w-xl mx-auto">
+                      {s.desc}
+                    </p>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="-left-4 md:-left-6" />
+            <CarouselNext className="-right-4 md:-right-6" />
+          </Carousel>
+        </div>
+      </section>
+
 
 /* ══════════════ LANDING PAGE ══════════════ */
 export default function Landing() {
