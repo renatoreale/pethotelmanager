@@ -70,7 +70,7 @@ export function getExternalClient(url: string, anonKey: string) {
   if (externalClientCache && externalClientCache.url === url && externalClientCache.key === anonKey) {
     return externalClientCache.client;
   }
-  const client = createClient(url, anonKey, {
+  const client = createClient<any>(url, anonKey, {
     auth: { storage: localStorage, persistSession: true, autoRefreshToken: true },
   });
   externalClientCache = { url, key: anonKey, client };
