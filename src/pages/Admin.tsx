@@ -20,7 +20,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Building2, Users, ShieldCheck, Plus, Pencil, Trash2, Save, Clock, Euro, CreditCard, Ban, Globe, TrendingUp, UserCheck } from "lucide-react";
+import { Building2, Users, ShieldCheck, Plus, Pencil, Trash2, Save, Clock, Euro, CreditCard, Ban, Globe, TrendingUp, UserCheck, Database } from "lucide-react";
 import { GlobalSlotConfigsTab } from "@/components/admin/GlobalSlotConfigsTab";
 import { GlobalPriceListsTab } from "@/components/admin/GlobalPriceListsTab";
 import { GlobalPaymentMethodsTab } from "@/components/admin/GlobalPaymentMethodsTab";
