@@ -28,6 +28,7 @@ import { GlobalCancellationPolicyTab } from "@/components/admin/GlobalCancellati
 import { LandingConfigTab } from "@/components/admin/LandingConfigTab";
 import { TrialDashboardTab } from "@/components/admin/TrialDashboardTab";
 import { DemoLeadsTab } from "@/components/admin/DemoLeadsTab";
+import { DatabaseConfigTab } from "@/components/admin/DatabaseConfigTab";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Database } from "@/integrations/supabase/types";
