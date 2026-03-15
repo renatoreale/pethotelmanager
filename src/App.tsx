@@ -55,6 +55,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <SupabaseClientProvider>
         <AuthProvider>
           <Routes>
             {/* Public routes */}
