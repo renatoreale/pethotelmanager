@@ -17,29 +17,25 @@ import {
 import landingLogo from "@/assets/pethotelmanager_landing_logo.png";
 
 /* ── Feature lists per pricing ── */
-const BASE_FEATURES = [
+const STARTER_FEATURES = [
+  "Creazione preventivi",
   "Gestione prenotazioni",
+  "Documenti PDF",
   "Calendario appuntamenti",
-  "Anagrafica clienti e animali",
+  "Anagrafica clienti",
   "Registro presenze",
-  "1 pensione",
-];
-const PRO_FEATURES = [
-  "Tutto del piano Base",
-  "Gestione pagamenti completa",
-  "Preventivi e documenti PDF",
   "Occupazione casette",
   "Report e statistiche",
+  "Area riservata per cliente",
 ];
-const GOLD_FEATURES = [
-  "Tutto del piano Pro",
+const PRO_FEATURES = [
+  "Tutto del piano Starter",
   "Multi-pensione (fino a 3)",
   "Dashboard multi-sede",
-  "Gestione centralizzata",
 ];
-const ENTERPRISE_FEATURES = [
-  "Tutto del piano Gold",
-  "Pensioni illimitate (oltre 3)",
+const BUSINESS_FEATURES = [
+  "Tutto del piano Pro",
+  "Multi-pensione (fino a 10)",
   "Supporto prioritario",
   "Configurazione dedicata",
 ];
@@ -263,8 +259,8 @@ export default function Landing() {
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "EUR",
-      lowPrice: STRIPE_TIERS.base.priceYearly,
-      highPrice: STRIPE_TIERS.enterprise.priceYearly,
+      lowPrice: STRIPE_TIERS.starter.priceYearly,
+      highPrice: STRIPE_TIERS.business.priceYearly,
     },
   };
 
@@ -475,28 +471,28 @@ export default function Landing() {
               Tutti i piani includono <strong className="text-foreground">{trialDays} giorni gratis</strong>. Scegli quello giusto per te.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {/* Base */}
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Starter */}
             <Card className="relative border-2 border-border hover:border-primary/30 transition-colors">
               <CardHeader className="pb-4">
-                <CardTitle className="text-2xl font-serif">Base</CardTitle>
-                <CardDescription>Per piccole pensioni</CardDescription>
+                <CardTitle className="text-2xl font-serif">Starter</CardTitle>
+                <CardDescription>Per iniziare a gestire la tua pensione</CardDescription>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.base.priceYearly}</span>
-                  <span className="text-muted-foreground">/anno</span>
+                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.starter.priceMonthly}</span>
+                  <span className="text-muted-foreground">/mese</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">equivale a €{(STRIPE_TIERS.base.priceYearly / 12).toFixed(0)}/mese</p>
+                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.starter.priceYearly}/anno con abbonamento annuale</p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
-                  {BASE_FEATURES.map((f) => (
+                  {STARTER_FEATURES.map((f) => (
                     <li key={f} className="flex items-start gap-3 text-sm">
                       <Check className="h-4 w-4 text-accent mt-0.5 shrink-0" /><span>{f}</span>
                     </li>
                   ))}
                 </ul>
-                <Button className="w-full" variant="outline" size="lg" disabled={loadingPlan === "base"} onClick={() => handleSubscribe(STRIPE_TIERS.base.price_id, "base")}>
-                  {loadingPlan === "base" ? "Caricamento..." : "Inizia con Base"}
+                <Button className="w-full" variant="outline" size="lg" disabled={loadingPlan === "starter"} onClick={() => handleSubscribe(STRIPE_TIERS.starter.price_id, "starter")}>
+                  {loadingPlan === "starter" ? "Caricamento..." : "Inizia con Starter"}
                 </Button>
               </CardContent>
             </Card>
@@ -508,12 +504,12 @@ export default function Landing() {
               </div>
               <CardHeader className="pb-4">
                 <CardTitle className="text-2xl font-serif">Pro</CardTitle>
-                <CardDescription>Per pensioni professionali</CardDescription>
+                <CardDescription>Per pensioni multi-sede</CardDescription>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.pro.priceYearly}</span>
-                  <span className="text-muted-foreground">/anno</span>
+                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.pro.priceMonthly}</span>
+                  <span className="text-muted-foreground">/mese</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">equivale a €{(STRIPE_TIERS.pro.priceYearly / 12).toFixed(0)}/mese</p>
+                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.pro.priceYearly}/anno con abbonamento annuale</p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
@@ -529,55 +525,30 @@ export default function Landing() {
               </CardContent>
             </Card>
 
-            {/* Gold */}
+            {/* Business */}
             <Card className="relative border-2 border-amber-500/50 shadow-lg shadow-amber-500/10">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge className="bg-amber-500 text-white gap-1"><Crown className="h-3 w-3" /> Multi-Sede</Badge>
+                <Badge className="bg-amber-500 text-white gap-1"><Crown className="h-3 w-3" /> Business</Badge>
               </div>
               <CardHeader className="pb-4">
-                <CardTitle className="text-2xl font-serif">Gold</CardTitle>
-                <CardDescription>Multi-pensione fino a 3</CardDescription>
+                <CardTitle className="text-2xl font-serif">Business</CardTitle>
+                <CardDescription>Per grandi strutture multi-sede</CardDescription>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.gold.priceYearly}</span>
-                  <span className="text-muted-foreground">/anno</span>
+                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.business.priceMonthly}</span>
+                  <span className="text-muted-foreground">/mese</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">equivale a €{(STRIPE_TIERS.gold.priceYearly / 12).toFixed(0)}/mese</p>
+                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.business.priceYearly}/anno con abbonamento annuale</p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
-                  {GOLD_FEATURES.map((f) => (
+                  {BUSINESS_FEATURES.map((f) => (
                     <li key={f} className="flex items-start gap-3 text-sm">
                       <Check className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" /><span>{f}</span>
                     </li>
                   ))}
                 </ul>
-                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white" size="lg" disabled={loadingPlan === "gold"} onClick={() => handleSubscribe(STRIPE_TIERS.gold.price_id, "gold")}>
-                  {loadingPlan === "gold" ? "Caricamento..." : "Inizia con Gold"}
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Enterprise */}
-            <Card className="relative border-2 border-border hover:border-primary/30 transition-colors">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-2xl font-serif">Enterprise</CardTitle>
-                <CardDescription>Oltre 3 pensioni</CardDescription>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.enterprise.priceYearly}</span>
-                  <span className="text-muted-foreground">/anno</span>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">equivale a €{(STRIPE_TIERS.enterprise.priceYearly / 12).toFixed(0)}/mese</p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <ul className="space-y-3">
-                  {ENTERPRISE_FEATURES.map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-sm">
-                      <Check className="h-4 w-4 text-accent mt-0.5 shrink-0" /><span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button className="w-full" variant="outline" size="lg" disabled={loadingPlan === "enterprise"} onClick={() => handleSubscribe(STRIPE_TIERS.enterprise.price_id, "enterprise")}>
-                  {loadingPlan === "enterprise" ? "Caricamento..." : "Inizia con Enterprise"}
+                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white" size="lg" disabled={loadingPlan === "business"} onClick={() => handleSubscribe(STRIPE_TIERS.business.price_id, "business")}>
+                  {loadingPlan === "business" ? "Caricamento..." : "Inizia con Business"}
                 </Button>
               </CardContent>
             </Card>
