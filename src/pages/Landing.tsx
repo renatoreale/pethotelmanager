@@ -42,7 +42,7 @@ const SCREENSHOTS = [
   { src: screenshotAppuntamenti, alt: "Calendario appuntamenti", desc: "Calendario appuntamenti — pianifica check-in e check-out con vista lista e prenotazioni da fissare." },
   { src: screenshotAppuntamenti2, alt: "Vista calendario mensile", desc: "Vista calendario mensile — tutti gli appuntamenti di check-in e check-out a colpo d'occhio." },
   { src: screenshotOccupazione, alt: "Occupazione casette", desc: "Occupazione casette — griglia visuale con occupazione giornaliera per singole e doppie, divise per tipo di Pet." },
-  { src: screenshotCheckin, alt: "Check-in dettagliato", desc: "Check-in — accettazione animali con riepilogo soggiorno, pagamenti e transazioni per ogni prenotazione." },
+  { src: screenshotCheckin, alt: "Check-in dettagliato", desc: "Check-in — accettazione Pet con riepilogo soggiorno, pagamenti e transazioni per ogni prenotazione." },
   { src: screenshotRegistro, alt: "Registro animali", desc: "Registro animali — traccia ingressi e uscite con microchip, razza, sesso e stato di presenza." },
   { src: screenshotAreaCliente, alt: "Area riservata cliente", desc: "Area riservata cliente — il tuo cliente può vedere prenotazioni, richiedere preventivi e gestire i propri animali." },
   { src: screenshotAreaCliente2, alt: "Preventivi cliente", desc: "Portale cliente — dettaglio pratiche con stato pagamenti, download preventivi e moduli di affido." },
