@@ -17,29 +17,25 @@ import {
 import landingLogo from "@/assets/pethotelmanager_landing_logo.png";
 
 /* ── Feature lists per pricing ── */
-const BASE_FEATURES = [
+const STARTER_FEATURES = [
+  "Creazione preventivi",
   "Gestione prenotazioni",
+  "Documenti PDF",
   "Calendario appuntamenti",
-  "Anagrafica clienti e animali",
+  "Anagrafica clienti",
   "Registro presenze",
-  "1 pensione",
-];
-const PRO_FEATURES = [
-  "Tutto del piano Base",
-  "Gestione pagamenti completa",
-  "Preventivi e documenti PDF",
   "Occupazione casette",
   "Report e statistiche",
+  "Area riservata per cliente",
 ];
-const GOLD_FEATURES = [
-  "Tutto del piano Pro",
+const PRO_FEATURES = [
+  "Tutto del piano Starter",
   "Multi-pensione (fino a 3)",
   "Dashboard multi-sede",
-  "Gestione centralizzata",
 ];
-const ENTERPRISE_FEATURES = [
-  "Tutto del piano Gold",
-  "Pensioni illimitate (oltre 3)",
+const BUSINESS_FEATURES = [
+  "Tutto del piano Pro",
+  "Multi-pensione (fino a 10)",
   "Supporto prioritario",
   "Configurazione dedicata",
 ];
