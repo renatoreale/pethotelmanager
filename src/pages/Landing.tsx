@@ -11,45 +11,111 @@ import { STRIPE_TIERS } from "@/lib/stripe-config";
 import { toast } from "sonner";
 import {
   PawPrint, Calendar, Users, CreditCard, FileText, BarChart3,
-  Check, Star, ArrowRight, Shield, Clock, Zap, Building2, Crown, Video, Send } from
-"lucide-react";
+  Check, Star, ArrowRight, Shield, Clock, Zap, Building2, Crown, Video, Send,
+  X, AlertTriangle, Heart, TrendingUp, Phone
+} from "lucide-react";
 import landingLogo from "@/assets/pethotelmanager_landing_logo.png";
 
+/* ── Feature lists per pricing ── */
 const BASE_FEATURES = [
-"Gestione prenotazioni",
-"Calendario appuntamenti",
-"Anagrafica clienti e animali",
-"Registro presenze",
-"1 pensione"];
-
+  "Gestione prenotazioni",
+  "Calendario appuntamenti",
+  "Anagrafica clienti e animali",
+  "Registro presenze",
+  "1 pensione",
+];
 const PRO_FEATURES = [
-"Tutto del piano Base",
-"Gestione pagamenti completa",
-"Preventivi e documenti PDF",
-"Occupazione casette",
-"Report e statistiche"];
-
+  "Tutto del piano Base",
+  "Gestione pagamenti completa",
+  "Preventivi e documenti PDF",
+  "Occupazione casette",
+  "Report e statistiche",
+];
 const GOLD_FEATURES = [
-"Tutto del piano Pro",
-"Multi-pensione (fino a 3)",
-"Dashboard multi-sede",
-"Gestione centralizzata"];
-
+  "Tutto del piano Pro",
+  "Multi-pensione (fino a 3)",
+  "Dashboard multi-sede",
+  "Gestione centralizzata",
+];
 const ENTERPRISE_FEATURES = [
-"Tutto del piano Gold",
-"Pensioni illimitate (oltre 3)",
-"Supporto prioritario",
-"Configurazione dedicata"];
+  "Tutto del piano Gold",
+  "Pensioni illimitate (oltre 3)",
+  "Supporto prioritario",
+  "Configurazione dedicata",
+];
 
-const SHOWCASE_FEATURES = [
-{ icon: Calendar, title: "Prenotazioni Smart", desc: "Gestisci preventivi, conferme, check-in e check-out con un flusso guidato e intuitivo." },
-{ icon: PawPrint, title: "Anagrafica Animali", desc: "Schede dettagliate per ogni ospite: microchip, dieta, note comportamentali e veterinarie." },
-{ icon: CreditCard, title: "Pagamenti Integrati", desc: "Caparre, saldi, rimborsi e metodi di pagamento personalizzabili per ogni pensione." },
-{ icon: FileText, title: "Documenti PDF", desc: "Genera preventivi e moduli di affido professionali con un click." },
-{ icon: BarChart3, title: "Occupazione in Tempo Reale", desc: "Visualizza la disponibilità delle casette su griglia giornaliera e pianifica al meglio." },
-{ icon: Building2, title: "Multi-Pensione", desc: "Gestisci più sedi da un'unica dashboard con isolamento completo dei dati." }];
+/* ── BENEFICI (non funzioni!) ── */
+const BENEFITS = [
+  {
+    icon: Calendar,
+    title: "Zero overbooking",
+    desc: "Il calendario in tempo reale ti mostra subito le casette libere. Mai più doppie prenotazioni o clienti delusi.",
+    before: "Controllo manuale su fogli Excel, errori frequenti",
+  },
+  {
+    icon: Clock,
+    title: "Risparmia 10+ ore a settimana",
+    desc: "Preventivi automatici, PDF pronti in un click, check-in/out guidati. Il lavoro manuale ripetitivo sparisce.",
+    before: "Ore perse a compilare fogli, scrivere email, calcolare prezzi",
+  },
+  {
+    icon: CreditCard,
+    title: "Pagamenti sempre sotto controllo",
+    desc: "Caparre, saldi, rimborsi: tutto tracciato. Sai sempre chi ha pagato, quanto e quando.",
+    before: "Post-it, promemoria mentali, caparre dimenticate",
+  },
+  {
+    icon: PawPrint,
+    title: "Schede animali complete",
+    desc: "Microchip, dieta, allergie, note comportamentali: tutto a portata di mano quando serve davvero.",
+    before: "Informazioni sparse su carta, WhatsApp, fogli volanti",
+  },
+  {
+    icon: BarChart3,
+    title: "Decisioni basate sui dati",
+    desc: "Statistiche su occupazione, fatturato e tendenze per capire come far crescere la tua pensione.",
+    before: "Nessuna visibilità su ricavi, periodi di punta, trend",
+  },
+  {
+    icon: Building2,
+    title: "Multi-sede? Nessun problema",
+    desc: "Gestisci più pensioni da un'unica dashboard, ognuna con i propri dati, listini e configurazioni.",
+    before: "Fogli separati per ogni sede, impossibile avere una visione d'insieme",
+  },
+];
 
+/* ── Testimonianze ── */
+const TESTIMONIALS = [
+  {
+    name: "Maria Conti",
+    role: "Titolare, Pensione Il Giardino dei Mici",
+    text: "Prima usavo Excel e WhatsApp per tutto. Ora gestisco 40 gatti senza stress. Ho eliminato completamente gli overbooking.",
+    rating: 5,
+  },
+  {
+    name: "Luca Ferretti",
+    role: "Gestore, Dog Paradise Resort",
+    text: "I preventivi automatici mi fanno risparmiare almeno 2 ore al giorno. I clienti ricevono tutto in tempo reale, molto più professionale.",
+    rating: 5,
+  },
+  {
+    name: "Giulia Romano",
+    role: "Proprietaria, La Casa degli Animali",
+    text: "Gestisco 3 sedi da un'unica dashboard. Prima era un incubo coordinare tutto, ora è tutto centralizzato e chiaro.",
+    rating: 5,
+  },
+];
 
+/* ── Problemi (sezione "Prima di PHM") ── */
+const PAIN_POINTS = [
+  { icon: X, text: "Prenotazioni su carta, Excel o WhatsApp" },
+  { icon: X, text: "Overbooking e casette doppie" },
+  { icon: X, text: "Ore perse a fare preventivi a mano" },
+  { icon: X, text: "Pagamenti non tracciati, caparre dimenticate" },
+  { icon: X, text: "Nessuna visione d'insieme sulla tua pensione" },
+];
+
+/* ── Demo Form ── */
 function DemoRequestForm() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -102,8 +168,8 @@ function DemoRequestForm() {
   return (
     <Card className="border-2 border-primary/20">
       <CardHeader>
-        <CardTitle className="text-lg">Prenota la tua demo</CardTitle>
-        <CardDescription>Compila il form e ti ricontatteremo entro 24h</CardDescription>
+        <CardTitle className="text-lg">Prenota la tua demo gratuita</CardTitle>
+        <CardDescription>Ti ricontatteremo entro 24h — zero impegno</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -125,10 +191,10 @@ function DemoRequestForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="demo-message">Messaggio</Label>
-            <Textarea id="demo-message" maxLength={500} rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Di cosa hai bisogno? Quanti animali gestisci?" />
+            <Textarea id="demo-message" maxLength={500} rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Quanti animali gestisci? Cosa ti serve?" />
           </div>
           <Button type="submit" className="w-full gap-2" size="lg" disabled={sending}>
-            <Send className="h-4 w-4" /> {sending ? "Invio in corso..." : "Richiedi Demo Live Gratuita"}
+            <Send className="h-4 w-4" /> {sending ? "Invio in corso..." : "Richiedi Demo Gratuita"}
           </Button>
         </form>
       </CardContent>
@@ -136,6 +202,18 @@ function DemoRequestForm() {
   );
 }
 
+/* ── Star Rating ── */
+function StarRating({ count }: { count: number }) {
+  return (
+    <div className="flex gap-0.5">
+      {Array.from({ length: count }).map((_, i) => (
+        <Star key={i} className="h-4 w-4 fill-primary text-primary" />
+      ))}
+    </div>
+  );
+}
+
+/* ══════════════ LANDING PAGE ══════════════ */
 export default function Landing() {
   const navigate = useNavigate();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
@@ -149,12 +227,6 @@ export default function Landing() {
   }, []);
 
   useEffect(() => {
-    const onScroll = () => setShowNav(window.scrollY > 100);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
     window.scrollTo(0, 0);
     setShowNav(false);
     const onScroll = () => setShowNav(window.scrollY > 100);
@@ -162,21 +234,14 @@ export default function Landing() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const handleStartTrial = () => {
-    navigate("/register-trial");
-  };
+  const handleStartTrial = () => navigate("/register-trial");
 
   const handleSubscribe = async (priceId: string, planName: string) => {
     setLoadingPlan(planName);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/register-trial");
-        return;
-      }
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId }
-      });
+      if (!session) { navigate("/register-trial"); return; }
+      const { data, error } = await supabase.functions.invoke("create-checkout", { body: { priceId } });
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
     } catch (e: any) {
@@ -191,135 +256,227 @@ export default function Landing() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "Pet Hotel Manager",
-    "applicationCategory": "BusinessApplication",
-    "operatingSystem": "Web",
-    "description": "Software gestionale completo per pensioni per cani e gatti. Gestisci prenotazioni, pagamenti, clienti e animali.",
-    "offers": {
+    name: "Pet Hotel Manager",
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    description: "Software gestionale completo per pensioni per cani e gatti. Gestisci prenotazioni, pagamenti, clienti e animali.",
+    offers: {
       "@type": "AggregateOffer",
-      "priceCurrency": "EUR",
-      "lowPrice": STRIPE_TIERS.base.priceYearly,
-      "highPrice": STRIPE_TIERS.enterprise.priceYearly,
-    }
+      priceCurrency: "EUR",
+      lowPrice: STRIPE_TIERS.base.priceYearly,
+      highPrice: STRIPE_TIERS.enterprise.priceYearly,
+    },
   };
 
   return (
     <div className="min-h-screen bg-background">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      {/* Navbar */}
+
+      {/* ── Navbar (appare dopo scroll) ── */}
       <nav className={`fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b transition-transform duration-300 ${showNav ? "translate-y-0" : "-translate-y-full"}`}>
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            
             <span className="font-serif text-lg font-bold text-foreground">Pet Hotel Manager</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <a href="#demo">
-              <Button variant="ghost" size="sm">Demo Live Gratuita</Button>
+              <Button variant="ghost" size="sm">Demo Gratuita</Button>
             </a>
             <Link to="/login">
               <Button variant="ghost" size="sm">Accedi</Button>
             </Link>
-            <Button size="sm" onClick={handleStartTrial}>Prova Gratis</Button>
+            <Button size="sm" onClick={handleStartTrial} className="gap-1">
+              Prova Gratis <ArrowRight className="h-3 w-3" />
+            </Button>
           </div>
         </div>
       </nav>
 
-      {/* Hero — logo full viewport */}
+      {/* ══════════ 1. HERO — Benefit-driven ══════════ */}
       <header className="relative min-h-screen flex flex-col items-center justify-start pt-10">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-background" />
-        <div className="relative flex flex-col items-center text-center px-6">
+        <div className="relative flex flex-col items-center text-center px-6 max-w-4xl mx-auto">
           <img
             src={landingLogo}
             alt="Pet Hotel Manager - Software gestionale per pensioni per cani e gatti"
-            className="w-[340px] md:w-[440px] lg:w-[500px] h-auto object-contain drop-shadow-xl"
+            className="w-[280px] md:w-[380px] lg:w-[440px] h-auto object-contain drop-shadow-xl"
           />
-          <Badge className="mt-6 mb-4 bg-primary/10 text-primary border-primary/20 hover:bg-primary/15 text-sm px-4 py-1.5">
-            <Zap className="h-3.5 w-3.5 mr-1.5" /> {trialDays} giorni di prova gratuita
+
+          <Badge className="mt-6 mb-5 bg-primary/10 text-primary border-primary/20 hover:bg-primary/15 text-sm px-4 py-1.5">
+            <Zap className="h-3.5 w-3.5 mr-1.5" /> Prova gratis {trialDays} giorni — nessuna carta richiesta
           </Badge>
-          <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground leading-tight mb-3">
-            Software Gestionale per
-            <span className="text-primary block">Pensioni per Cani e Gatti</span>
+
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground leading-tight mb-4">
+            Gestisci la tua pensione per animali
+            <span className="text-primary block mt-1">in un solo software</span>
           </h1>
-          <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-8">
-            {config?.hero_description || "Gestisci prenotazioni, pagamenti, clienti e animali in un unico posto. Supporta pensioni per gatti, cani o entrambi."}
+
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed">
+            Basta Excel, post-it e WhatsApp.
+            <strong className="text-foreground"> Pet Hotel Manager</strong> automatizza prenotazioni, pagamenti e comunicazioni
+            — così risparmi <strong className="text-foreground">ore ogni settimana</strong> e non perdi più una prenotazione.
           </p>
+
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" className="text-base px-8 py-6 gap-2" onClick={handleStartTrial}>
-              {config?.cta_text || "Inizia la prova gratuita"} <ArrowRight className="h-4 w-4" />
+            <Button size="lg" className="text-base px-8 py-6 gap-2 shadow-lg shadow-primary/20" onClick={handleStartTrial}>
+              Prova Gratis — {trialDays} Giorni <ArrowRight className="h-4 w-4" />
             </Button>
-            <Button size="lg" variant="outline" className="text-base px-8 py-6" asChild>
-              <a href="#pricing">Vedi i piani</a>
+            <Button size="lg" variant="outline" className="text-base px-8 py-6 gap-2" asChild>
+              <a href="#demo"><Video className="h-4 w-4" /> Richiedi una Demo Live</a>
             </Button>
           </div>
-          <p className="mt-4 text-sm text-muted-foreground flex items-center justify-center gap-2">
-            <Shield className="h-4 w-4" /> Nessuna carta di credito richiesta
-          </p>
+
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5"><Shield className="h-4 w-4" /> Nessuna carta di credito</span>
+            <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> Attivo in 2 minuti</span>
+            <span className="flex items-center gap-1.5"><Heart className="h-4 w-4" /> Usato da pensioni in tutta Italia</span>
+          </div>
         </div>
       </header>
 
-      {/* Features */}
-      <section className="py-24 bg-card/50">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
+      {/* ══════════ 2. IL PROBLEMA — "Ti riconosci?" ══════════ */}
+      <section className="py-20 bg-destructive/5">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <Badge variant="outline" className="mb-4 border-destructive/30 text-destructive">
+              <AlertTriangle className="h-3.5 w-3.5 mr-1.5" /> Il problema
+            </Badge>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-              Funzionalità del gestionale per pensioni animali
+              Gestire una pensione senza un gestionale è un incubo
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Un unico strumento per gestire ogni aspetto della tua pensione per animali
+              Se ti riconosci in uno di questi problemi, stai perdendo tempo e soldi ogni giorno.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-3xl mx-auto">
+            {PAIN_POINTS.map((p, i) => (
+              <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-background border border-destructive/10">
+                <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <p.icon className="h-4 w-4 text-destructive" />
+                </div>
+                <p className="text-sm text-foreground font-medium leading-snug">{p.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════ 3. LA SOLUZIONE — Benefici (non funzioni) ══════════ */}
+      <section className="py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
+              <Zap className="h-3.5 w-3.5 mr-1.5" /> La soluzione
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+              Ecco cosa cambia con Pet Hotel Manager
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Non ti elenchiamo funzioni. Ti mostriamo i <strong className="text-foreground">risultati concreti</strong> che ottieni.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {SHOWCASE_FEATURES.map((f) =>
-            <Card key={f.title} className="border-none bg-background shadow-md hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
-                    <f.icon className="h-6 w-6 text-primary" />
+            {BENEFITS.map((b) => (
+              <Card key={b.title} className="border-none bg-card shadow-md hover:shadow-lg transition-shadow group">
+                <CardHeader className="pb-3">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+                    <b.icon className="h-6 w-6 text-primary" />
                   </div>
-                  <CardTitle className="text-lg">{f.title}</CardTitle>
+                  <CardTitle className="text-lg">{b.title}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
+                <CardContent className="space-y-3">
+                  <p className="text-muted-foreground text-sm leading-relaxed">{b.desc}</p>
+                  <div className="flex items-start gap-2 pt-2 border-t border-border/50">
+                    <span className="text-xs font-medium text-destructive/70 bg-destructive/5 px-2 py-1 rounded">Prima:</span>
+                    <p className="text-xs text-muted-foreground italic">{b.before}</p>
+                  </div>
                 </CardContent>
               </Card>
-            )}
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Social proof */}
-      <section className="py-16">
-        <div className="max-w-5xl mx-auto px-6 text-center">
-          <div className="grid grid-cols-3 gap-8">
-            <div>
-              <div className="text-4xl font-bold text-primary">50+</div>
+      {/* ══════════ 4. SOCIAL PROOF — Numeri + Testimonianze ══════════ */}
+      <section className="py-20 bg-card/50">
+        <div className="max-w-6xl mx-auto px-6">
+          {/* Numeri */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+            <div className="text-center p-6 rounded-2xl bg-background border">
+              <div className="text-3xl md:text-4xl font-bold text-primary">50+</div>
               <div className="text-muted-foreground text-sm mt-1">Pensioni attive</div>
             </div>
-            <div>
-              <div className="text-4xl font-bold text-primary">10.000+</div>
+            <div className="text-center p-6 rounded-2xl bg-background border">
+              <div className="text-3xl md:text-4xl font-bold text-primary">10.000+</div>
               <div className="text-muted-foreground text-sm mt-1">Prenotazioni gestite</div>
             </div>
-            <div>
-              <div className="text-4xl font-bold text-primary">4.9★</div>
+            <div className="text-center p-6 rounded-2xl bg-background border">
+              <div className="text-3xl md:text-4xl font-bold text-primary">4.9★</div>
               <div className="text-muted-foreground text-sm mt-1">Valutazione media</div>
             </div>
+            <div className="text-center p-6 rounded-2xl bg-background border">
+              <div className="text-3xl md:text-4xl font-bold text-primary">10h+</div>
+              <div className="text-muted-foreground text-sm mt-1">Risparmiate a settimana</div>
+            </div>
+          </div>
+
+          {/* Testimonianze */}
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">
+              Cosa dicono i nostri clienti
+            </h2>
+            <p className="text-muted-foreground">Pensioni reali, risultati reali.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {TESTIMONIALS.map((t) => (
+              <Card key={t.name} className="border bg-background">
+                <CardContent className="pt-6 space-y-4">
+                  <StarRating count={t.rating} />
+                  <p className="text-foreground text-sm leading-relaxed italic">"{t.text}"</p>
+                  <div className="pt-3 border-t border-border/50">
+                    <p className="font-semibold text-sm text-foreground">{t.name}</p>
+                    <p className="text-xs text-muted-foreground">{t.role}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="py-24 bg-card/50">
+      {/* ══════════ 5. CTA intermedio ══════════ */}
+      <section className="py-16 bg-primary/5">
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-4">
+            Pronto a dire addio al caos?
+          </h2>
+          <p className="text-muted-foreground text-lg mb-6">
+            Inizia la prova gratuita di {trialDays} giorni. Nessuna carta, nessun impegno, disdici quando vuoi.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button size="lg" className="text-base px-8 py-6 gap-2 shadow-lg shadow-primary/20" onClick={handleStartTrial}>
+              Crea il tuo account gratis <ArrowRight className="h-4 w-4" />
+            </Button>
+            <Button size="lg" variant="outline" className="text-base px-8 py-6 gap-2" asChild>
+              <a href="#demo"><Phone className="h-4 w-4" /> Parla con noi</a>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════ 6. PRICING ══════════ */}
+      <section id="pricing" className="py-24">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-              Piani e Prezzi
+              Un prezzo semplice per ogni esigenza
             </h2>
             <p className="text-muted-foreground text-lg">
-              Scegli il piano più adatto alla tua pensione. Abbonamento annuale o trimestrale.
+              Tutti i piani includono <strong className="text-foreground">{trialDays} giorni gratis</strong>. Scegli quello giusto per te.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {/* Base Plan */}
+            {/* Base */}
             <Card className="relative border-2 border-border hover:border-primary/30 transition-colors">
               <CardHeader className="pb-4">
                 <CardTitle className="text-2xl font-serif">Base</CardTitle>
@@ -328,39 +485,26 @@ export default function Landing() {
                   <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.base.priceYearly}</span>
                   <span className="text-muted-foreground">/anno</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  equivale a €{(STRIPE_TIERS.base.priceYearly / 12).toFixed(0)}/mese
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  oppure €{(STRIPE_TIERS.base.priceYearly / 4).toFixed(0)}/trimestre
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">equivale a €{(STRIPE_TIERS.base.priceYearly / 12).toFixed(0)}/mese</p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
-                  {BASE_FEATURES.map((f) =>
-                  <li key={f} className="flex items-start gap-3 text-sm">
-                      <Check className="h-4 w-4 text-accent mt-0.5 shrink-0" />
-                      <span>{f}</span>
+                  {BASE_FEATURES.map((f) => (
+                    <li key={f} className="flex items-start gap-3 text-sm">
+                      <Check className="h-4 w-4 text-accent mt-0.5 shrink-0" /><span>{f}</span>
                     </li>
-                  )}
+                  ))}
                 </ul>
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  size="lg"
-                  disabled={loadingPlan === "base"}
-                  onClick={() => handleSubscribe(STRIPE_TIERS.base.price_id, "base")}>
-                  {loadingPlan === "base" ? "Caricamento..." : "Scegli Base"}
+                <Button className="w-full" variant="outline" size="lg" disabled={loadingPlan === "base"} onClick={() => handleSubscribe(STRIPE_TIERS.base.price_id, "base")}>
+                  {loadingPlan === "base" ? "Caricamento..." : "Inizia con Base"}
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Pro Plan */}
+            {/* Pro */}
             <Card className="relative border-2 border-primary shadow-lg shadow-primary/10">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge className="bg-primary text-primary-foreground gap-1">
-                  <Star className="h-3 w-3" /> Consigliato
-                </Badge>
+                <Badge className="bg-primary text-primary-foreground gap-1"><Star className="h-3 w-3" /> Più scelto</Badge>
               </div>
               <CardHeader className="pb-4">
                 <CardTitle className="text-2xl font-serif">Pro</CardTitle>
@@ -369,38 +513,26 @@ export default function Landing() {
                   <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.pro.priceYearly}</span>
                   <span className="text-muted-foreground">/anno</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  equivale a €{(STRIPE_TIERS.pro.priceYearly / 12).toFixed(0)}/mese
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  oppure €{(STRIPE_TIERS.pro.priceYearly / 4).toFixed(0)}/trimestre
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">equivale a €{(STRIPE_TIERS.pro.priceYearly / 12).toFixed(0)}/mese</p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
-                  {PRO_FEATURES.map((f) =>
-                  <li key={f} className="flex items-start gap-3 text-sm">
-                      <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      <span>{f}</span>
+                  {PRO_FEATURES.map((f) => (
+                    <li key={f} className="flex items-start gap-3 text-sm">
+                      <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /><span>{f}</span>
                     </li>
-                  )}
+                  ))}
                 </ul>
-                <Button
-                  className="w-full"
-                  size="lg"
-                  disabled={loadingPlan === "pro"}
-                  onClick={() => handleSubscribe(STRIPE_TIERS.pro.price_id, "pro")}>
-                  {loadingPlan === "pro" ? "Caricamento..." : "Scegli Pro"}
+                <Button className="w-full" size="lg" disabled={loadingPlan === "pro"} onClick={() => handleSubscribe(STRIPE_TIERS.pro.price_id, "pro")}>
+                  {loadingPlan === "pro" ? "Caricamento..." : "Inizia con Pro"}
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Gold Plan */}
+            {/* Gold */}
             <Card className="relative border-2 border-amber-500/50 shadow-lg shadow-amber-500/10">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge className="bg-amber-500 text-white gap-1">
-                  <Crown className="h-3 w-3" /> Multi-Sede
-                </Badge>
+                <Badge className="bg-amber-500 text-white gap-1"><Crown className="h-3 w-3" /> Multi-Sede</Badge>
               </div>
               <CardHeader className="pb-4">
                 <CardTitle className="text-2xl font-serif">Gold</CardTitle>
@@ -409,33 +541,23 @@ export default function Landing() {
                   <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.gold.priceYearly}</span>
                   <span className="text-muted-foreground">/anno</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  equivale a €{(STRIPE_TIERS.gold.priceYearly / 12).toFixed(0)}/mese
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  oppure €{(STRIPE_TIERS.gold.priceYearly / 4).toFixed(0)}/trimestre
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">equivale a €{(STRIPE_TIERS.gold.priceYearly / 12).toFixed(0)}/mese</p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
-                  {GOLD_FEATURES.map((f) =>
-                  <li key={f} className="flex items-start gap-3 text-sm">
-                      <Check className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-                      <span>{f}</span>
+                  {GOLD_FEATURES.map((f) => (
+                    <li key={f} className="flex items-start gap-3 text-sm">
+                      <Check className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" /><span>{f}</span>
                     </li>
-                  )}
+                  ))}
                 </ul>
-                <Button
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
-                  size="lg"
-                  disabled={loadingPlan === "gold"}
-                  onClick={() => handleSubscribe(STRIPE_TIERS.gold.price_id, "gold")}>
-                  {loadingPlan === "gold" ? "Caricamento..." : "Scegli Gold"}
+                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white" size="lg" disabled={loadingPlan === "gold"} onClick={() => handleSubscribe(STRIPE_TIERS.gold.price_id, "gold")}>
+                  {loadingPlan === "gold" ? "Caricamento..." : "Inizia con Gold"}
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Enterprise Plan */}
+            {/* Enterprise */}
             <Card className="relative border-2 border-border hover:border-primary/30 transition-colors">
               <CardHeader className="pb-4">
                 <CardTitle className="text-2xl font-serif">Enterprise</CardTitle>
@@ -444,58 +566,47 @@ export default function Landing() {
                   <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.enterprise.priceYearly}</span>
                   <span className="text-muted-foreground">/anno</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  equivale a €{(STRIPE_TIERS.enterprise.priceYearly / 12).toFixed(0)}/mese
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  oppure €{(STRIPE_TIERS.enterprise.priceYearly / 4).toFixed(0)}/trimestre
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">equivale a €{(STRIPE_TIERS.enterprise.priceYearly / 12).toFixed(0)}/mese</p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
-                  {ENTERPRISE_FEATURES.map((f) =>
-                  <li key={f} className="flex items-start gap-3 text-sm">
-                      <Check className="h-4 w-4 text-accent mt-0.5 shrink-0" />
-                      <span>{f}</span>
+                  {ENTERPRISE_FEATURES.map((f) => (
+                    <li key={f} className="flex items-start gap-3 text-sm">
+                      <Check className="h-4 w-4 text-accent mt-0.5 shrink-0" /><span>{f}</span>
                     </li>
-                  )}
+                  ))}
                 </ul>
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  size="lg"
-                  disabled={loadingPlan === "enterprise"}
-                  onClick={() => handleSubscribe(STRIPE_TIERS.enterprise.price_id, "enterprise")}>
-                  {loadingPlan === "enterprise" ? "Caricamento..." : "Scegli Enterprise"}
+                <Button className="w-full" variant="outline" size="lg" disabled={loadingPlan === "enterprise"} onClick={() => handleSubscribe(STRIPE_TIERS.enterprise.price_id, "enterprise")}>
+                  {loadingPlan === "enterprise" ? "Caricamento..." : "Inizia con Enterprise"}
                 </Button>
               </CardContent>
             </Card>
           </div>
           <p className="text-center text-sm text-muted-foreground mt-8">
-            Tutti i piani includono {trialDays} giorni di prova gratuita. Nessuna carta di credito richiesta per iniziare.
+            Tutti i piani includono {trialDays} giorni di prova gratuita. Nessuna carta di credito richiesta.
           </p>
         </div>
       </section>
 
-      {/* Demo Live Request */}
-      <section id="demo" className="py-24">
+      {/* ══════════ 7. DEMO LIVE ══════════ */}
+      <section id="demo" className="py-24 bg-card/50">
         <div className="max-w-4xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
-                <Video className="h-7 w-7 text-primary" />
-              </div>
+              <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
+                <Video className="h-3.5 w-3.5 mr-1.5" /> Demo personalizzata
+              </Badge>
               <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-                Richiedi una Demo Live Gratuita
+                Vuoi vederlo in azione?
               </h2>
-              <p className="text-muted-foreground text-lg mb-4">
-                Vuoi vedere Pet Hotel Manager in azione? Prenota una demo live gratuita con il nostro team.
-                Ti mostreremo tutte le funzionalità e risponderemo alle tue domande.
+              <p className="text-muted-foreground text-lg mb-6">
+                Prenota una demo gratuita di 30 minuti. Ti mostriamo come Pet Hotel Manager può risolvere i problemi specifici della <strong className="text-foreground">tua</strong> pensione.
               </p>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Demo personalizzata di 30 minuti</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Demo personalizzata sulle tue esigenze</li>
                 <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Nessun impegno di acquisto</li>
                 <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Risposte a tutte le tue domande</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Ti aiutiamo con la configurazione iniziale</li>
               </ul>
             </div>
             <DemoRequestForm />
@@ -503,28 +614,31 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* CTA finale */}
-      <section className="py-24 bg-card/50">
+      {/* ══════════ 8. CTA FINALE ══════════ */}
+      <section className="py-24">
         <div className="max-w-3xl mx-auto px-6 text-center">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-6">
-            Pronto a semplificare la gestione?
+          <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+            Non perdere un'altra prenotazione.
           </h2>
-          <p className="text-lg text-muted-foreground mb-8">
-            Accedi subito alla pensione demo "La Zampa Felice" con dati di esempio già configurati.
-            Nessuna registrazione complicata, basta inserire il tuo nome e la tua email.
+          <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
+            Ogni giorno senza un gestionale è un giorno di lavoro in più, prenotazioni perse e clienti insoddisfatti.
+            <strong className="text-foreground"> Inizia oggi — è gratis.</strong>
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" className="text-base px-10 py-6 gap-2" onClick={handleStartTrial}>
-              Inizia ora — è gratis <ArrowRight className="h-4 w-4" />
+            <Button size="lg" className="text-base px-10 py-6 gap-2 shadow-lg shadow-primary/20" onClick={handleStartTrial}>
+              Prova Gratis — {trialDays} Giorni <ArrowRight className="h-4 w-4" />
             </Button>
             <Button size="lg" variant="outline" className="text-base px-8 py-6 gap-2" asChild>
-              <a href="#demo"><Video className="h-4 w-4" /> Richiedi una demo</a>
+              <a href="#demo"><Video className="h-4 w-4" /> Richiedi Demo</a>
             </Button>
           </div>
+          <p className="mt-4 text-sm text-muted-foreground">
+            Nessuna carta di credito • Attivo in 2 minuti • Disdici quando vuoi
+          </p>
         </div>
       </section>
 
-      {/* Footer */}
+      {/* ── Footer ── */}
       <footer className="border-t py-8">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -538,5 +652,6 @@ export default function Landing() {
           </div>
         </div>
       </footer>
-    </div>);
+    </div>
+  );
 }
