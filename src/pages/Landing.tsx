@@ -80,28 +80,6 @@ const BENEFITS = [
   },
 ];
 
-/* ── Testimonianze ── */
-const TESTIMONIALS = [
-  {
-    name: "Maria Conti",
-    role: "Titolare, Pensione Il Giardino dei Mici",
-    text: "Prima usavo Excel e WhatsApp per tutto. Ora gestisco 40 gatti senza stress. Ho eliminato completamente gli overbooking.",
-    rating: 5,
-  },
-  {
-    name: "Luca Ferretti",
-    role: "Gestore, Dog Paradise Resort",
-    text: "I preventivi automatici mi fanno risparmiare almeno 2 ore al giorno. I clienti ricevono tutto in tempo reale, molto più professionale.",
-    rating: 5,
-  },
-  {
-    name: "Giulia Romano",
-    role: "Proprietaria, La Casa degli Animali",
-    text: "Gestisco 3 sedi da un'unica dashboard. Prima era un incubo coordinare tutto, ora è tutto centralizzato e chiaro.",
-    rating: 5,
-  },
-];
-
 /* ── Problemi (sezione "Prima di PHM") ── */
 const PAIN_POINTS = [
   { icon: X, text: "Prenotazioni su carta, Excel o WhatsApp" },
@@ -198,16 +176,6 @@ function DemoRequestForm() {
   );
 }
 
-/* ── Star Rating ── */
-function StarRating({ count }: { count: number }) {
-  return (
-    <div className="flex gap-0.5">
-      {Array.from({ length: count }).map((_, i) => (
-        <Star key={i} className="h-4 w-4 fill-primary text-primary" />
-      ))}
-    </div>
-  );
-}
 
 /* ══════════════ LANDING PAGE ══════════════ */
 export default function Landing() {
@@ -416,27 +384,6 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Testimonianze */}
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">
-              Cosa dicono i nostri clienti
-            </h2>
-            <p className="text-muted-foreground">Pensioni reali, risultati reali.</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t) => (
-              <Card key={t.name} className="border bg-background">
-                <CardContent className="pt-6 space-y-4">
-                  <StarRating count={t.rating} />
-                  <p className="text-foreground text-sm leading-relaxed italic">"{t.text}"</p>
-                  <div className="pt-3 border-t border-border/50">
-                    <p className="font-semibold text-sm text-foreground">{t.name}</p>
-                    <p className="text-xs text-muted-foreground">{t.role}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         </div>
       </section>
 
