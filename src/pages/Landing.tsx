@@ -259,8 +259,8 @@ export default function Landing() {
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "EUR",
-      lowPrice: STRIPE_TIERS.base.priceYearly,
-      highPrice: STRIPE_TIERS.enterprise.priceYearly,
+      lowPrice: STRIPE_TIERS.starter.priceYearly,
+      highPrice: STRIPE_TIERS.business.priceYearly,
     },
   };
 
