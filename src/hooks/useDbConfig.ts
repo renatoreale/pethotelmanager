@@ -64,7 +64,7 @@ export function useTestExternalConnection() {
  * Returns the appropriate Supabase client based on the current db_mode config.
  * Falls back to the default Lovable Cloud client.
  */
-let externalClientCache: { url: string; key: string; client: ReturnType<typeof createClient> } | null = null;
+let externalClientCache: { url: string; key: string; client: any } | null = null;
 
 export function getExternalClient(url: string, anonKey: string) {
   if (externalClientCache && externalClientCache.url === url && externalClientCache.key === anonKey) {
