@@ -384,27 +384,6 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Testimonianze */}
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">
-              Cosa dicono i nostri clienti
-            </h2>
-            <p className="text-muted-foreground">Pensioni reali, risultati reali.</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t) => (
-              <Card key={t.name} className="border bg-background">
-                <CardContent className="pt-6 space-y-4">
-                  <StarRating count={t.rating} />
-                  <p className="text-foreground text-sm leading-relaxed italic">"{t.text}"</p>
-                  <div className="pt-3 border-t border-border/50">
-                    <p className="font-semibold text-sm text-foreground">{t.name}</p>
-                    <p className="text-xs text-muted-foreground">{t.role}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         </div>
       </section>
 
