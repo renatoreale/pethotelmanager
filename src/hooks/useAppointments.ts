@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 
@@ -10,6 +10,7 @@ export interface SlotAvailability {
 // Fetch slot configs for a specific appointment type and day of week
 export function useSlotConfigsForDay(appointmentType: "check_in" | "check_out", dayOfWeek: number | undefined) {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["slot-configs-day", profile?.tenant_id, appointmentType, dayOfWeek],
     queryFn: async () => {
@@ -48,12 +49,11 @@ export function generateTimeSlots(config: any): string[] {
 // Count existing appointments for a given date/time to check availability
 export function useAppointmentCounts(date: string | undefined, appointmentType: "check_in" | "check_out") {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["appointment-counts", profile?.tenant_id, date, appointmentType],
     queryFn: async () => {
       if (!profile?.tenant_id || !date) return {};
-      // Fetch all appointments of this type on this date
-      // Use timezone-aware range to cover the full local day
       const dayStart = `${date}T00:00:00`;
       const dayEnd = `${date}T23:59:59`;
       const { data, error } = await supabase
@@ -64,11 +64,8 @@ export function useAppointmentCounts(date: string | undefined, appointmentType: 
         .gte("scheduled_at", dayStart)
         .lte("scheduled_at", dayEnd);
       if (error) throw error;
-      // Count per time slot — extract HH:MM from the stored string directly
-      // scheduled_at is stored as "YYYY-MM-DDTHH:MM:00" without timezone
       const counts: Record<string, number> = {};
       for (const appt of data ?? []) {
-        // Extract time directly from the ISO string to avoid timezone shifts
         const isoStr = appt.scheduled_at;
         const tIndex = isoStr.indexOf("T");
         const time = tIndex >= 0 ? isoStr.slice(tIndex + 1, tIndex + 6) : new Date(isoStr).toTimeString().slice(0, 5);
@@ -83,11 +80,12 @@ export function useAppointmentCounts(date: string | undefined, appointmentType: 
 export function useCreateAppointment() {
   const qc = useQueryClient();
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (input: {
       booking_id: string;
       appointment_type: "check_in" | "check_out";
-      scheduled_at: string; // ISO datetime
+      scheduled_at: string;
       duration_minutes?: number;
       notes?: string;
     }) => {
@@ -112,6 +110,7 @@ export function useCreateAppointment() {
 
 // Fetch appointments for a booking
 export function useBookingAppointments(bookingId: string | undefined) {
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["booking-appointments", bookingId],
     queryFn: async () => {
@@ -161,6 +160,7 @@ export interface AppointmentWithDetails {
 // Fetch all appointments for a given date with booking + client + cats
 export function useAppointmentsByDate(date: string | undefined) {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["appointments-by-date", profile?.tenant_id, date],
     queryFn: async () => {
@@ -188,9 +188,10 @@ export function useAppointmentsByDate(date: string | undefined) {
   });
 }
 
-// Fetch all appointments (no date filter) — used when searching across all dates
+// Fetch all appointments (no date filter)
 export function useAllAppointments(enabled: boolean) {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["appointments-all", profile?.tenant_id],
     queryFn: async () => {
@@ -218,6 +219,7 @@ export function useAllAppointments(enabled: boolean) {
 // Fetch all appointments for a date range with booking + client + cats
 export function useAppointmentsByDateRange(startDate: string | undefined, endDate: string | undefined) {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["appointments-by-range", profile?.tenant_id, startDate, endDate],
     queryFn: async () => {
@@ -247,6 +249,7 @@ export function useAppointmentsByDateRange(startDate: string | undefined, endDat
 
 export function useConfirmAppointment() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async ({ id, confirmed }: { id: string; confirmed: boolean }) => {
       const { data, error } = await supabase
@@ -267,19 +270,17 @@ export function useConfirmAppointment() {
 
 export function useDeleteAppointment() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async ({ id, bookingId }: { id: string; bookingId: string }) => {
-      // Delete the appointment
       const { error } = await supabase.from("appointments").delete().eq("id", id);
       if (error) throw error;
 
-      // Check if any appointments remain for this booking
       const { data: remaining } = await supabase
         .from("appointments")
         .select("id, appointment_type")
         .eq("booking_id", bookingId);
 
-      // Determine new status based on remaining appointments
       const remainingTypes = (remaining ?? []).map((a: any) => a.appointment_type);
       const hasIn = remainingTypes.includes("check_in");
       const hasOut = remainingTypes.includes("check_out");
@@ -295,7 +296,6 @@ export function useDeleteAppointment() {
         newStatus = "appuntamento_out_fissato";
       }
 
-      // Update booking status
       await supabase
         .from("bookings")
         .update({ status: newStatus as any })
@@ -314,6 +314,7 @@ export function useDeleteAppointment() {
 
 export function useUpdateAppointment() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (input: {
       id: string;

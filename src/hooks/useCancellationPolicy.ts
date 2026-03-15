@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 
@@ -19,6 +19,7 @@ export interface CancellationPolicy {
 // ── Tenant cancellation policy ──
 export function useCancellationPolicy() {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["cancellation-policy", profile?.tenant_id],
     queryFn: async () => {
@@ -47,6 +48,7 @@ export function useCancellationPolicy() {
 
 // ── Global cancellation policy ──
 export function useGlobalCancellationPolicy() {
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["global-cancellation-policy"],
     queryFn: async () => {
@@ -74,6 +76,7 @@ export function useGlobalCancellationPolicy() {
 // ── Save full policy (upsert policy + sync rules) ──
 export function useSaveCancellationPolicy() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async ({
       tenantId,
@@ -84,7 +87,6 @@ export function useSaveCancellationPolicy() {
       adminFee: number;
       rules: CancellationRule[];
     }) => {
-      // Upsert policy
       let policyId: string;
       const filter = tenantId
         ? supabase.from("cancellation_policies" as any).select("id").eq("tenant_id", tenantId).maybeSingle()
@@ -108,7 +110,6 @@ export function useSaveCancellationPolicy() {
         policyId = (data as any).id;
       }
 
-      // Delete existing rules and re-insert
       await supabase
         .from("cancellation_policy_rules" as any)
         .delete()

@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 
@@ -52,6 +52,7 @@ const ACTIVE_STATUSES = [
 
 export function useBookings(statusFilter?: string) {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["bookings", profile?.tenant_id, statusFilter],
     queryFn: async () => {
@@ -118,6 +119,7 @@ export function getTransitions(status: string) {
 
 export function useTransitionBooking() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async ({ id, newStatus }: { id: string; newStatus: string }) => {
       const { data, error } = await supabase
@@ -146,6 +148,7 @@ export function useTransitionBooking() {
 
 export function useDeleteBooking() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("bookings").delete().eq("id", id);

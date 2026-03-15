@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 
@@ -33,17 +33,9 @@ export interface Preventivo {
   }[];
 }
 
-// Get next booking number from DB function
-async function getNextBookingNumber(tenantId: string): Promise<string> {
-  const { data, error } = await supabase.rpc("next_booking_number", {
-    _tenant_id: tenantId,
-  });
-  if (error) throw error;
-  return data as string;
-}
-
 export function usePreventivi() {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["preventivi", profile?.tenant_id],
     queryFn: async () => {
@@ -70,6 +62,7 @@ export function usePreventivi() {
 export function useCreatePreventivo() {
   const qc = useQueryClient();
   const { user, profile } = useAuth();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (input: {
       client_id: string;
@@ -88,7 +81,11 @@ export function useCreatePreventivo() {
       if (!profile?.tenant_id) throw new Error("Tenant non configurato");
       const { cat_ids, quote_request_id, ...booking } = input;
 
-      const bookingNumber = await getNextBookingNumber(profile.tenant_id);
+      // Get next booking number
+      const { data: bookingNumber, error: bnError } = await supabase.rpc("next_booking_number", {
+        _tenant_id: profile.tenant_id,
+      });
+      if (bnError) throw bnError;
 
       // Insert booking
       const { data: newBooking, error: bookingError } = await supabase
@@ -96,7 +93,7 @@ export function useCreatePreventivo() {
         .insert({
           ...booking,
           tenant_id: profile.tenant_id,
-          booking_number: bookingNumber,
+          booking_number: bookingNumber as string,
           status: "preventivo" as const,
           created_by: user?.id ?? null,
           units_occupied: booking.units_occupied ?? 1,
@@ -138,6 +135,7 @@ export function useCreatePreventivo() {
 
 export function useUpdatePreventivo() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (input: {
       id: string;
@@ -164,9 +162,7 @@ export function useUpdatePreventivo() {
 
       // Update cats if provided
       if (cat_ids !== undefined) {
-        // Delete existing
         await supabase.from("booking_cats").delete().eq("booking_id", id);
-        // Re-insert
         if (cat_ids.length > 0) {
           const { error: catsError } = await supabase
             .from("booking_cats")
@@ -191,9 +187,9 @@ export function useUpdatePreventivo() {
 
 export function useDeletePreventivo() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (id: string) => {
-      // Delete cats first
       await supabase.from("booking_cats").delete().eq("booking_id", id);
       const { error } = await supabase.from("bookings").delete().eq("id", id);
       if (error) throw error;
@@ -205,6 +201,7 @@ export function useDeletePreventivo() {
 export function useConfirmPreventivo() {
   const qc = useQueryClient();
   const { user, profile } = useAuth();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async (input: {
       id: string;
@@ -217,7 +214,6 @@ export function useConfirmPreventivo() {
     }) => {
       if (!profile?.tenant_id) throw new Error("Tenant non configurato");
 
-      // 1. Update booking status and actual deposit
       const { data, error } = await supabase
         .from("bookings")
         .update({
@@ -229,7 +225,6 @@ export function useConfirmPreventivo() {
         .single();
       if (error) throw error;
 
-      // 2. Register deposit payment
       const { error: payError } = await supabase
         .from("payments")
         .insert({
@@ -256,6 +251,7 @@ export function useConfirmPreventivo() {
 
 // Fetch cats by client_id
 export function useClientCats(clientId: string | undefined) {
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["client-cats", clientId],
     queryFn: async () => {

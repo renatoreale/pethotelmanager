@@ -1,9 +1,10 @@
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 
 export function useQuoteRequests() {
   const { profile } = useAuth();
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["quote-requests", profile?.tenant_id],
     queryFn: async () => {
@@ -23,6 +24,7 @@ export function useQuoteRequests() {
 
 export function useUpdateQuoteRequestStatus() {
   const qc = useQueryClient();
+  const supabase = useSupabase();
   return useMutation({
     mutationFn: async ({ id, status, rejection_reason }: { id: string; status: string; rejection_reason?: string }) => {
       const update: any = { status };
