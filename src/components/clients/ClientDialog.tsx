@@ -34,7 +34,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, Cat, Dog, PawPrint, RefreshCw, KeyRound } from "lucide-react";
 import { useCreateClient, useUpdateClient, type Client } from "@/hooks/useClients";
 import { useCreateCat, useCats, useDeleteCat, useUpdateCat } from "@/hooks/useCats";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { usePetLabels, type PetType } from "@/hooks/usePetLabels";
 import { BreedCombobox } from "@/components/BreedCombobox";
 
@@ -93,6 +93,7 @@ interface ClientDialogProps {
 }
 
 export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) {
+  const supabase = useSupabase();
   const { profile } = useAuth();
   const createClient = useCreateClient();
   const updateClient = useUpdateClient();
@@ -119,11 +120,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       
+      toast.success(`Invito inviato a ${client.email}`);
       if (data?.recovery_link) {
         await navigator.clipboard.writeText(data.recovery_link);
-        toast.success("Nuovo link generato e copiato negli appunti!");
-      } else {
-        toast.success("Nuovo invito generato");
       }
     } catch (err: any) {
       toast.error(err.message || "Errore nel reinvio dell'invito");
@@ -142,11 +141,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       
+      toast.success(`Email reset password inviata a ${client.email}`);
       if (data?.recovery_link) {
         await navigator.clipboard.writeText(data.recovery_link);
-        toast.success("Link reset password generato e copiato negli appunti!");
-      } else {
-        toast.success("Reset password generato");
       }
     } catch (err: any) {
       toast.error(err.message || "Errore nel reset della password");

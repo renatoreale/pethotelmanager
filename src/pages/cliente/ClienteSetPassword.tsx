@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase, useSupabaseClientInfo } from "@/hooks/useSupabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,8 @@ import { XCircle, Loader2 } from "lucide-react";
 
 export default function ClienteSetPassword() {
   const navigate = useNavigate();
+  const supabase = useSupabase();
+  const { loading: clientLoading } = useSupabaseClientInfo();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,57 +20,51 @@ export default function ClienteSetPassword() {
   const [isPasswordReset, setIsPasswordReset] = useState(false);
 
   useEffect(() => {
-    let timeout: ReturnType<typeof setTimeout>;
-    let recoveryHandled = false;
+    if (clientLoading) return;
+    let handled = false;
+
+    const handleSession = async (isRecovery: boolean) => {
+      if (handled) return;
+      handled = true;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setStatus("expired"); return; }
+      const { data: client } = await supabase
+        .from("clients")
+        .select("portal_activated")
+        .eq("user_id", user.id)
+        .single();
+      if (!client) { setStatus("expired"); return; }
+      if (client.portal_activated && !isRecovery) {
+        setStatus("already_activated");
+      } else {
+        if (client.portal_activated) setIsPasswordReset(true);
+        setStatus("ready");
+      }
+    };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
       if (event === "PASSWORD_RECOVERY") {
-        recoveryHandled = true;
-        clearTimeout(timeout);
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: client } = await supabase
-            .from("clients")
-            .select("portal_activated")
-            .eq("user_id", user.id)
-            .single();
-
-          if (client?.portal_activated) {
-            setIsPasswordReset(true);
-          }
-        }
-        setStatus("ready");
+        await handleSession(true);
       }
     });
 
-    // If no PASSWORD_RECOVERY event fires within 3s, check if user is already signed in
-    timeout = setTimeout(async () => {
-      if (recoveryHandled) return;
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: client } = await supabase
-          .from("clients")
-          .select("portal_activated")
-          .eq("user_id", user.id)
-          .single();
-
-        if (client?.portal_activated) {
-          setStatus("already_activated");
-        } else if (client) {
-          setStatus("ready");
-        } else {
-          setStatus("expired");
-        }
-      } else {
-        setStatus("expired");
+    // Il client potrebbe aver già processato il token prima che il listener fosse pronto:
+    // controlliamo subito la sessione esistente.
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session && !handled) {
+        await handleSession(true);
+      } else if (!session) {
+        // Aspettiamo ancora un po' per l'evento async
+        setTimeout(async () => {
+          if (!handled) setStatus("expired");
+        }, 3000);
       }
-    }, 3000);
+    });
 
     return () => {
       subscription.unsubscribe();
-      clearTimeout(timeout);
     };
-  }, []);
+  }, [supabase, clientLoading]);
 
   const handleSetPassword = async (e: React.FormEvent) => {
     e.preventDefault();

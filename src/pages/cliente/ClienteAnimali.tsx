@@ -18,7 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, PawPrint, Camera, X } from "lucide-react";
 import { BreedCombobox } from "@/components/BreedCombobox";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 
 interface CatForm {
   name: string;
@@ -42,6 +42,7 @@ const emptyForm: CatForm = {
 };
 
 export default function ClienteAnimali() {
+  const supabase = useSupabase();
   const { data: profile } = useClienteProfile();
   const { data: cats, isLoading } = useClienteCats();
   const { data: tenant } = useClienteTenant();

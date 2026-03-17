@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase as baseClient } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -62,6 +63,7 @@ interface FullUser {
 type FilterType = "all" | "trial_active" | "trial_expired" | "active" | "banned" | "no_role";
 
 export function TrialDashboardTab() {
+  const supabase = useSupabase();
   const [users, setUsers] = useState<FullUser[]>([]);
   const [tenants, setTenants] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,7 +96,7 @@ export function TrialDashboardTab() {
         supabase.from("user_roles").select("*"),
         supabase.from("tenants").select("id, name").order("name"),
         supabase.from("trial_registrations").select("*"),
-        supabase.functions.invoke("admin-list-users"),
+        baseClient.functions.invoke("admin-list-users"),
       ]);
 
       const profiles = profilesRes.data || [];
@@ -230,7 +232,7 @@ export function TrialDashboardTab() {
 
       // Update email if changed
       if (editEmail.trim() && editEmail.trim() !== editUser.email) {
-        await supabase.functions.invoke("admin-update-user", {
+        await baseClient.functions.invoke("admin-update-user", {
           body: { user_id: editUser.user_id, email: editEmail.trim() },
         });
       }
@@ -313,7 +315,7 @@ export function TrialDashboardTab() {
   const handleBan = async () => {
     if (!banningUser) return;
     try {
-      const { data, error } = await supabase.functions.invoke("admin-ban-user", {
+      const { data, error } = await baseClient.functions.invoke("admin-ban-user", {
         body: { user_id: banningUser.user.user_id, ban: banningUser.ban },
       });
       if (error) throw error;
@@ -330,7 +332,7 @@ export function TrialDashboardTab() {
   const handleDelete = async () => {
     if (!deletingUser) return;
     try {
-      const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+      const { data, error } = await baseClient.functions.invoke("admin-delete-user", {
         body: { user_id: deletingUser.user_id },
       });
       if (error) throw error;

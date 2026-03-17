@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -8,14 +8,15 @@ import { Calendar as CalendarWidget } from "@/components/ui/calendar";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useTenantConfig, usePriceLists } from "@/hooks/usePensioneConfig";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
+import { generateModuloAffidoPDF } from "@/lib/generateModuloAffidoPDF";
 
 interface BookingData {
   id: string;
@@ -25,8 +26,9 @@ interface BookingData {
   total_amount: number | null;
   price_breakdown: any;
   status?: string;
-  client?: { first_name: string; last_name: string };
+  client?: { first_name: string; last_name: string; email?: string | null };
   booking_cats?: { id: string; cat?: { id: string; name: string } }[];
+  appointments?: { appointment_type: "check_in" | "check_out"; scheduled_at: string }[];
 }
 
 interface Props {
@@ -36,6 +38,7 @@ interface Props {
 }
 
 export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
+  const supabase = useSupabase();
   const queryClient = useQueryClient();
   const { data: tenantConfig } = useTenantConfig();
   const { data: priceLists } = usePriceLists();
@@ -45,11 +48,15 @@ export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
   const [ciPickerOpen, setCiPickerOpen] = useState(false);
   const [coPickerOpen, setCoPickerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [emailConfirmPhase, setEmailConfirmPhase] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const savedRef = useRef<{ ci: string; co: string }>({ ci: "", co: "" });
 
   useEffect(() => {
     if (open) {
       setNewCiDate(parseISO(booking.check_in_date));
       setNewCoDate(parseISO(booking.check_out_date));
+      setEmailConfirmPhase(false);
     }
   }, [open, booking.check_in_date, booking.check_out_date]);
 
@@ -150,7 +157,12 @@ export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
       queryClient.invalidateQueries({ queryKey: ["preventivi"] });
 
       toast.success("Date prenotazione aggiornate");
-      onOpenChange(false);
+      savedRef.current = { ci: newCiStr, co: newCoStr };
+      if (booking.client?.email && tenantConfig) {
+        setEmailConfirmPhase(true);
+      } else {
+        onOpenChange(false);
+      }
     } catch (err: any) {
       toast.error(err.message || "Errore durante il salvataggio");
     } finally {
@@ -158,15 +170,64 @@ export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
     }
   };
 
+  const handleSendEmail = async () => {
+    if (!tenantConfig) return;
+    setSendingEmail(true);
+    try {
+      const bookingWithDates = {
+        ...booking,
+        check_in_date: savedRef.current.ci,
+        check_out_date: savedRef.current.co,
+      };
+      const pdf_base64 = await generateModuloAffidoPDF(bookingWithDates as any, tenantConfig as any, true, supabase) as string;
+      const { data, error } = await supabase.functions.invoke("send-appuntamento", {
+        body: { booking_id: booking.id, pdf_base64, filename: `Modulo_Affido_${booking.booking_number}.pdf` },
+      });
+      if (error || data?.error) throw new Error((error || data?.error)?.message || "Errore invio");
+      toast.success(`Email inviata a ${booking.client?.email}`);
+    } catch (err: any) {
+      toast.error(err.message || "Errore nell'invio email");
+    } finally {
+      setSendingEmail(false);
+      setEmailConfirmPhase(false);
+      onOpenChange(false);
+    }
+  };
+
+  const handleClose = () => {
+    setEmailConfirmPhase(false);
+    onOpenChange(false);
+  };
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Modifica Date Prenotazione</DialogTitle>
         </DialogHeader>
+
+        {emailConfirmPhase ? (
+          <div className="space-y-4 py-2">
+            <div className="flex items-start gap-3 rounded-lg border p-4 bg-muted/40">
+              <Mail className="h-5 w-5 mt-0.5 text-primary shrink-0" />
+              <div className="space-y-1">
+                <p className="font-medium text-sm">Inviare la mail al cliente?</p>
+                <p className="text-sm text-muted-foreground">
+                  Vuoi inviare a <strong>{booking.client?.email}</strong> la conferma degli appuntamenti con il modulo di affido in allegato?
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={handleClose} disabled={sendingEmail}>No, chiudi</Button>
+              <Button onClick={handleSendEmail} disabled={sendingEmail}>
+                {sendingEmail ? "Invio in corso..." : "Sì, invia email"}
+              </Button>
+            </DialogFooter>
+          </div>
+        ) : (
 
         <div className="space-y-4 py-2">
           {/* Booking info */}
@@ -272,17 +333,17 @@ export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
               La data di check-in non può essere uguale o successiva al check-out.
             </div>
           )}
+          <DialogFooter>
+            <Button variant="outline" onClick={handleClose}>Annulla</Button>
+            <Button
+              onClick={handleSave}
+              disabled={saving || !anyChange || (recalculated && !recalculated.valid)}
+            >
+              {saving ? "Salvataggio..." : "Salva Modifiche"}
+            </Button>
+          </DialogFooter>
         </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Annulla</Button>
-          <Button
-            onClick={handleSave}
-            disabled={saving || !anyChange || (recalculated && !recalculated.valid)}
-          >
-            {saving ? "Salvataggio..." : "Salva Modifiche"}
-          </Button>
-        </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

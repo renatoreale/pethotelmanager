@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -18,6 +18,10 @@ import {
   generateTimeSlots,
 } from "@/hooks/useAppointments";
 import { useTransitionBooking } from "@/hooks/useBookings";
+import { useSupabase } from "@/hooks/useSupabaseClient";
+import { useTenantConfig } from "@/hooks/usePensioneConfig";
+import { generateModuloAffidoPDF } from "@/lib/generateModuloAffidoPDF";
+import { Mail } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -29,7 +33,13 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
   const [checkInTime, setCheckInTime] = useState<string | null>(null);
   const [checkOutTime, setCheckOutTime] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailConfirmPhase, setEmailConfirmPhase] = useState(false);
+  // Snapshot of times used for PDF after save
+  const savedTimesRef = useRef<{ checkIn: string | null; checkOut: string | null }>({ checkIn: null, checkOut: null });
 
+  const supabase = useSupabase();
+  const { data: tenantConfig } = useTenantConfig();
   const transitionBooking = useTransitionBooking();
   const createAppointment = useCreateAppointment();
   const updateAppointment = useUpdateAppointment();
@@ -63,6 +73,7 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
     if (open) {
       setCheckInTime(existingCheckIn?.time ?? null);
       setCheckOutTime(existingCheckOut?.time ?? null);
+      setEmailConfirmPhase(false);
     }
   }, [open, existingCheckIn?.time, existingCheckOut?.time]);
 
@@ -179,11 +190,48 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
       await transitionBooking.mutateAsync({ id: booking.id, newStatus });
 
       toast.success(isEditMode ? "Appuntamenti aggiornati" : "Appuntamenti fissati");
-      onOpenChange(false);
+
+      // If client has email, ask for confirmation before sending
+      if (booking.client?.email && tenantConfig) {
+        savedTimesRef.current = { checkIn: checkInTime, checkOut: checkOutTime };
+        setEmailConfirmPhase(true);
+      } else {
+        onOpenChange(false);
+      }
     } catch (err: any) {
       toast.error(err.message || "Errore");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!booking || !tenantConfig) return;
+    setSendingEmail(true);
+    try {
+      const { checkIn, checkOut } = savedTimesRef.current;
+      const bookingWithAppts = {
+        ...booking,
+        appointments: [
+          ...(booking.appointments ?? []).filter((a: any) =>
+            a.appointment_type !== "check_in" && a.appointment_type !== "check_out"
+          ),
+          ...(checkIn && checkInDate ? [{ id: "new-in", appointment_type: "check_in" as const, scheduled_at: `${checkInDate}T${checkIn}:00` }] : []),
+          ...(checkOut && checkOutDate ? [{ id: "new-out", appointment_type: "check_out" as const, scheduled_at: `${checkOutDate}T${checkOut}:00` }] : []),
+        ],
+      };
+      const pdf_base64 = await generateModuloAffidoPDF(bookingWithAppts, tenantConfig as any, true, supabase) as string;
+      const { data, error } = await supabase.functions.invoke("send-appuntamento", {
+        body: { booking_id: booking.id, pdf_base64, filename: `Modulo_Affido_${booking.booking_number}.pdf` },
+      });
+      if (error || data?.error) throw new Error((error || data?.error)?.message || "Errore invio");
+      toast.success(`Email con modulo di affido inviata a ${booking.client.email}`);
+    } catch (err: any) {
+      toast.error(err.message || "Errore nell'invio email");
+    } finally {
+      setSendingEmail(false);
+      setEmailConfirmPhase(false);
+      onOpenChange(false);
     }
   };
 
@@ -219,57 +267,84 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
     );
   };
 
+  const handleClose = () => {
+    setEmailConfirmPhase(false);
+    onOpenChange(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{isEditMode ? "Modifica Appuntamenti" : "Fissa Appuntamenti"}</DialogTitle>
         </DialogHeader>
 
-        {booking && (
-          <div className="space-y-1 text-sm border-b pb-3">
-            <p><span className="text-muted-foreground">Prenotazione:</span> <span className="font-mono">{booking.booking_number}</span></p>
-            <p><span className="text-muted-foreground">Cliente:</span> {booking.client?.first_name} {booking.client?.last_name}</p>
-            <p><span className="text-muted-foreground">Totale:</span> € {Number(booking.total_amount ?? 0).toFixed(2)}</p>
+        {!emailConfirmPhase ? (
+          <>
+            {booking && (
+              <div className="space-y-1 text-sm border-b pb-3">
+                <p><span className="text-muted-foreground">Prenotazione:</span> <span className="font-mono">{booking.booking_number}</span></p>
+                <p><span className="text-muted-foreground">Cliente:</span> {booking.client?.first_name} {booking.client?.last_name}</p>
+                <p><span className="text-muted-foreground">Totale:</span> € {Number(booking.total_amount ?? 0).toFixed(2)}</p>
+              </div>
+            )}
+
+            <div className="space-y-5 py-2">
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">
+                  Appuntamento Check-in — {checkInDate ? format(parseISO(checkInDate), "EEEE dd MMM yyyy", { locale: it }) : ""}
+                </Label>
+                {!checkInSlots.length ? (
+                  <p className="text-sm text-muted-foreground">Nessuno slot configurato per questo giorno.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {checkInSlots.map((slot) => renderSlotButton(slot, checkInTime, setCheckInTime, existingCheckIn?.time ?? null))}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">
+                  Appuntamento Check-out — {checkOutDate ? format(parseISO(checkOutDate), "EEEE dd MMM yyyy", { locale: it }) : ""}
+                </Label>
+                {!checkOutSlots.length ? (
+                  <p className="text-sm text-muted-foreground">Nessuno slot configurato per questo giorno.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {checkOutSlots.map((slot) => renderSlotButton(slot, checkOutTime, setCheckOutTime, existingCheckOut?.time ?? null))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={handleClose}>Annulla</Button>
+              <Button onClick={handleConfirm} disabled={saving}>
+                {saving ? "Salvataggio..." : isEditMode ? "Aggiorna Appuntamenti" : "Fissa Appuntamenti"}
+              </Button>
+            </DialogFooter>
+          </>
+        ) : (
+          <div className="space-y-4 py-2">
+            <div className="flex items-start gap-3 rounded-lg border p-4 bg-muted/40">
+              <Mail className="h-5 w-5 mt-0.5 text-primary shrink-0" />
+              <div className="space-y-1">
+                <p className="font-medium text-sm">Inviare la mail al cliente?</p>
+                <p className="text-sm text-muted-foreground">
+                  Vuoi inviare a <strong>{booking?.client?.email}</strong> la conferma degli appuntamenti con il modulo di affido in allegato?
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={handleClose} disabled={sendingEmail}>
+                No, chiudi
+              </Button>
+              <Button onClick={handleSendEmail} disabled={sendingEmail}>
+                {sendingEmail ? "Invio in corso..." : "Sì, invia email"}
+              </Button>
+            </DialogFooter>
           </div>
         )}
-
-        <div className="space-y-5 py-2">
-          {/* Check-in slot */}
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">
-              Appuntamento Check-in — {checkInDate ? format(parseISO(checkInDate), "EEEE dd MMM yyyy", { locale: it }) : ""}
-            </Label>
-            {!checkInSlots.length ? (
-              <p className="text-sm text-muted-foreground">Nessuno slot configurato per questo giorno.</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {checkInSlots.map((slot) => renderSlotButton(slot, checkInTime, setCheckInTime, existingCheckIn?.time ?? null))}
-              </div>
-            )}
-          </div>
-
-          {/* Check-out slot */}
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">
-              Appuntamento Check-out — {checkOutDate ? format(parseISO(checkOutDate), "EEEE dd MMM yyyy", { locale: it }) : ""}
-            </Label>
-            {!checkOutSlots.length ? (
-              <p className="text-sm text-muted-foreground">Nessuno slot configurato per questo giorno.</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {checkOutSlots.map((slot) => renderSlotButton(slot, checkOutTime, setCheckOutTime, existingCheckOut?.time ?? null))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Annulla</Button>
-          <Button onClick={handleConfirm} disabled={saving}>
-            {saving ? "Salvataggio..." : isEditMode ? "Aggiorna Appuntamenti" : "Fissa Appuntamenti"}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

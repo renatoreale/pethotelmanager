@@ -1,8 +1,9 @@
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // ── Global Slot Configs (tenant_id IS NULL) ──
 export function useGlobalSlotConfigs() {
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["global-slot-configs"],
     queryFn: async () => {
@@ -19,6 +20,7 @@ export function useGlobalSlotConfigs() {
 }
 
 export function useUpsertGlobalSlotConfig() {
+  const supabase = useSupabase();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (slot: {
@@ -56,6 +58,7 @@ export function useUpsertGlobalSlotConfig() {
 }
 
 export function useDeleteGlobalSlotConfig() {
+  const supabase = useSupabase();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
@@ -68,6 +71,7 @@ export function useDeleteGlobalSlotConfig() {
 
 // ── Global Price Lists (tenant_id IS NULL) ──
 export function useGlobalPriceLists() {
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["global-price-lists"],
     queryFn: async () => {
@@ -83,6 +87,7 @@ export function useGlobalPriceLists() {
 }
 
 export function useUpsertGlobalPriceList() {
+  const supabase = useSupabase();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (price: {
@@ -125,6 +130,7 @@ export function useUpsertGlobalPriceList() {
 }
 
 export function useDeleteGlobalPriceList() {
+  const supabase = useSupabase();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
@@ -137,6 +143,7 @@ export function useDeleteGlobalPriceList() {
 
 // ── Global Payment Methods (tenant_id IS NULL) ──
 export function useGlobalPaymentMethods() {
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["global-payment-methods"],
     queryFn: async () => {
@@ -152,6 +159,7 @@ export function useGlobalPaymentMethods() {
 }
 
 export function useUpsertGlobalPaymentMethod() {
+  const supabase = useSupabase();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (method: {
@@ -185,6 +193,7 @@ export function useUpsertGlobalPaymentMethod() {
 }
 
 export function useDeleteGlobalPaymentMethod() {
+  const supabase = useSupabase();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {

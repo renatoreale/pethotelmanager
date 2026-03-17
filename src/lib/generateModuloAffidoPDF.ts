@@ -1,7 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format, parseISO, differenceInDays } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase as baseSupabase } from "@/integrations/supabase/client";
 
 interface BookingData {
   id: string;
@@ -65,7 +65,10 @@ async function loadImageAsBase64(url: string): Promise<string | null> {
 export async function generateModuloAffidoPDF(
   booking: BookingData,
   tenant: TenantData,
+  returnBase64 = false,
+  supabaseClient?: any,
 ) {
+  const supabase = supabaseClient ?? baseSupabase;
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -549,6 +552,8 @@ export async function generateModuloAffidoPDF(
     doc.text(contactParts.join(" • "), pageWidth / 2, footerY + 4, { align: "center" });
   }
 
-  // ── Download ──
+  if (returnBase64) {
+    return doc.output("datauristring").split(",")[1];
+  }
   doc.save(`Modulo_Affido_${booking.booking_number}.pdf`);
 }

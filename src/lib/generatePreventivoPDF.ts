@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { format, addDays, parseISO } from "date-fns";
+import { format, addDays, parseISO, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
 import type { PaymentSplitConfig } from "@/hooks/usePaymentSplits";
 
@@ -61,7 +61,8 @@ export async function generatePreventivoPDF(
   tenant: TenantData,
   paymentSplits: PaymentSplitConfig[],
   stayCalcType: string,
-) {
+  returnBase64 = false,
+): Promise<string | void> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -183,10 +184,12 @@ export async function generatePreventivoPDF(
     const checkOutFormatted = format(parseISO(preventivo.check_out_date), "dd/MM/yyyy");
     const numCats = preventivo.booking_cats?.length ?? 1;
     const unitLabel = stayCalcType === "notti" ? "notti" : "gg";
+    const diff = differenceInDays(parseISO(preventivo.check_out_date), parseISO(preventivo.check_in_date));
+    const stayDays = stayCalcType === "notti" ? diff : diff + 1;
     tableBody.push([
       `Soggiorno dal: ${checkInFormatted} al: ${checkOutFormatted}`,
       `€ ${(Number(preventivo.total_amount) / numCats).toFixed(2)}`,
-      `- ${unitLabel}`,
+      `${stayDays} ${unitLabel}`,
       String(numCats),
       `€ ${Number(preventivo.total_amount).toFixed(2)}`,
     ]);
@@ -382,6 +385,8 @@ export async function generatePreventivoPDF(
     doc.text(ibanLine, pageWidth / 2, footerY + 8, { align: "center" });
   }
 
-  // ── Download ──
+  if (returnBase64) {
+    return doc.output("datauristring").split(",")[1];
+  }
   doc.save(`Preventivo_${preventivo.booking_number}.pdf`);
 }

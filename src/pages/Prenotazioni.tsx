@@ -1,4 +1,5 @@
 import { useState, useMemo, Fragment } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { HelpButton } from "@/components/HelpButton";
 import { prenotazioniHelpSections } from "@/components/help/prenotazioniHelp";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -18,7 +19,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, CalendarDays, MoreHorizontal, Pencil, CalendarClock, CreditCard, ChevronDown, Trash2, FileDown } from "lucide-react";
+import { Search, CalendarDays, MoreHorizontal, Pencil, CalendarClock, CreditCard, ChevronDown, Trash2, FileDown, Mail, Send } from "lucide-react";
 import { BookingDrillDown } from "@/components/BookingDrillDown";
 import { AutocompleteSearch } from "@/components/AutocompleteSearch";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
@@ -30,7 +31,7 @@ import { it } from "date-fns/locale";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import { useBookings, useTransitionBooking, useDeleteBooking, getTransitions } from "@/hooks/useBookings";
 import { useUpdatePreventivo } from "@/hooks/usePreventivi";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useAuth } from "@/hooks/useAuth";
 import { usePaymentSplits } from "@/hooks/usePaymentSplits";
 import { generatePreventivoPDF } from "@/lib/generatePreventivoPDF";
@@ -80,6 +81,8 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function Prenotazioni() {
+  const supabase = useSupabase();
+  const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("tutti");
   const [search, setSearch] = useState("");
   const [transitioning, setTransitioning] = useState<{ id: string; bookingNumber: string; newStatus: string; label: string } | null>(null);
@@ -262,6 +265,46 @@ export default function Prenotazioni() {
     }
   };
 
+  const handleSendPDF = async (b: any) => {
+    if (!tenantConfig) return;
+    if (!b.client?.email) {
+      toast.error("Il cliente non ha un indirizzo email");
+      return;
+    }
+    try {
+      const pdf_base64 = await generatePreventivoPDF(b, tenantConfig as any, paymentSplits ?? [], stayCalcType, true) as string;
+      const { data, error } = await supabase.functions.invoke("send-preventivo", {
+        body: {
+          booking_id: b.id,
+          pdf_base64,
+          filename: `Preventivo_${b.booking_number}.pdf`,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Preventivo inviato a ${b.client.email}`);
+    } catch (err: any) {
+      toast.error(err.message || "Errore nell'invio del preventivo");
+    }
+  };
+
+  const handleSendApptEmail = async (b: any) => {
+    if (!tenantConfig) return;
+    if (!b.client?.email) { toast.error("Il cliente non ha un indirizzo email"); return; }
+    try {
+      const pdf_base64 = await generateModuloAffidoPDF(b, tenantConfig as any, true, supabase) as string;
+      const { data, error } = await supabase.functions.invoke("send-appuntamento", {
+        body: { booking_id: b.id, pdf_base64, filename: `Modulo_Affido_${b.booking_number}.pdf` },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Email appuntamenti inviata a ${b.client.email}`);
+      if (b.client_id) queryClient.invalidateQueries({ queryKey: ["email-logs", b.client_id] });
+    } catch (err: any) {
+      toast.error(err.message || "Errore nell'invio email");
+    }
+  };
+
   const handleDownloadModuloAffido = async (b: any) => {
     if (!tenantConfig) return;
     try {
@@ -342,7 +385,9 @@ export default function Prenotazioni() {
                   {filtered.map((b) => {
                     const duration = calcStayDuration(b.check_in_date, b.check_out_date);
                     const catNames = b.booking_cats?.map(bc => bc.cat?.name).filter(Boolean).join(", ") || "—";
-                    const transitions = getTransitions(b.status);
+                    const transitions = getTransitions(b.status).filter(t =>
+                      t.next !== "rimborsata" || b.payments?.some(p => p.payment_type === "rimborso")
+                    );
 
                     return (
                       <Fragment key={b.id}>
@@ -429,14 +474,14 @@ export default function Prenotazioni() {
                                     key={t.next}
                                     onClick={() => {
                                       if (t.next === "appuntamento_fissato" || t.next === "appuntamento_in_fissato" || t.next === "appuntamento_out_fissato" || t.next === "appuntamento_in_out_fissato") {
-                                        setSchedulingBooking(b);
+                                        setTimeout(() => setSchedulingBooking(b), 0);
                                       } else {
-                                        setTransitioning({
+                                        setTimeout(() => setTransitioning({
                                           id: b.id,
                                           bookingNumber: b.booking_number,
                                           newStatus: t.next,
                                           label: t.label,
-                                        });
+                                        }), 0);
                                       }
                                     }}
                                   >
@@ -447,13 +492,25 @@ export default function Prenotazioni() {
                                   <FileDown className="h-4 w-4 mr-2" />
                                   Scarica Preventivo PDF
                                 </DropdownMenuItem>
+                                {b.client?.email && (
+                                  <DropdownMenuItem onClick={() => handleSendPDF(b)}>
+                                    <Mail className="h-4 w-4 mr-2" />
+                                    Invia Preventivo via email
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem onClick={() => handleDownloadModuloAffido(b)}>
                                   <FileDown className="h-4 w-4 mr-2" />
                                   Scarica Modulo Affido
                                 </DropdownMenuItem>
+                                {b.client?.email && b.appointments && b.appointments.length > 0 && (
+                                  <DropdownMenuItem onClick={() => handleSendApptEmail(b)}>
+                                    <Send className="h-4 w-4 mr-2" />
+                                    Invia email appuntamenti
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem
                                   className="text-destructive focus:text-destructive"
-                                  onClick={() => setDeleting({ id: b.id, bookingNumber: b.booking_number })}
+                                  onClick={() => setTimeout(() => setDeleting({ id: b.id, bookingNumber: b.booking_number }), 0)}
                                 >
                                   <Trash2 className="h-4 w-4 mr-2" />
                                   Elimina

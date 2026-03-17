@@ -8,7 +8,7 @@ import { it } from "date-fns/locale";
 import { FileText, CreditCard, Building2, Copy, Download, Loader2, CheckCircle2, Eye, Printer, Mail, AlertTriangle } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase as baseClient } from "@/integrations/supabase/client";
 import { generateModuloAffidoPDF } from "@/lib/generateModuloAffidoPDF";
 import { generatePreventivoPDF } from "@/lib/generatePreventivoPDF";
 import { useSearchParams } from "react-router-dom";
@@ -78,7 +78,7 @@ export default function ClientePreventivi() {
       verifyAttempted.current = true;
       (async () => {
         try {
-          const { data, error } = await supabase.functions.invoke("verify-stripe-payment", {
+          const { data, error } = await baseClient.functions.invoke("verify-stripe-payment", {
             body: { booking_id: bookingId },
           });
           if (error) throw error;
@@ -114,7 +114,7 @@ export default function ClientePreventivi() {
     setPayingStripe(true);
     try {
       const amount = booking.deposit_amount > 0 ? Number(booking.deposit_amount) : Number(booking.total_amount || 0);
-      const { data, error } = await supabase.functions.invoke("create-client-payment", {
+      const { data, error } = await baseClient.functions.invoke("create-client-payment", {
         body: {
           booking_id: booking.id,
           amount,

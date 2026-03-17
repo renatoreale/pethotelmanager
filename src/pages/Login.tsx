@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase, useSupabaseClientInfo } from "@/hooks/useSupabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,8 @@ const DEMO_EMAIL = "demo@pethotelmanager.com";
 const DEMO_PASSWORD = "DemoTest2026!";
 
 export default function Login() {
+  const supabase = useSupabase();
+  const { loading: clientLoading } = useSupabaseClientInfo();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
@@ -76,7 +78,7 @@ export default function Login() {
               <Label htmlFor="password">{t("auth.passwordLabel")}</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || clientLoading}>
               {loading ? t("auth.loginLoading") : t("auth.loginButton")}
             </Button>
             <div className="flex justify-end text-sm">

@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 
 export type Permission = "read" | "write" | "delete";
 export type Resource = 
@@ -95,6 +95,7 @@ interface DbPermission {
 }
 
 export function usePermissions() {
+  const supabase = useSupabase();
   const { roles, hasRole } = useAuth();
 
   // Load DB permissions

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase as baseClient } from "@/integrations/supabase/client";
+import { useSupabase, useSupabaseClientInfo } from "@/hooks/useSupabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -35,6 +36,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const supabase = useSupabase();
+  const { loading: clientLoading } = useSupabaseClientInfo();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -47,6 +50,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    if (clientLoading) return;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
@@ -81,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabase, clientLoading]);
 
   async function fetchProfileAndRoles(authUser: User) {
     const userId = authUser.id;
@@ -96,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if ((!rolesRes.data || rolesRes.data.length === 0) && authUser.user_metadata?.is_trial) {
       console.log("[useAuth] Trial user with no roles, provisioning...");
       try {
-        const { data, error } = await supabase.functions.invoke("provision-trial");
+        const { data, error } = await baseClient.functions.invoke("provision-trial");
         if (error) {
           console.error("Provision trial error:", error);
         } else if (data?.success) {
@@ -170,7 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTrialExpired(true);
         // Auto-ban the expired trial user
         try {
-          await supabase.functions.invoke("admin-ban-user", {
+          await baseClient.functions.invoke("admin-ban-user", {
             body: { user_id: userId, ban: true, auto_expire: true },
           });
         } catch (e) {
@@ -200,7 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setProfile({ ...profile, tenant_id: tenantId });
     queryClient.invalidateQueries();
-  }, [profile, queryClient]);
+  }, [profile, queryClient, supabase]);
 
   const hasRole = (role: UserRole) => roles.includes(role);
 

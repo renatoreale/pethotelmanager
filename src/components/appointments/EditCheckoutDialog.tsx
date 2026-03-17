@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -10,7 +10,7 @@ import { Calendar as CalendarWidget } from "@/components/ui/calendar";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { CalendarIcon, AlertTriangle, CheckCircle2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO, differenceInDays, getDay, addDays } from "date-fns";
 import { it } from "date-fns/locale";
@@ -24,11 +24,12 @@ import {
   type AppointmentWithDetails,
 } from "@/hooks/useAppointments";
 import { useTenantConfig, usePriceLists } from "@/hooks/usePensioneConfig";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useOccupancyData } from "@/components/OccupancyGrid";
 import type { Booking } from "@/hooks/useBookings";
+import { generateModuloAffidoPDF } from "@/lib/generateModuloAffidoPDF";
 
 /** Booking-only data for create mode */
 export interface CheckoutBookingData {
@@ -55,6 +56,7 @@ interface Props {
 }
 
 export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingData }: Props) {
+  const supabase = useSupabase();
   const queryClient = useQueryClient();
   const updateAppointment = useUpdateAppointment();
   const createAppointment = useCreateAppointment();
@@ -73,6 +75,9 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [saving, setSaving] = useState(false);
+  const [emailConfirmPhase, setEmailConfirmPhase] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const savedRef = useRef<{ date: string; time: string }>({ date: "", time: "" });
 
   // Extract current time from appointment (edit mode only)
   const currentTime = useMemo(() => {
@@ -86,6 +91,7 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
     if (open) {
       setNewDate(originalCoDate ? parseISO(originalCoDate) : new Date());
       setSelectedTime(isCreateMode ? "" : currentTime);
+      setEmailConfirmPhase(false);
     }
   }, [open, originalCoDate, currentTime, isCreateMode]);
 
@@ -310,7 +316,12 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
       queryClient.invalidateQueries({ queryKey: ["booking-appointments"] });
 
       toast.success(isCreateMode ? "Appuntamento check-out creato" : "Appuntamento check-out aggiornato");
-      onOpenChange(false);
+      savedRef.current = { date: newDateStr, time: selectedTime };
+      if ((booking as any)?.client?.email && tenantConfig) {
+        setEmailConfirmPhase(true);
+      } else {
+        onOpenChange(false);
+      }
     } catch (err: any) {
       toast.error(err.message || "Errore durante il salvataggio");
     } finally {
@@ -318,14 +329,67 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
     }
   };
 
+  const handleSendEmail = async () => {
+    if (!booking || !tenantConfig) return;
+    setSendingEmail(true);
+    try {
+      const { date, time } = savedRef.current;
+      const bookingWithAppts = {
+        ...booking,
+        check_out_date: date,
+        appointments: [
+          ...((booking as any).appointments ?? []).filter((a: any) => a.appointment_type !== "check_out"),
+          { id: "upd-out", appointment_type: "check_out" as const, scheduled_at: `${date}T${time}:00` },
+        ],
+      };
+      const pdf_base64 = await generateModuloAffidoPDF(bookingWithAppts as any, tenantConfig as any, true, supabase) as string;
+      const { data, error } = await supabase.functions.invoke("send-appuntamento", {
+        body: { booking_id: (booking as any).id, pdf_base64, filename: `Modulo_Affido_${(booking as any).booking_number}.pdf` },
+      });
+      if (error || data?.error) throw new Error((error || data?.error)?.message || "Errore invio");
+      toast.success(`Email inviata a ${(booking as any).client?.email}`);
+    } catch (err: any) {
+      toast.error(err.message || "Errore nell'invio email");
+    } finally {
+      setSendingEmail(false);
+      setEmailConfirmPhase(false);
+      onOpenChange(false);
+    }
+  };
+
+  const handleClose = () => {
+    setEmailConfirmPhase(false);
+    onOpenChange(false);
+  };
+
   const noChanges = !isCreateMode && !dateChanged && selectedTime === currentTime;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isCreateMode ? "Fissa Check-out" : "Modifica Check-out"}</DialogTitle>
         </DialogHeader>
+
+        {emailConfirmPhase ? (
+          <div className="space-y-4 py-2">
+            <div className="flex items-start gap-3 rounded-lg border p-4 bg-muted/40">
+              <Mail className="h-5 w-5 mt-0.5 text-primary shrink-0" />
+              <div className="space-y-1">
+                <p className="font-medium text-sm">Inviare la mail al cliente?</p>
+                <p className="text-sm text-muted-foreground">
+                  Vuoi inviare a <strong>{(booking as any)?.client?.email}</strong> la conferma degli appuntamenti con il modulo di affido in allegato?
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={handleClose} disabled={sendingEmail}>No, chiudi</Button>
+              <Button onClick={handleSendEmail} disabled={sendingEmail}>
+                {sendingEmail ? "Invio in corso..." : "Sì, invia email"}
+              </Button>
+            </DialogFooter>
+          </div>
+        ) : (
 
         <div className="space-y-4 py-2">
           {/* Booking info */}
@@ -456,14 +520,14 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
               La data di check-out non può essere uguale o precedente al check-in.
             </div>
           )}
+          <DialogFooter>
+            <Button variant="outline" onClick={handleClose}>Annulla</Button>
+            <Button onClick={handleSave} disabled={saving || noChanges || !selectedTime || (recalculated && !recalculated.valid)}>
+              {saving ? "Salvataggio..." : isCreateMode ? "Fissa Check-out" : "Salva Modifiche"}
+            </Button>
+          </DialogFooter>
         </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Annulla</Button>
-          <Button onClick={handleSave} disabled={saving || noChanges || !selectedTime || (recalculated && !recalculated.valid)}>
-            {saving ? "Salvataggio..." : isCreateMode ? "Fissa Check-out" : "Salva Modifiche"}
-          </Button>
-        </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

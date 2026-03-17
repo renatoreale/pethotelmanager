@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export interface ClienteProfile {
@@ -16,6 +16,7 @@ export interface ClienteProfile {
 }
 
 export function useClienteProfile() {
+  const supabase = useSupabase();
   const { user } = useAuth();
   return useQuery({
     queryKey: ["cliente-profile", user?.id],
@@ -34,6 +35,7 @@ export function useClienteProfile() {
 }
 
 export function useUpdateClienteProfile() {
+  const supabase = useSupabase();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<ClienteProfile> & { id: string }) => {
@@ -53,6 +55,7 @@ export function useUpdateClienteProfile() {
 }
 
 export function useClienteCats() {
+  const supabase = useSupabase();
   const { data: clientProfile } = useClienteProfile();
   return useQuery({
     queryKey: ["cliente-cats", clientProfile?.id],
@@ -71,6 +74,7 @@ export function useClienteCats() {
 }
 
 export function useCreateClienteCat() {
+  const supabase = useSupabase();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (cat: any) => {
@@ -87,6 +91,7 @@ export function useCreateClienteCat() {
 }
 
 export function useUpdateClienteCat() {
+  const supabase = useSupabase();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updates }: any) => {
@@ -104,6 +109,7 @@ export function useUpdateClienteCat() {
 }
 
 export function useDeleteClienteCat() {
+  const supabase = useSupabase();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
@@ -115,6 +121,7 @@ export function useDeleteClienteCat() {
 }
 
 export function useClienteBookings() {
+  const supabase = useSupabase();
   const { data: clientProfile } = useClienteProfile();
   return useQuery({
     queryKey: ["cliente-bookings", clientProfile?.id],
@@ -135,6 +142,7 @@ export function useClienteBookings() {
 }
 
 export function useClienteAppointments() {
+  const supabase = useSupabase();
   const { data: clientProfile } = useClienteProfile();
   return useQuery({
     queryKey: ["cliente-appointments", clientProfile?.id],
@@ -159,6 +167,7 @@ export function useClienteAppointments() {
 }
 
 export function useClienteTenant() {
+  const supabase = useSupabase();
   const { data: clientProfile } = useClienteProfile();
   return useQuery({
     queryKey: ["cliente-tenant", clientProfile?.tenant_id],
@@ -177,6 +186,7 @@ export function useClienteTenant() {
 }
 
 export function useCreateQuoteRequest() {
+  const supabase = useSupabase();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (request: {
@@ -201,6 +211,7 @@ export function useCreateQuoteRequest() {
 }
 
 export function useClienteQuoteRequests() {
+  const supabase = useSupabase();
   const { data: clientProfile } = useClienteProfile();
   return useQuery({
     queryKey: ["cliente-quote-requests", clientProfile?.id],

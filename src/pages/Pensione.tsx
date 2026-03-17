@@ -20,8 +20,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Settings, Clock, Euro, CreditCard, Plus, Pencil, Trash2, Save, RotateCcw, Ban, Building2, Upload, X, FileText, KeyRound, Eye, EyeOff, CheckCircle2, XCircle, ExternalLink } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Settings, Clock, Euro, CreditCard, Plus, Pencil, Trash2, Save, RotateCcw, Ban, Building2, Upload, X, FileText, KeyRound, Eye, EyeOff, CheckCircle2, XCircle, ExternalLink, Mail } from "lucide-react";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -37,6 +37,7 @@ import {
 } from "@/hooks/usePayments";
 import { CancellationPolicyTab } from "@/components/pensione/CancellationPolicyTab";
 import { PaymentSplitsTab } from "@/components/pensione/PaymentSplitsTab";
+import { EmailTemplatesTab } from "@/components/pensione/EmailTemplatesTab";
 
 const DAYS = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
 
@@ -70,6 +71,7 @@ export default function Pensione() {
           <TabsTrigger value="pagamenti" className="gap-2"><CreditCard className="h-4 w-4" /> Modalità Pagamento</TabsTrigger>
           <TabsTrigger value="cancellazione" className="gap-2"><Ban className="h-4 w-4" /> Cancellazione</TabsTrigger>
           <TabsTrigger value="preventivo-config" className="gap-2"><FileText className="h-4 w-4" /> Config. Preventivo</TabsTrigger>
+          <TabsTrigger value="email-templates" className="gap-2"><Mail className="h-4 w-4" /> Template Email</TabsTrigger>
           <TabsTrigger value="stripe" className="gap-2"><KeyRound className="h-4 w-4" /> Stripe</TabsTrigger>
         </TabsList>
 
@@ -80,6 +82,7 @@ export default function Pensione() {
         <TabsContent value="pagamenti"><PaymentMethodsTab /></TabsContent>
         <TabsContent value="cancellazione"><CancellationPolicyTab /></TabsContent>
         <TabsContent value="preventivo-config"><PaymentSplitsTab /></TabsContent>
+        <TabsContent value="email-templates"><EmailTemplatesTab /></TabsContent>
         <TabsContent value="stripe"><StripeConfigTab /></TabsContent>
       </Tabs>
     </div>
@@ -88,6 +91,7 @@ export default function Pensione() {
 
 // ── ANAGRAFICA TAB ──
 function AnagraficaTab() {
+  const supabase = useSupabase();
   const { data: config, isLoading } = useTenantConfig();
   const updateConfig = useUpdateTenantConfig();
   const [name, setName] = useState<string | null>(null);
@@ -544,6 +548,7 @@ function CasetteTab() {
 
 // ── SLOT TAB ──
 function SlotTab() {
+  const supabase = useSupabase();
   const { profile } = useAuth();
   const { data: slots, isLoading } = useSlotConfigs();
   const upsertSlot = useUpsertSlotConfig();
@@ -799,6 +804,7 @@ function SlotTab() {
 
 // ── LISTINO TAB ──
 function ListinoTab() {
+  const supabase = useSupabase();
   const { profile } = useAuth();
   const { data: prices, isLoading } = usePriceLists();
   const { data: tenantConfig } = useTenantConfig();
@@ -1171,6 +1177,7 @@ function ListinoTab() {
 
 // ── MODALITÀ PAGAMENTO TAB ──
 function PaymentMethodsTab() {
+  const supabase = useSupabase();
   const { profile } = useAuth();
   const { data: methods, isLoading } = useAllPaymentMethods();
   const createMethod = useCreatePaymentMethod();

@@ -37,6 +37,11 @@ export interface Booking {
     appointment_type: "check_in" | "check_out";
     scheduled_at: string;
   }[];
+  payments?: {
+    id: string;
+    payment_type: string;
+    amount: number;
+  }[];
 }
 
 const ACTIVE_STATUSES = [
@@ -63,7 +68,8 @@ export function useBookings(statusFilter?: string) {
           *,
           client:clients(id, first_name, last_name, email, phone),
           booking_cats(id, cat_id, cat:cats(id, name)),
-          appointments(id, appointment_type, scheduled_at)
+          appointments(id, appointment_type, scheduled_at),
+          payments(id, payment_type, amount)
         `)
         .eq("tenant_id", profile.tenant_id)
         .neq("status", "preventivo")

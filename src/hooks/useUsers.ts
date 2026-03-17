@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
@@ -16,6 +16,7 @@ export interface UserWithRole {
 }
 
 export function useUsers() {
+  const supabase = useSupabase();
   const queryClient = useQueryClient();
   const { profile } = useAuth();
 

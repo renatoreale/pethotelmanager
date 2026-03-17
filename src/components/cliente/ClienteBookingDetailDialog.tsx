@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { format, parseISO, getDay, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { CalendarDays, Clock, Info, MapPin, CreditCard, Calendar } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { generateTimeSlots } from "@/hooks/useAppointments";
 
@@ -60,6 +60,7 @@ function useClientAppointmentCounts(tenantId: string | undefined, date: string |
 }
 
 export function ClienteBookingDetailDialog({ open, onOpenChange, booking, tenantId }: Props) {
+  const supabase = useSupabase();
   const [scheduleMode, setScheduleMode] = useState(false);
   const [checkInTime, setCheckInTime] = useState<string | null>(null);
   const [checkOutTime, setCheckOutTime] = useState<string | null>(null);

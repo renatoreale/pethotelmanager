@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase as baseClient } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +37,7 @@ export function DemoLeadsTab() {
   const { data: leads, isLoading } = useQuery({
     queryKey: ["demo-leads"],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("mysql-demo-leads", {
+      const { data, error } = await baseClient.functions.invoke("mysql-demo-leads", {
         body: { action: "list" },
       });
       if (error) throw error;
@@ -47,7 +47,7 @@ export function DemoLeadsTab() {
 
   const approveMutation = useMutation({
     mutationFn: async (lead: DemoLead) => {
-      const { data, error } = await supabase.functions.invoke("mysql-demo-leads", {
+      const { data, error } = await baseClient.functions.invoke("mysql-demo-leads", {
         body: { action: "approve", id: lead.id },
       });
       if (error) throw error;

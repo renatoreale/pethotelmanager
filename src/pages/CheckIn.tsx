@@ -30,7 +30,7 @@ import { useInsertCatRegistry } from "@/hooks/useCatRegistry";
 import { useCreatePayment, usePaymentMethods } from "@/hooks/usePayments";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenantConfig, usePriceLists } from "@/hooks/usePensioneConfig";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
 
 const CHECKIN_STATUSES = ["check_in", "appuntamento_in_fissato", "appuntamento_in_out_fissato"];
@@ -46,6 +46,7 @@ interface CatDetails {
 }
 
 export default function CheckIn() {
+  const supabase = useSupabase();
   const queryClient = useQueryClient();
   const { profile } = useAuth();
   const { data: bookings, isLoading } = useBookings();

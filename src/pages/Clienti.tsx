@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useClients, useDeleteClient, type Client } from "@/hooks/useClients";
 import { ClientDialog } from "@/components/clients/ClientDialog";
+import { EmailHistoryDialog } from "@/components/clients/EmailHistoryDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -16,20 +18,23 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { HelpButton } from "@/components/HelpButton";
 import { clientiHelpSections } from "@/components/help/clientiHelp";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import { useTranslation } from "react-i18next";
 
 export default function Clienti() {
+  const supabase = useSupabase();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [deletingClient, setDeletingClient] = useState<Client | null>(null);
   const [inviteClient, setInviteClient] = useState<Client | null>(null);
   const [inviting, setInviting] = useState(false);
+  const [emailHistoryClient, setEmailHistoryClient] = useState<Client | null>(null);
   
 
   const { data: clients, isLoading } = useClients(search);
@@ -67,6 +72,7 @@ export default function Clienti() {
       if (data?.error) throw new Error(data.error);
       
       toast.success(`${t("clients.inviteSuccess")}`);
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
       setInviteClient(null);
     } catch (err: any) {
       toast.error(err.message || "Error");
@@ -184,6 +190,27 @@ export default function Clienti() {
                               </Button>
                             )}
                           </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Storico email"
+                            onClick={() => setEmailHistoryClient(client)}
+                            onMouseEnter={() => queryClient.prefetchQuery({
+                              queryKey: ["email-logs", client.id],
+                              queryFn: async () => {
+                                const { data } = await supabase
+                                  .from("email_logs" as any)
+                                  .select("id, email_type, subject, recipient_email, sent_at, status, booking_id, body_html")
+                                  .eq("client_id", client.id)
+                                  .order("sent_at", { ascending: false })
+                                  .limit(100);
+                                return data ?? [];
+                              },
+                              staleTime: 30_000,
+                            })}
+                          >
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                          </Button>
                           <Button variant="ghost" size="icon" onClick={() => handleEdit(client)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -209,6 +236,15 @@ export default function Clienti() {
         }}
         client={editingClient}
       />
+
+      {emailHistoryClient && (
+        <EmailHistoryDialog
+          open={!!emailHistoryClient}
+          onOpenChange={(open) => { if (!open) setEmailHistoryClient(null); }}
+          clientId={emailHistoryClient.id}
+          clientName={`${emailHistoryClient.first_name} ${emailHistoryClient.last_name}`}
+        />
+      )}
 
       <AlertDialog open={!!deletingClient} onOpenChange={() => setDeletingClient(null)}>
         <AlertDialogContent>

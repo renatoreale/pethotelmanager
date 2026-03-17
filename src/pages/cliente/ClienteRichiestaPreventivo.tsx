@@ -12,9 +12,10 @@ import { toast } from "sonner";
 import { Send, AlertTriangle, XCircle, CheckCircle2 } from "lucide-react";
 import { format, addDays } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 
 export default function ClienteRichiestaPreventivo() {
+  const supabase = useSupabase();
   const navigate = useNavigate();
   const { data: profile } = useClienteProfile();
   const { data: cats } = useClienteCats();

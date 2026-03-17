@@ -12,7 +12,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Search, CheckCircle2, FileText, Download, Inbox, XCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, CheckCircle2, FileText, Download, Inbox, XCircle, Mail, MailCheck } from "lucide-react";
 import { ConfirmPreventivoDialog } from "@/components/preventivi/ConfirmPreventivoDialog";
 import { toast } from "sonner";
 import { format, differenceInDays, parseISO } from "date-fns";
@@ -25,6 +25,8 @@ import { PreventivoDialog } from "@/components/preventivi/PreventivoDialog";
 import { usePaymentSplits } from "@/hooks/usePaymentSplits";
 import { generatePreventivoPDF } from "@/lib/generatePreventivoPDF";
 import { useQuoteRequests, useUpdateQuoteRequestStatus } from "@/hooks/useQuoteRequests";
+import { useSupabase } from "@/hooks/useSupabaseClient";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useDateLocale } from "@/hooks/useDateLocale";
 import { HelpButton } from "@/components/HelpButton";
@@ -32,8 +34,10 @@ import { preventiviHelpSections } from "@/components/help/preventiviHelp";
 
 export default function Preventivi() {
   const { t } = useTranslation();
+  const supabase = useSupabase();
   const dateLocale = useDateLocale();
   const { data: preventivi, isLoading } = usePreventivi();
+  const qc = useQueryClient();
   const createPreventivo = useCreatePreventivo();
   const updatePreventivo = useUpdatePreventivo();
   const deletePreventivo = useDeletePreventivo();
@@ -51,6 +55,7 @@ export default function Preventivi() {
   const [quotePrefill, setQuotePrefill] = useState<{ client_id: string; check_in_date: string; check_out_date: string; notes?: string; quote_request_id?: string } | null>(null);
   const [rejectingQuote, setRejectingQuote] = useState<any>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [sendingIds, setSendingIds] = useState<Set<string>>(new Set());
 
   // Stay config
   const stayCalcType = (tenantConfig as any)?.stay_calc_type ?? "notti";
@@ -117,6 +122,34 @@ export default function Preventivi() {
       toast.success(t("quotes.pdfGenerated"));
     } catch (err: any) {
       toast.error(err.message || "Errore nella generazione del PDF");
+    }
+  };
+
+  const handleSendPDF = async (p: any) => {
+    if (!tenantConfig) return;
+    if (!p.client?.email) {
+      toast.error("Il cliente non ha un indirizzo email");
+      return;
+    }
+    setSendingIds(prev => new Set(prev).add(p.id));
+    try {
+      const pdf_base64 = await generatePreventivoPDF(p, tenantConfig as any, paymentSplits ?? [], stayCalcType, true) as string;
+      const { data, error } = await supabase.functions.invoke("send-preventivo", {
+        body: {
+          booking_id: p.id,
+          pdf_base64,
+          filename: `Preventivo_${p.booking_number}.pdf`,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      await supabase.from("bookings").update({ preventivo_sent_at: new Date().toISOString() } as any).eq("id", p.id);
+      qc.invalidateQueries({ queryKey: ["preventivi"] });
+      toast.success(`Preventivo inviato a ${p.client.email}`);
+    } catch (err: any) {
+      toast.error(err.message || "Errore nell'invio del preventivo");
+    } finally {
+      setSendingIds(prev => { const s = new Set(prev); s.delete(p.id); return s; });
     }
   };
 
@@ -274,6 +307,20 @@ export default function Preventivi() {
                             <Button variant="ghost" size="icon" title={t("bookings.downloadPDF")} onClick={() => handleDownloadPDF(p)}>
                               <Download className="h-4 w-4 text-blue-600" />
                             </Button>
+                            {p.client?.email && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title={p.preventivo_sent_at ? "Reinvia preventivo" : "Invia via email"}
+                                onClick={() => handleSendPDF(p)}
+                                disabled={sendingIds.has(p.id)}
+                              >
+                                {p.preventivo_sent_at
+                                  ? <MailCheck className="h-4 w-4 text-green-600" />
+                                  : <Mail className="h-4 w-4 text-primary" />
+                                }
+                              </Button>
+                            )}
                             <Button variant="ghost" size="icon" title={t("common.confirm")} onClick={() => setConfirming(p)}>
                               <CheckCircle2 className="h-4 w-4 text-green-600" />
                             </Button>

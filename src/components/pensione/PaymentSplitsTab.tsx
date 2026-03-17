@@ -39,7 +39,6 @@ export function PaymentSplitsTab() {
   const [ibanHolder, setIbanHolder] = useState<string | null>(null);
   const [bolloAmount, setBolloAmount] = useState<number | null>(null);
   const [validityDays, setValidityDays] = useState<number | null>(null);
-  
 
   const currentIban = iban ?? (config as any)?.iban ?? "";
   const currentBankName = bankName ?? (config as any)?.bank_name ?? "";
@@ -116,7 +115,11 @@ export function PaymentSplitsTab() {
     try {
       await updateConfig.mutateAsync({
         id: config.id,
-        ...(({ iban: currentIban || null, bank_name: currentBankName || null, iban_holder: currentIbanHolder || null, bollo_amount: currentBolloAmount, preventivo_validity_days: currentValidityDays }) as any),
+        iban: currentIban || null,
+        bank_name: currentBankName || null,
+        iban_holder: currentIbanHolder || null,
+        bollo_amount: currentBolloAmount,
+        preventivo_validity_days: currentValidityDays,
       });
       toast.success("Configurazione preventivo salvata");
       setIban(null); setBankName(null); setIbanHolder(null); setBolloAmount(null); setValidityDays(null);

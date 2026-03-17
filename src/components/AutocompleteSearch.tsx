@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Search, User, Cat, Mail, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useAuth } from "@/hooks/useAuth";
 
 const ACTIVE_STATUSES = [
@@ -26,6 +26,7 @@ interface GroupedSuggestion {
 }
 
 function useActiveBookingSuggestions() {
+  const supabase = useSupabase();
   const { profile } = useAuth();
   return useQuery({
     queryKey: ["autocomplete-suggestions", profile?.tenant_id],

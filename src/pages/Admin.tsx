@@ -29,7 +29,7 @@ import { LandingConfigTab } from "@/components/admin/LandingConfigTab";
 import { TrialDashboardTab } from "@/components/admin/TrialDashboardTab";
 import { DemoLeadsTab } from "@/components/admin/DemoLeadsTab";
 import { DatabaseConfigTab } from "@/components/admin/DatabaseConfigTab";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useAuth } from "@/hooks/useAuth";
 import { Database } from "@/integrations/supabase/types";
 import {
@@ -270,6 +270,7 @@ function PensioniTab() {
 // UTENTI TAB (simplified - one role per user per tenant)
 // ══════════════════════════════════════════════════════════════════════════════
 function UtentiTab() {
+  const supabase = useSupabase();
   const { data: allUsers, isLoading: usersLoading } = useAllUsers();
   const { data: tenants } = useAllTenants();
   const { activeTenant, profile } = useAuth();

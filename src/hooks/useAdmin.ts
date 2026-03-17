@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase as baseClient } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
 
@@ -27,6 +28,7 @@ export interface Tenant {
 }
 
 export function useAllTenants() {
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["admin-tenants"],
     queryFn: async () => {
@@ -41,6 +43,7 @@ export function useAllTenants() {
 }
 
 export function useCreateTenant() {
+  const supabase = useSupabase();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (tenant: {
@@ -81,6 +84,7 @@ export function useCreateTenant() {
 }
 
 export function useUpdateTenant() {
+  const supabase = useSupabase();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Tenant> & { id: string }) => {
@@ -105,6 +109,7 @@ export function useUpdateTenant() {
 }
 
 export function useDeleteTenant() {
+  const supabase = useSupabase();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
@@ -141,6 +146,7 @@ export interface UserWithProfile {
 }
 
 export function useAllUsers() {
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["admin-all-users"],
     queryFn: async () => {
@@ -168,7 +174,7 @@ export function useAllUsers() {
       // Get emails from auth via edge function
       let emailMap: Record<string, string> = {};
       try {
-        const { data: emailData } = await supabase.functions.invoke("admin-list-users");
+        const { data: emailData } = await baseClient.functions.invoke("admin-list-users");
         if (emailData?.emails) {
           emailMap = emailData.emails;
         }
@@ -200,6 +206,7 @@ export function useAllUsers() {
 
 // ── ADD TENANT-ROLE ASSOCIATION ──
 export function useAddTenantRole() {
+  const supabase = useSupabase();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({
@@ -231,6 +238,7 @@ export function useAddTenantRole() {
 
 // ── REMOVE TENANT-ROLE ASSOCIATION ──
 export function useRemoveTenantRole() {
+  const supabase = useSupabase();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (roleId: string) => {
@@ -250,6 +258,7 @@ export function useRemoveTenantRole() {
 
 // ── SET ACTIVE TENANT ──
 export function useSetActiveTenant() {
+  const supabase = useSupabase();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({
@@ -316,6 +325,7 @@ export const ROLES: { value: AppRole; label: string }[] = [
 ];
 
 export function useRolePermissions() {
+  const supabase = useSupabase();
   return useQuery({
     queryKey: ["admin-role-permissions"],
     queryFn: async () => {
@@ -331,6 +341,7 @@ export function useRolePermissions() {
 }
 
 export function useUpsertRolePermission() {
+  const supabase = useSupabase();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (permission: {
@@ -388,6 +399,7 @@ export function useUpsertRolePermission() {
 }
 
 export function useBulkUpsertPermissions() {
+  const supabase = useSupabase();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (permissions: RolePermission[]) => {
@@ -449,7 +461,7 @@ export function useCreateUser() {
       tenant_id: string | null;
       role: AppRole;
     }) => {
-      const { data, error } = await supabase.functions.invoke("admin-create-user", {
+      const { data, error } = await baseClient.functions.invoke("admin-create-user", {
         body: userData,
       });
       if (error) throw new Error(error.message);
@@ -469,6 +481,7 @@ export function useCreateUser() {
 
 // ── UPDATE USER PROFILE ──
 export function useUpdateUserProfile() {
+  const supabase = useSupabase();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ profileId, full_name, phone, avatar_url }: { 
@@ -503,7 +516,7 @@ export function useUpdateUserEmail() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ userId, email }: { userId: string; email: string }) => {
-      const { data, error } = await supabase.functions.invoke("admin-update-user", {
+      const { data, error } = await baseClient.functions.invoke("admin-update-user", {
         body: { user_id: userId, email },
       });
       if (error) throw new Error(error.message);
@@ -523,7 +536,7 @@ export function useDeleteUser() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (userId: string) => {
-      const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+      const { data, error } = await baseClient.functions.invoke("admin-delete-user", {
         body: { user_id: userId },
       });
       if (error) throw new Error(error.message);

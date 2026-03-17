@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
 export default function ResetPassword() {
+  const supabase = useSupabase();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [password, setPassword] = useState("");

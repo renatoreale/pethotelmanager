@@ -10,7 +10,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Plus, Trash2, Save, RotateCcw } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -20,6 +20,7 @@ import {
 } from "@/hooks/useCancellationPolicy";
 
 export function CancellationPolicyTab() {
+  const supabase = useSupabase();
   const { profile } = useAuth();
   const { data: policy, isLoading } = useCancellationPolicy();
   const savePolicy = useSaveCancellationPolicy();

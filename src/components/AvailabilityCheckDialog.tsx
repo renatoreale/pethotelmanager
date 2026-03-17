@@ -12,12 +12,13 @@ import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { OccupancyGrid, useOccupancyData, usePoolOccupancyData } from "@/components/OccupancyGrid";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import type { Booking } from "@/hooks/useBookings";
 
 export function AvailabilityCheckDialog() {
+  const supabase = useSupabase();
   const [open, setOpen] = useState(false);
   const [checkInDate, setCheckInDate] = useState<Date>(new Date());
   const [cageType, setCageType] = useState<"singola" | "doppia">("singola");

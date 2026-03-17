@@ -31,7 +31,7 @@ import { useClients } from "@/hooks/useClients";
 import { usePriceLists, useTenantConfig } from "@/hooks/usePensioneConfig";
 import { useClientCats } from "@/hooks/usePreventivi";
 import { useBookings } from "@/hooks/useBookings";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { OccupancyGrid, useOccupancyData, checkAvailability } from "@/components/OccupancyGrid";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -96,6 +96,7 @@ export function PreventivoDialog({
   open, onOpenChange, editing, onCreate, onUpdate,
   stayCalcType, countCheckinDay, countCheckoutDay, prefill,
 }: Props) {
+  const supabase = useSupabase();
   const { data: clients } = useClients();
   const { data: priceLists } = usePriceLists();
 

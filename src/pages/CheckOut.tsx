@@ -30,7 +30,7 @@ import { useUpdateCatRegistryCheckout } from "@/hooks/useCatRegistry";
 import { useCreatePayment, usePaymentMethods } from "@/hooks/usePayments";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenantConfig, usePriceLists } from "@/hooks/usePensioneConfig";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
 
 const CHECKOUT_STATUSES = ["in_corso"];
@@ -46,6 +46,7 @@ interface CatInfo {
 }
 
 export default function CheckOut() {
+  const supabase = useSupabase();
   const queryClient = useQueryClient();
   const { profile } = useAuth();
   const { data: bookings, isLoading } = useBookings();

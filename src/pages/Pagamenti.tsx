@@ -26,7 +26,7 @@ import {
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -96,6 +96,7 @@ function MoneyBadge({ value, variant }: { value: number; variant: "total" | "pai
 }
 
 export default function Pagamenti() {
+  const supabase = useSupabase();
   const queryClient = useQueryClient();
   const { data: bookings, isLoading } = useAllBookingsWithPayments();
   const { data: paymentMethods } = usePaymentMethods();
