@@ -3,78 +3,52 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { CheckCircle2, XCircle, Loader2, Clock } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Mail } from "lucide-react";
 import petHotelLogo from "@/assets/pethotelmanager_logo.png";
-
-const DEMO_EMAIL = "demo@pethotelmanager.com";
-const DEMO_PASSWORD = "DemoTest2026!";
 
 export default function ConfirmDemo() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState<"loading" | "success" | "error" | "already" | "expired">("loading");
+  const [status, setStatus] = useState<"loading" | "confirmed" | "already" | "not_found" | "error">("loading");
+  const [email, setEmail] = useState<string>("");
 
   useEffect(() => {
     const token = searchParams.get("token");
     if (!token) {
-      setStatus("error");
+      setStatus("not_found");
       return;
     }
 
-    const confirmLead = async () => {
+    const activate = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke("send-demo-validation", {
-          body: { action: "confirm_by_token", token },
+        const { data, error } = await supabase.functions.invoke("activate-trial-lead", {
+          body: { token },
         });
 
         if (error) {
-          console.error("Confirm error:", error);
+          console.error("Activation error:", error);
           setStatus("error");
           return;
         }
 
         if (data?.status === "not_found") {
-          setStatus("error");
-          return;
-        }
-
-        if (data?.status === "expired") {
-          setStatus("expired");
-          return;
-        }
-
-        if (data?.status === "confirmed") {
-          if (data?.was_already_confirmed) {
-            setStatus("already");
-          } else {
-            setStatus("success");
-          }
-
-          // Auto-login with demo credentials
-          const { error: loginError } = await supabase.auth.signInWithPassword({
-            email: DEMO_EMAIL,
-            password: DEMO_PASSWORD,
-          });
-
-          if (loginError) {
-            toast.info("Usa le credenziali demo per accedere.");
-            setTimeout(() => navigate("/login?demo=true"), 2000);
-          } else {
-            toast.success("Accesso alla demo in corso...");
-            setTimeout(() => navigate("/"), 1500);
-          }
-        } else if (data?.status !== "expired") {
+          setStatus("not_found");
+        } else if (data?.status === "already_confirmed") {
+          setStatus("already");
+        } else if (data?.status === "confirmed") {
+          setEmail(data.email || "");
+          setStatus("confirmed");
+        } else {
           setStatus("error");
         }
       } catch (err) {
-        console.error("Confirm error:", err);
+        console.error("Activation error:", err);
         setStatus("error");
       }
     };
 
-    confirmLead();
-  }, [searchParams, navigate]);
+    activate();
+  }, [searchParams]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -88,18 +62,18 @@ export default function ConfirmDemo() {
                 <Loader2 className="h-10 w-10 text-primary animate-spin" />
               </div>
               <CardTitle className="text-xl font-serif">Attivazione in corso...</CardTitle>
-              <CardDescription>Stiamo attivando il tuo accesso alla demo.</CardDescription>
+              <CardDescription>Stiamo attivando il tuo account.</CardDescription>
             </>
           )}
 
-          {status === "success" && (
+          {status === "confirmed" && (
             <>
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-                <CheckCircle2 className="h-8 w-8 text-green-600" />
+                <Mail className="h-8 w-8 text-green-600" />
               </div>
-              <CardTitle className="text-xl font-serif">Demo attivata!</CardTitle>
+              <CardTitle className="text-xl font-serif">Controlla la tua email!</CardTitle>
               <CardDescription>
-                Accesso automatico in corso... Verrai reindirizzato alla dashboard demo.
+                Abbiamo inviato un link a <strong>{email}</strong> per impostare la tua password e accedere alla prova gratuita.
               </CardDescription>
             </>
           )}
@@ -109,63 +83,43 @@ export default function ConfirmDemo() {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
                 <CheckCircle2 className="h-8 w-8 text-blue-600" />
               </div>
-              <CardTitle className="text-xl font-serif">Bentornato!</CardTitle>
+              <CardTitle className="text-xl font-serif">Account già attivato</CardTitle>
               <CardDescription>
-                Il tuo accesso demo è attivo. Accesso automatico in corso...
+                Il tuo account è già stato attivato. Accedi con le tue credenziali.
               </CardDescription>
             </>
           )}
 
-          {status === "expired" && (
-            <>
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
-                <Clock className="h-8 w-8 text-amber-600" />
-              </div>
-              <CardTitle className="text-xl font-serif">Periodo di prova terminato</CardTitle>
-              <CardDescription>
-                Il tuo periodo di prova gratuita di 3 giorni è scaduto. Se ti è piaciuto il servizio, puoi acquistare una licenza o contattarci per maggiori informazioni.
-              </CardDescription>
-            </>
-          )}
-
-          {status === "error" && (
+          {(status === "not_found" || status === "error") && (
             <>
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
                 <XCircle className="h-8 w-8 text-red-600" />
               </div>
               <CardTitle className="text-xl font-serif">Link non valido</CardTitle>
               <CardDescription>
-                Il link di attivazione non è valido. Contattaci per assistenza.
+                Il link di attivazione non è valido o è scaduto. Contattaci per assistenza.
               </CardDescription>
             </>
           )}
         </CardHeader>
 
-        {status === "expired" && (
-          <CardContent className="space-y-3">
-            <Button className="w-full" onClick={() => window.location.href = "mailto:info@pethotelmanager.com?subject=Interesse%20acquisto%20licenza"}>
-              Contattaci
+        <CardContent className="space-y-3">
+          {status === "already" && (
+            <Button className="w-full" onClick={() => navigate("/login")}>
+              Vai al login
             </Button>
-            <Button variant="outline" className="w-full" onClick={() => navigate("/landing#pricing")}>
-              Scopri i piani disponibili
-            </Button>
-          </CardContent>
-        )}
-
-        {(status === "already" || status === "error") && (
-          <CardContent className="space-y-3">
-            {status === "error" && (
-              <>
-                <Button className="w-full" onClick={() => navigate("/login?demo=true")}>
-                  Accedi con le credenziali demo
-                </Button>
-                <Button variant="outline" className="w-full" onClick={() => navigate("/register-trial")}>
-                  Richiedi una nuova demo
-                </Button>
-              </>
-            )}
-          </CardContent>
-        )}
+          )}
+          {(status === "not_found" || status === "error") && (
+            <>
+              <Button className="w-full" onClick={() => navigate("/register-trial")}>
+                Richiedi una nuova prova
+              </Button>
+              <Button variant="outline" className="w-full" onClick={() => window.location.href = "mailto:info@pethotelmanager.com"}>
+                Contattaci
+              </Button>
+            </>
+          )}
+        </CardContent>
       </Card>
     </div>
   );
