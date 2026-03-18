@@ -35,6 +35,7 @@ export function useAllTenants() {
       const { data, error } = await supabase
         .from("tenants")
         .select("*")
+        .is("deleted_at", null)
         .order("name");
       if (error) throw error;
       return data as Tenant[];
@@ -113,7 +114,10 @@ export function useDeleteTenant() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("tenants").delete().eq("id", id);
+      const { error } = await supabase
+        .from("tenants")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
