@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSupabase } from "@/hooks/useSupabaseClient";
+import { supabase as baseClient } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,10 +39,17 @@ export default function ResetPassword() {
     const { error } = await supabase.auth.updateUser({ password });
     if (error) {
       toast.error(error.message);
-    } else {
-      toast.success(t("auth.passwordUpdated"));
-      navigate("/");
+      setLoading(false);
+      return;
     }
+    // Attempt trial provisioning for new trial users
+    try {
+      await baseClient.functions.invoke("provision-trial");
+    } catch (_) {
+      // Non-trial users: ignore
+    }
+    toast.success(t("auth.passwordUpdated"));
+    navigate("/");
     setLoading(false);
   };
 

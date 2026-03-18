@@ -97,16 +97,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from("tenants").select("id, name"),
     ]);
 
-    // If no roles and user has is_trial metadata, auto-provision
-    if ((!rolesRes.data || rolesRes.data.length === 0) && authUser.user_metadata?.is_trial) {
-      console.log("[useAuth] Trial user with no roles, provisioning...");
+    // If no roles, attempt trial provisioning (works if user has is_trial metadata)
+    if (!rolesRes.data || rolesRes.data.length === 0) {
+      console.log("[useAuth] User with no roles, attempting trial provisioning...");
       try {
         const { data, error } = await baseClient.functions.invoke("provision-trial");
         if (error) {
-          console.error("Provision trial error:", error);
+          console.log("[useAuth] Provision trial skipped:", error.message);
         } else if (data?.success) {
           console.log("[useAuth] Trial provisioned, refetching...");
-          // Refetch after provisioning
           const [p2, r2, t2] = await Promise.all([
             supabase.from("profiles").select("id, full_name, tenant_id, avatar_url").eq("user_id", userId).single(),
             supabase.from("user_roles").select("role, tenant_id").eq("user_id", userId),
@@ -115,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return applyProfileData(userId, p2, r2, t2);
         }
       } catch (e) {
-        console.error("Provision trial exception:", e);
+        console.log("[useAuth] Provision trial skipped:", e);
       }
     }
 

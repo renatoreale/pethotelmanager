@@ -91,13 +91,19 @@ export default function RegisterTrial() {
     setLoading(true);
 
     try {
-      const { error: fnError } = await supabase.functions.invoke("send-demo-validation", {
-        body: { email, firstName, lastName, phone, baseUrl: window.location.origin },
+      const { data, error: fnError } = await supabase.functions.invoke("register-trial", {
+        body: { email, firstName, lastName, phone },
       });
 
       if (fnError) {
         console.error("Edge function error:", fnError);
-        toast.error("Errore nel salvataggio. Riprova.");
+        toast.error("Errore durante la registrazione. Riprova.");
+        setLoading(false);
+        return;
+      }
+
+      if (data?.error) {
+        toast.error(data.error);
         setLoading(false);
         return;
       }
@@ -119,9 +125,9 @@ export default function RegisterTrial() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
               <Mail className="h-8 w-8 text-green-600" />
             </div>
-            <CardTitle className="text-xl font-serif">Richiesta inviata!</CardTitle>
+            <CardTitle className="text-xl font-serif">Controlla la tua email!</CardTitle>
             <CardDescription className="text-base">
-              La tua richiesta di accesso gratuito è stata ricevuta. Riceverai un'email con il link di attivazione una volta approvata dal nostro team.
+              Abbiamo inviato un'email a <strong>{email}</strong> con il link per impostare la tua password e accedere subito alla prova gratuita.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">

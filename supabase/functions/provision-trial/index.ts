@@ -54,15 +54,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check user metadata for trial flag
     const metadata = user.user_metadata || {};
-    if (!metadata.is_trial) {
-      return new Response(JSON.stringify({ error: "Not a trial user" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const fullName = metadata.full_name || user.email;
 
     // Find demo tenant
@@ -107,24 +99,40 @@ Deno.serve(async (req) => {
       .update({ tenant_id: tenantId, full_name: fullName })
       .eq("user_id", user.id);
 
-    // 3. Create trial_registration
-    const trialStart = new Date();
-    const trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
-
-    const { error: trialError } = await adminClient
+    // 3. Create trial_registration (skip if already exists)
+    const { data: existingTrial } = await adminClient
       .from("trial_registrations")
-      .insert({
-        user_id: user.id,
-        email: user.email!,
-        full_name: fullName,
-        pet_type: metadata.pet_type || "gatti",
-        tenant_id: tenantId,
-        trial_start: trialStart.toISOString(),
-        trial_end: trialEnd.toISOString(),
-      });
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-    if (trialError) {
-      console.error("Error creating trial registration:", trialError);
+    if (!existingTrial) {
+      const trialStart = new Date();
+      const trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
+
+      const { error: trialError } = await adminClient
+        .from("trial_registrations")
+        .insert({
+          user_id: user.id,
+          email: user.email!,
+          full_name: fullName,
+          pet_type: metadata.pet_type || "gatti",
+          tenant_id: tenantId,
+          trial_start: trialStart.toISOString(),
+          trial_end: trialEnd.toISOString(),
+        });
+
+      if (trialError) {
+        console.error("Error creating trial registration:", trialError);
+      }
+    }
+
+    // Update profile phone from metadata if available
+    if (metadata.phone) {
+      await adminClient
+        .from("profiles")
+        .update({ phone: metadata.phone })
+        .eq("user_id", user.id);
     }
 
     return new Response(

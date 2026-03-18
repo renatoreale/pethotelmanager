@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
       .single();
     const tenantName = tenant?.name || "La Pensione";
 
-    const origin = req.headers.get("origin") || "";
+    const origin = req.headers.get("origin") || Deno.env.get("SITE_URL") || "";
 
     // --- RESEND INVITE ---
     if (action === "resend") {
@@ -256,7 +256,6 @@ Deno.serve(async (req) => {
       tenant_id: client.tenant_id, client_id, direction: "sent",
       email_type: "invito", subject: `Benvenuto nel portale clienti - ${tenantName}`,
       recipient_email: client.email, status: "sent",
-      body_html: inviteEmailHtml(client.first_name, tenantName, recoveryLink),
     });
 
     return new Response(
