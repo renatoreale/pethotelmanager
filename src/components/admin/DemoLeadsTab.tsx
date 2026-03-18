@@ -37,26 +37,28 @@ export function DemoLeadsTab() {
   const { data: leads, isLoading } = useQuery({
     queryKey: ["demo-leads"],
     queryFn: async () => {
-      const { data, error } = await baseClient.functions.invoke("mysql-demo-leads", {
-        body: { action: "list" },
-      });
+      const { data, error } = await baseClient
+        .from("demo_leads" as any)
+        .select("*")
+        .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data?.data || []) as DemoLead[];
+      return (data || []) as DemoLead[];
     },
   });
 
   const approveMutation = useMutation({
     mutationFn: async (lead: DemoLead) => {
-      const { data, error } = await baseClient.functions.invoke("mysql-demo-leads", {
-        body: { action: "approve", id: lead.id },
+      const { data, error } = await baseClient.functions.invoke("approve-demo-lead", {
+        body: { leadId: lead.id },
       });
       if (error) throw error;
-      return data?.data || lead;
+      if (data?.error) throw new Error(data.error);
+      return lead;
     },
-    onSuccess: (updatedLead) => {
+    onSuccess: (lead) => {
       const baseUrl = window.location.origin;
-      const link = `${baseUrl}/confirm-demo?token=${updatedLead.token}`;
-      setActivationModal({ open: true, lead: { ...updatedLead, activationLink: link } });
+      const link = `${baseUrl}/confirm-demo?token=${lead.token}`;
+      setActivationModal({ open: true, lead: { ...lead, activationLink: link } });
       queryClient.invalidateQueries({ queryKey: ["demo-leads"] });
     },
     onError: (error: any) => {
