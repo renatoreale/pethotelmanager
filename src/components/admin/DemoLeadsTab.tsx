@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase as baseClient } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ interface DemoLead {
 }
 
 export function DemoLeadsTab() {
+  const supabase = useSupabase();
   const queryClient = useQueryClient();
   const [activationModal, setActivationModal] = useState<{ open: boolean; lead: (DemoLead & { activationLink?: string }) | null }>({ open: false, lead: null });
   const [activeTab, setActiveTab] = useState<LeadType>("all");
@@ -37,7 +39,7 @@ export function DemoLeadsTab() {
   const { data: leads, isLoading } = useQuery({
     queryKey: ["demo-leads"],
     queryFn: async () => {
-      const { data, error } = await baseClient
+      const { data, error } = await supabase
         .from("demo_leads" as any)
         .select("*")
         .order("created_at", { ascending: false });
