@@ -105,21 +105,74 @@ serve(async (req) => {
       }
     }
 
-    const { error: insertError } = await supabase.from("demo_leads").insert({
-      full_name: firstName.trim(),
-      last_name: lastName?.trim() || null,
-      email: email.trim().toLowerCase(),
-      phone: phone || null,
-      lead_type: resolvedLeadType,
-      pensione_name: pensioneName?.trim() || null,
-      message: message?.trim() || null,
-      privacy_accepted: true,
-    });
+    const { data: inserted, error: insertError } = await supabase
+      .from("demo_leads")
+      .insert({
+        full_name: firstName.trim(),
+        last_name: lastName?.trim() || null,
+        email: email.trim().toLowerCase(),
+        phone: phone || null,
+        lead_type: resolvedLeadType,
+        pensione_name: pensioneName?.trim() || null,
+        message: message?.trim() || null,
+        privacy_accepted: true,
+      })
+      .select("token")
+      .single();
 
-    if (insertError) {
+    if (insertError || !inserted) {
       console.error("Insert error:", insertError);
       return new Response(JSON.stringify({ error: "Errore nel salvataggio della richiesta" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Invia email di attivazione automaticamente
+    const resendKey = Deno.env.get("RESEND_API_KEY");
+    const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || "noreply@pethotelmanager.com";
+    const baseUrl = body.baseUrl || "https://pethotelmanager.com";
+    const activationLink = `${baseUrl}/confirm-demo?token=${inserted.token}`;
+    const fullName = `${firstName.trim()}${lastName ? " " + lastName.trim() : ""}`;
+
+    if (resendKey) {
+      const html = `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px 24px;">
+          <div style="text-align:center;margin-bottom:24px;">
+            <h1 style="color:#c45a12;font-size:24px;margin:0;">PetHotelManager</h1>
+          </div>
+          <h2 style="color:#1a1a1a;font-size:20px;">Ciao ${fullName}!</h2>
+          <p style="color:#333;font-size:16px;line-height:1.6;">
+            Grazie per aver richiesto la prova gratuita di PetHotelManager!
+          </p>
+          <p style="color:#333;font-size:16px;line-height:1.6;">
+            Clicca il pulsante qui sotto per attivare il tuo accesso:
+          </p>
+          <div style="text-align:center;margin:32px 0;">
+            <a href="${activationLink}"
+               style="background-color:#c45a12;color:white;padding:14px 32px;text-decoration:none;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">
+              Attiva la prova gratuita
+            </a>
+          </div>
+          <p style="color:#666;font-size:14px;line-height:1.5;">
+            Se il pulsante non funziona, copia e incolla questo link nel browser:<br/>
+            <a href="${activationLink}" style="color:#c45a12;word-break:break-all;">${activationLink}</a>
+          </p>
+          <hr style="border:none;border-top:1px solid #eee;margin:24px 0;"/>
+          <p style="color:#999;font-size:12px;text-align:center;">
+            PetHotelManager — Il gestionale per la tua pensione per animali
+          </p>
+        </div>
+      `;
+
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${resendKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: fromEmail,
+          to: email.trim().toLowerCase(),
+          subject: "Attiva la tua prova gratuita — PetHotelManager",
+          html,
+        }),
       });
     }
 

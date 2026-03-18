@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { Users, CheckCircle2, Clock, Send, Loader2, Copy, Video, Play } from "lucide-react";
+import { Users, CheckCircle2, Clock, Loader2, Copy, Video, Play, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -48,23 +48,20 @@ export function DemoLeadsTab() {
     },
   });
 
-  const approveMutation = useMutation({
-    mutationFn: async (lead: DemoLead) => {
-      const { data, error } = await baseClient.functions.invoke("approve-demo-lead", {
-        body: { leadId: lead.id },
-      });
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("demo_leads" as any)
+        .delete()
+        .eq("id", id);
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      return lead;
     },
-    onSuccess: (lead) => {
-      const baseUrl = window.location.origin;
-      const link = `${baseUrl}/confirm-demo?token=${lead.token}`;
-      setActivationModal({ open: true, lead: { ...lead, activationLink: link } });
+    onSuccess: () => {
+      toast.success("Richiesta eliminata");
       queryClient.invalidateQueries({ queryKey: ["demo-leads"] });
     },
     onError: (error: any) => {
-      toast.error(error.message || "Errore nell'approvazione");
+      toast.error(error.message || "Errore nell'eliminazione");
     },
   });
 
@@ -208,19 +205,7 @@ export function DemoLeadsTab() {
                         {format(new Date(lead.created_at), "dd MMM yyyy HH:mm", { locale: it })}
                       </TableCell>
                       <TableCell>
-                        {!isConfirmed(lead) ? (
-                          <Button
-                            size="sm"
-                            onClick={() => approveMutation.mutate(lead)}
-                            disabled={approveMutation.isPending}
-                          >
-                            {approveMutation.isPending ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <><Send className="h-4 w-4 mr-1" /> Approva</>
-                            )}
-                          </Button>
-                        ) : (
+                        <div className="flex gap-1">
                           <Button
                             size="sm"
                             variant="outline"
@@ -232,7 +217,19 @@ export function DemoLeadsTab() {
                           >
                             <Copy className="h-4 w-4 mr-1" /> Link
                           </Button>
-                        )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => deleteMutation.mutate(lead.id)}
+                            disabled={deleteMutation.isPending}
+                          >
+                            {deleteMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            )}
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
