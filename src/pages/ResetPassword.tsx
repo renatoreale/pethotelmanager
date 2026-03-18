@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSupabase } from "@/hooks/useSupabaseClient";
-
+import { supabase as baseClient } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +9,6 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
 export default function ResetPassword() {
-  const supabase = useSupabase();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [password, setPassword] = useState("");
@@ -18,36 +16,44 @@ export default function ResetPassword() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash.includes("type=recovery") || hash.includes("type=invite")) {
-      setReady(true);
-    } else {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
-          setReady(true);
-        } else {
-          toast.error(t("auth.invalidLink"));
-          navigate("/login");
-        }
-      });
-    }
+    // Listen for PASSWORD_RECOVERY event from baseClient (recovery link sets session here)
+    const { data: { subscription } } = baseClient.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" || (session && window.location.hash.includes("type=recovery"))) {
+        setReady(true);
+      }
+    });
+
+    // Also check if session already exists
+    baseClient.auth.getSession().then(({ data: { session } }) => {
+      if (session) setReady(true);
+      else if (!window.location.hash.includes("type=recovery") && !window.location.hash.includes("type=invite")) {
+        toast.error(t("auth.invalidLink"));
+        navigate("/login");
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate, t]);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password });
+
+    // Always use baseClient: recovery link session is on the base Supabase project
+    const { error } = await baseClient.auth.updateUser({ password });
     if (error) {
       toast.error(error.message);
       setLoading(false);
       return;
     }
-    // Attempt trial provisioning for new trial users
+
+    // Provision trial role for new users (baseClient has the session)
     try {
-      await supabase.functions.invoke("provision-trial");
+      await baseClient.functions.invoke("provision-trial");
     } catch (_) {
       // Non-trial users: ignore
     }
+
     toast.success(t("auth.passwordUpdated"));
     navigate("/");
     setLoading(false);
