@@ -102,13 +102,15 @@ Deno.serve(async (req) => {
     // 3. Create trial_registration (skip if already exists)
     const { data: existingTrial } = await adminClient
       .from("trial_registrations")
-      .select("id")
+      .select("id, trial_end")
       .eq("user_id", user.id)
       .maybeSingle();
 
+    let trialEnd: Date;
+
     if (!existingTrial) {
       const trialStart = new Date();
-      const trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
+      trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
 
       const { error: trialError } = await adminClient
         .from("trial_registrations")
@@ -125,6 +127,8 @@ Deno.serve(async (req) => {
       if (trialError) {
         console.error("Error creating trial registration:", trialError);
       }
+    } else {
+      trialEnd = new Date(existingTrial.trial_end);
     }
 
     // Update profile phone from metadata if available

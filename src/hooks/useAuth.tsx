@@ -101,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!rolesRes.data || rolesRes.data.length === 0) {
       console.log("[useAuth] User with no roles, attempting trial provisioning...");
       try {
-        const { data, error } = await baseClient.functions.invoke("provision-trial");
+        const { data, error } = await supabase.functions.invoke("provision-trial");
         if (error) {
           console.log("[useAuth] Provision trial skipped:", error.message);
         } else if (data?.success) {
