@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,6 +55,14 @@ const SEASON_OPTIONS = [
 ];
 
 export default function Pensione() {
+  const { trialEnd, user } = useAuth();
+  const isTrial = trialEnd !== null || user?.user_metadata?.is_trial === true;
+  const [demoNoticeOpen, setDemoNoticeOpen] = useState(false);
+
+  useEffect(() => {
+    if (isTrial) setDemoNoticeOpen(true);
+  }, [isTrial]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -75,16 +83,42 @@ export default function Pensione() {
           <TabsTrigger value="stripe" className="gap-2"><KeyRound className="h-4 w-4" /> Stripe</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="anagrafica"><AnagraficaTab /></TabsContent>
-        <TabsContent value="casette"><CasetteTab /></TabsContent>
-        <TabsContent value="slot"><SlotTab /></TabsContent>
-        <TabsContent value="listino"><ListinoTab /></TabsContent>
-        <TabsContent value="pagamenti"><PaymentMethodsTab /></TabsContent>
-        <TabsContent value="cancellazione"><CancellationPolicyTab /></TabsContent>
-        <TabsContent value="preventivo-config"><PaymentSplitsTab /></TabsContent>
-        <TabsContent value="email-templates"><EmailTemplatesTab /></TabsContent>
-        <TabsContent value="stripe"><StripeConfigTab /></TabsContent>
+        <div className={isTrial ? "pointer-events-none select-none opacity-60" : ""}>
+          <TabsContent value="anagrafica"><AnagraficaTab /></TabsContent>
+          <TabsContent value="casette"><CasetteTab /></TabsContent>
+          <TabsContent value="slot"><SlotTab /></TabsContent>
+          <TabsContent value="listino"><ListinoTab /></TabsContent>
+          <TabsContent value="pagamenti"><PaymentMethodsTab /></TabsContent>
+          <TabsContent value="cancellazione"><CancellationPolicyTab /></TabsContent>
+          <TabsContent value="preventivo-config"><PaymentSplitsTab /></TabsContent>
+          <TabsContent value="email-templates"><EmailTemplatesTab /></TabsContent>
+          <TabsContent value="stripe"><StripeConfigTab /></TabsContent>
+        </div>
       </Tabs>
+
+      <Dialog open={demoNoticeOpen} onOpenChange={setDemoNoticeOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-primary" />
+              Sezione non modificabile
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <p>
+              Per garantire il <strong>corretto funzionamento della versione DEMO</strong>,
+              la configurazione della pensione è preimpostata e non può essere modificata.
+            </p>
+            <p>
+              Puoi comunque esplorare tutte le sezioni e vedere come sono strutturate.
+              Una volta attivato l'abbonamento, avrai accesso completo alla configurazione.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setDemoNoticeOpen(false)}>Ho capito</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
