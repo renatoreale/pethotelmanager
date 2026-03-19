@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { supabase as baseClient } from "@/integrations/supabase/client";
-import { useSupabase } from "@/hooks/useSupabaseClient";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,7 @@ import { it } from "date-fns/locale";
 import { Users, Clock, CheckCircle, XCircle, RefreshCw, Trash2, Search, Mail } from "lucide-react";
 import { toast } from "sonner";
 
-type TrialStatus = "richiesta" | "in_corso" | "scaduta";
+type TrialStatus = "richiesta" | "attiva" | "scaduta";
 
 interface TrialUser {
   user_id: string;
@@ -39,11 +38,11 @@ function getStatusBadge(status: TrialStatus, daysRemaining: number | null) {
       </Badge>
     );
   }
-  if (status === "in_corso") {
+  if (status === "attiva") {
     return (
       <Badge className="bg-green-100 text-green-800 hover:bg-green-100 gap-1">
         <CheckCircle className="h-3 w-3" />
-        In corso {daysRemaining !== null ? `(${daysRemaining}gg)` : ""}
+        Attiva {daysRemaining !== null ? `(${daysRemaining}gg)` : ""}
       </Badge>
     );
   }
@@ -55,7 +54,6 @@ function getStatusBadge(status: TrialStatus, daysRemaining: number | null) {
 }
 
 export function TrialDashboardTab() {
-  const supabase = useSupabase();
   const [users, setUsers] = useState<TrialUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -65,28 +63,24 @@ export function TrialDashboardTab() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      // Fetch auth users + trial_registrations in parallel
-      const [authRes, trialsRes] = await Promise.all([
-        baseClient.functions.invoke("admin-list-users"),
-        supabase.from("trial_registrations").select("user_id, trial_start, trial_end, is_converted"),
-      ]);
+      // Fetch auth users (includes trial data via service role)
+      const authRes = await baseClient.functions.invoke("admin-list-users");
 
       const authDetails: Record<string, {
         email: string;
         created_at: string;
         user_metadata: Record<string, any>;
         banned_until: string | null;
+        trial_start: string | null;
+        trial_end: string | null;
+        is_converted: boolean;
       }> = authRes.data?.userDetails || {};
-
-      const trialsMap = new Map(
-        (trialsRes.data || []).map((t: any) => [t.user_id, t])
-      );
 
       const trialUsers: TrialUser[] = [];
 
       for (const [userId, auth] of Object.entries(authDetails)) {
         const meta = auth.user_metadata || {};
-        const trial = trialsMap.get(userId) as any;
+        const trial = auth.trial_start ? auth : null;
         const isBanned = auth.banned_until && new Date(auth.banned_until) > new Date();
 
         // Include only users with is_trial flag OR who have a trial_registration
@@ -100,7 +94,7 @@ export function TrialDashboardTab() {
           if (expired) {
             status = "scaduta";
           } else {
-            status = "in_corso";
+            status = "attiva";
             daysRemaining = Math.max(0, differenceInDays(new Date(trial.trial_end), new Date()));
           }
         } else {
@@ -162,7 +156,7 @@ export function TrialDashboardTab() {
 
   const total = users.length;
   const richiesta = users.filter((u) => u.status === "richiesta").length;
-  const inCorso = users.filter((u) => u.status === "in_corso").length;
+  const inCorso = users.filter((u) => u.status === "attiva").length;
   const scaduta = users.filter((u) => u.status === "scaduta").length;
 
   return (

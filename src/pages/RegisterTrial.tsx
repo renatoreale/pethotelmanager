@@ -97,7 +97,12 @@ export default function RegisterTrial() {
 
       if (fnError) {
         console.error("Edge function error:", fnError);
-        toast.error("Errore durante la registrazione. Riprova.");
+        let errorMsg = (fnError as any).message || "Errore durante la registrazione. Riprova.";
+        try {
+          const body = await (fnError as any).context?.json?.();
+          if (body?.error) errorMsg = body.error;
+        } catch {}
+        toast.error(errorMsg);
         setLoading(false);
         return;
       }

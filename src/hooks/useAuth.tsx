@@ -54,6 +54,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        // Recovery link (implicit flow: PASSWORD_RECOVERY, PKCE flow: SIGNED_IN + ?code=)
+        const isRecovery =
+          _event === "PASSWORD_RECOVERY" ||
+          (_event === "SIGNED_IN" && window.location.search.includes("code="));
+        if (isRecovery && !window.location.pathname.includes("/reset-password")) {
+          window.location.href = "/reset-password";
+          return;
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -104,8 +113,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data, error } = await baseClient.functions.invoke("provision-trial");
         if (error) {
           console.log("[useAuth] Provision trial skipped:", error.message);
-        } else if (data?.success) {
-          console.log("[useAuth] Trial provisioned, refetching...");
+        } else if (data?.success || data?.already_provisioned) {
+          console.log("[useAuth] Trial provisioned (or already provisioned), refetching...");
           const [p2, r2, t2] = await Promise.all([
             supabase.from("profiles").select("id, full_name, tenant_id, avatar_url").eq("user_id", userId).single(),
             supabase.from("user_roles").select("role, tenant_id").eq("user_id", userId),

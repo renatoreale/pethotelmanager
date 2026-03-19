@@ -58,18 +58,36 @@ Deno.serve(async (req) => {
     const fullName = metadata.full_name || user.email;
 
     // Find demo tenant
-    const { data: demoTenant, error: tenantError } = await adminClient
+    let { data: demoTenant, error: tenantError } = await adminClient
       .from("tenants")
       .select("id")
       .eq("slug", DEMO_TENANT_SLUG)
       .single();
 
+    // Se non esiste, crealo al volo (primo deploy / dev)
     if (tenantError || !demoTenant) {
-      console.error("Demo tenant not found:", tenantError);
-      return new Response(JSON.stringify({ error: "Demo tenant not found" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.warn("Demo tenant not found, creating it...");
+      const { data: newTenant, error: createError } = await adminClient
+        .from("tenants")
+        .insert({
+          name: "La Zampa Felice",
+          slug: DEMO_TENANT_SLUG,
+          num_singole: 10,
+          num_doppie: 5,
+          pet_type: "gatti",
+          locale: "it",
+        })
+        .select("id")
+        .single();
+
+      if (createError || !newTenant) {
+        console.error("Failed to create demo tenant:", createError);
+        return new Response(JSON.stringify({ error: "Demo tenant not found and could not be created: " + (createError?.message ?? "unknown") }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      demoTenant = newTenant;
     }
 
     const tenantId = demoTenant.id;
@@ -80,7 +98,7 @@ Deno.serve(async (req) => {
       .select("trial_days")
       .limit(1)
       .single();
-    const trialDays = landingConfig?.trial_days || 3;
+    const trialDays = landingConfig?.trial_days || 14;
 
     // 1. Assign titolare role on demo tenant
     const { error: roleError } = await adminClient.from("user_roles").insert({

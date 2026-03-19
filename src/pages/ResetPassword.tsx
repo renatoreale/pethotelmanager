@@ -16,20 +16,29 @@ export default function ResetPassword() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // Listen for PASSWORD_RECOVERY event from baseClient (recovery link sets session here)
+    // PKCE flow: code in query string. Implicit flow: access_token + type=recovery in hash.
+    const hasPkceCode = window.location.search.includes("code=");
+    const hasRecoveryHash = window.location.hash.includes("type=recovery") || window.location.hash.includes("type=invite");
+
     const { data: { subscription } } = baseClient.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY" || (session && window.location.hash.includes("type=recovery"))) {
+      if (
+        event === "PASSWORD_RECOVERY" ||
+        event === "SIGNED_IN" ||
+        (session && (hasRecoveryHash || hasPkceCode))
+      ) {
         setReady(true);
       }
     });
 
-    // Also check if session already exists
+    // Also check if session already exists (e.g. PKCE exchange completed before this effect ran)
     baseClient.auth.getSession().then(({ data: { session } }) => {
-      if (session) setReady(true);
-      else if (!window.location.hash.includes("type=recovery") && !window.location.hash.includes("type=invite")) {
+      if (session) {
+        setReady(true);
+      } else if (!hasRecoveryHash && !hasPkceCode) {
         toast.error(t("auth.invalidLink"));
         navigate("/login");
       }
+      // If hasPkceCode: wait for onAuthStateChange to fire after code exchange
     });
 
     return () => subscription.unsubscribe();
@@ -49,9 +58,14 @@ export default function ResetPassword() {
 
     // Provision trial role for new users (baseClient has the session)
     try {
-      await baseClient.functions.invoke("provision-trial");
-    } catch (_) {
-      // Non-trial users: ignore
+      const { data: provisionData, error: provisionError } = await baseClient.functions.invoke("provision-trial");
+      if (provisionError) {
+        console.error("[ResetPassword] provision-trial error:", provisionError);
+      } else {
+        console.log("[ResetPassword] provision-trial result:", provisionData);
+      }
+    } catch (e) {
+      console.error("[ResetPassword] provision-trial exception:", e);
     }
 
     toast.success(t("auth.passwordUpdated"));
