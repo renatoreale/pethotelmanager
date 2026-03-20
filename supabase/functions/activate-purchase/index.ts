@@ -1,0 +1,223 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .substring(0, 50);
+}
+
+async function sendEmail(to: string, subject: string, html: string) {
+  const resendKey = Deno.env.get("RESEND_API_KEY");
+  const fromEmail = Deno.env.get("RESEND_FROM_ORDERS_EMAIL") || "orders@pethotelmanager.com";
+  if (!resendKey) { console.error("RESEND_API_KEY mancante"); return; }
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${resendKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from: `PetHotelManager <${fromEmail}>`, to: [to], subject, html }),
+  });
+  if (!res.ok) console.error("Resend error:", await res.text());
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const siteUrl = Deno.env.get("SITE_URL") || "http://localhost:5173";
+
+    // Verifica autenticazione
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: userError } = await userClient.auth.getUser();
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+    // Verifica ruolo admin
+    const { data: roles } = await adminClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id);
+    if (!roles?.some((r: any) => r.role === "admin")) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { purchase_request_id } = await req.json();
+    if (!purchase_request_id) throw new Error("purchase_request_id mancante");
+
+    // 1. Carica la richiesta
+    const { data: purchase, error: purchaseError } = await adminClient
+      .from("purchase_requests")
+      .select("*")
+      .eq("id", purchase_request_id)
+      .single();
+
+    if (purchaseError || !purchase) throw new Error("Richiesta non trovata");
+    if (purchase.status !== "pagato") throw new Error("La richiesta non è in stato pagato");
+
+    const fullName = `${purchase.nome} ${purchase.cognome}`;
+    const pianoLabel = purchase.piano.charAt(0).toUpperCase() + purchase.piano.slice(1);
+
+    // 2. Genera slug univoco
+    let slug = slugify(purchase.nome_pensione);
+    const { data: existingSlug } = await adminClient
+      .from("tenants")
+      .select("slug")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (existingSlug) slug = `${slug}-${Math.random().toString(36).substring(2, 6)}`;
+
+    // 3. Crea il tenant
+    const { data: tenant, error: tenantError } = await adminClient
+      .from("tenants")
+      .insert({
+        name: purchase.nome_pensione,
+        slug,
+        email: purchase.email,
+        phone: purchase.telefono || null,
+        address: purchase.citta_pensione,
+        num_singole: 0,
+        num_doppie: 0,
+        pet_type: "gatti",
+        locale: "it",
+      })
+      .select()
+      .single();
+
+    if (tenantError || !tenant) throw new Error("Errore creazione tenant: " + tenantError?.message);
+
+    // 4. Crea o recupera l'utente
+    let newUserId: string;
+    const { data: createData, error: createError } = await adminClient.auth.admin.createUser({
+      email: purchase.email,
+      email_confirm: true,
+      user_metadata: { full_name: fullName },
+    });
+
+    if (createError) {
+      if (createError.message.includes("already been registered") || createError.message.includes("already exists")) {
+        const { data: listData } = await adminClient.auth.admin.listUsers();
+        const existingUser = listData?.users?.find((u: any) => u.email === purchase.email);
+        if (!existingUser) throw new Error("Utente già esistente ma non trovato");
+        newUserId = existingUser.id;
+      } else {
+        throw new Error("Errore creazione utente: " + createError.message);
+      }
+    } else {
+      newUserId = createData.user.id;
+    }
+
+    // 5. Assegna ruolo titolare (skip se già esiste)
+    const { data: existingRole } = await adminClient
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", newUserId)
+      .eq("tenant_id", tenant.id)
+      .maybeSingle();
+
+    if (!existingRole) {
+      await adminClient.from("user_roles").insert({
+        user_id: newUserId,
+        role: "titolare",
+        tenant_id: tenant.id,
+      });
+    }
+
+    // 6. Aggiorna profilo
+    await adminClient
+      .from("profiles")
+      .update({ tenant_id: tenant.id, full_name: fullName })
+      .eq("user_id", newUserId);
+
+    // 7. Genera recovery link per impostare la password
+    const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+      type: "recovery",
+      email: purchase.email,
+      options: { redirectTo: `${siteUrl}/reset-password` },
+    });
+
+    if (linkError || !linkData?.properties?.action_link) {
+      throw new Error("Errore generazione link: " + linkError?.message);
+    }
+
+    const recoveryLink = linkData.properties.action_link;
+
+    // 8. Email di benvenuto con link per impostare la password
+    const PIANOPRICES: Record<string, string> = {
+      starter: "€468/anno", pro: "€1.080/anno", business: "€2.400/anno",
+    };
+
+    const welcomeHtml = `
+      <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;">
+        <h2 style="color:#c45a12;margin:0 0 24px;">PetHotelManager</h2>
+        <p>Ciao <strong>${purchase.nome}</strong>,</p>
+        <p>Il tuo account PetHotelManager è stato attivato! 🎉<br/>
+        La tua pensione <strong>${purchase.nome_pensione}</strong> è pronta.</p>
+        <div style="background:#f9f9f9;border-radius:8px;padding:16px 20px;margin:24px 0;font-size:14px;">
+          <p style="margin:0 0 10px;font-weight:600;color:#333;">Dettagli account</p>
+          <ul style="margin:0;padding-left:20px;color:#555;line-height:2;">
+            <li>Pensione: <strong>${purchase.nome_pensione}</strong></li>
+            <li>Piano: <strong>${pianoLabel}</strong> — ${PIANOPRICES[purchase.piano] ?? ""}</li>
+            <li>Email: <strong>${purchase.email}</strong></li>
+          </ul>
+        </div>
+        <p>Clicca il pulsante per impostare la tua password e accedere subito:</p>
+        <a href="${recoveryLink}"
+           style="display:inline-block;margin:16px 0 24px;padding:14px 32px;background:#c45a12;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;font-size:15px;">
+          Imposta la password e accedi
+        </a>
+        <p style="color:#666;font-size:13px;">Il link è valido per 24 ore.</p>
+        <p style="color:#555;font-size:14px;">Per assistenza: <a href="mailto:orders@pethotelmanager.com" style="color:#c45a12;">orders@pethotelmanager.com</a></p>
+        <hr style="border:none;border-top:1px solid #eee;margin:24px 0;"/>
+        <p style="color:#999;font-size:12px;">PetHotelManager — Il gestionale per la tua pensione per animali</p>
+      </div>
+    `;
+
+    await sendEmail(purchase.email, "Account attivato — Benvenuto in PetHotelManager!", welcomeHtml);
+
+    // 9. Aggiorna status → attivato
+    await adminClient
+      .from("purchase_requests")
+      .update({ status: "attivato" })
+      .eq("id", purchase_request_id);
+
+    return new Response(JSON.stringify({ success: true, tenant_id: tenant.id, slug }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("activate-purchase error:", msg);
+    return new Response(JSON.stringify({ error: msg }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
+  }
+});
