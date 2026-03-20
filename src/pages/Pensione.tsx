@@ -56,9 +56,7 @@ const SEASON_OPTIONS = [
 
 export default function Pensione() {
   const { trialEnd, user } = useAuth();
-  const { data: tenantConfig } = useTenantConfig();
-  const isDemoTenant = tenantConfig?.slug === "la-zampa-felice";
-  const isTrial = isDemoTenant && (trialEnd !== null || user?.user_metadata?.is_trial === true);
+  const isTrial = trialEnd !== null || user?.user_metadata?.is_trial === true;
   const [demoNoticeOpen, setDemoNoticeOpen] = useState(false);
 
   useEffect(() => {
