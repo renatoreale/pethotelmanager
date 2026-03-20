@@ -7,6 +7,8 @@ project_id = "ukvlnokihyghgbssamea"
     verify_jwt = false
   [functions.send-demo-validation]
     verify_jwt = false
+  [functions.activate-purchase]
+    verify_jwt = false
   [functions.request-purchase]
     verify_jwt = false
   [functions.verify-purchase]
