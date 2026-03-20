@@ -5,9 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface PurchaseRequest {
   id: string;
@@ -49,6 +53,8 @@ function PianoLabel({ piano }: { piano: string }) {
 export function PurchaseRequestsTab() {
   const [requests, setRequests] = useState<PurchaseRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState<PurchaseRequest | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -77,6 +83,23 @@ export function PurchaseRequestsTab() {
       hour: "2-digit",
       minute: "2-digit",
     });
+
+  const handleDelete = async () => {
+    if (!deleting) return;
+    setDeleteLoading(true);
+    const { error } = await (supabase as any)
+      .from("purchase_requests")
+      .delete()
+      .eq("id", deleting.id);
+    if (error) {
+      toast.error("Errore durante l'eliminazione: " + error.message);
+    } else {
+      toast.success("Richiesta eliminata");
+      setRequests((prev) => prev.filter((r) => r.id !== deleting.id));
+    }
+    setDeleteLoading(false);
+    setDeleting(null);
+  };
 
   const pending = requests.filter((r) => r.status === "pending").length;
   const paid = requests.filter((r) => r.status === "pagato").length;
@@ -118,6 +141,7 @@ export function PurchaseRequestsTab() {
                   <TableHead>P.IVA / CF</TableHead>
                   <TableHead>Piano</TableHead>
                   <TableHead>Stato</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -140,6 +164,16 @@ export function PurchaseRequestsTab() {
                     <TableCell>
                       <StatusBadge status={r.status} />
                     </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                        onClick={() => setDeleting(r)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -147,6 +181,29 @@ export function PurchaseRequestsTab() {
           </div>
         )}
       </CardContent>
+
+      <AlertDialog open={!!deleting} onOpenChange={(open) => { if (!open) setDeleting(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Elimina richiesta</AlertDialogTitle>
+            <AlertDialogDescription>
+              Stai per eliminare la richiesta di{" "}
+              <strong>{deleting?.nome} {deleting?.cognome}</strong> (Piano {deleting?.piano} — {deleting?.status === "pagato" ? "Pagato" : "In attesa"}).
+              <br />Questa azione è irreversibile.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteLoading}>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleteLoading}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {deleteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Elimina"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
