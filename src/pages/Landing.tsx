@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { PurchaseRequestDialog } from "@/components/PurchaseRequestDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -212,9 +213,10 @@ function DemoRequestForm() {
 /* ══════════════ LANDING PAGE ══════════════ */
 export default function Landing() {
   const navigate = useNavigate();
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [config, setConfig] = useState<any>(null);
   const [showNav, setShowNav] = useState(false);
+  const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<{ priceId: string; planName: string } | null>(null);
 
   useEffect(() => {
     supabase.from("landing_config").select("*").limit(1).single().then(({ data }) => {
@@ -232,19 +234,9 @@ export default function Landing() {
 
   const handleStartTrial = () => navigate("/register-trial");
 
-  const handleSubscribe = async (priceId: string, planName: string) => {
-    setLoadingPlan(planName);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { navigate("/register-trial"); return; }
-      const { data, error } = await supabase.functions.invoke("create-checkout", { body: { priceId } });
-      if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
-    } catch (e: any) {
-      toast.error(e.message || "Errore durante il checkout");
-    } finally {
-      setLoadingPlan(null);
-    }
+  const handleSubscribe = (priceId: string, planName: string) => {
+    setSelectedPlan({ priceId, planName });
+    setPurchaseDialogOpen(true);
   };
 
   const trialDays = config?.trial_days || 14;
@@ -265,6 +257,7 @@ export default function Landing() {
   };
 
   return (
+    <>
     <div className="min-h-screen bg-background">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
@@ -514,8 +507,8 @@ export default function Landing() {
                     </li>
                   ))}
                 </ul>
-                <Button className="w-full" variant="outline" size="lg" disabled={loadingPlan === "starter"} onClick={() => handleSubscribe(STRIPE_TIERS.starter.price_id, "starter")}>
-                  {loadingPlan === "starter" ? "Caricamento..." : "Inizia con Starter"}
+                <Button className="w-full" variant="outline" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.starter.price_id, "starter")}>
+                  <CreditCard className="h-4 w-4 mr-2" />Acquista Starter
                 </Button>
               </CardContent>
             </Card>
@@ -542,8 +535,8 @@ export default function Landing() {
                     </li>
                   ))}
                 </ul>
-                <Button className="w-full" size="lg" disabled={loadingPlan === "pro"} onClick={() => handleSubscribe(STRIPE_TIERS.pro.price_id, "pro")}>
-                  {loadingPlan === "pro" ? "Caricamento..." : "Inizia con Pro"}
+                <Button className="w-full" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.pro.price_id, "pro")}>
+                  <CreditCard className="h-4 w-4 mr-2" />Acquista Pro
                 </Button>
               </CardContent>
             </Card>
@@ -570,8 +563,8 @@ export default function Landing() {
                     </li>
                   ))}
                 </ul>
-                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white" size="lg" disabled={loadingPlan === "business"} onClick={() => handleSubscribe(STRIPE_TIERS.business.price_id, "business")}>
-                  {loadingPlan === "business" ? "Caricamento..." : "Inizia con Business"}
+                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.business.price_id, "business")}>
+                  <CreditCard className="h-4 w-4 mr-2" />Acquista Business
                 </Button>
               </CardContent>
             </Card>
@@ -647,5 +640,15 @@ export default function Landing() {
         </div>
       </footer>
     </div>
+
+    {selectedPlan && (
+      <PurchaseRequestDialog
+        open={purchaseDialogOpen}
+        onOpenChange={setPurchaseDialogOpen}
+        planName={selectedPlan.planName}
+        priceId={selectedPlan.priceId}
+      />
+    )}
+    </>
   );
 }

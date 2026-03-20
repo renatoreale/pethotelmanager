@@ -37,6 +37,7 @@ import Termini from "./pages/Termini";
 import RegisterTrial from "./pages/RegisterTrial";
 import ConfirmDemo from "./pages/ConfirmDemo";
 import Statistiche from "./pages/Statistiche";
+import PurchaseSuccess from "./pages/PurchaseSuccess";
 
 // Client portal
 import ClienteLogin from "./pages/cliente/ClienteLogin";
@@ -68,6 +69,7 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/acquisto-completato" element={<PurchaseSuccess />} />
 
             {/* Client portal - public */}
             <Route path="/cliente/login" element={<ClienteLogin />} />
