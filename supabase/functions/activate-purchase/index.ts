@@ -137,7 +137,28 @@ serve(async (req) => {
       newUserId = createData.user.id;
     }
 
-    // 5. Assegna ruolo titolare (skip se già esiste)
+    // 5. Rimuovi associazioni con il tenant demo (la-zampa-felice) se presenti
+    const { data: demoTenant } = await adminClient
+      .from("tenants")
+      .select("id")
+      .eq("slug", "la-zampa-felice")
+      .maybeSingle();
+
+    if (demoTenant) {
+      await adminClient
+        .from("user_roles")
+        .delete()
+        .eq("user_id", newUserId)
+        .eq("tenant_id", demoTenant.id);
+
+      // Marca trial come convertito
+      await adminClient
+        .from("trial_registrations")
+        .update({ is_converted: true })
+        .eq("user_id", newUserId);
+    }
+
+    // 6. Assegna ruolo titolare (skip se già esiste)
     const { data: existingRole } = await adminClient
       .from("user_roles")
       .select("id")
@@ -153,7 +174,7 @@ serve(async (req) => {
       });
     }
 
-    // 6. Aggiorna profilo
+    // 7. Aggiorna profilo
     await adminClient
       .from("profiles")
       .update({ tenant_id: tenant.id, full_name: fullName })
