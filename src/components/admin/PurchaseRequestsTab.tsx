@@ -86,8 +86,12 @@ export function PurchaseRequestsTab() {
     if (!activating) return;
     setActivateLoading(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessione non trovata. Rieffettua il login.");
+
       const { data, error } = await supabase.functions.invoke("activate-purchase", {
         body: { purchase_request_id: activating.id },
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (error) {
         let msg = error.message;
@@ -95,12 +99,9 @@ export function PurchaseRequestsTab() {
           const ctx = (error as any).context;
           if (ctx) {
             const body = await ctx.json();
-            console.error("[activate-purchase] error body:", body);
             if (body?.error) msg = body.error;
           }
-        } catch (parseErr) {
-          console.error("[activate-purchase] could not parse error body:", parseErr);
-        }
+        } catch {}
         throw new Error(msg);
       }
       toast.success(`Account attivato! Pensione "${activating.nome_pensione}" creata. Email inviata a ${activating.email}.`);
