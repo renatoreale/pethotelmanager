@@ -35,36 +35,36 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const siteUrl = Deno.env.get("SITE_URL") || "http://localhost:5173";
-
-    // Verifica autenticazione
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
+    // Verifica autenticazione tramite adminClient.auth.getUser(token)
+    const authHeader = req.headers.get("Authorization");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.replace("Bearer ", "") : null;
+    if (!token) {
+      return new Response(JSON.stringify({ error: "Unauthorized: no token" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: { user }, error: userError } = await adminClient.auth.getUser(token);
+    if (userError || !user) {
+      console.error("[activate-purchase] getUser error:", userError?.message);
+      return new Response(JSON.stringify({ error: "Unauthorized: " + (userError?.message ?? "no user") }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    console.log("[activate-purchase] user.id:", user.id);
+
     // Verifica ruolo admin
-    const { data: roles } = await adminClient
+    const { data: roles, error: rolesError } = await adminClient
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id);
+    console.log("[activate-purchase] roles:", roles, "error:", rolesError?.message);
     if (!roles?.some((r: any) => r.role === "admin")) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
+      return new Response(JSON.stringify({ error: "Forbidden: ruolo admin non trovato" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
