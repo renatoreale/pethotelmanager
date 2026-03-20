@@ -69,8 +69,10 @@ serve(async (req) => {
       });
     }
 
-    const { purchase_request_id } = await req.json();
+    const body = await req.json();
+    const { purchase_request_id } = body;
     if (!purchase_request_id) throw new Error("purchase_request_id mancante");
+    console.log("[activate-purchase] purchase_request_id:", purchase_request_id);
 
     // 1. Carica la richiesta
     const { data: purchase, error: purchaseError } = await adminClient
@@ -79,8 +81,9 @@ serve(async (req) => {
       .eq("id", purchase_request_id)
       .single();
 
-    if (purchaseError || !purchase) throw new Error("Richiesta non trovata");
-    if (purchase.status !== "pagato") throw new Error("La richiesta non è in stato pagato");
+    console.log("[activate-purchase] purchase:", purchase, "error:", purchaseError?.message);
+    if (purchaseError || !purchase) throw new Error("Richiesta non trovata: " + purchaseError?.message);
+    if (purchase.status !== "pagato") throw new Error("Stato non valido: " + purchase.status);
 
     const fullName = `${purchase.nome} ${purchase.cognome}`;
     const pianoLabel = purchase.piano.charAt(0).toUpperCase() + purchase.piano.slice(1);

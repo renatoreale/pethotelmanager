@@ -91,7 +91,16 @@ export function PurchaseRequestsTab() {
       });
       if (error) {
         let msg = error.message;
-        try { const body = await (error as any).context?.json?.(); if (body?.error) msg = body.error; } catch {}
+        try {
+          const ctx = (error as any).context;
+          if (ctx) {
+            const body = await ctx.json();
+            console.error("[activate-purchase] error body:", body);
+            if (body?.error) msg = body.error;
+          }
+        } catch (parseErr) {
+          console.error("[activate-purchase] could not parse error body:", parseErr);
+        }
         throw new Error(msg);
       }
       toast.success(`Account attivato! Pensione "${activating.nome_pensione}" creata. Email inviata a ${activating.email}.`);
