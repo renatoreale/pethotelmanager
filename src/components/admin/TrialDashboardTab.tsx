@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase as baseClient } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -54,6 +56,8 @@ function getStatusBadge(status: TrialStatus, daysRemaining: number | null) {
 }
 
 export function TrialDashboardTab() {
+  const { session } = useAuth();
+  const supabase = useSupabase();
   const [users, setUsers] = useState<TrialUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -61,10 +65,11 @@ export function TrialDashboardTab() {
   const [deleting, setDeleting] = useState(false);
 
   const fetchAll = async () => {
+    if (!session) return;
     setLoading(true);
     try {
       // Fetch auth users (includes trial data via service role)
-      const authRes = await baseClient.functions.invoke("admin-list-users");
+      const authRes = await supabase.functions.invoke("admin-list-users");
 
       const authDetails: Record<string, {
         email: string;
@@ -124,7 +129,7 @@ export function TrialDashboardTab() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { if (session) fetchAll(); }, [session]);
 
   const handleDelete = async () => {
     if (!deletingUser) return;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,23 +11,30 @@ import { useTranslation } from "react-i18next";
 export default function Register() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+  const checkoutPriceId = searchParams.get("checkout");
+  const checkoutPlan = searchParams.get("plan");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const loginPath = checkoutPriceId
+    ? `/login?checkout=${encodeURIComponent(checkoutPriceId)}${checkoutPlan ? `&plan=${checkoutPlan}` : ""}`
+    : "/login";
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email, password,
-      options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}/login` },
+      options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}${loginPath}` },
     });
     if (error) {
       toast.error(error.message);
     } else {
       toast.success(t("auth.registerSuccess"));
-      navigate("/login");
+      navigate(loginPath);
     }
     setLoading(false);
   };
@@ -58,7 +65,7 @@ export default function Register() {
               {loading ? t("auth.registering") : t("auth.registerButton")}
             </Button>
             <div className="text-center text-sm">
-              <Link to="/login" className="text-primary hover:underline">{t("auth.hasAccountLogin")}</Link>
+              <Link to={loginPath} className="text-primary hover:underline">{t("auth.hasAccountLogin")}</Link>
             </div>
           </form>
         </CardContent>

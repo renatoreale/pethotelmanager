@@ -7,11 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format, isPast } from "date-fns";
+import { format, isPast, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { Users, CheckCircle2, CheckCircle, XCircle, Clock, Loader2, Copy, Video, Play, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 type LeadType = "all" | "demo_live" | "prova_gratuita";
 
@@ -43,6 +44,7 @@ interface TrialUser {
 export function DemoLeadsTab() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
+  const { user, session } = useAuth();
   const [activationModal, setActivationModal] = useState<{ open: boolean; lead: (DemoLead & { activationLink?: string }) | null }>({ open: false, lead: null });
   const [activeTab, setActiveTab] = useState<LeadType>("all");
 
@@ -60,8 +62,9 @@ export function DemoLeadsTab() {
 
   const { data: trialUsers, isLoading: isLoadingTrials } = useQuery({
     queryKey: ["trial-registrations-admin"],
+    enabled: !!session,
     queryFn: async () => {
-      const authRes = await baseClient.functions.invoke("admin-list-users");
+      const authRes = await supabase.functions.invoke("admin-list-users");
       const userDetails: Record<string, any> = authRes.data?.userDetails || {};
 
       const result: TrialUser[] = [];
@@ -236,6 +239,9 @@ export function DemoLeadsTab() {
                   <TableBody>
                     {trialUsers.map((u) => {
                       const expired = u.trial_end ? isPast(new Date(u.trial_end)) : false;
+                      const daysLeft = u.trial_end && !expired
+                        ? Math.max(0, differenceInDays(new Date(u.trial_end), new Date()))
+                        : null;
                       return (
                         <TableRow key={u.user_id}>
                           <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
@@ -249,7 +255,7 @@ export function DemoLeadsTab() {
                                 </Badge>
                               ) : (
                                 <Badge className="bg-green-100 text-green-800 hover:bg-green-100 gap-1">
-                                  <CheckCircle className="h-3 w-3" /> Attiva
+                                  <CheckCircle className="h-3 w-3" /> Attiva ({daysLeft}gg)
                                 </Badge>
                               )
                             ) : (

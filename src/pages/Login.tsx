@@ -20,6 +20,8 @@ export default function Login() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const isDemo = searchParams.get("demo") === "true";
+  const checkoutPriceId = searchParams.get("checkout");
+  const checkoutPlan = searchParams.get("plan");
   const [email, setEmail] = useState(isDemo ? DEMO_EMAIL : "");
   const [password, setPassword] = useState(isDemo ? DEMO_PASSWORD : "");
   const [loading, setLoading] = useState(false);
@@ -33,6 +35,15 @@ export default function Login() {
       toast.error(error.message);
     } else {
       toast.success(t("auth.loginSuccess"));
+      if (checkoutPriceId) {
+        const { data, error: checkoutErr } = await supabase.functions.invoke("create-checkout", {
+          body: { priceId: checkoutPriceId },
+        });
+        if (!checkoutErr && data?.url) {
+          window.location.href = data.url;
+          return;
+        }
+      }
       navigate("/");
     }
     setLoading(false);
@@ -81,7 +92,13 @@ export default function Login() {
             <Button type="submit" className="w-full" disabled={loading || clientLoading}>
               {loading ? t("auth.loginLoading") : t("auth.loginButton")}
             </Button>
-            <div className="flex justify-end text-sm">
+            <div className="flex justify-between text-sm">
+              <Link
+                to={checkoutPriceId ? `/register?checkout=${encodeURIComponent(checkoutPriceId)}${checkoutPlan ? `&plan=${checkoutPlan}` : ""}` : "/register"}
+                className="text-muted-foreground hover:underline"
+              >
+                {t("auth.createAccount")}
+              </Link>
               <Link to="/forgot-password" className="text-muted-foreground hover:underline">{t("auth.forgotPassword")}</Link>
             </div>
           </form>
