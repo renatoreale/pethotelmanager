@@ -1,21 +1,21 @@
 export const STRIPE_TIERS = {
   starter: {
-    product_id: "prod_UBLateo9XPpVDE",
-    price_id: "price_1TCytAQVJRFR5c8X7EqksFGb",
+    product_id: "prod_UDOX9vTUBJU9wK",
+    price_id: "price_1TExkTQYqblmeN59HOG5R20c",
     name: "Starter",
     priceYearly: 468,
     priceMonthly: 39,
   },
   pro: {
-    product_id: "prod_UBLbvG5df7Zh1U",
-    price_id: "price_1TCyu3QVJRFR5c8XiT17WOSN",
+    product_id: "prod_UDOYV6m28r6T8n",
+    price_id: "price_1TExkwQYqblmeN59UISEkr6r",
     name: "Pro",
     priceYearly: 1080,
     priceMonthly: 90,
   },
   business: {
-    product_id: "prod_UBLczkGGDOkLYG",
-    price_id: "price_1TCyvKQVJRFR5c8XQlgp0oXI",
+    product_id: "prod_UDOYdZZWVYKGcd",
+    price_id: "price_1TExlOQYqblmeN59WL0zHUwk",
     name: "Business",
     priceYearly: 2400,
     priceMonthly: 200,
