@@ -55,8 +55,8 @@ const SEASON_OPTIONS = [
 ];
 
 export default function Pensione() {
-  const { trialEnd, user } = useAuth();
-  const isTrial = trialEnd !== null || user?.user_metadata?.is_trial === true;
+  const { trialEnd, user, hasRole } = useAuth();
+  const isTrial = !hasRole("admin") && (trialEnd !== null || user?.user_metadata?.is_trial === true);
   const [demoNoticeOpen, setDemoNoticeOpen] = useState(false);
 
   useEffect(() => {
