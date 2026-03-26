@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Outlet } from "react-router-dom";
@@ -6,7 +7,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useAllTenants } from "@/hooks/useAdmin";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import { useTenantLocale } from "@/hooks/useTenantLocale";
-import { Building2, ChevronDown, Check } from "lucide-react";
+import { Building2, ChevronDown, Check, ShoppingCart } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { TrialUpgradeDialog } from "@/components/TrialUpgradeDialog";
 
 function TenantLogo({ logoUrl, name, size = "sm" }: { logoUrl?: string | null; name?: string; size?: "sm" | "md" }) {
   const cls = size === "sm" ? "h-6 w-6" : "h-8 w-8";
@@ -24,11 +26,14 @@ function TenantLogo({ logoUrl, name, size = "sm" }: { logoUrl?: string | null; n
 }
 
 export function AppLayout() {
-  const { profile, activeTenant, userTenants, switchTenant } = useAuth();
+  const { profile, activeTenant, userTenants, switchTenant, trialEnd, user, hasRole } = useAuth();
   const { isAdmin, isManager, isTitolare } = usePermissions();
   const { data: allTenants } = useAllTenants();
   const { data: tenantConfig } = useTenantConfig();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   useTenantLocale();
+
+  const isTrial = !hasRole("admin") && (trialEnd !== null || user?.user_metadata?.is_trial === true);
 
   const { isCeo } = usePermissions();
   const tenantOptions = isAdmin
@@ -42,7 +47,21 @@ export function AppLayout() {
   // Use tenantConfig (available to all roles) as primary source, fallback to allTenants for admin
   const currentLogoUrl = tenantConfig?.logo_url || allTenants?.find(t => t.id === profile?.tenant_id)?.logo_url || null;
 
+  // Pre-compila i dati dal profilo e dalla config della pensione
+  const fullName = profile?.full_name ?? "";
+  const nameParts = fullName.trim().split(" ");
+  const prefill = {
+    nome: nameParts[0] ?? "",
+    cognome: nameParts.slice(1).join(" ") ?? "",
+    email: user?.email ?? "",
+    telefono: (tenantConfig as any)?.phone ?? "",
+    nome_pensione: tenantConfig?.name ?? activeTenant?.name ?? "",
+    citta_pensione: (tenantConfig as any)?.city ?? "",
+    partita_iva: (tenantConfig as any)?.partita_iva ?? "",
+  };
+
   return (
+    <>
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
@@ -88,6 +107,18 @@ export function AppLayout() {
             ) : null}
 
             <div className="flex-1" />
+
+            {isTrial && (
+              <Button
+                size="sm"
+                className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
+                onClick={() => setUpgradeOpen(true)}
+              >
+                <ShoppingCart className="h-4 w-4" />
+                <span className="hidden sm:inline">Acquista ora</span>
+                <span className="sm:hidden">Acquista</span>
+              </Button>
+            )}
           </header>
           <main className="flex-1 p-6">
             <Outlet />
@@ -95,5 +126,14 @@ export function AppLayout() {
         </div>
       </div>
     </SidebarProvider>
+
+    {isTrial && (
+      <TrialUpgradeDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        prefill={prefill}
+      />
+    )}
+    </>
   );
 }
