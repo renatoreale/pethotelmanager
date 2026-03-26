@@ -32,6 +32,15 @@ export interface TicketMessage {
   author_name?: string;
 }
 
+// Fire-and-forget: chiama la edge function di notifica senza bloccare
+async function notifyTicket(supabase: any, payload: Record<string, unknown>) {
+  try {
+    await supabase.functions.invoke("notify-ticket", { body: payload });
+  } catch (err) {
+    console.warn("notify-ticket non raggiungibile:", err);
+  }
+}
+
 // ── User hooks ────────────────────────────────────────────────────────────────
 
 export function useMyTickets() {
@@ -85,6 +94,12 @@ export function useCreateTicket() {
           is_support_reply: false,
         });
       if (msgErr) throw msgErr;
+      // Notifica
+      notifyTicket(supabase, {
+        event: "created",
+        ticket_id: (ticket as any).id,
+        message_body: payload.body,
+      });
       return ticket;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["support-tickets-my"] }),
@@ -122,8 +137,15 @@ export function useReplyTicket() {
         .from("support_ticket_messages" as any)
         .insert({ ticket_id: ticketId, author_id: user!.id, body, is_support_reply: isSupportReply });
       if (error) throw error;
+      // Notifica
+      notifyTicket(supabase, {
+        event: "message",
+        ticket_id: ticketId,
+        message_body: body,
+        is_support_reply: isSupportReply,
+      });
     },
-    onSuccess: (_,  { ticketId }) => {
+    onSuccess: (_, { ticketId }) => {
       qc.invalidateQueries({ queryKey: ["ticket-messages", ticketId] });
       qc.invalidateQueries({ queryKey: ["support-tickets-my"] });
       qc.invalidateQueries({ queryKey: ["support-tickets-all"] });
@@ -141,6 +163,12 @@ export function useUpdateTicketStatus() {
         .update({ status })
         .eq("id", ticketId);
       if (error) throw error;
+      // Notifica
+      notifyTicket(supabase, {
+        event: "status_changed",
+        ticket_id: ticketId,
+        new_status: status,
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["support-tickets-my"] });
