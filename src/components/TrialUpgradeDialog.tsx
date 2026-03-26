@@ -51,21 +51,40 @@ const PLANS: { key: PlanKey; label: string; monthly: number; yearly: number; fea
     label: "Starter",
     monthly: STRIPE_TIERS.starter.priceMonthly,
     yearly: STRIPE_TIERS.starter.priceYearly,
-    features: ["Gestione prenotazioni", "Listino prezzi", "Preventivi PDF", "1 utente"],
+    features: [
+      "Creazione preventivi",
+      "Gestione prenotazioni",
+      "Documenti PDF",
+      "Calendario appuntamenti",
+      "Anagrafica clienti",
+      "Registro presenze",
+      "Occupazione casette",
+      "Report e statistiche",
+      "Area riservata per cliente",
+    ],
   },
   {
     key: "pro",
     label: "Pro",
     monthly: STRIPE_TIERS.pro.priceMonthly,
     yearly: STRIPE_TIERS.pro.priceYearly,
-    features: ["Tutto Starter", "Slot appuntamenti", "Template email", "Pagamenti online", "5 utenti"],
+    features: [
+      "Tutto del piano Starter",
+      "Multi-pensione (fino a 3)",
+      "Dashboard multi-sede",
+    ],
   },
   {
     key: "business",
     label: "Business",
     monthly: STRIPE_TIERS.business.priceMonthly,
     yearly: STRIPE_TIERS.business.priceYearly,
-    features: ["Tutto Pro", "Statistiche avanzate", "Multi-tenancy", "Utenti illimitati"],
+    features: [
+      "Tutto del piano Pro",
+      "Multi-pensione (fino a 10)",
+      "Supporto prioritario",
+      "Configurazione dedicata",
+    ],
   },
 ];
 
