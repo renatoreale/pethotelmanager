@@ -23,7 +23,8 @@ export type Resource =
   | "utenti"
   | "template-email"
   | "pensione"
-  | "admin";
+  | "admin"
+  | "supporto";
 
 // Fallback permissions if DB has no entries
 const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> = {
@@ -47,6 +48,7 @@ const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> 
     "template-email": ["read", "write", "delete"],
     pensione: ["read", "write", "delete"],
     admin: ["read", "write", "delete"],
+    supporto: ["read", "write", "delete"],
   },
   ceo: {
     dashboard: ["read"], dashboard_revenue: ["read"],
@@ -54,7 +56,7 @@ const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> 
     "check-in": ["read"], "check-out": ["read"], pagamenti: ["read"],
     clienti: ["read"], gatti: ["read"], presenze: ["read"], "registro-gatti": ["read"],
     planning: ["read"], occupazione: ["read"], statistiche: ["read"], utenti: ["read"],
-    "template-email": ["read"], pensione: ["read"], admin: [],
+    "template-email": ["read"], pensione: ["read"], admin: [], supporto: ["read", "write"],
   },
   titolare: {
     dashboard: ["read", "write"], dashboard_revenue: ["read"],
@@ -64,7 +66,7 @@ const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> 
     clienti: ["read", "write", "delete"], gatti: ["read", "write", "delete"],
     presenze: ["read"], "registro-gatti": ["read", "write", "delete"], planning: ["read", "write", "delete"],
     occupazione: ["read", "write", "delete"], statistiche: ["read"], utenti: ["read", "write"],
-    "template-email": ["read"], pensione: ["read", "write"], admin: [],
+    "template-email": ["read"], pensione: ["read", "write"], admin: [], supporto: ["read", "write"],
   },
   manager: {
     dashboard: ["read"], dashboard_revenue: ["read"],
@@ -74,14 +76,14 @@ const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> 
     clienti: ["read", "write"], gatti: ["read", "write"],
     presenze: ["read"], "registro-gatti": ["read"], planning: ["read", "write"],
     occupazione: ["read"], statistiche: ["read"], utenti: [], "template-email": [],
-    pensione: [], admin: [],
+    pensione: [], admin: [], supporto: ["read", "write"],
   },
   operatore: {
     dashboard: ["read"], dashboard_revenue: [],
     preventivi: [], prenotazioni: [], appuntamenti: [],
     "check-in": ["read"], "check-out": ["read"], pagamenti: [],
     clienti: [], gatti: [], presenze: ["read"], "registro-gatti": [], planning: [],
-    occupazione: [], statistiche: [], utenti: [], "template-email": [], pensione: [], admin: [],
+    occupazione: [], statistiche: [], utenti: [], "template-email": [], pensione: [], admin: [], supporto: ["read", "write"],
   },
 };
 

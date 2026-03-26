@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, FileText, CalendarCheck, Calendar, LogIn, LogOut,
   CreditCard, Users, Cat, ClipboardList, Shield, Mail, Building2,
-  Power, Grid3X3, Settings2, PawPrint, BarChart3 } from
+  Power, Grid3X3, Settings2, PawPrint, BarChart3, LifeBuoy } from
 "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -49,6 +49,7 @@ const adminNav: NavItem[] = [
 { titleKey: "sidebar.usersRoles", url: "/utenti", icon: Shield, resource: "utenti" },
 { titleKey: "sidebar.emailTemplates", url: "/template-email", icon: Mail, resource: "template-email" },
 { titleKey: "sidebar.pensione", url: "/pensione", icon: Building2, resource: "pensione" },
+{ titleKey: "sidebar.supporto", url: "/supporto", icon: LifeBuoy, resource: "supporto" },
 { titleKey: "sidebar.systemAdmin", url: "/admin", icon: Settings2, resource: "admin" }];
 
 

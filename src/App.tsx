@@ -37,6 +37,7 @@ import Termini from "./pages/Termini";
 import RegisterTrial from "./pages/RegisterTrial";
 import ConfirmDemo from "./pages/ConfirmDemo";
 import Statistiche from "./pages/Statistiche";
+import Supporto from "./pages/Supporto";
 import PurchaseSuccess from "./pages/PurchaseSuccess";
 
 // Client portal
@@ -111,6 +112,7 @@ const App = () => (
               <Route path="/pensione" element={<Pensione />} />
               <Route path="/occupazione" element={<OccupazioneCasette />} />
               <Route path="/statistiche" element={<Statistiche />} />
+              <Route path="/supporto" element={<Supporto />} />
               <Route path="/admin" element={<Admin />} />
             </Route>
 
