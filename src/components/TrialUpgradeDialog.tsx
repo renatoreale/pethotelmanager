@@ -174,7 +174,7 @@ export function TrialUpgradeDialog({ open, onOpenChange, prefill }: TrialUpgrade
           {/* Selettore piano */}
           <div className="space-y-2">
             <Label className="text-sm font-semibold">Seleziona il piano *</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
               {PLANS.map((plan) => {
                 const isSelected = selectedPlan === plan.key;
                 return (
