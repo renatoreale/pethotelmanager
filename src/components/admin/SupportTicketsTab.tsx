@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import {
 import { ArrowLeft, Send, Clock, Building2 } from "lucide-react";
 import {
   useAllTickets, useTicketMessages, useReplyTicket, useUpdateTicketStatus,
+  markTicketViewed, hasNewActivity,
   type SupportTicket, type TicketStatus,
 } from "@/hooks/useSupportTickets";
 import { useAuth } from "@/hooks/useAuth";
@@ -42,6 +43,8 @@ function AdminTicketThread({ ticket, onBack }: { ticket: SupportTicket; onBack: 
   const reply = useReplyTicket();
   const updateStatus = useUpdateTicketStatus();
   const [body, setBody] = useState("");
+
+  useEffect(() => { markTicketViewed(ticket.id, ticket.updated_at); }, [ticket.id, ticket.updated_at]);
 
   const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -224,7 +227,14 @@ export function SupportTicketsTab() {
               <CardContent className="py-3 px-4">
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="space-y-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{ticket.title}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-sm truncate">{ticket.title}</p>
+                      {hasNewActivity(ticket) && (
+                        <span className="shrink-0 inline-flex items-center rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                          Nuovo
+                        </span>
+                      )}
+                    </div>
                     <div className="flex flex-wrap items-center gap-1.5">
                       <Badge variant={STATUS_VARIANT[ticket.status]} className="text-xs">{STATUS_LABELS[ticket.status]}</Badge>
                       <Badge variant="outline" className="text-xs">{CATEGORY_LABELS[ticket.category]}</Badge>

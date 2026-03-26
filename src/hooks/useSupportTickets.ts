@@ -32,6 +32,28 @@ export interface TicketMessage {
   author_name?: string;
 }
 
+// ── Lettura ticket (localStorage) ─────────────────────────────────────────────
+
+const VIEWED_KEY = "ticket_last_viewed";
+
+function getViewedMap(): Record<string, string> {
+  try { return JSON.parse(localStorage.getItem(VIEWED_KEY) ?? "{}"); } catch { return {}; }
+}
+
+export function markTicketViewed(ticketId: string, updatedAt: string) {
+  try {
+    const map = getViewedMap();
+    map[ticketId] = updatedAt;
+    localStorage.setItem(VIEWED_KEY, JSON.stringify(map));
+  } catch {}
+}
+
+export function hasNewActivity(ticket: { id: string; updated_at: string }): boolean {
+  const lastSeen = getViewedMap()[ticket.id];
+  if (!lastSeen) return true;
+  return ticket.updated_at !== lastSeen;
+}
+
 // Fire-and-forget: chiama la edge function di notifica senza bloccare
 async function notifyTicket(supabase: any, payload: Record<string, unknown>) {
   try {
@@ -51,14 +73,11 @@ export function useMyTickets() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("support_tickets" as any)
-        .select("*, profiles!created_by(full_name)")
+        .select("*")
         .eq("tenant_id", profile!.tenant_id)
         .order("updated_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []).map((t: any) => ({
-        ...t,
-        creator_name: t.profiles?.full_name ?? "—",
-      })) as SupportTicket[];
+      return (data ?? []) as SupportTicket[];
     },
     enabled: !!profile?.tenant_id,
   });
@@ -113,14 +132,11 @@ export function useTicketMessages(ticketId: string | null) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("support_ticket_messages" as any)
-        .select("*, profiles!author_id(full_name)")
+        .select("*")
         .eq("ticket_id", ticketId!)
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return (data ?? []).map((m: any) => ({
-        ...m,
-        author_name: m.profiles?.full_name ?? "—",
-      })) as TicketMessage[];
+      return (data ?? []) as TicketMessage[];
     },
     enabled: !!ticketId,
     refetchInterval: 15000,
@@ -186,7 +202,7 @@ export function useAllTickets(statusFilter?: TicketStatus | "tutti") {
     queryFn: async () => {
       let q = supabase
         .from("support_tickets" as any)
-        .select("*, profiles!created_by(full_name), tenants!tenant_id(name)")
+        .select("*, tenants!tenant_id(name)")
         .order("updated_at", { ascending: false });
       if (statusFilter && statusFilter !== "tutti") {
         q = q.eq("status", statusFilter);
@@ -195,7 +211,6 @@ export function useAllTickets(statusFilter?: TicketStatus | "tutti") {
       if (error) throw error;
       return (data ?? []).map((t: any) => ({
         ...t,
-        creator_name: t.profiles?.full_name ?? "—",
         tenant_name: t.tenants?.name ?? "—",
       })) as SupportTicket[];
     },
