@@ -171,14 +171,12 @@ export function PaymentSplitsTab() {
 
       {/* Payment Splits */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Modalità di Pagamento Preventivo</CardTitle>
-              <CardDescription>Configura le rate e le percentuali per il pagamento del soggiorno</CardDescription>
-            </div>
-            <Button onClick={openNewSplit} size="sm"><Plus className="mr-2 h-4 w-4" /> Aggiungi Rata</Button>
+        <CardHeader className="flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <CardTitle>Modalità di Pagamento Preventivo</CardTitle>
+            <CardDescription>Configura le rate e le percentuali per il pagamento del soggiorno</CardDescription>
           </div>
+          <Button onClick={openNewSplit} size="sm" className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" /> Aggiungi Rata</Button>
         </CardHeader>
         <CardContent className="space-y-4">
           {totalPercentage !== 100 && (splits?.length ?? 0) > 0 && (
@@ -195,41 +193,69 @@ export function PaymentSplitsTab() {
               Nessuna rata configurata. Aggiungi le rate per il pagamento del preventivo.
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[60px]">Ordine</TableHead>
-                    <TableHead>Etichetta</TableHead>
-                    <TableHead>Percentuale</TableHead>
-                    <TableHead>Momento</TableHead>
-                    <TableHead>Nota metodo pagamento</TableHead>
-                    <TableHead className="w-[100px]">Azioni</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {splits.map((s) => (
-                    <TableRow key={s.id}>
-                      <TableCell className="text-center text-muted-foreground">{s.sort_order}</TableCell>
-                      <TableCell className="font-medium">{s.label}</TableCell>
-                      <TableCell><Badge variant="secondary">{Number(s.percentage)}%</Badge></TableCell>
-                      <TableCell>{PAYMENT_MOMENTS.find(m => m.value === s.payment_moment)?.label ?? s.payment_moment}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{s.payment_method_note ?? "—"}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => openEditSplit(s)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => setDeleting(s)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+            <>
+              {/* Mobile: card list */}
+              <div className="sm:hidden space-y-2">
+                {splits.map((s) => (
+                  <div key={s.id} className="border rounded-lg p-3">
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="font-medium text-sm">{s.label}</span>
+                        <Badge variant="secondary">{Number(s.percentage)}%</Badge>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <Button variant="ghost" size="icon" onClick={() => openEditSplit(s)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => setDeleting(s)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {PAYMENT_MOMENTS.find(m => m.value === s.payment_moment)?.label ?? s.payment_moment}
+                      {s.payment_method_note && ` · ${s.payment_method_note}`}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              {/* Desktop: table */}
+              <div className="hidden sm:block rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[60px]">Ordine</TableHead>
+                      <TableHead>Etichetta</TableHead>
+                      <TableHead>Percentuale</TableHead>
+                      <TableHead>Momento</TableHead>
+                      <TableHead>Nota metodo pagamento</TableHead>
+                      <TableHead className="w-[100px]">Azioni</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {splits.map((s) => (
+                      <TableRow key={s.id}>
+                        <TableCell className="text-center text-muted-foreground">{s.sort_order}</TableCell>
+                        <TableCell className="font-medium">{s.label}</TableCell>
+                        <TableCell><Badge variant="secondary">{Number(s.percentage)}%</Badge></TableCell>
+                        <TableCell>{PAYMENT_MOMENTS.find(m => m.value === s.payment_moment)?.label ?? s.payment_moment}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{s.payment_method_note ?? "—"}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => openEditSplit(s)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => setDeleting(s)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
 
           {/* Form dialog inline */}

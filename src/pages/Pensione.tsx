@@ -66,22 +66,24 @@ export default function Pensione() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Configurazione Pensione</h1>
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Configurazione Pensione</h1>
         <p className="text-muted-foreground text-sm mt-1">Anagrafica, casette, slot appuntamenti, listino prezzi, pagamenti e politica di cancellazione</p>
       </div>
 
       <Tabs defaultValue="anagrafica" className="space-y-4">
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="anagrafica" className="gap-2"><Building2 className="h-4 w-4" /> Anagrafica</TabsTrigger>
-          <TabsTrigger value="casette" className="gap-2"><Settings className="h-4 w-4" /> Casette</TabsTrigger>
-          <TabsTrigger value="slot" className="gap-2"><Clock className="h-4 w-4" /> Slot Appuntamenti</TabsTrigger>
-          <TabsTrigger value="listino" className="gap-2"><Euro className="h-4 w-4" /> Listino Prezzi</TabsTrigger>
-          <TabsTrigger value="pagamenti" className="gap-2"><CreditCard className="h-4 w-4" /> Modalità Pagamento</TabsTrigger>
-          <TabsTrigger value="cancellazione" className="gap-2"><Ban className="h-4 w-4" /> Cancellazione</TabsTrigger>
-          <TabsTrigger value="preventivo-config" className="gap-2"><FileText className="h-4 w-4" /> Config. Preventivo</TabsTrigger>
-          <TabsTrigger value="email-templates" className="gap-2"><Mail className="h-4 w-4" /> Template Email</TabsTrigger>
-          <TabsTrigger value="stripe" className="gap-2"><KeyRound className="h-4 w-4" /> Stripe</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <TabsList className="flex w-max min-w-full">
+            <TabsTrigger value="anagrafica" className="gap-2 whitespace-nowrap"><Building2 className="h-4 w-4" /> Anagrafica</TabsTrigger>
+            <TabsTrigger value="casette" className="gap-2 whitespace-nowrap"><Settings className="h-4 w-4" /> Casette</TabsTrigger>
+            <TabsTrigger value="slot" className="gap-2 whitespace-nowrap"><Clock className="h-4 w-4" /> Slot Appuntamenti</TabsTrigger>
+            <TabsTrigger value="listino" className="gap-2 whitespace-nowrap"><Euro className="h-4 w-4" /> Listino Prezzi</TabsTrigger>
+            <TabsTrigger value="pagamenti" className="gap-2 whitespace-nowrap"><CreditCard className="h-4 w-4" /> Modalità Pagamento</TabsTrigger>
+            <TabsTrigger value="cancellazione" className="gap-2 whitespace-nowrap"><Ban className="h-4 w-4" /> Cancellazione</TabsTrigger>
+            <TabsTrigger value="preventivo-config" className="gap-2 whitespace-nowrap"><FileText className="h-4 w-4" /> Config. Preventivo</TabsTrigger>
+            <TabsTrigger value="email-templates" className="gap-2 whitespace-nowrap"><Mail className="h-4 w-4" /> Template Email</TabsTrigger>
+            <TabsTrigger value="stripe" className="gap-2 whitespace-nowrap"><KeyRound className="h-4 w-4" /> Stripe</TabsTrigger>
+          </TabsList>
+        </div>
 
         <div className={isTrial ? "pointer-events-none select-none opacity-60" : ""}>
           <TabsContent value="anagrafica"><AnagraficaTab /></TabsContent>
@@ -682,16 +684,16 @@ function SlotTab() {
   return (
     <>
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
+        <CardHeader className="flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>Slot Appuntamenti</CardTitle>
             <CardDescription>Configura le fasce orarie per check-in e check-out</CardDescription>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setResetConfirm(true)} disabled={resetting}>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" size="sm" onClick={() => setResetConfirm(true)} disabled={resetting} className="flex-1 sm:flex-none">
               <RotateCcw className="mr-2 h-4 w-4" /> Reset Predefiniti
             </Button>
-            <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Nuovo Slot</Button>
+            <Button size="sm" onClick={openNew} className="flex-1 sm:flex-none"><Plus className="mr-2 h-4 w-4" /> Nuovo Slot</Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -700,7 +702,44 @@ function SlotTab() {
           ) : !slots?.length ? (
             <div className="py-12 text-center text-muted-foreground">Nessuno slot configurato</div>
           ) : (
-            <div className="rounded-md border">
+            <>
+            {/* Mobile: card list */}
+            <div className="sm:hidden space-y-2">
+              {slots.map((slot: any) => (
+                <div key={slot.id} className="border rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant={slot.appointment_type === "check_in" ? "default" : "outline"}>
+                        {slot.appointment_type === "check_in" ? "Check-in" : "Check-out"}
+                      </Badge>
+                      <Badge variant={slot.is_active ? "default" : "secondary"} className="text-xs">
+                        {slot.is_active ? "Attivo" : "Inattivo"}
+                      </Badge>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(slot)}><Pencil className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => setDeleting(slot)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Giorno</p>
+                      <p className="font-medium">{DAYS[slot.day_of_week] ?? slot.day_of_week}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Orario</p>
+                      <p>{slot.start_time?.slice(0, 5)} – {slot.end_time?.slice(0, 5)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Durata / Max</p>
+                      <p>{slot.slot_duration_minutes}min · {slot.max_appointments}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Desktop: table */}
+            <div className="hidden sm:block rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -741,6 +780,7 @@ function SlotTab() {
                 </TableBody>
               </Table>
             </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -972,16 +1012,16 @@ function ListinoTab() {
   return (
     <>
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
+        <CardHeader className="flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>Listino Prezzi</CardTitle>
             <CardDescription>Gestisci tariffe stagionali e servizi extra</CardDescription>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setResetConfirm(true)} disabled={resetting}>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" size="sm" onClick={() => setResetConfirm(true)} disabled={resetting} className="flex-1 sm:flex-none">
               <RotateCcw className="mr-2 h-4 w-4" /> Reset Predefiniti
             </Button>
-            <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Nuova Tariffa</Button>
+            <Button size="sm" onClick={openNew} className="flex-1 sm:flex-none"><Plus className="mr-2 h-4 w-4" /> Nuova Tariffa</Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -990,7 +1030,41 @@ function ListinoTab() {
           ) : !prices?.length ? (
             <div className="py-12 text-center text-muted-foreground">Nessuna tariffa configurata</div>
           ) : (
-            <div className="rounded-md border">
+            <>
+            {/* Mobile: card list */}
+            <div className="sm:hidden space-y-2">
+              {prices.map((p: any) => (
+                <div key={p.id} className="border rounded-lg p-3">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="font-medium text-sm">{p.name}</span>
+                      {p.season && (
+                        <Badge variant="outline" className="text-xs">
+                          {SEASON_OPTIONS.find(s => s.value === p.season)?.label ?? p.season}
+                        </Badge>
+                      )}
+                      {tenantPetType === "entrambi" && (
+                        <Badge variant="outline" className="text-xs">{p.pet_type === "cani" ? "🐶 Cani" : "🐱 Gatti"}</Badge>
+                      )}
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => setDeleting(p)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 text-xs text-muted-foreground">
+                    <Badge variant="secondary">{TARIFF_TYPE_LABELS[p.tariff_type as TariffType] ?? p.tariff_type}</Badge>
+                    <Badge variant={p.is_active ? "default" : "secondary"}>{p.is_active ? "Attivo" : "Inattivo"}</Badge>
+                  </div>
+                  <p className="text-xs mt-1.5">{renderPriceInfo(p)}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {p.valid_from && p.valid_to ? `${p.valid_from} → ${p.valid_to}` : p.valid_from ? `dal ${p.valid_from}` : "Sempre"}
+                  </p>
+                </div>
+              ))}
+            </div>
+            {/* Desktop: table */}
+            <div className="hidden sm:block rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -1046,6 +1120,7 @@ function ListinoTab() {
                 </TableBody>
               </Table>
             </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -1293,16 +1368,16 @@ function PaymentMethodsTab() {
   return (
     <>
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
+        <CardHeader className="flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle>Modalità di Pagamento</CardTitle>
             <CardDescription>Configura i metodi di pagamento accettati (es. Contanti, Bonifico, Carta)</CardDescription>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setResetConfirm(true)} disabled={resetting}>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" size="sm" onClick={() => setResetConfirm(true)} disabled={resetting} className="flex-1 sm:flex-none">
               <RotateCcw className="mr-2 h-4 w-4" /> Reset Predefiniti
             </Button>
-            <Button onClick={() => { setNewName(""); setDialogOpen(true); }}>
+            <Button size="sm" onClick={() => { setNewName(""); setDialogOpen(true); }} className="flex-1 sm:flex-none">
               <Plus className="mr-2 h-4 w-4" /> Nuova Modalità
             </Button>
           </div>
@@ -1313,7 +1388,33 @@ function PaymentMethodsTab() {
           ) : !methods?.length ? (
             <div className="py-12 text-center text-muted-foreground">Nessuna modalità configurata. Aggiungine almeno una per poter registrare i pagamenti.</div>
           ) : (
-            <div className="rounded-md border">
+            <>
+            {/* Mobile: card list */}
+            <div className="sm:hidden space-y-2">
+              {methods.map((m: any) => (
+                <div key={m.id} className="border rounded-lg p-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-medium text-sm truncate">{m.name}</span>
+                    <Badge variant={m.is_active ? "default" : "secondary"} className="shrink-0">
+                      {m.is_active ? "Attiva" : "Inattiva"}
+                    </Badge>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" onClick={() => { setEditing(m); setEditName(m.name); }}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleToggle(m.id, m.is_active)}>
+                      <Switch checked={m.is_active} className="pointer-events-none" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => setDeleting(m)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Desktop: table */}
+            <div className="hidden sm:block rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -1349,6 +1450,7 @@ function PaymentMethodsTab() {
                 </TableBody>
               </Table>
             </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -1588,7 +1690,7 @@ function StripeConfigTab() {
           {/* Input */}
           <div className="space-y-2">
             <Label>{existing ? "Aggiorna chiave Stripe" : "Chiave segreta Stripe"}</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 type="password"
                 value={key}
@@ -1596,7 +1698,7 @@ function StripeConfigTab() {
                 placeholder="sk_live_..."
                 className="font-mono"
               />
-              <Button onClick={handleSave} disabled={saving || !key.trim()}>
+              <Button onClick={handleSave} disabled={saving || !key.trim()} className="sm:shrink-0">
                 <Save className="mr-2 h-4 w-4" />
                 {saving ? "Salvataggio..." : "Salva"}
               </Button>
