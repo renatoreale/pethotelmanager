@@ -56,12 +56,17 @@ function NavGroup({ label, items, collapsed }: {label: string;items: NavItem[];c
   const location = useLocation();
   const { isVisible } = usePermissions();
   const { t } = useTranslation();
+  const { isMobile, setOpenMobile } = useSidebar();
 
   const isActive = (path: string) =>
   path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
 
   const visibleItems = items.filter((item) => isVisible(item.resource));
   if (visibleItems.length === 0) return null;
+
+  const handleNavClick = () => {
+    if (isMobile) setOpenMobile(false);
+  };
 
   return (
     <SidebarGroup>
@@ -79,8 +84,9 @@ function NavGroup({ label, items, collapsed }: {label: string;items: NavItem[];c
                 to={item.url}
                 end={item.url === "/"}
                 className="hover:bg-sidebar-accent/60"
-                activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
-                
+                activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                onClick={handleNavClick}>
+
                   <item.icon className="mr-2 h-4 w-4 shrink-0" />
                   {!collapsed && <span>{t(item.titleKey)}</span>}
                 </NavLink>
