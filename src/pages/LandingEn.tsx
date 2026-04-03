@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import i18n from "@/i18n";
+import { supabase } from "@/integrations/supabase/client";
 import { PurchaseRequestDialog } from "@/components/PurchaseRequestDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -38,89 +38,86 @@ import screenshotAreaCliente2 from "@/assets/screenshots/area-cliente2.png";
 import screenshotCheckin from "@/assets/screenshots/checkin.png";
 
 const SCREENSHOTS = [
-  { src: screenshotDashboard, alt: "Dashboard operativa", desc: "Dashboard operativa — panoramica completa su prenotazioni, presenze, check-in/out e incassi in un colpo d'occhio." },
-  { src: screenshotPreventivi, alt: "Gestione preventivi", desc: "Gestione preventivi — crea e invia preventivi ai clienti, gestisci le richieste dal portale clienti." },
-  { src: screenshotPrenotazioni, alt: "Gestione prenotazioni", desc: "Gestione prenotazioni — workflow completo dalla conferma al check-out, con azioni rapide e filtri per stato." },
-  { src: screenshotAppuntamenti, alt: "Calendario appuntamenti", desc: "Calendario appuntamenti — pianifica check-in e check-out con vista lista e prenotazioni da fissare." },
-  { src: screenshotAppuntamenti2, alt: "Vista calendario mensile", desc: "Vista calendario mensile — tutti gli appuntamenti di check-in e check-out a colpo d'occhio." },
-  { src: screenshotOccupazione, alt: "Occupazione casette", desc: "Occupazione casette — griglia visuale con occupazione giornaliera per singole e doppie, divise per tipo di Pet." },
-  { src: screenshotCheckin, alt: "Check-in dettagliato", desc: "Check-in — accettazione Pet con riepilogo soggiorno, pagamenti e transazioni per ogni prenotazione." },
-  { src: screenshotRegistro, alt: "Registro animali", desc: "Registro Pet — traccia ingressi e uscite con microchip, razza, sesso e stato di presenza." },
-  { src: screenshotAreaCliente, alt: "Area riservata cliente", desc: "Area riservata cliente — il tuo cliente può vedere prenotazioni, richiedere preventivi e gestire i propri Pet." },
-  { src: screenshotAreaCliente2, alt: "Preventivi cliente", desc: "Portale cliente — dettaglio pratiche con stato pagamenti, download preventivi e moduli di affido." },
+  { src: screenshotDashboard, alt: "Operations dashboard", desc: "Operations dashboard — complete overview of bookings, check-ins/outs and revenue at a glance." },
+  { src: screenshotPreventivi, alt: "Quote management", desc: "Quote management — create and send quotes to clients, manage requests from the client portal." },
+  { src: screenshotPrenotazioni, alt: "Booking management", desc: "Booking management — full workflow from confirmation to check-out, with quick actions and status filters." },
+  { src: screenshotAppuntamenti, alt: "Appointment calendar", desc: "Appointment calendar — schedule check-ins and check-outs with list view and pending bookings." },
+  { src: screenshotAppuntamenti2, alt: "Monthly calendar view", desc: "Monthly calendar view — all check-in and check-out appointments at a glance." },
+  { src: screenshotOccupazione, alt: "Kennel occupancy", desc: "Kennel occupancy — visual grid with daily occupancy for single and double kennels, by pet type." },
+  { src: screenshotCheckin, alt: "Detailed check-in", desc: "Check-in — pet admission with stay summary, payments and transactions for each booking." },
+  { src: screenshotRegistro, alt: "Pet registry", desc: "Pet registry — track arrivals and departures with microchip, breed, gender and presence status." },
+  { src: screenshotAreaCliente, alt: "Client portal", desc: "Client portal — your clients can view bookings, request quotes and manage their pets." },
+  { src: screenshotAreaCliente2, alt: "Client quotes", desc: "Client portal — case details with payment status, quote downloads and boarding forms." },
 ];
 
-/* ── Feature lists per pricing ── */
 const STARTER_FEATURES = [
-  "Creazione preventivi",
-  "Gestione prenotazioni",
-  "Documenti PDF",
-  "Calendario appuntamenti",
-  "Anagrafica clienti",
-  "Registro presenze",
-  "Occupazione casette",
-  "Report e statistiche",
-  "Area riservata per cliente",
+  "Quote creation",
+  "Booking management",
+  "PDF documents",
+  "Appointment calendar",
+  "Client registry",
+  "Attendance log",
+  "Kennel occupancy",
+  "Reports & statistics",
+  "Client portal",
 ];
 const PRO_FEATURES = [
-  "Tutto del piano Starter",
-  "Multi-pensione (fino a 3)",
-  "Dashboard multi-sede",
+  "Everything in Starter",
+  "Multi-location (up to 3)",
+  "Multi-site dashboard",
 ];
 const BUSINESS_FEATURES = [
-  "Tutto del piano Pro",
-  "Multi-pensione (fino a 10)",
-  "Supporto prioritario",
-  "Configurazione dedicata",
+  "Everything in Pro",
+  "Multi-location (up to 10)",
+  "Priority support",
+  "Dedicated setup",
 ];
 
-/* ── BENEFICI (non funzioni!) ── */
 const BENEFITS = [
   {
     icon: Calendar,
     title: "Zero overbooking",
-    desc: "Il calendario in tempo reale ti mostra subito le casette libere. Mai più doppie prenotazioni o clienti delusi.",
-    before: "Controllo manuale su fogli Excel, errori frequenti",
+    desc: "The real-time calendar shows available kennels instantly. No more double bookings or disappointed clients.",
+    before: "Manual checks on spreadsheets, frequent errors",
   },
   {
     icon: Clock,
-    title: "Risparmia 10+ ore a settimana",
-    desc: "Preventivi automatici, PDF pronti in un click, check-in/out guidati. Il lavoro manuale ripetitivo sparisce.",
-    before: "Ore perse a compilare fogli, scrivere email, calcolare prezzi",
+    title: "Save 10+ hours a week",
+    desc: "Automated quotes, PDF-ready in one click, guided check-in/out. Repetitive manual work disappears.",
+    before: "Hours wasted filling forms, writing emails, calculating prices",
   },
   {
     icon: CreditCard,
-    title: "Pagamenti sempre sotto controllo",
-    desc: "Caparre, saldi, rimborsi: tutto tracciato. Sai sempre chi ha pagato, quanto e quando.",
-    before: "Post-it, promemoria mentali, caparre dimenticate",
+    title: "Payments always under control",
+    desc: "Deposits, balances, refunds: everything tracked. You always know who paid, how much and when.",
+    before: "Post-its, mental reminders, forgotten deposits",
   },
   {
     icon: PawPrint,
-    title: "Schede animali complete",
-    desc: "Microchip, dieta, allergie, note comportamentali: tutto a portata di mano quando serve davvero.",
-    before: "Informazioni sparse su carta, WhatsApp, fogli volanti",
+    title: "Complete pet profiles",
+    desc: "Microchip, diet, allergies, behavioural notes: everything at hand when you really need it.",
+    before: "Information scattered on paper, WhatsApp, loose sheets",
   },
   {
     icon: BarChart3,
-    title: "Decisioni basate sui dati",
-    desc: "Statistiche su occupazione, fatturato e tendenze per capire come far crescere la tua pensione.",
-    before: "Nessuna visibilità su ricavi, periodi di punta, trend",
+    title: "Data-driven decisions",
+    desc: "Statistics on occupancy, revenue and trends to understand how to grow your pet boarding business.",
+    before: "No visibility on revenue, peak periods, trends",
   },
   {
     icon: Building2,
-    title: "Multi-sede? Nessun problema",
-    desc: "Gestisci più pensioni da un'unica dashboard, ognuna con i propri dati, listini e configurazioni.",
-    before: "Fogli separati per ogni sede, impossibile avere una visione d'insieme",
+    title: "Multi-location? No problem",
+    desc: "Manage multiple pet hotels from a single dashboard, each with its own data, pricing and settings.",
+    before: "Separate spreadsheets for each location, no overall view",
   },
 ];
 
-/* ── Problemi (sezione "Prima di PHM") ── */
 const PAIN_POINTS = [
-  { icon: X, text: "Prenotazioni su carta, Excel o WhatsApp" },
-  { icon: X, text: "Overbooking e casette doppie" },
-  { icon: X, text: "Ore perse a fare preventivi a mano" },
-  { icon: X, text: "Pagamenti non tracciati, caparre dimenticate" },
-  { icon: X, text: "Nessuna visione d'insieme sulla tua pensione" },
+  { icon: X, text: "Bookings on paper, Excel or WhatsApp" },
+  { icon: X, text: "Overbooking and double-booked kennels" },
+  { icon: X, text: "Hours lost making quotes by hand" },
+  { icon: X, text: "Untracked payments, forgotten deposits" },
+  { icon: X, text: "No overall picture of your pet hotel" },
 ];
 
 /* ── Demo Form ── */
@@ -132,7 +129,7 @@ function DemoRequestForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim()) {
-      toast.error("Nome e email sono obbligatori");
+      toast.error("Name and email are required");
       return;
     }
     setSending(true);
@@ -151,9 +148,9 @@ function DemoRequestForm() {
       });
       if (error) throw error;
       setSent(true);
-      toast.success("Richiesta inviata! Ti contatteremo a breve.");
+      toast.success("Request sent! We'll get back to you shortly.");
     } catch {
-      toast.error("Errore nell'invio. Riprova più tardi.");
+      toast.error("Error sending request. Please try again.");
     } finally {
       setSending(false);
     }
@@ -166,8 +163,8 @@ function DemoRequestForm() {
           <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
             <Check className="h-7 w-7 text-primary" />
           </div>
-          <h3 className="text-xl font-semibold text-foreground">Richiesta Inviata!</h3>
-          <p className="text-muted-foreground">Ti contatteremo a breve per fissare la demo.</p>
+          <h3 className="text-xl font-semibold text-foreground">Request Sent!</h3>
+          <p className="text-muted-foreground">We'll contact you shortly to schedule the demo.</p>
         </CardContent>
       </Card>
     );
@@ -176,33 +173,33 @@ function DemoRequestForm() {
   return (
     <Card className="border-2 border-primary/20">
       <CardHeader>
-        <CardTitle className="text-lg">Prenota la tua demo gratuita</CardTitle>
-        <CardDescription>Ti ricontatteremo entro 24h — zero impegno</CardDescription>
+        <CardTitle className="text-lg">Book your free demo</CardTitle>
+        <CardDescription>We'll get back to you within 24h — no commitment</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="demo-name">Nome e Cognome *</Label>
-            <Input id="demo-name" required maxLength={100} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Mario Rossi" />
+            <Label htmlFor="demo-name">Full Name *</Label>
+            <Input id="demo-name" required maxLength={100} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="John Smith" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="demo-email">Email *</Label>
-            <Input id="demo-email" type="email" required maxLength={255} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="mario@example.com" />
+            <Input id="demo-email" type="email" required maxLength={255} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="john@example.com" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="demo-phone">Telefono</Label>
-            <Input id="demo-phone" type="tel" maxLength={20} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+39 333 1234567" />
+            <Label htmlFor="demo-phone">Phone</Label>
+            <Input id="demo-phone" type="tel" maxLength={20} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+1 555 123 4567" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="demo-pensione">Nome della tua Pensione</Label>
-            <Input id="demo-pensione" maxLength={100} value={form.pensione_name} onChange={(e) => setForm({ ...form, pensione_name: e.target.value })} placeholder="La Pensione dei Mici" />
+            <Label htmlFor="demo-pensione">Your Pet Hotel Name</Label>
+            <Input id="demo-pensione" maxLength={100} value={form.pensione_name} onChange={(e) => setForm({ ...form, pensione_name: e.target.value })} placeholder="Happy Paws Hotel" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="demo-message">Messaggio</Label>
-            <Textarea id="demo-message" maxLength={500} rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Quanti animali gestisci? Cosa ti serve?" />
+            <Label htmlFor="demo-message">Message</Label>
+            <Textarea id="demo-message" maxLength={500} rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="How many pets do you manage? What do you need?" />
           </div>
           <Button type="submit" className="w-full gap-2" size="lg" disabled={sending}>
-            <Send className="h-4 w-4" /> {sending ? "Invio in corso..." : "Richiedi Demo Gratuita"}
+            <Send className="h-4 w-4" /> {sending ? "Sending..." : "Request Free Demo"}
           </Button>
         </form>
       </CardContent>
@@ -211,8 +208,8 @@ function DemoRequestForm() {
 }
 
 
-/* ══════════════ LANDING PAGE ══════════════ */
-export default function Landing() {
+/* ══════════════ LANDING PAGE (EN) ══════════════ */
+export default function LandingEn() {
   const navigate = useNavigate();
   const [config, setConfig] = useState<any>(null);
   const [showNav, setShowNav] = useState(false);
@@ -225,15 +222,38 @@ export default function Landing() {
     });
   }, []);
 
-  // Ensure Italian language on this page
-  useEffect(() => { i18n.changeLanguage("it"); }, []);
-
   useEffect(() => {
     window.scrollTo(0, 0);
     setShowNav(false);
     const onScroll = () => setShowNav(window.scrollY > 100);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Set language to English
+  useEffect(() => {
+    i18n.changeLanguage("en");
+    return () => { i18n.changeLanguage("it"); };
+  }, []);
+
+  // Update page meta for SEO
+  useEffect(() => {
+    const prevTitle = document.title;
+    const prevDesc = document.querySelector('meta[name="description"]')?.getAttribute("content") ?? "";
+    const prevLang = document.documentElement.lang;
+
+    document.title = "Cat & Dog Boarding Software | Pet Hotel Management System | Pet Hotel Manager";
+    document.querySelector('meta[name="description"]')?.setAttribute(
+      "content",
+      "The complete cat boarding and dog boarding management software: bookings, pet profiles, payments, check-in/out calendar and client portal in one system. Free 14-day trial, no credit card required."
+    );
+    document.documentElement.lang = "en";
+
+    return () => {
+      document.title = prevTitle;
+      document.querySelector('meta[name="description"]')?.setAttribute("content", prevDesc);
+      document.documentElement.lang = prevLang;
+    };
   }, []);
 
   const handleStartTrial = () => navigate("/register-trial");
@@ -250,22 +270,22 @@ export default function Landing() {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
       name: "Pet Hotel Manager",
-      alternateName: ["Gestionale Pensione Gatti", "Gestionale Pensione Cani", "Software Cat Hotel", "Software Dog Hotel"],
+      alternateName: ["Cat Boarding Software", "Dog Boarding Software", "Cat Hotel Management System", "Dog Hotel Software", "Pet Boarding Management Software"],
       applicationCategory: "BusinessApplication",
       applicationSubCategory: "Pet Hotel Management Software",
       operatingSystem: "Web, iOS, Android",
-      url: "https://pethotelmanager.com/landing",
-      description: "Gestionale per pensioni di gatti e cani: prenotazioni, schede animali, pagamenti, calendario check-in/out e area clienti in un solo software. Ideale per cat hotel, dog hotel, pensioni feline e canine.",
+      url: "https://pethotelmanager.com/en",
+      description: "Complete cat and dog boarding management software: bookings, pet profiles, payments, check-in/out calendar and client portal in one system. Ideal for cat hotels, dog hotels, catteries and pet boarding businesses.",
       featureList: [
-        "Gestione prenotazioni pensione gatti e cani",
-        "Calendario check-in e check-out",
-        "Schede animali con microchip, dieta e note mediche",
-        "Preventivi automatici con PDF",
-        "Gestione pagamenti e caparre",
-        "Occupazione casette in tempo reale",
-        "Area riservata per clienti",
-        "Statistiche e report",
-        "Multi-pensione fino a 10 sedi",
+        "Cat and dog boarding booking management",
+        "Check-in and check-out calendar",
+        "Pet profiles with microchip, diet and medical notes",
+        "Automated quotes with PDF",
+        "Payment and deposit management",
+        "Real-time kennel occupancy",
+        "Client self-service portal",
+        "Statistics and reports",
+        "Multi-location up to 10 sites",
       ],
       screenshot: "https://pethotelmanager.com/assets/screenshots/dashboard.png",
       offers: {
@@ -287,42 +307,42 @@ export default function Landing() {
       mainEntity: [
         {
           "@type": "Question",
-          name: "Cos'è un gestionale per pensione gatti?",
+          name: "What is cat boarding software?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Un gestionale per pensione gatti è un software che automatizza la gestione delle prenotazioni, dei pagamenti, delle schede animali e del calendario di una pensione felina o cat hotel. Pet Hotel Manager è il gestionale completo per pensioni di gatti, cani e animali in generale.",
+            text: "Cat boarding software is a management system that automates bookings, payments, pet profiles and calendar management for a cattery or cat hotel. Pet Hotel Manager is the complete solution for cat boarding, dog boarding and all types of pet accommodation businesses.",
           },
         },
         {
           "@type": "Question",
-          name: "Funziona anche come gestionale per pensione cani?",
+          name: "Does it work for dog boarding as well?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Sì, Pet Hotel Manager funziona come gestionale per pensione cani, gestionale per pensione gatti e per pensioni miste. Supporta gatti, cani e qualsiasi tipo di animale domestico. È il software ideale per dog hotel, cat hotel e pensioni per animali.",
+            text: "Yes, Pet Hotel Manager works as dog boarding software, cat boarding software and for mixed pet hotels. It supports cats, dogs and any type of pet. It is the ideal software for dog hotels, cat hotels and general pet boarding facilities.",
           },
         },
         {
           "@type": "Question",
-          name: "Quanto costa il software per gestione pensione animali?",
+          name: "How much does pet boarding management software cost?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: `Il software parte da €${STRIPE_TIERS.starter.priceYearly}/anno per il piano Starter. È disponibile una prova gratuita di ${trialDays} giorni senza carta di credito.`,
+            text: `The software starts from €${STRIPE_TIERS.starter.priceYearly}/year for the Starter plan. A free ${trialDays}-day trial is available with no credit card required.`,
           },
         },
         {
           "@type": "Question",
-          name: "Posso gestire più pensioni con un solo software?",
+          name: "Can I manage multiple locations with one software?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Sì, con i piani Pro e Business puoi gestire fino a 10 pensioni per animali da un'unica dashboard. Ogni sede mantiene i propri dati, listini e configurazioni.",
+            text: "Yes, with the Pro and Business plans you can manage up to 10 pet boarding locations from a single dashboard. Each location keeps its own data, pricing and settings.",
           },
         },
         {
           "@type": "Question",
-          name: "Il gestionale funziona su smartphone?",
+          name: "Does it work on mobile devices?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Sì, Pet Hotel Manager è un software web ottimizzato per smartphone, tablet e PC. Nessuna app da installare: accedi dal browser ovunque ti trovi.",
+            text: "Yes, Pet Hotel Manager is a web-based software optimised for smartphones, tablets and PCs. No app to install — access it from any browser wherever you are.",
           },
         },
       ],
@@ -336,7 +356,7 @@ export default function Landing() {
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       ))}
 
-      {/* ── Navbar (appare dopo scroll) ── */}
+      {/* ── Navbar ── */}
       <nav className={`fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b transition-transform duration-300 ${showNav ? "translate-y-0" : "-translate-y-full"}`}>
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -344,72 +364,72 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <a href="#demo">
-              <Button variant="ghost" size="sm">Demo Gratuita</Button>
+              <Button variant="ghost" size="sm">Free Demo</Button>
             </a>
             <Link to="/login">
-              <Button variant="ghost" size="sm">Accedi</Button>
+              <Button variant="ghost" size="sm">Sign In</Button>
             </Link>
             <Button size="sm" onClick={handleStartTrial} className="gap-1">
-              Prova Gratis <ArrowRight className="h-3 w-3" />
+              Try Free <ArrowRight className="h-3 w-3" />
             </Button>
           </div>
         </div>
       </nav>
 
-      {/* ══════════ 1. HERO — Benefit-driven ══════════ */}
+      {/* ══════════ 1. HERO ══════════ */}
       <header className="relative min-h-screen flex flex-col items-center justify-start pt-10">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-background" />
         <div className="relative flex flex-col items-center text-center px-6 max-w-4xl mx-auto">
           <img
             src={landingLogo}
-            alt="Pet Hotel Manager - Software gestionale per pensioni per cani e gatti"
+            alt="Pet Hotel Manager - Cat and dog boarding management software"
             className="w-[280px] md:w-[380px] lg:w-[440px] h-auto object-contain drop-shadow-xl"
           />
 
           <Badge className="mt-6 mb-5 bg-primary/10 text-primary border-primary/20 hover:bg-primary/15 text-sm px-4 py-1.5">
-            <Zap className="h-3.5 w-3.5 mr-1.5" /> Prova gratis {trialDays} giorni — nessuna carta richiesta
+            <Zap className="h-3.5 w-3.5 mr-1.5" /> Free {trialDays}-day trial — no credit card required
           </Badge>
 
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground leading-tight mb-4">
-            Gestisci la tua pensione per animali
-            <span className="text-primary block mt-1">in un solo software</span>
+            Manage your pet boarding business
+            <span className="text-primary block mt-1">in one single software</span>
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed">
-            Basta Excel, post-it e WhatsApp.
-            <strong className="text-foreground"> Pet Hotel Manager</strong> automatizza prenotazioni, pagamenti e comunicazioni
-            — così risparmi <strong className="text-foreground">ore ogni settimana</strong> e non perdi più una prenotazione.
+            No more spreadsheets, sticky notes and WhatsApp chaos.
+            <strong className="text-foreground"> Pet Hotel Manager</strong> automates bookings, payments and communications
+            — saving you <strong className="text-foreground">hours every week</strong> with zero missed reservations.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="text-base px-8 py-6 gap-2 shadow-lg shadow-primary/20" onClick={handleStartTrial}>
-              Prova Gratis — {trialDays} Giorni <ArrowRight className="h-4 w-4" />
+              Try Free — {trialDays} Days <ArrowRight className="h-4 w-4" />
             </Button>
             <Button size="lg" variant="outline" className="text-base px-8 py-6 gap-2" asChild>
-              <a href="#demo"><Video className="h-4 w-4" /> Richiedi una Demo Live</a>
+              <a href="#demo"><Video className="h-4 w-4" /> Request a Live Demo</a>
             </Button>
           </div>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5"><Shield className="h-4 w-4" /> Nessuna carta di credito</span>
-            <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> Attivo in 2 minuti</span>
-            <span className="flex items-center gap-1.5"><Heart className="h-4 w-4" /> Usato da pensioni in tutto il mondo</span>
+            <span className="flex items-center gap-1.5"><Shield className="h-4 w-4" /> No credit card required</span>
+            <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> Up and running in 2 minutes</span>
+            <span className="flex items-center gap-1.5"><Heart className="h-4 w-4" /> Used by pet hotels worldwide</span>
           </div>
         </div>
       </header>
 
-      {/* ══════════ 2. IL PROBLEMA — "Ti riconosci?" ══════════ */}
+      {/* ══════════ 2. THE PROBLEM ══════════ */}
       <section className="py-20 bg-destructive/5">
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-12">
             <Badge variant="outline" className="mb-4 border-destructive/30 text-destructive">
-              <AlertTriangle className="h-3.5 w-3.5 mr-1.5" /> Il problema
+              <AlertTriangle className="h-3.5 w-3.5 mr-1.5" /> The problem
             </Badge>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-              Gestire una pensione senza un gestionale è un incubo
+              Running a pet hotel without software is a nightmare
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Se ti riconosci in uno di questi problemi, stai perdendo tempo e soldi ogni giorno.
+              If you recognise any of these problems, you're losing time and money every single day.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-3xl mx-auto">
@@ -425,18 +445,18 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ══════════ 3. LA SOLUZIONE — Benefici (non funzioni) ══════════ */}
+      {/* ══════════ 3. THE SOLUTION — Benefits ══════════ */}
       <section className="py-24">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
-              <Zap className="h-3.5 w-3.5 mr-1.5" /> La soluzione
+              <Zap className="h-3.5 w-3.5 mr-1.5" /> The solution
             </Badge>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-              Ecco cosa cambia con Pet Hotel Manager
+              Here's what changes with Pet Hotel Manager
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Non ti elenchiamo funzioni. Ti mostriamo i <strong className="text-foreground">risultati concreti</strong> che ottieni.
+              We don't list features. We show you the <strong className="text-foreground">real results</strong> you get.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -451,7 +471,7 @@ export default function Landing() {
                 <CardContent className="space-y-3">
                   <p className="text-muted-foreground text-sm leading-relaxed">{b.desc}</p>
                   <div className="flex items-start gap-2 pt-2 border-t border-border/50">
-                    <span className="text-xs font-medium text-destructive/70 bg-destructive/5 px-2 py-1 rounded">Prima:</span>
+                    <span className="text-xs font-medium text-destructive/70 bg-destructive/5 px-2 py-1 rounded">Before:</span>
                     <p className="text-xs text-muted-foreground italic">{b.before}</p>
                   </div>
                 </CardContent>
@@ -466,13 +486,13 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
             <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
-              <Monitor className="h-3.5 w-3.5 mr-1.5" /> Scopri l'interfaccia
+              <Monitor className="h-3.5 w-3.5 mr-1.5" /> Explore the interface
             </Badge>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-              Un'occhiata al software
+              A look at the software
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Ecco come si presenta Pet Hotel Manager nel quotidiano.
+              Here's how Pet Hotel Manager looks in everyday use.
             </p>
           </div>
           <Carousel
@@ -485,16 +505,9 @@ export default function Landing() {
                 <CarouselItem key={i} className="md:basis-4/5 lg:basis-3/4">
                   <div className="p-2">
                     <div className="rounded-xl border-2 border-border overflow-hidden shadow-lg bg-background">
-                      <img
-                        src={s.src}
-                        alt={s.alt}
-                        className="w-full h-auto"
-                        loading="lazy"
-                      />
+                      <img src={s.src} alt={s.alt} className="w-full h-auto" loading="lazy" />
                     </div>
-                    <p className="text-center text-sm text-muted-foreground mt-4 max-w-xl mx-auto">
-                      {s.desc}
-                    </p>
+                    <p className="text-center text-sm text-muted-foreground mt-4 max-w-xl mx-auto">{s.desc}</p>
                   </div>
                 </CarouselItem>
               ))}
@@ -505,47 +518,45 @@ export default function Landing() {
         </div>
       </section>
 
-
+      {/* ══════════ 4. NUMBERS ══════════ */}
       <section className="py-20 bg-card/50">
         <div className="max-w-6xl mx-auto px-6">
-          {/* Numeri */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
             <div className="text-center p-6 rounded-2xl bg-background border">
               <div className="text-3xl md:text-4xl font-bold text-primary">50+</div>
-              <div className="text-muted-foreground text-sm mt-1">Pensioni attive</div>
+              <div className="text-muted-foreground text-sm mt-1">Active pet hotels</div>
             </div>
             <div className="text-center p-6 rounded-2xl bg-background border">
-              <div className="text-3xl md:text-4xl font-bold text-primary">10.000+</div>
-              <div className="text-muted-foreground text-sm mt-1">Prenotazioni gestite</div>
+              <div className="text-3xl md:text-4xl font-bold text-primary">10,000+</div>
+              <div className="text-muted-foreground text-sm mt-1">Bookings managed</div>
             </div>
             <div className="text-center p-6 rounded-2xl bg-background border">
               <div className="text-3xl md:text-4xl font-bold text-primary">4.9★</div>
-              <div className="text-muted-foreground text-sm mt-1">Valutazione media</div>
+              <div className="text-muted-foreground text-sm mt-1">Average rating</div>
             </div>
             <div className="text-center p-6 rounded-2xl bg-background border">
               <div className="text-3xl md:text-4xl font-bold text-primary">10h+</div>
-              <div className="text-muted-foreground text-sm mt-1">Risparmiate a settimana</div>
+              <div className="text-muted-foreground text-sm mt-1">Saved per week</div>
             </div>
           </div>
-
         </div>
       </section>
 
-      {/* ══════════ 5. CTA intermedio ══════════ */}
+      {/* ══════════ 5. MID CTA ══════════ */}
       <section className="py-16 bg-primary/5">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-4">
-            Pronto a dire addio al caos?
+            Ready to say goodbye to the chaos?
           </h2>
           <p className="text-muted-foreground text-lg mb-6">
-            Inizia la prova gratuita di {trialDays} giorni. Nessuna carta, nessun impegno, disdici quando vuoi.
+            Start your free {trialDays}-day trial. No card, no commitment, cancel anytime.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="text-base px-8 py-6 gap-2 shadow-lg shadow-primary/20" onClick={handleStartTrial}>
-              Crea il tuo account gratis <ArrowRight className="h-4 w-4" />
+              Create your free account <ArrowRight className="h-4 w-4" />
             </Button>
             <Button size="lg" variant="outline" className="text-base px-8 py-6 gap-2" asChild>
-              <a href="#demo"><Phone className="h-4 w-4" /> Parla con noi</a>
+              <a href="#demo"><Phone className="h-4 w-4" /> Talk to us</a>
             </Button>
           </div>
         </div>
@@ -556,10 +567,10 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-              Un prezzo semplice per ogni esigenza
+              Simple pricing for every need
             </h2>
             <p className="text-muted-foreground text-lg">
-              Tutti i piani includono <strong className="text-foreground">{trialDays} giorni gratis</strong>. Scegli quello giusto per te.
+              All plans include <strong className="text-foreground">{trialDays} days free</strong>. Choose the right one for you.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -567,12 +578,12 @@ export default function Landing() {
             <Card className="relative border-2 border-border hover:border-primary/30 transition-colors">
               <CardHeader className="pb-4">
                 <CardTitle className="text-2xl font-serif">Starter</CardTitle>
-                <CardDescription>Per iniziare a gestire la tua pensione</CardDescription>
+                <CardDescription>To start managing your pet hotel</CardDescription>
                 <div className="mt-4">
                   <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.starter.priceMonthly}</span>
-                  <span className="text-muted-foreground">/mese</span>
+                  <span className="text-muted-foreground">/month</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.starter.priceYearly}/anno con abbonamento annuale</p>
+                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.starter.priceYearly}/year with annual billing</p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
@@ -583,7 +594,7 @@ export default function Landing() {
                   ))}
                 </ul>
                 <Button className="w-full" variant="outline" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.starter.price_id, "starter")}>
-                  <CreditCard className="h-4 w-4 mr-2" />Acquista Starter
+                  <CreditCard className="h-4 w-4 mr-2" />Get Starter
                 </Button>
               </CardContent>
             </Card>
@@ -591,16 +602,16 @@ export default function Landing() {
             {/* Pro */}
             <Card className="relative border-2 border-primary shadow-lg shadow-primary/10">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge className="bg-primary text-primary-foreground gap-1"><Star className="h-3 w-3" /> Più scelto</Badge>
+                <Badge className="bg-primary text-primary-foreground gap-1"><Star className="h-3 w-3" /> Most popular</Badge>
               </div>
               <CardHeader className="pb-4">
                 <CardTitle className="text-2xl font-serif">Pro</CardTitle>
-                <CardDescription>Per pensioni multi-sede</CardDescription>
+                <CardDescription>For multi-location pet hotels</CardDescription>
                 <div className="mt-4">
                   <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.pro.priceMonthly}</span>
-                  <span className="text-muted-foreground">/mese</span>
+                  <span className="text-muted-foreground">/month</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.pro.priceYearly}/anno con abbonamento annuale</p>
+                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.pro.priceYearly}/year with annual billing</p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
@@ -611,7 +622,7 @@ export default function Landing() {
                   ))}
                 </ul>
                 <Button className="w-full" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.pro.price_id, "pro")}>
-                  <CreditCard className="h-4 w-4 mr-2" />Acquista Pro
+                  <CreditCard className="h-4 w-4 mr-2" />Get Pro
                 </Button>
               </CardContent>
             </Card>
@@ -623,12 +634,12 @@ export default function Landing() {
               </div>
               <CardHeader className="pb-4">
                 <CardTitle className="text-2xl font-serif">Business</CardTitle>
-                <CardDescription>Per grandi strutture multi-sede</CardDescription>
+                <CardDescription>For large pet hotel chains</CardDescription>
                 <div className="mt-4">
                   <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.business.priceMonthly}</span>
-                  <span className="text-muted-foreground">/mese</span>
+                  <span className="text-muted-foreground">/month</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.business.priceYearly}/anno con abbonamento annuale</p>
+                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.business.priceYearly}/year with annual billing</p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
@@ -639,36 +650,43 @@ export default function Landing() {
                   ))}
                 </ul>
                 <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.business.price_id, "business")}>
-                  <CreditCard className="h-4 w-4 mr-2" />Acquista Business
+                  <CreditCard className="h-4 w-4 mr-2" />Get Business
                 </Button>
               </CardContent>
             </Card>
           </div>
+
           <p className="text-center text-sm text-muted-foreground mt-8">
-            Tutti i piani includono {trialDays} giorni di prova gratuita. Nessuna carta di credito richiesta.
+            All prices exclude VAT. Annual billing. Cancel anytime.
           </p>
         </div>
       </section>
 
-      {/* ══════════ 7. DEMO LIVE ══════════ */}
+      {/* ══════════ 7. DEMO FORM ══════════ */}
       <section id="demo" className="py-24 bg-card/50">
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-12 items-start">
             <div>
               <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
-                <Video className="h-3.5 w-3.5 mr-1.5" /> Demo personalizzata
+                <Video className="h-3.5 w-3.5 mr-1.5" /> Free live demo
               </Badge>
               <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-                Vuoi vederlo in azione?
+                See Pet Hotel Manager in action
               </h2>
               <p className="text-muted-foreground text-lg mb-6">
-                Prenota una demo gratuita di 30 minuti. Ti mostriamo come Pet Hotel Manager può risolvere i problemi specifici della <strong className="text-foreground">tua</strong> pensione.
+                Book a free 30-minute live demo. We'll show you everything and answer all your questions.
               </p>
-              <ul className="space-y-3 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Demo personalizzata sulle tue esigenze</li>
-                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Nessun impegno di acquisto</li>
-                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Risposte a tutte le tue domande</li>
-                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Ti aiutiamo con la configurazione iniziale</li>
+              <ul className="space-y-3">
+                {[
+                  "Complete walkthrough tailored to your business",
+                  "Live Q&A with our team",
+                  "Setup assistance included",
+                  "No pressure, no commitment",
+                ].map((item) => (
+                  <li key={item} className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <Check className="h-4 w-4 text-primary shrink-0" />{item}
+                  </li>
+                ))}
               </ul>
             </div>
             <DemoRequestForm />
@@ -676,71 +694,71 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ══════════ 8. CTA FINALE ══════════ */}
-      <section className="py-24">
+      {/* ══════════ 8. FINAL CTA ══════════ */}
+      <section className="py-24 bg-primary/5">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-            Non perdere un'altra prenotazione.
+            Start your free trial today
           </h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
-            Ogni giorno senza un gestionale è un giorno di lavoro in più, prenotazioni perse e clienti insoddisfatti.
-            <strong className="text-foreground"> Inizia oggi — è gratis.</strong>
+            Every day without a management system is a day of extra work, lost bookings and unsatisfied clients.
+            <strong className="text-foreground"> Start today — it's free.</strong>
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="text-base px-10 py-6 gap-2 shadow-lg shadow-primary/20" onClick={handleStartTrial}>
-              Prova Gratis — {trialDays} Giorni <ArrowRight className="h-4 w-4" />
+              Try Free — {trialDays} Days <ArrowRight className="h-4 w-4" />
             </Button>
             <Button size="lg" variant="outline" className="text-base px-8 py-6 gap-2" asChild>
-              <a href="#demo"><Video className="h-4 w-4" /> Richiedi Demo</a>
+              <a href="#demo"><Video className="h-4 w-4" /> Request Demo</a>
             </Button>
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
-            Nessuna carta di credito • Attivo in 2 minuti • Disdici quando vuoi
+            No credit card • Up in 2 minutes • Cancel anytime
           </p>
         </div>
       </section>
 
-      {/* ── Sezione SEO keyword ── */}
+      {/* ── SEO keyword section ── */}
       <section className="bg-muted/30 border-t py-12">
         <div className="max-w-5xl mx-auto px-6">
           <h2 className="text-2xl font-serif font-bold text-foreground mb-4 text-center">
-            Il software gestionale per ogni tipo di pensione per animali
+            The management software for every type of pet boarding business
           </h2>
           <p className="text-muted-foreground text-center mb-8 max-w-3xl mx-auto">
-            Pet Hotel Manager è il <strong>gestionale per pensioni di gatti</strong> e <strong>gestionale per pensioni di cani</strong> più completo sul mercato italiano. Progettato per cat hotel, dog hotel, pensioni feline, pensioni canine e pensioni miste.
+            Pet Hotel Manager is the most complete <strong>cat boarding software</strong> and <strong>dog boarding software</strong> on the market. Designed for cat hotels, dog hotels, catteries, kennels and mixed pet boarding facilities.
           </p>
           <div className="grid md:grid-cols-3 gap-6 text-sm text-muted-foreground">
             <div>
-              <h3 className="font-semibold text-foreground mb-2">Gestionale Pensione Gatti</h3>
+              <h3 className="font-semibold text-foreground mb-2">Cat Boarding Software</h3>
               <ul className="space-y-1">
-                <li>Software per cat hotel</li>
-                <li>Gestionale pensione felina</li>
-                <li>Programma gestione pensione gatti</li>
-                <li>App pensione gatti</li>
-                <li>Software cattery</li>
-                <li>Gestionale hotel per gatti</li>
+                <li>Cat hotel management system</li>
+                <li>Cattery management software</li>
+                <li>Cat boarding booking system</li>
+                <li>Cat kennel software</li>
+                <li>Cat hotel software</li>
+                <li>Cat boarding app</li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold text-foreground mb-2">Gestionale Pensione Cani</h3>
+              <h3 className="font-semibold text-foreground mb-2">Dog Boarding Software</h3>
               <ul className="space-y-1">
-                <li>Software per dog hotel</li>
-                <li>Gestionale pensione canina</li>
-                <li>Programma gestione pensione cani</li>
-                <li>App pensione cani</li>
-                <li>Software dog boarding</li>
-                <li>Gestionale hotel per cani</li>
+                <li>Dog hotel management system</li>
+                <li>Kennel management software</li>
+                <li>Dog boarding booking system</li>
+                <li>Dog kennel software</li>
+                <li>Dog hotel software</li>
+                <li>Dog boarding app</li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold text-foreground mb-2">Software Pensione Animali</h3>
+              <h3 className="font-semibold text-foreground mb-2">Pet Boarding Management</h3>
               <ul className="space-y-1">
-                <li>Gestionale pensione per animali</li>
-                <li>Software prenotazioni pensione</li>
-                <li>Programma pensione animali domestici</li>
-                <li>Pet hotel software Italia</li>
-                <li>Gestione prenotazioni pet hotel</li>
-                <li>Software multi-pensione animali</li>
+                <li>Pet hotel management software</li>
+                <li>Pet boarding reservation system</li>
+                <li>Pet kennel management system</li>
+                <li>Pet hotel software</li>
+                <li>Multi-location pet boarding software</li>
+                <li>Pet accommodation management</li>
               </ul>
             </div>
           </div>
@@ -754,11 +772,11 @@ export default function Landing() {
             <img src={landingLogo} alt="Pet Hotel Manager" className="h-8 w-auto object-contain" /> Pet Hotel Manager © {new Date().getFullYear()}
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <Link to="/en" className="hover:text-foreground transition-colors">🇬🇧 English</Link>
+            <Link to="/landing" className="hover:text-foreground transition-colors">🇮🇹 Italiano</Link>
             <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-            <Link to="/termini" className="hover:text-foreground transition-colors">Termini</Link>
-            <Link to="/login" className="hover:text-foreground transition-colors">Accedi</Link>
-            <a href="#pricing" className="hover:text-foreground transition-colors">Prezzi</a>
+            <Link to="/termini" className="hover:text-foreground transition-colors">Terms</Link>
+            <Link to="/login" className="hover:text-foreground transition-colors">Sign In</Link>
+            <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
           </div>
         </div>
       </footer>

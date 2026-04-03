@@ -23,8 +23,8 @@ const ROUTE_RESOURCE_MAP: Record<string, Resource> = {
 };
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, profileLoading, roles, trialExpired } = useAuth();
-  const { canRead, primaryRole } = usePermissions();
+  const { user, loading, profileLoading, roles, trialExpired, trialEnd } = useAuth();
+  const { canRead, primaryRole, isAdmin } = usePermissions();
   const location = useLocation();
 
   // Wait for auth AND profile/roles to fully load
@@ -96,6 +96,12 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
         </div>
       </div>
     );
+  }
+
+  // Trial users cannot access users/roles page
+  const isTrial = !isAdmin && (trialEnd !== null || user?.user_metadata?.is_trial === true);
+  if (isTrial && location.pathname === "/utenti") {
+    return <Navigate to="/" replace />;
   }
 
   // Check page-level permissions — avoid redirecting to the same page

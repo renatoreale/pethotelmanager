@@ -32,6 +32,7 @@ import Presenze from "./pages/Presenze";
 import OccupazioneCasette from "./pages/OccupazioneCasette";
 import Admin from "./pages/Admin";
 import Landing from "./pages/Landing";
+import LandingEn from "./pages/LandingEn";
 import Privacy from "./pages/Privacy";
 import Termini from "./pages/Termini";
 import RegisterTrial from "./pages/RegisterTrial";
@@ -62,6 +63,7 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/landing" element={<Landing />} />
+            <Route path="/en" element={<LandingEn />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/termini" element={<Termini />} />
             <Route path="/register-trial" element={<RegisterTrial />} />

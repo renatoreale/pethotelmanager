@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -88,6 +88,27 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
       pet_type: cat?.pet_type ?? defaultPetType ?? "",
     },
   });
+
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        name: cat?.name ?? "",
+        client_id: cat?.client_id ?? defaultClientId ?? "",
+        breed: cat?.breed ?? "",
+        color: cat?.color ?? "",
+        birth_date: cat?.birth_date ?? "",
+        gender: cat?.gender ?? "",
+        microchip: cat?.microchip ?? "",
+        weight_kg: cat?.weight_kg ?? "",
+        is_neutered: cat?.is_neutered ?? false,
+        medical_notes: cat?.medical_notes ?? "",
+        dietary_notes: cat?.dietary_notes ?? "",
+        behavioral_notes: cat?.behavioral_notes ?? "",
+        needs_double_cage: cat?.needs_double_cage ?? false,
+        pet_type: cat?.pet_type ?? defaultPetType ?? "",
+      });
+    }
+  }, [open, cat]);
 
   const onSubmit = async (values: CatFormValues) => {
     if (pet.petType === "entrambi" && !values.pet_type) {

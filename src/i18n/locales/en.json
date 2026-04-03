@@ -529,5 +529,35 @@
     "friday": "Friday",
     "saturday": "Saturday",
     "sunday": "Sunday"
+  },
+  "registerTrial": {
+    "title": "Free Trial",
+    "subtitle": "{{trialDays}} free days, no credit card required",
+    "backToHome": "Back to Home",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone",
+    "email": "Email",
+    "warning": "⚠️ Enter real information: login credentials will be sent to the email provided.",
+    "privacy": "I consent to the processing of my personal data under GDPR (EU Reg. 2016/679) for managing the demo request. Data will be used exclusively to provide access to the free trial. *",
+    "submit": "Request free access",
+    "submitting": "Sending...",
+    "alreadyHaveAccount": "Already have an account? Sign in",
+    "checkEmail": "Check your email!",
+    "checkEmailDescription": "We sent an email to {{email}} with the link to set your password and immediately access the free trial.",
+    "errors": {
+      "minChars": "Enter at least 2 characters",
+      "invalidChars": "Invalid characters",
+      "invalidName": "Invalid name",
+      "invalidEmail": "Invalid email address",
+      "disposableEmail": "Please use a real email address, not a temporary one",
+      "fakeEmail": "Please enter a real email address",
+      "invalidPhone": "Enter a valid phone number",
+      "invalidPhoneFormat": "Invalid phone number format",
+      "repeatedPhone": "Invalid phone number",
+      "acceptPrivacy": "You must accept the privacy policy to continue.",
+      "fixErrors": "Please correct the highlighted fields",
+      "registrationError": "Registration error. Please try again."
+    }
   }
 }

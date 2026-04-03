@@ -103,8 +103,11 @@ function NavGroup({ label, items, collapsed }: {label: string;items: NavItem[];c
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { profile, signOut, user } = useAuth();
-  const { primaryRole } = usePermissions();
+  const { profile, signOut, user, trialEnd } = useAuth();
+  const { primaryRole, isAdmin } = usePermissions();
+
+  const isTrial = !isAdmin && (trialEnd !== null || user?.user_metadata?.is_trial === true);
+  const visibleAdminNav = isTrial ? adminNav.filter((item) => item.resource !== "utenti") : adminNav;
   const { t } = useTranslation();
 
   const initials = profile?.full_name ?
@@ -125,7 +128,7 @@ export function AppSidebar() {
         <NavGroup label={t("sidebar.operations")} items={mainNav} collapsed={collapsed} />
         <NavGroup label={t("sidebar.registry")} items={registryNav} collapsed={collapsed} />
         <NavGroup label={t("sidebar.operationsGroup")} items={operationsNav} collapsed={collapsed} />
-        <NavGroup label={t("sidebar.administration")} items={adminNav} collapsed={collapsed} />
+        <NavGroup label={t("sidebar.administration")} items={visibleAdminNav} collapsed={collapsed} />
       </SidebarContent>
 
       <SidebarFooter className="p-3 border-t border-sidebar-border">
