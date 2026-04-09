@@ -222,7 +222,8 @@
     "quote": "quote",
     "quote_plural": "quotes",
     "downloadQuotePDF": "Download Quote PDF",
-    "downloadCustodyForm": "Download Custody Form"
+    "downloadCustodyForm": "Download Custody Form",
+    "searchPlaceholder": "Search by client or number..."
   },
   "appointments": {
     "title": "Appointments",

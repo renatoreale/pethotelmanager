@@ -223,7 +223,8 @@
     "quote": "preventivo",
     "quote_plural": "preventivi",
     "downloadQuotePDF": "Scarica Preventivo PDF",
-    "downloadCustodyForm": "Scarica Modulo Affido"
+    "downloadCustodyForm": "Scarica Modulo Affido",
+    "searchPlaceholder": "Cerca per cliente o numero..."
   },
   "appointments": {
     "title": "Appuntamenti",
