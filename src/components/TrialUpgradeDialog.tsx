@@ -48,7 +48,7 @@ type PlanKey = keyof typeof STRIPE_TIERS;
 const PLANS: { key: PlanKey; label: string; monthly: number; yearly: number; features: string[] }[] = [
   {
     key: "starter",
-    label: "Starter",
+    label: "Singola Pensione",
     monthly: STRIPE_TIERS.starter.priceMonthly,
     yearly: STRIPE_TIERS.starter.priceYearly,
     features: [
@@ -64,32 +64,21 @@ const PLANS: { key: PlanKey; label: string; monthly: number; yearly: number; fea
     ],
   },
   {
-    key: "pro",
-    label: "Pro",
-    monthly: STRIPE_TIERS.pro.priceMonthly,
-    yearly: STRIPE_TIERS.pro.priceYearly,
+    key: "multi",
+    label: "Multi Pensione",
+    monthly: STRIPE_TIERS.multi.priceMonthly,
+    yearly: STRIPE_TIERS.multi.priceYearly,
     features: [
-      "Tutto del piano Starter",
-      "Multi-pensione (fino a 3)",
+      "Tutto di Singola Pensione",
+      "Fino a 3 pensioni incluse",
+      "€20 per pensione al mese",
       "Dashboard multi-sede",
-    ],
-  },
-  {
-    key: "business",
-    label: "Business",
-    monthly: STRIPE_TIERS.business.priceMonthly,
-    yearly: STRIPE_TIERS.business.priceYearly,
-    features: [
-      "Tutto del piano Pro",
-      "Multi-pensione (fino a 10)",
-      "Supporto prioritario",
-      "Configurazione dedicata",
     ],
   },
 ];
 
 export function TrialUpgradeDialog({ open, onOpenChange, prefill }: TrialUpgradeDialogProps) {
-  const [selectedPlan, setSelectedPlan] = useState<PlanKey>("pro");
+  const [selectedPlan, setSelectedPlan] = useState<PlanKey>("starter");
   const [form, setForm] = useState<FormState>({
     nome: prefill?.nome ?? "",
     cognome: prefill?.cognome ?? "",
@@ -174,7 +163,7 @@ export function TrialUpgradeDialog({ open, onOpenChange, prefill }: TrialUpgrade
           {/* Selettore piano */}
           <div className="space-y-2">
             <Label className="text-sm font-semibold">Seleziona il piano *</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
               {PLANS.map((plan) => {
                 const isSelected = selectedPlan === plan.key;
                 return (

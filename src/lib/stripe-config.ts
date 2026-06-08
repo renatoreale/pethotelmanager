@@ -1,10 +1,17 @@
 export const STRIPE_TIERS = {
   starter: {
-    product_id: "prod_UDOX9vTUBJU9wK",
-    price_id: "price_1TExkTQYqblmeN59HOG5R20c",
-    name: "Starter",
-    priceYearly: 468,
-    priceMonthly: 39,
+    product_id: "prod_UfQmHxJmkY7am6",
+    price_id: "price_1Tg5woQYqblmeN598KDF8lzl",
+    name: "Singola Pensione",
+    priceYearly: 300,
+    priceMonthly: 25,
+  },
+  multi: {
+    product_id: "prod_UfQmT7dIRughKY",
+    price_id: "price_1Tg5wkQYqblmeN59xiY1BYQt",
+    name: "Multi Pensione",
+    priceYearly: 720,
+    priceMonthly: 60,
   },
   pro: {
     product_id: "prod_UDOYV6m28r6T8n",

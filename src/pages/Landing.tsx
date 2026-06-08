@@ -62,16 +62,11 @@ const STARTER_FEATURES = [
   "Report e statistiche",
   "Area riservata per cliente",
 ];
-const PRO_FEATURES = [
-  "Tutto del piano Starter",
-  "Multi-pensione (fino a 3)",
+const MULTI_FEATURES = [
+  "Tutto di Singola Pensione",
+  "Fino a 3 pensioni incluse",
+  "€20 per pensione al mese",
   "Dashboard multi-sede",
-];
-const BUSINESS_FEATURES = [
-  "Tutto del piano Pro",
-  "Multi-pensione (fino a 10)",
-  "Supporto prioritario",
-  "Configurazione dedicata",
 ];
 
 /* ── BENEFICI (non funzioni!) ── */
@@ -536,12 +531,12 @@ export default function Landing() {
               Tutti i piani includono <strong className="text-foreground">{trialDays} giorni gratis</strong>. Scegli quello giusto per te.
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Starter */}
+          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            {/* Singola Pensione */}
             <Card className="relative border-2 border-border hover:border-primary/30 transition-colors">
               <CardHeader className="pb-4">
-                <CardTitle className="text-2xl font-serif">Starter</CardTitle>
-                <CardDescription>Per iniziare a gestire la tua pensione</CardDescription>
+                <CardTitle className="text-2xl font-serif">Singola Pensione</CardTitle>
+                <CardDescription>Per gestire una singola struttura</CardDescription>
                 <div className="mt-4">
                   <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.starter.priceMonthly}</span>
                   <span className="text-muted-foreground">/mese</span>
@@ -557,63 +552,35 @@ export default function Landing() {
                   ))}
                 </ul>
                 <Button className="w-full" variant="outline" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.starter.price_id, "starter")}>
-                  <CreditCard className="h-4 w-4 mr-2" />Acquista Starter
+                  <CreditCard className="h-4 w-4 mr-2" />Acquista Singola Pensione
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Pro */}
+            {/* Multi Pensione */}
             <Card className="relative border-2 border-primary shadow-lg shadow-primary/10">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <Badge className="bg-primary text-primary-foreground gap-1"><Star className="h-3 w-3" /> Più scelto</Badge>
               </div>
               <CardHeader className="pb-4">
-                <CardTitle className="text-2xl font-serif">Pro</CardTitle>
-                <CardDescription>Per pensioni multi-sede</CardDescription>
+                <CardTitle className="text-2xl font-serif">Multi Pensione</CardTitle>
+                <CardDescription>Pacchetto 3 pensioni — €20 a struttura</CardDescription>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.pro.priceMonthly}</span>
+                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.multi.priceMonthly}</span>
                   <span className="text-muted-foreground">/mese</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.pro.priceYearly}/anno con abbonamento annuale</p>
+                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.multi.priceYearly}/anno con abbonamento annuale</p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
-                  {PRO_FEATURES.map((f) => (
+                  {MULTI_FEATURES.map((f) => (
                     <li key={f} className="flex items-start gap-3 text-sm">
                       <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /><span>{f}</span>
                     </li>
                   ))}
                 </ul>
-                <Button className="w-full" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.pro.price_id, "pro")}>
-                  <CreditCard className="h-4 w-4 mr-2" />Acquista Pro
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Business */}
-            <Card className="relative border-2 border-amber-500/50 shadow-lg shadow-amber-500/10">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge className="bg-amber-500 text-white gap-1"><Crown className="h-3 w-3" /> Business</Badge>
-              </div>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-2xl font-serif">Business</CardTitle>
-                <CardDescription>Per grandi strutture multi-sede</CardDescription>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.business.priceMonthly}</span>
-                  <span className="text-muted-foreground">/mese</span>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.business.priceYearly}/anno con abbonamento annuale</p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <ul className="space-y-3">
-                  {BUSINESS_FEATURES.map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-sm">
-                      <Check className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" /><span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.business.price_id, "business")}>
-                  <CreditCard className="h-4 w-4 mr-2" />Acquista Business
+                <Button className="w-full" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.multi.price_id, "multi")}>
+                  <CreditCard className="h-4 w-4 mr-2" />Acquista Multi Pensione
                 </Button>
               </CardContent>
             </Card>

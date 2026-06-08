@@ -37,7 +37,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function PianoLabel({ piano }: { piano: string }) {
-  const map: Record<string, string> = { starter: "Starter", pro: "Pro", business: "Business" };
+  const map: Record<string, string> = { starter: "Singola Pensione", multi: "Multi Pensione", pro: "Pro", business: "Business" };
   return <span>{map[piano] ?? piano}</span>;
 }
 

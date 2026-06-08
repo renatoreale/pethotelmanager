@@ -195,7 +195,7 @@ serve(async (req) => {
 
     // 8. Email di benvenuto con link per impostare la password
     const PIANOPRICES: Record<string, string> = {
-      starter: "€468/anno", pro: "€1.080/anno", business: "€2.400/anno",
+      starter: "€300/anno", multi: "€720/anno", pro: "€1.080/anno", business: "€2.400/anno",
     };
 
     const welcomeHtml = `

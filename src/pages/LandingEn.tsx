@@ -61,16 +61,11 @@ const STARTER_FEATURES = [
   "Reports & statistics",
   "Client portal",
 ];
-const PRO_FEATURES = [
-  "Everything in Starter",
-  "Multi-location (up to 3)",
+const MULTI_FEATURES = [
+  "Everything in Single Hotel",
+  "Up to 3 hotels included",
+  "€20 per hotel/month",
   "Multi-site dashboard",
-];
-const BUSINESS_FEATURES = [
-  "Everything in Pro",
-  "Multi-location (up to 10)",
-  "Priority support",
-  "Dedicated setup",
 ];
 
 const BENEFITS = [
@@ -230,10 +225,9 @@ export default function LandingEn() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Set language to English
+  // Set language to English and persist it
   useEffect(() => {
     i18n.changeLanguage("en");
-    return () => { i18n.changeLanguage("it"); };
   }, []);
 
   // Update page meta for SEO
@@ -292,7 +286,7 @@ export default function LandingEn() {
         "@type": "AggregateOffer",
         priceCurrency: "EUR",
         lowPrice: STRIPE_TIERS.starter.priceYearly,
-        highPrice: STRIPE_TIERS.business.priceYearly,
+        highPrice: STRIPE_TIERS.multi.priceYearly,
       },
       aggregateRating: {
         "@type": "AggregateRating",
@@ -326,7 +320,7 @@ export default function LandingEn() {
           name: "How much does pet boarding management software cost?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: `The software starts from €${STRIPE_TIERS.starter.priceYearly}/year for the Starter plan. A free ${trialDays}-day trial is available with no credit card required.`,
+            text: `The software starts from €${STRIPE_TIERS.starter.priceYearly}/year for the Single Hotel plan. A free ${trialDays}-day trial is available with no credit card required.`,
           },
         },
         {
@@ -573,12 +567,12 @@ export default function LandingEn() {
               All plans include <strong className="text-foreground">{trialDays} days free</strong>. Choose the right one for you.
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Starter */}
+          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            {/* Single Hotel */}
             <Card className="relative border-2 border-border hover:border-primary/30 transition-colors">
               <CardHeader className="pb-4">
-                <CardTitle className="text-2xl font-serif">Starter</CardTitle>
-                <CardDescription>To start managing your pet hotel</CardDescription>
+                <CardTitle className="text-2xl font-serif">Single Hotel</CardTitle>
+                <CardDescription>To manage a single pet hotel</CardDescription>
                 <div className="mt-4">
                   <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.starter.priceMonthly}</span>
                   <span className="text-muted-foreground">/month</span>
@@ -594,63 +588,35 @@ export default function LandingEn() {
                   ))}
                 </ul>
                 <Button className="w-full" variant="outline" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.starter.price_id, "starter")}>
-                  <CreditCard className="h-4 w-4 mr-2" />Get Starter
+                  <CreditCard className="h-4 w-4 mr-2" />Get Single Hotel
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Pro */}
+            {/* Multi Hotel */}
             <Card className="relative border-2 border-primary shadow-lg shadow-primary/10">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <Badge className="bg-primary text-primary-foreground gap-1"><Star className="h-3 w-3" /> Most popular</Badge>
               </div>
               <CardHeader className="pb-4">
-                <CardTitle className="text-2xl font-serif">Pro</CardTitle>
-                <CardDescription>For multi-location pet hotels</CardDescription>
+                <CardTitle className="text-2xl font-serif">Multi Hotel</CardTitle>
+                <CardDescription>3-hotel package — €20 per location</CardDescription>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.pro.priceMonthly}</span>
+                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.multi.priceMonthly}</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.pro.priceYearly}/year with annual billing</p>
+                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.multi.priceYearly}/year with annual billing</p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
-                  {PRO_FEATURES.map((f) => (
+                  {MULTI_FEATURES.map((f) => (
                     <li key={f} className="flex items-start gap-3 text-sm">
                       <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /><span>{f}</span>
                     </li>
                   ))}
                 </ul>
-                <Button className="w-full" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.pro.price_id, "pro")}>
-                  <CreditCard className="h-4 w-4 mr-2" />Get Pro
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Business */}
-            <Card className="relative border-2 border-amber-500/50 shadow-lg shadow-amber-500/10">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge className="bg-amber-500 text-white gap-1"><Crown className="h-3 w-3" /> Business</Badge>
-              </div>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-2xl font-serif">Business</CardTitle>
-                <CardDescription>For large pet hotel chains</CardDescription>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.business.priceMonthly}</span>
-                  <span className="text-muted-foreground">/month</span>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.business.priceYearly}/year with annual billing</p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <ul className="space-y-3">
-                  {BUSINESS_FEATURES.map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-sm">
-                      <Check className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" /><span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.business.price_id, "business")}>
-                  <CreditCard className="h-4 w-4 mr-2" />Get Business
+                <Button className="w-full" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.multi.price_id, "multi")}>
+                  <CreditCard className="h-4 w-4 mr-2" />Get Multi Hotel
                 </Button>
               </CardContent>
             </Card>
