@@ -24,7 +24,7 @@ interface NavItem {
 }
 
 const mainNav: NavItem[] = [
-{ titleKey: "sidebar.dashboard", url: "/", icon: LayoutDashboard, resource: "dashboard" },
+{ titleKey: "sidebar.dashboard", url: "/dashboard", icon: LayoutDashboard, resource: "dashboard" },
 { titleKey: "sidebar.quotes", url: "/preventivi", icon: FileText, resource: "preventivi" },
 { titleKey: "sidebar.bookings", url: "/prenotazioni", icon: CalendarCheck, resource: "prenotazioni" },
 { titleKey: "sidebar.appointments", url: "/appuntamenti", icon: Calendar, resource: "appuntamenti" },
