@@ -62,6 +62,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             {/* Public routes */}
+            <Route path="/" element={<Landing />} />
             <Route path="/landing" element={<Landing />} />
             <Route path="/en" element={<LandingEn />} />
             <Route path="/privacy" element={<Privacy />} />
@@ -97,7 +98,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             >
-              <Route path="/" element={<Index />} />
+              <Route path="/dashboard" element={<Index />} />
               <Route path="/preventivi" element={<Preventivi />} />
               <Route path="/prenotazioni" element={<Prenotazioni />} />
               <Route path="/appuntamenti" element={<Appuntamenti />} />

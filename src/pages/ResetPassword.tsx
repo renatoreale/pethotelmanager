@@ -69,7 +69,7 @@ export default function ResetPassword() {
     }
 
     toast.success(t("auth.passwordUpdated"));
-    navigate("/");
+    navigate("/dashboard");
     setLoading(false);
   };
 

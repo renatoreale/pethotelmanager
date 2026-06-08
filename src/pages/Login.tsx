@@ -44,7 +44,7 @@ export default function Login() {
           return;
         }
       }
-      navigate("/");
+      navigate("/dashboard");
     }
     setLoading(false);
   };
@@ -72,7 +72,7 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md border-none shadow-lg">
         <CardHeader className="text-center">
-          <Link to="/landing" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 self-start">
+          <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 self-start">
             <ArrowLeft className="h-4 w-4" /> Torna alla home
           </Link>
           <img src={petHotelLogo} alt="Pet Hotel Manager" className="mx-auto mb-4 h-20 w-20 rounded-xl object-contain" />

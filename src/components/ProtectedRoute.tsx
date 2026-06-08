@@ -4,7 +4,7 @@ import { usePermissions, Resource } from "@/hooks/usePermissions";
 
 // Map routes to resources
 const ROUTE_RESOURCE_MAP: Record<string, Resource> = {
-  "/": "dashboard",
+  "/dashboard": "dashboard",
   "/preventivi": "preventivi",
   "/prenotazioni": "prenotazioni",
   "/appuntamenti": "appuntamenti",
@@ -101,13 +101,13 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   // Trial users cannot access users/roles page
   const isTrial = !isAdmin && (trialEnd !== null || user?.user_metadata?.is_trial === true);
   if (isTrial && location.pathname === "/utenti") {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   // Check page-level permissions — avoid redirecting to the same page
   const resource = ROUTE_RESOURCE_MAP[location.pathname];
   if (resource && !canRead(resource)) {
-    if (location.pathname === "/") {
+    if (location.pathname === "/dashboard") {
       // Already on dashboard but no read permission — show message instead of loop
       return (
         <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -121,7 +121,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
         </div>
       );
     }
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;
