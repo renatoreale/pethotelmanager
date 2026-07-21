@@ -103,12 +103,8 @@ serve(async (req) => {
     if (purchase && updated) {
       const pianoLabel = purchase.piano.charAt(0).toUpperCase() + purchase.piano.slice(1);
 
-      const PIANOPRICES: Record<string, string> = {
-        starter: "€468/anno",
-        pro: "€1.080/anno",
-        business: "€2.400/anno",
-      };
-      const prezzoLabel = PIANOPRICES[purchase.piano] ?? "";
+      const importoPagato = (session.amount_total ?? 0) / 100;
+      const prezzoLabel = `€${importoPagato.toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/anno`;
 
       // ── Email all'admin ──
       let adminErr: string | null = null;
