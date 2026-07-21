@@ -21,7 +21,7 @@ import {
 import Autoplay from "embla-carousel-autoplay";
 import {
   PawPrint, Calendar, Users, CreditCard, FileText, BarChart3,
-  Check, Star, ArrowRight, Shield, Clock, Zap, Building2, Crown, Video, Send,
+  Check, ArrowRight, Shield, Clock, Zap, Building2, Crown, Video, Send,
   X, AlertTriangle, Heart, TrendingUp, Phone, Monitor
 } from "lucide-react";
 import landingLogo from "@/assets/pethotelmanager_landing_logo.png";
@@ -60,12 +60,6 @@ const STARTER_FEATURES = [
   "Kennel occupancy",
   "Reports & statistics",
   "Client portal",
-];
-const MULTI_FEATURES = [
-  "Everything in Single Hotel",
-  "Up to 3 hotels included",
-  "€20 per hotel/month",
-  "Multi-site dashboard",
 ];
 
 const BENEFITS = [
@@ -357,15 +351,12 @@ export default function LandingEn() {
             <span className="font-serif text-lg font-bold text-foreground">Pet Hotel Manager</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <a href="#demo">
-              <Button variant="ghost" size="sm">Free Demo</Button>
+            <a href="#pricing">
+              <Button variant="outline" size="sm">Buy Now</Button>
             </a>
             <Link to="/login">
               <Button variant="ghost" size="sm">Sign In</Button>
             </Link>
-            <Button size="sm" onClick={handleStartTrial} className="gap-1">
-              Try Free <ArrowRight className="h-3 w-3" />
-            </Button>
           </div>
         </div>
       </nav>
@@ -517,11 +508,11 @@ export default function LandingEn() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
             <div className="text-center p-6 rounded-2xl bg-background border">
-              <div className="text-3xl md:text-4xl font-bold text-primary">50+</div>
+              <div className="text-3xl md:text-4xl font-bold text-primary">48</div>
               <div className="text-muted-foreground text-sm mt-1">Active pet hotels</div>
             </div>
             <div className="text-center p-6 rounded-2xl bg-background border">
-              <div className="text-3xl md:text-4xl font-bold text-primary">10,000+</div>
+              <div className="text-3xl md:text-4xl font-bold text-primary">8,300</div>
               <div className="text-muted-foreground text-sm mt-1">Bookings managed</div>
             </div>
             <div className="text-center p-6 rounded-2xl bg-background border">
@@ -557,27 +548,21 @@ export default function LandingEn() {
       </section>
 
       {/* ══════════ 6. PRICING ══════════ */}
-      <section id="pricing" className="py-24">
+      <section id="pricing" className="py-24 bg-primary/5">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-              Simple pricing for every need
+              One price with all features
             </h2>
-            <p className="text-muted-foreground text-lg">
-              All plans include <strong className="text-foreground">{trialDays} days free</strong>. Choose the right one for you.
-            </p>
           </div>
-          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+          <div className="max-w-md mx-auto">
             {/* Single Hotel */}
             <Card className="relative border-2 border-border hover:border-primary/30 transition-colors">
               <CardHeader className="pb-4">
-                <CardTitle className="text-2xl font-serif">Single Hotel</CardTitle>
-                <CardDescription>To manage a single pet hotel</CardDescription>
                 <div className="mt-4">
                   <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.starter.priceMonthly}</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.starter.priceYearly}/year with annual billing</p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
@@ -588,43 +573,11 @@ export default function LandingEn() {
                   ))}
                 </ul>
                 <Button className="w-full" variant="outline" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.starter.price_id, "starter")}>
-                  <CreditCard className="h-4 w-4 mr-2" />Get Single Hotel
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Multi Hotel */}
-            <Card className="relative border-2 border-primary shadow-lg shadow-primary/10">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge className="bg-primary text-primary-foreground gap-1"><Star className="h-3 w-3" /> Most popular</Badge>
-              </div>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-2xl font-serif">Multi Hotel</CardTitle>
-                <CardDescription>3-hotel package — €20 per location</CardDescription>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.multi.priceMonthly}</span>
-                  <span className="text-muted-foreground">/month</span>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.multi.priceYearly}/year with annual billing</p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <ul className="space-y-3">
-                  {MULTI_FEATURES.map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-sm">
-                      <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /><span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button className="w-full" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.multi.price_id, "multi")}>
-                  <CreditCard className="h-4 w-4 mr-2" />Get Multi Hotel
+                  <CreditCard className="h-4 w-4 mr-2" />Buy now!
                 </Button>
               </CardContent>
             </Card>
           </div>
-
-          <p className="text-center text-sm text-muted-foreground mt-8">
-            All prices exclude VAT. Annual billing. Cancel anytime.
-          </p>
         </div>
       </section>
 

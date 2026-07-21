@@ -332,15 +332,12 @@ export default function Landing() {
             <span className="font-serif text-lg font-bold text-foreground">Pet Hotel Manager</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <a href="#demo">
-              <Button variant="ghost" size="sm">Demo Gratuita</Button>
+            <a href="#pricing">
+              <Button variant="outline" size="sm">Acquista ora</Button>
             </a>
             <Link to="/login">
               <Button variant="ghost" size="sm">Accedi</Button>
             </Link>
-            <Button size="sm" onClick={handleStartTrial} className="gap-1">
-              Prova Gratis <ArrowRight className="h-3 w-3" />
-            </Button>
           </div>
         </div>
       </nav>
@@ -386,6 +383,30 @@ export default function Landing() {
           </div>
         </div>
       </header>
+
+      {/* ══════════ 1bis. STATISTICHE ══════════ */}
+      <section className="py-8">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="rounded-xl border bg-background p-6 text-center">
+              <div className="text-3xl font-bold text-primary">48</div>
+              <div className="text-sm text-muted-foreground mt-1">Pensioni attive</div>
+            </div>
+            <div className="rounded-xl border bg-background p-6 text-center">
+              <div className="text-3xl font-bold text-primary">8.300</div>
+              <div className="text-sm text-muted-foreground mt-1">Prenotazioni gestite</div>
+            </div>
+            <div className="rounded-xl border bg-background p-6 text-center">
+              <div className="text-3xl font-bold text-primary">4.9★</div>
+              <div className="text-sm text-muted-foreground mt-1">Valutazione media</div>
+            </div>
+            <div className="rounded-xl border bg-background p-6 text-center">
+              <div className="text-3xl font-bold text-primary">10h+</div>
+              <div className="text-sm text-muted-foreground mt-1">Risparmiate a settimana</div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ══════════ 2. IL PROBLEMA — "Ti riconosci?" ══════════ */}
       <section className="py-20 bg-destructive/5">
@@ -515,27 +536,21 @@ export default function Landing() {
       </section>
 
       {/* ══════════ 6. PRICING ══════════ */}
-      <section id="pricing" className="py-24">
+      <section id="pricing" className="py-24 bg-primary/5">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-              Un prezzo semplice per ogni esigenza
+              Un solo prezzo con tutte le funzionalità
             </h2>
-            <p className="text-muted-foreground text-lg">
-              Tutti i piani includono <strong className="text-foreground">{trialDays} giorni gratis</strong>. Scegli quello giusto per te.
-            </p>
           </div>
           <div className="max-w-md mx-auto">
             {/* Singola Pensione */}
             <Card className="relative border-2 border-border hover:border-primary/30 transition-colors">
               <CardHeader className="pb-4">
-                <CardTitle className="text-2xl font-serif">Singola Pensione</CardTitle>
-                <CardDescription>Per gestire una singola struttura</CardDescription>
                 <div className="mt-4">
                   <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.starter.priceMonthly}</span>
                   <span className="text-muted-foreground">/mese</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.starter.priceYearly}/anno con abbonamento annuale</p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
@@ -546,14 +561,11 @@ export default function Landing() {
                   ))}
                 </ul>
                 <Button className="w-full" variant="outline" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.starter.price_id, "starter")}>
-                  <CreditCard className="h-4 w-4 mr-2" />Acquista Singola Pensione
+                  <CreditCard className="h-4 w-4 mr-2" />Acquista ora!
                 </Button>
               </CardContent>
             </Card>
           </div>
-          <p className="text-center text-sm text-muted-foreground mt-8">
-            Tutti i piani includono {trialDays} giorni di prova gratuita. Nessuna carta di credito richiesta.
-          </p>
         </div>
       </section>
 
