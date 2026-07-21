@@ -403,6 +403,30 @@ export default function LandingEn() {
         </div>
       </header>
 
+      {/* ══════════ 1bis. NUMBERS ══════════ */}
+      <section className="py-8">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="rounded-xl border bg-background p-6 text-center">
+              <div className="text-3xl font-bold text-primary">48</div>
+              <div className="text-sm text-muted-foreground mt-1">Active pet hotels</div>
+            </div>
+            <div className="rounded-xl border bg-background p-6 text-center">
+              <div className="text-3xl font-bold text-primary">8,300</div>
+              <div className="text-sm text-muted-foreground mt-1">Bookings managed</div>
+            </div>
+            <div className="rounded-xl border bg-background p-6 text-center">
+              <div className="text-3xl font-bold text-primary">4.9★</div>
+              <div className="text-sm text-muted-foreground mt-1">Average rating</div>
+            </div>
+            <div className="rounded-xl border bg-background p-6 text-center">
+              <div className="text-3xl font-bold text-primary">10h+</div>
+              <div className="text-sm text-muted-foreground mt-1">Saved per week</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ══════════ 2. THE PROBLEM ══════════ */}
       <section className="py-20 bg-destructive/5">
         <div className="max-w-4xl mx-auto px-6">
@@ -500,30 +524,6 @@ export default function LandingEn() {
             <CarouselPrevious className="-left-4 md:-left-6" />
             <CarouselNext className="-right-4 md:-right-6" />
           </Carousel>
-        </div>
-      </section>
-
-      {/* ══════════ 4. NUMBERS ══════════ */}
-      <section className="py-20 bg-card/50">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
-            <div className="text-center p-6 rounded-2xl bg-background border">
-              <div className="text-3xl md:text-4xl font-bold text-primary">48</div>
-              <div className="text-muted-foreground text-sm mt-1">Active pet hotels</div>
-            </div>
-            <div className="text-center p-6 rounded-2xl bg-background border">
-              <div className="text-3xl md:text-4xl font-bold text-primary">8,300</div>
-              <div className="text-muted-foreground text-sm mt-1">Bookings managed</div>
-            </div>
-            <div className="text-center p-6 rounded-2xl bg-background border">
-              <div className="text-3xl md:text-4xl font-bold text-primary">4.9★</div>
-              <div className="text-muted-foreground text-sm mt-1">Average rating</div>
-            </div>
-            <div className="text-center p-6 rounded-2xl bg-background border">
-              <div className="text-3xl md:text-4xl font-bold text-primary">10h+</div>
-              <div className="text-muted-foreground text-sm mt-1">Saved per week</div>
-            </div>
-          </div>
         </div>
       </section>
 
