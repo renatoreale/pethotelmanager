@@ -21,7 +21,7 @@ import {
 import Autoplay from "embla-carousel-autoplay";
 import {
   PawPrint, Calendar, Users, CreditCard, FileText, BarChart3,
-  Check, Star, ArrowRight, Shield, Clock, Zap, Building2, Crown, Video, Send,
+  Check, ArrowRight, Shield, Clock, Zap, Building2, Crown, Video, Send,
   X, AlertTriangle, Heart, TrendingUp, Phone, Monitor
 } from "lucide-react";
 import landingLogo from "@/assets/pethotelmanager_landing_logo.png";
@@ -61,12 +61,6 @@ const STARTER_FEATURES = [
   "Occupazione casette",
   "Report e statistiche",
   "Area riservata per cliente",
-];
-const MULTI_FEATURES = [
-  "Tutto di Singola Pensione",
-  "Fino a 3 pensioni incluse",
-  "€20 per pensione al mese",
-  "Dashboard multi-sede",
 ];
 
 /* ── BENEFICI (non funzioni!) ── */
@@ -531,7 +525,7 @@ export default function Landing() {
               Tutti i piani includono <strong className="text-foreground">{trialDays} giorni gratis</strong>. Scegli quello giusto per te.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+          <div className="max-w-md mx-auto">
             {/* Singola Pensione */}
             <Card className="relative border-2 border-border hover:border-primary/30 transition-colors">
               <CardHeader className="pb-4">
@@ -553,34 +547,6 @@ export default function Landing() {
                 </ul>
                 <Button className="w-full" variant="outline" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.starter.price_id, "starter")}>
                   <CreditCard className="h-4 w-4 mr-2" />Acquista Singola Pensione
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Multi Pensione */}
-            <Card className="relative border-2 border-primary shadow-lg shadow-primary/10">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge className="bg-primary text-primary-foreground gap-1"><Star className="h-3 w-3" /> Più scelto</Badge>
-              </div>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-2xl font-serif">Multi Pensione</CardTitle>
-                <CardDescription>Pacchetto 3 pensioni — €20 a struttura</CardDescription>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.multi.priceMonthly}</span>
-                  <span className="text-muted-foreground">/mese</span>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">€{STRIPE_TIERS.multi.priceYearly}/anno con abbonamento annuale</p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <ul className="space-y-3">
-                  {MULTI_FEATURES.map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-sm">
-                      <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /><span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button className="w-full" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.multi.price_id, "multi")}>
-                  <CreditCard className="h-4 w-4 mr-2" />Acquista Multi Pensione
                 </Button>
               </CardContent>
             </Card>
