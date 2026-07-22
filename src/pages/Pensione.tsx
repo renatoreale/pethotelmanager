@@ -20,7 +20,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Settings, Clock, Euro, CreditCard, Plus, Pencil, Trash2, Save, RotateCcw, Ban, Building2, Upload, X, FileText, KeyRound, Eye, EyeOff, CheckCircle2, XCircle, ExternalLink, Mail } from "lucide-react";
+import { Settings, Clock, Euro, CreditCard, Plus, Pencil, Trash2, Save, RotateCcw, Ban, Building2, Upload, X, FileText, KeyRound, Eye, EyeOff, CheckCircle2, XCircle, ExternalLink, Mail, Receipt } from "lucide-react";
 import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -82,6 +82,7 @@ export default function Pensione() {
             <TabsTrigger value="preventivo-config" className="gap-2 whitespace-nowrap"><FileText className="h-4 w-4" /> Config. Preventivo</TabsTrigger>
             <TabsTrigger value="email-templates" className="gap-2 whitespace-nowrap"><Mail className="h-4 w-4" /> Template Email</TabsTrigger>
             <TabsTrigger value="stripe" className="gap-2 whitespace-nowrap"><KeyRound className="h-4 w-4" /> Stripe</TabsTrigger>
+            <TabsTrigger value="abbonamento" className="gap-2 whitespace-nowrap"><Receipt className="h-4 w-4" /> Abbonamento</TabsTrigger>
           </TabsList>
         </div>
 
@@ -95,6 +96,7 @@ export default function Pensione() {
           <TabsContent value="preventivo-config"><PaymentSplitsTab /></TabsContent>
           <TabsContent value="email-templates"><EmailTemplatesTab /></TabsContent>
           <TabsContent value="stripe"><StripeConfigTab /></TabsContent>
+          <TabsContent value="abbonamento"><SubscriptionTab /></TabsContent>
         </div>
       </Tabs>
 
@@ -1707,5 +1709,43 @@ function StripeConfigTab() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function SubscriptionTab() {
+  const supabase = useSupabase();
+  const [loading, setLoading] = useState(false);
+
+  const handleManageSubscription = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (!data?.url) throw new Error("URL del portale non ricevuto");
+      window.location.href = data.url;
+    } catch (err: any) {
+      toast.error(err.message || "Errore nell'apertura del portale di gestione abbonamento");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Receipt className="h-5 w-5" />
+          Gestione Abbonamento
+        </CardTitle>
+        <CardDescription>
+          Gestisci il tuo piano, aggiorna il metodo di pagamento o disdici l'abbonamento in qualsiasi momento tramite il portale sicuro di Stripe.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button onClick={handleManageSubscription} disabled={loading} className="gap-2">
+          <ExternalLink className="h-4 w-4" />
+          {loading ? "Apertura in corso..." : "Gestisci abbonamento"}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }

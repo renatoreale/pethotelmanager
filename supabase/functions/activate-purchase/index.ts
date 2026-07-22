@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -115,6 +116,31 @@ serve(async (req) => {
       .single();
 
     if (tenantError || !tenant) throw new Error("Errore creazione tenant: " + tenantError?.message);
+
+    // 3bis. Collega il tenant al cliente/abbonamento Stripe della richiesta pagata
+    if (purchase.stripe_session_id) {
+      try {
+        const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+          apiVersion: "2025-08-27.basil",
+        });
+        const session = await stripe.checkout.sessions.retrieve(purchase.stripe_session_id);
+        const stripeCustomerId = typeof session.customer === "string" ? session.customer : session.customer?.id ?? null;
+        const stripeSubscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription?.id ?? null;
+
+        if (stripeCustomerId || stripeSubscriptionId) {
+          await adminClient
+            .from("tenants")
+            .update({
+              stripe_customer_id: stripeCustomerId,
+              stripe_subscription_id: stripeSubscriptionId,
+              subscription_status: "active",
+            })
+            .eq("id", tenant.id);
+        }
+      } catch (stripeErr) {
+        console.error("[activate-purchase] errore recupero dati Stripe:", stripeErr);
+      }
+    }
 
     // 4. Crea o recupera l'utente
     let newUserId: string;
