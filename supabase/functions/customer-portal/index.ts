@@ -31,13 +31,43 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated");
 
+    const { data: profile } = await supabaseClient
+      .from("profiles")
+      .select("tenant_id")
+      .eq("user_id", user.id)
+      .single();
+
+    let tenantId: string | null = profile?.tenant_id ?? null;
+    let stripeCustomerId: string | null = null;
+
+    if (tenantId) {
+      const { data: tenant } = await supabaseClient
+        .from("tenants")
+        .select("stripe_customer_id")
+        .eq("id", tenantId)
+        .single();
+      stripeCustomerId = tenant?.stripe_customer_id ?? null;
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    if (customers.data.length === 0) throw new Error("No Stripe customer found");
+
+    if (!stripeCustomerId) {
+      // Tenant non ancora collegato (es. sottoscrizione precedente all'introduzione di stripe_customer_id): fallback per email
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      if (customers.data.length === 0) throw new Error("No Stripe customer found");
+      stripeCustomerId = customers.data[0].id;
+
+      if (tenantId) {
+        await supabaseClient
+          .from("tenants")
+          .update({ stripe_customer_id: stripeCustomerId })
+          .eq("id", tenantId);
+      }
+    }
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
     const portalSession = await stripe.billingPortal.sessions.create({
-      customer: customers.data[0].id,
+      customer: stripeCustomerId,
       return_url: `${origin}/`,
     });
 
