@@ -219,9 +219,12 @@ export async function generatePreventivoPDF(
       } else {
         qtyLabel = String(extra.quantity ?? 1);
       }
+      const unitPrice = tariffType === "extra_km"
+        ? Number(extra.extraKmCost || 0)
+        : Number(extra.unitCost || extra.fixedCost || 0);
       tableBody.push([
         extra.name,
-        `€ ${Number(extra.unitCost || extra.fixedCost || 0).toFixed(2)}`,
+        `€ ${unitPrice.toFixed(2)}`,
         qtyLabel,
         "1",
         `€ ${Number(extra.total).toFixed(2)}`,
@@ -276,7 +279,7 @@ export async function generatePreventivoPDF(
   doc.setTextColor(...primaryColor);
 
   const totalsData: [string, string][] = [];
-  totalsData.push(["Totale servizi", `€ ${subTotal.toFixed(2)}`]);
+  totalsData.push(["Totale servizi", `€ ${(seasonTotal + extrasTotal).toFixed(2)}`]);
   if (discountTotal > 0) {
     totalsData.push(["Sconti", `- € ${discountTotal.toFixed(2)}`]);
   }
