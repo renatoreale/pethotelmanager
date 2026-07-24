@@ -1,4 +1,5 @@
 import { useClienteBookings, useClienteTenant } from "@/hooks/useClienteAuth";
+import { useSupabase } from "@/hooks/useSupabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "
 };
 
 export default function ClientePreventivi() {
+  const supabase = useSupabase();
   const { data: bookings, isLoading } = useClienteBookings();
   const { data: tenant } = useClienteTenant();
   const [paymentDialog, setPaymentDialog] = useState<any>(null);
