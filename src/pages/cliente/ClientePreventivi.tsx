@@ -59,11 +59,7 @@ export default function ClientePreventivi() {
     queryKey: ["tenant-has-stripe", tenant?.id],
     queryFn: async () => {
       if (!tenant?.id) return false;
-      const { data, error } = await supabase
-        .from("tenant_stripe_keys" as any)
-        .select("id")
-        .eq("tenant_id", tenant.id)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc("tenant_has_stripe" as any, { _tenant_id: tenant.id });
       if (error) return false;
       return !!data;
     },

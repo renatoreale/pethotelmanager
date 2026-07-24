@@ -9,8 +9,7 @@ async function sendEmail(to: string, subject: string, html: string, fromName: st
   const resendKey = Deno.env.get("RESEND_API_KEY");
   const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || "noreply@resend.dev";
   if (!resendKey) {
-    console.error("RESEND_API_KEY non configurata");
-    return;
+    throw new Error("RESEND_API_KEY non configurata");
   }
   const from = `${fromName} <${fromEmail}>`;
   const res = await fetch("https://api.resend.com/emails", {
@@ -24,6 +23,7 @@ async function sendEmail(to: string, subject: string, html: string, fromName: st
   if (!res.ok) {
     const err = await res.text();
     console.error("Resend error:", err);
+    throw new Error(`Invio email fallito: ${err}`);
   }
 }
 
