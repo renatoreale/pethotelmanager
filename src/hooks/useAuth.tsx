@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase as baseClient } from "@/integrations/supabase/client";
 import { useSupabase, useSupabaseClientInfo } from "@/hooks/useSupabaseClient";
@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [trialExpired, setTrialExpired] = useState(false);
   const [trialEnd, setTrialEnd] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const loadedUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (clientLoading) return;
@@ -66,13 +67,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
 
+        // Il client Supabase rinnova il token quando la tab riprende il focus,
+        // generando un evento anche se l'utente non è cambiato: in quel caso
+        // evitiamo di rifare il fetch di profilo/ruoli (che mostrerebbe lo
+        // spinner a schermo intero) dato che è già caricato.
+        if (session?.user && loadedUserIdRef.current === session.user.id) {
+          setLoading(false);
+          return;
+        }
+
         if (session?.user) {
           setProfileLoading(true);
           setTimeout(async () => {
             await fetchProfileAndRoles(session.user);
+            loadedUserIdRef.current = session.user.id;
             setProfileLoading(false);
           }, 0);
         } else {
+          loadedUserIdRef.current = null;
           setProfile(null);
           setRoles([]);
           setUserTenants([]);
@@ -89,7 +101,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         setProfileLoading(true);
-        fetchProfileAndRoles(session.user).then(() => setProfileLoading(false));
+        fetchProfileAndRoles(session.user).then(() => {
+          loadedUserIdRef.current = session.user.id;
+          setProfileLoading(false);
+        });
       }
       setLoading(false);
     });
