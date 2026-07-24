@@ -891,7 +891,7 @@ export function PreventivoDialog({
                   <div ref={clientSearchRef} className="relative flex-1">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Cerca cliente per nome, email o telefono..."
+                      placeholder="Cerca cliente per nome, email, telefono o nome gatto..."
                       value={clientSearch}
                       onChange={(e) => { setClientSearch(e.target.value); if (e.target.value.trim().length >= 1) setClientDropdownOpen(true); else setClientDropdownOpen(false); }}
                       onFocus={() => { if (clientSearch.trim().length >= 1) setClientDropdownOpen(true); }}
