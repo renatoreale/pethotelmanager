@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -52,7 +53,24 @@ import ClienteRichiestaPreventivo from "./pages/cliente/ClienteRichiestaPreventi
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  useEffect(() => {
+    // Fix per un bug noto di Radix UI: quando un Dialog contiene un Select annidato,
+    // alla chiusura a volte "pointer-events: none" resta bloccato sul body anche se
+    // nessun overlay è più aperto, rendendo l'intera pagina non cliccabile.
+    const observer = new MutationObserver(() => {
+      if (
+        document.body.style.pointerEvents === "none" &&
+        !document.querySelector('[data-state="open"]')
+      ) {
+        document.body.style.pointerEvents = "";
+      }
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ["style"] });
+    return () => observer.disconnect();
+  }, []);
+
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -126,6 +144,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
