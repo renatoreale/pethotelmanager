@@ -48,12 +48,25 @@ export default function ClienteSetPassword() {
       }
     });
 
-    // Il client potrebbe aver già processato il token prima che il listener fosse pronto:
-    // controlliamo subito la sessione esistente.
+    // Nuovo formato link (dominio proprio): ?token_hash=...&type=recovery.
+    // La verifica esplicita innesca comunque l'evento PASSWORD_RECOVERY sopra.
+    const tokenHash = new URLSearchParams(window.location.search).get("token_hash");
+    if (tokenHash) {
+      supabase.auth.verifyOtp({ token_hash: tokenHash, type: "recovery" }).then(({ error }) => {
+        window.history.replaceState({}, "", window.location.pathname);
+        if (error && !handled) {
+          handled = true;
+          setStatus("expired");
+        }
+      });
+    }
+
+    // Vecchio formato (link Supabase diretto): il client potrebbe aver già processato
+    // il token via hash prima che il listener fosse pronto — controlliamo la sessione esistente.
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session && !handled) {
         await handleSession(true);
-      } else if (!session) {
+      } else if (!session && !tokenHash) {
         // Aspettiamo ancora un po' per l'evento async
         setTimeout(async () => {
           if (!handled) setStatus("expired");

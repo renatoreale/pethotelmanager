@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
         options: { redirectTo: `${origin}/cliente/set-password` },
       });
       if (linkErr) throw linkErr;
-      const recoveryLink = linkData?.properties?.action_link;
+      const recoveryLink = `${origin}/cliente/set-password?token_hash=${linkData?.properties?.hashed_token}&type=recovery`;
 
       await sendEmail(
         client.email,
@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
         options: { redirectTo: `${origin}/cliente/set-password` },
       });
       if (linkErr) throw linkErr;
-      const recoveryLink = linkData?.properties?.action_link;
+      const recoveryLink = `${origin}/cliente/set-password?token_hash=${linkData?.properties?.hashed_token}&type=recovery`;
 
       await sendEmail(
         client.email,
@@ -233,7 +233,7 @@ Deno.serve(async (req) => {
       options: { redirectTo: `${origin}/cliente/set-password` },
     });
     if (linkErr) throw linkErr;
-    const recoveryLink = linkData?.properties?.action_link;
+    const recoveryLink = `${origin}/cliente/set-password?token_hash=${linkData?.properties?.hashed_token}&type=recovery`;
 
     await sendEmail(
       client.email,
