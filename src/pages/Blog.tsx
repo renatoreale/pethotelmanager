@@ -11,6 +11,12 @@ const URL = "https://pethotelmanager.com/blog";
 
 const POSTS = [
   {
+    slug: "aprire-pensione-cani-gatti",
+    title: "Come aprire una pensione per cani e gatti: la checklist completa",
+    description: "Dalla valutazione del mercato alle autorizzazioni, dallo spazio necessario alla scelta degli strumenti giusti fin da subito.",
+    date: "6 agosto 2026",
+  },
+  {
     slug: "quanto-costa-gestire-pensione-animali",
     title: "Quanto costa gestire una pensione per cani e gatti: guida ai costi",
     description: "Le voci di costo reali — fisse, variabili, personale e costi nascosti — e come ridurle senza abbassare la qualità del servizio.",

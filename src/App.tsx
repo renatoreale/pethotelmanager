@@ -44,6 +44,7 @@ import PurchaseSuccess from "./pages/PurchaseSuccess";
 import Blog from "./pages/Blog";
 import OverbookingPensione from "./pages/blog/OverbookingPensione";
 import CostiPensione from "./pages/blog/CostiPensione";
+import AprirePensione from "./pages/blog/AprirePensione";
 
 // Client portal
 import ClienteLogin from "./pages/cliente/ClienteLogin";
@@ -98,6 +99,7 @@ const App = () => {
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/overbooking-pensione-animali" element={<OverbookingPensione />} />
             <Route path="/blog/quanto-costa-gestire-pensione-animali" element={<CostiPensione />} />
+            <Route path="/blog/aprire-pensione-cani-gatti" element={<AprirePensione />} />
 
             {/* Client portal - public */}
             <Route path="/cliente/login" element={<ClienteLogin />} />
