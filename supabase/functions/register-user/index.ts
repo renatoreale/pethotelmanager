@@ -37,10 +37,10 @@ function confirmSignupHtml(confirmLink: string): string {
     <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;">
       <h2 style="color:#c45a12;margin:0 0 24px;">PetHotelManager</h2>
       <p>Grazie per esserti registrato a PetHotelManager!</p>
-      <p>Clicca il pulsante qui sotto per confermare la tua email e attivare l'account:</p>
+      <p>Clicca il pulsante qui sotto per confermare la tua email e impostare la password:</p>
       <a href="${confirmLink}"
          style="display:inline-block;margin:24px 0;padding:14px 32px;background:#c45a12;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;font-size:15px;">
-        Conferma la tua email
+        Conferma e imposta la password
       </a>
       <p style="color:#555;font-size:14px;">
         Il link è valido per 24 ore.
@@ -66,43 +66,45 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { email, password, fullName, redirectTo } = await req.json();
+    const { email, fullName, redirectTo } = await req.json();
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim())) {
       return new Response(JSON.stringify({ error: "Email non valida" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (!password || String(password).length < 6) {
-      return new Response(JSON.stringify({ error: "La password deve avere almeno 6 caratteri" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     const normalizedEmail = String(email).trim().toLowerCase();
     const siteUrl = Deno.env.get("SITE_URL") || "https://pethotelmanager.com";
+    const trimmedFullName = fullName ? String(fullName).trim() : undefined;
 
-    const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
-      type: "signup",
+    // Same pattern as register-trial/invite-client/activate-purchase: create the
+    // account server-side (no password yet), then send a recovery-type link so
+    // the user sets their password on /reset-password after clicking through —
+    // avoids asking for a password twice (once here, once again on that page).
+    const { error: authErr } = await supabaseAdmin.auth.admin.createUser({
       email: normalizedEmail,
-      password: String(password),
-      options: {
-        data: { full_name: fullName ? String(fullName).trim() : undefined },
-        redirectTo: redirectTo || `${siteUrl}/login`,
-      },
+      email_confirm: true,
+      user_metadata: { full_name: trimmedFullName },
     });
 
-    if (linkErr) {
-      // "Already registered" — don't confirm/deny account existence or touch
-      // the existing account's password. Respond the same way as success.
-      if (linkErr.message?.toLowerCase().includes("already") ) {
+    if (authErr) {
+      if (authErr.message?.toLowerCase().includes("already")) {
+        // Don't confirm/deny account existence, don't touch the existing account.
         console.warn("[register-user] signup attempt on existing email (not surfaced to client):", normalizedEmail);
         return new Response(JSON.stringify({ success: true }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      throw linkErr;
+      throw authErr;
     }
+
+    const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+      type: "recovery",
+      email: normalizedEmail,
+      options: { redirectTo: redirectTo || `${siteUrl}/reset-password` },
+    });
+    if (linkErr) throw linkErr;
 
     if (linkData?.properties?.action_link) {
       await sendEmail(

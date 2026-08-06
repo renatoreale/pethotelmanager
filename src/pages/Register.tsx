@@ -15,7 +15,6 @@ export default function Register() {
   const checkoutPriceId = searchParams.get("checkout");
   const checkoutPlan = searchParams.get("plan");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -27,7 +26,7 @@ export default function Register() {
     e.preventDefault();
     setLoading(true);
     const { error } = await supabase.functions.invoke("register-user", {
-      body: { email, password, fullName, redirectTo: `${window.location.origin}${loginPath}` },
+      body: { email, fullName, redirectTo: `${window.location.origin}${loginPath}` },
     });
     if (error) {
       let errorMsg = (error as any).message || t("auth.registerSuccess");
@@ -60,10 +59,6 @@ export default function Register() {
             <div className="space-y-2">
               <Label htmlFor="email">{t("auth.emailLabel")}</Label>
               <Input id="email" type="email" placeholder="name@hotel.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">{t("auth.passwordLabel")}</Label>
-              <Input id="password" type="password" placeholder={t("auth.minChars")} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? t("auth.registering") : t("auth.registerButton")}
