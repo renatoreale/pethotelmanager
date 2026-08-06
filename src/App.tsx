@@ -41,6 +41,8 @@ import ConfirmDemo from "./pages/ConfirmDemo";
 import Statistiche from "./pages/Statistiche";
 import Supporto from "./pages/Supporto";
 import PurchaseSuccess from "./pages/PurchaseSuccess";
+import Blog from "./pages/Blog";
+import OverbookingPensione from "./pages/blog/OverbookingPensione";
 
 // Client portal
 import ClienteLogin from "./pages/cliente/ClienteLogin";
@@ -92,6 +94,8 @@ const App = () => {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/acquisto-completato" element={<PurchaseSuccess />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/overbooking-pensione-animali" element={<OverbookingPensione />} />
 
             {/* Client portal - public */}
             <Route path="/cliente/login" element={<ClienteLogin />} />

@@ -665,6 +665,7 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <Link to="/en" className="hover:text-foreground transition-colors">🇬🇧 English</Link>
+            <Link to="/blog" className="hover:text-foreground transition-colors">Blog</Link>
             <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
             <Link to="/termini" className="hover:text-foreground transition-colors">Termini</Link>
             <Link to="/login" className="hover:text-foreground transition-colors">Accedi</Link>

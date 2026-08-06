@@ -1,39 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://pethotelmanager.it/</loc>
-    <lastmod>2026-03-13</lastmod>
+    <loc>https://pethotelmanager.com/landing</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://pethotelmanager.com/landing"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pethotelmanager.com/en"/>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://pethotelmanager.it/landing</loc>
-    <lastmod>2026-03-13</lastmod>
+    <loc>https://pethotelmanager.com/en</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pethotelmanager.com/en"/>
+    <xhtml:link rel="alternate" hreflang="it" href="https://pethotelmanager.com/landing"/>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://pethotelmanager.it/register-trial</loc>
-    <lastmod>2026-03-13</lastmod>
+    <loc>https://pethotelmanager.com/register-trial</loc>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pethotelmanager.it/privacy</loc>
-    <lastmod>2026-03-13</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
+    <loc>https://pethotelmanager.com/blog</loc>
+    <lastmod>2026-08-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://pethotelmanager.it/termini</loc>
-    <lastmod>2026-03-13</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
+    <loc>https://pethotelmanager.com/blog/overbooking-pensione-animali</loc>
+    <lastmod>2026-08-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://pethotelmanager.it/login</loc>
-    <lastmod>2026-03-13</lastmod>
+    <loc>https://pethotelmanager.com/login</loc>
+    <lastmod>2026-04-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://pethotelmanager.com/privacy</loc>
+    <lastmod>2026-04-03</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://pethotelmanager.com/termini</loc>
+    <lastmod>2026-04-03</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
   </url>
 </urlset>
