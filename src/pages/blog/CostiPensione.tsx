@@ -171,6 +171,10 @@ export default function CostiPensione() {
               </Button>
             </Link>
           </div>
+
+          <p className="text-xs text-muted-foreground pt-6">
+            Articolo scritto con l'assistenza di strumenti di intelligenza artificiale, rivisto e approvato dal team di Pet Hotel Manager.
+          </p>
         </div>
       </article>
 
