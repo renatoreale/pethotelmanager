@@ -282,12 +282,6 @@ export default function LandingEn() {
         lowPrice: STRIPE_TIERS.starter.priceYearly,
         highPrice: STRIPE_TIERS.multi.priceYearly,
       },
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: "4.9",
-        reviewCount: "38",
-        bestRating: "5",
-      },
     },
     {
       "@context": "https://schema.org",
@@ -398,7 +392,7 @@ export default function LandingEn() {
           <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
             <span className="flex items-center gap-1.5"><Shield className="h-4 w-4" /> No credit card required</span>
             <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> Up and running in 2 minutes</span>
-            <span className="flex items-center gap-1.5"><Heart className="h-4 w-4" /> Used by pet hotels worldwide</span>
+            <span className="flex items-center gap-1.5"><Heart className="h-4 w-4" /> Built by people who run pet hotels</span>
           </div>
         </div>
       </header>
@@ -406,18 +400,13 @@ export default function LandingEn() {
       {/* ══════════ 1bis. NUMBERS ══════════ */}
       <section className="py-8">
         <div className="max-w-5xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="rounded-xl border bg-background p-6 text-center">
-              <div className="text-3xl font-bold text-primary">48</div>
-              <div className="text-sm text-muted-foreground mt-1">Active pet hotels</div>
-            </div>
-            <div className="rounded-xl border bg-background p-6 text-center">
-              <div className="text-3xl font-bold text-primary">8,300</div>
-              <div className="text-sm text-muted-foreground mt-1">Bookings managed</div>
-            </div>
-            <div className="rounded-xl border bg-background p-6 text-center">
-              <div className="text-3xl font-bold text-primary">4.9★</div>
-              <div className="text-sm text-muted-foreground mt-1">Average rating</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-xl border bg-background p-6 flex items-center gap-4 text-center md:text-left justify-center md:justify-start">
+              <PawPrint className="h-8 w-8 text-primary shrink-0" />
+              <div>
+                <div className="font-semibold text-foreground">Born from hands-on experience</div>
+                <div className="text-sm text-muted-foreground mt-1">running two pet boarding facilities in Lombardy, Italy</div>
+              </div>
             </div>
             <div className="rounded-xl border bg-background p-6 text-center">
               <div className="text-3xl font-bold text-primary">10h+</div>
