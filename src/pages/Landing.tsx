@@ -386,7 +386,7 @@ export default function Landing() {
               <PawPrint className="h-8 w-8 text-primary shrink-0" />
               <div>
                 <div className="font-semibold text-foreground">Nato dall'esperienza diretta</div>
-                <div className="text-sm text-muted-foreground mt-1">di creazione e gestione di due pensioni in Lombardia</div>
+                <div className="text-sm text-muted-foreground mt-1">nella creazione e gestione di due pensioni in Lombardia</div>
               </div>
             </div>
             <div className="rounded-xl border bg-background p-6 text-center">
