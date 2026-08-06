@@ -81,6 +81,23 @@ Deno.serve(async (req) => {
       };
     }
 
+    // Count bookings/preventivi actually created by each trial user (real product usage,
+    // not just "logged in" — trial users share one demo tenant so tenant-level counts
+    // would mix everyone's data; created_by is per-user and safe to use here).
+    const trialUserIds = (trialRows || []).map((t) => t.user_id);
+    const bookingsCreatedMap: Record<string, number> = {};
+    if (trialUserIds.length > 0) {
+      const { data: bookingRows } = await adminClient
+        .from("bookings")
+        .select("created_by")
+        .in("created_by", trialUserIds);
+      for (const b of bookingRows || []) {
+        if (b.created_by) {
+          bookingsCreatedMap[b.created_by] = (bookingsCreatedMap[b.created_by] || 0) + 1;
+        }
+      }
+    }
+
     // Return detailed user info
     const emails: Record<string, string> = {};
     const userDetails: Record<string, {
@@ -93,6 +110,7 @@ Deno.serve(async (req) => {
       trial_start: string | null;
       trial_end: string | null;
       is_converted: boolean;
+      bookings_created: number;
     }> = {};
 
     for (const u of allUsers) {
@@ -108,6 +126,7 @@ Deno.serve(async (req) => {
         trial_start: trial?.trial_start || null,
         trial_end: trial?.trial_end || null,
         is_converted: trial?.is_converted || false,
+        bookings_created: bookingsCreatedMap[u.id] || 0,
       };
     }
 

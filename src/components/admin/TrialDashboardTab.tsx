@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { format, isPast, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
-import { Users, Clock, CheckCircle, XCircle, RefreshCw, Trash2, Search, Mail } from "lucide-react";
+import { Users, Clock, CheckCircle, XCircle, RefreshCw, Trash2, Search, Mail, Activity } from "lucide-react";
 import { toast } from "sonner";
 
 type TrialStatus = "richiesta" | "attiva" | "scaduta";
@@ -30,6 +30,8 @@ interface TrialUser {
   trial_start: string | null;
   trial_end: string | null;
   days_remaining: number | null;
+  last_sign_in_at: string | null;
+  bookings_created: number;
 }
 
 function getStatusBadge(status: TrialStatus, daysRemaining: number | null) {
@@ -76,9 +78,11 @@ export function TrialDashboardTab() {
         created_at: string;
         user_metadata: Record<string, any>;
         banned_until: string | null;
+        last_sign_in_at: string | null;
         trial_start: string | null;
         trial_end: string | null;
         is_converted: boolean;
+        bookings_created: number;
       }> = authRes.data?.userDetails || {};
 
       const trialUsers: TrialUser[] = [];
@@ -116,6 +120,8 @@ export function TrialDashboardTab() {
           trial_start: trial?.trial_start || null,
           trial_end: trial?.trial_end || null,
           days_remaining: daysRemaining,
+          last_sign_in_at: auth.last_sign_in_at || null,
+          bookings_created: auth.bookings_created || 0,
         });
       }
 
@@ -163,11 +169,12 @@ export function TrialDashboardTab() {
   const richiesta = users.filter((u) => u.status === "richiesta").length;
   const inCorso = users.filter((u) => u.status === "attiva").length;
   const scaduta = users.filter((u) => u.status === "scaduta").length;
+  const haUsato = users.filter((u) => u.bookings_created > 0).length;
 
   return (
     <div className="space-y-6">
       {/* KPI */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -212,6 +219,17 @@ export function TrialDashboardTab() {
             </div>
           </CardContent>
         </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <Activity className="h-8 w-8 text-blue-600" />
+              <div>
+                <div className="text-2xl font-bold">{haUsato} / {total}</div>
+                <div className="text-xs text-muted-foreground">Hanno usato il prodotto</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Table */}
@@ -252,6 +270,8 @@ export function TrialDashboardTab() {
                     <TableHead>Richiesta il</TableHead>
                     <TableHead>Stato</TableHead>
                     <TableHead>Scadenza</TableHead>
+                    <TableHead>Ultimo accesso</TableHead>
+                    <TableHead>Attività</TableHead>
                     <TableHead className="w-[60px]"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -269,6 +289,22 @@ export function TrialDashboardTab() {
                         {u.trial_end
                           ? format(new Date(u.trial_end), "dd MMM yyyy", { locale: it })
                           : "—"}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {u.last_sign_in_at
+                          ? format(new Date(u.last_sign_in_at), "dd MMM yyyy HH:mm", { locale: it })
+                          : "Mai"}
+                      </TableCell>
+                      <TableCell>
+                        {u.bookings_created > 0 ? (
+                          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
+                            {u.bookings_created} prenotazion{u.bookings_created === 1 ? "e" : "i"}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-muted-foreground">
+                            Nessuna
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Button
