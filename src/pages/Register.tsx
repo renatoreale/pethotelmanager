@@ -26,12 +26,16 @@ export default function Register() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email, password,
-      options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}${loginPath}` },
+    const { error } = await supabase.functions.invoke("register-user", {
+      body: { email, password, fullName, redirectTo: `${window.location.origin}${loginPath}` },
     });
     if (error) {
-      toast.error(error.message);
+      let errorMsg = (error as any).message || t("auth.registerSuccess");
+      try {
+        const body = await (error as any).context?.json?.();
+        if (body?.error) errorMsg = body.error;
+      } catch {}
+      toast.error(errorMsg);
     } else {
       toast.success(t("auth.registerSuccess"));
       navigate(loginPath);
