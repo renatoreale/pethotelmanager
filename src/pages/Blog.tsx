@@ -11,6 +11,12 @@ const URL = "https://pethotelmanager.com/blog";
 
 const POSTS = [
   {
+    slug: "quanto-costa-gestire-pensione-animali",
+    title: "Quanto costa gestire una pensione per cani e gatti: guida ai costi",
+    description: "Le voci di costo reali — fisse, variabili, personale e costi nascosti — e come ridurle senza abbassare la qualità del servizio.",
+    date: "6 agosto 2026",
+  },
+  {
     slug: "overbooking-pensione-animali",
     title: "Overbooking in pensione per cani e gatti: come evitarlo per sempre",
     description: "Perché succede l'overbooking, i 5 errori più comuni che lo causano e la checklist pratica per non farlo mai più.",
