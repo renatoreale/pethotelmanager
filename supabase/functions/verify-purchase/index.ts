@@ -99,12 +99,13 @@ serve(async (req) => {
       purchase = existing;
     }
 
+    const amountPaid = (session.amount_total ?? 0) / 100;
+
     // Invia le email solo se abbiamo i dati e il pagamento non era già confermato
     if (purchase && updated) {
       const pianoLabel = purchase.piano.charAt(0).toUpperCase() + purchase.piano.slice(1);
 
-      const importoPagato = (session.amount_total ?? 0) / 100;
-      const prezzoLabel = `€${importoPagato.toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/anno`;
+      const prezzoLabel = `€${amountPaid.toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/anno`;
 
       // ── Email all'admin ──
       let adminErr: string | null = null;
@@ -181,13 +182,13 @@ serve(async (req) => {
         admin: !NOTIFICATION_ORDERS_EMAIL ? "skipped" : adminErr ?? "ok",
         customer: customerErr ?? "ok",
       };
-      return new Response(JSON.stringify({ success: true, email_status: emailStatus }), {
+      return new Response(JSON.stringify({ success: true, email_status: emailStatus, amount: amountPaid }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
     }
 
-    return new Response(JSON.stringify({ success: true, email_status: "already_paid" }), {
+    return new Response(JSON.stringify({ success: true, email_status: "already_paid", amount: amountPaid }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });

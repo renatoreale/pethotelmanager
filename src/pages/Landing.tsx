@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { STRIPE_TIERS } from "@/lib/stripe-config";
+import { trackDemoRequest } from "@/lib/gtagConversions";
 import { toast } from "sonner";
 import {
   Carousel,
@@ -139,6 +140,7 @@ function DemoRequestForm() {
         },
       });
       if (error) throw error;
+      trackDemoRequest();
       setSent(true);
       toast.success("Richiesta inviata! Ti contatteremo a breve.");
     } catch {

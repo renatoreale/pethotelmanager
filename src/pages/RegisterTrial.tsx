@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Clock, CheckCircle2, Loader2, Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
+import { trackTrialStart } from "@/lib/gtagConversions";
 
 const DISPOSABLE_DOMAINS = [
   "mailinator.com","guerrillamail.com","tempmail.com","throwaway.email",
@@ -120,6 +121,7 @@ export default function RegisterTrial() {
         return;
       }
 
+      trackTrialStart();
       setSubmitted(true);
     } catch (e: any) {
       toast.error(e.message || t("registerTrial.errors.registrationError"));

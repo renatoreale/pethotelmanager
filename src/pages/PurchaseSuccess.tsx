@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, AlertTriangle, Loader2 } from "lucide-react";
+import { trackPurchase } from "@/lib/gtagConversions";
 
 type State = "loading" | "success" | "already_done" | "error";
 
@@ -29,6 +30,7 @@ export default function PurchaseSuccess() {
           return;
         }
         if (data?.success) {
+          trackPurchase(data.amount ?? 0, sessionId);
           setState("success");
         } else {
           setState("error");
