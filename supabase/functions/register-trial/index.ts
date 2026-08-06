@@ -58,6 +58,10 @@ function trialWelcomeHtml(firstName: string, recoveryLink: string, trialDays: nu
         nessuna carta di credito richiesta.<br/>
         Il link è valido per 24 ore.
       </p>
+      <p style="color:#555;font-size:14px;">
+        Una volta dentro, il modo più veloce per capire se fa per te è creare
+        la tua prima prenotazione di prova — bastano 2 minuti.
+      </p>
       <p style="color:#999;font-size:12px;margin-top:24px;">
         Se il pulsante non funziona, copia e incolla questo link nel browser:<br/>
         <a href="${recoveryLink}" style="color:#c45a12;word-break:break-all;">${recoveryLink}</a>

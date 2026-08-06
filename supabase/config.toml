@@ -15,3 +15,5 @@ project_id = "idkzlnzvqzqvkdchchnz"
     verify_jwt = false
   [functions.stripe-webhook]
     verify_jwt = false
+  [functions.send-trial-nurture-emails]
+    verify_jwt = false
