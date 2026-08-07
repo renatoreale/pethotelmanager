@@ -46,7 +46,7 @@ const SCREENSHOTS = [
   { src: screenshotAppuntamenti2, alt: "Vista calendario mensile", desc: "Vista calendario mensile — tutti gli appuntamenti di check-in e check-out a colpo d'occhio." },
   { src: screenshotOccupazione, alt: "Occupazione casette", desc: "Occupazione casette — griglia visuale con occupazione giornaliera per singole e doppie, divise per tipo di Pet." },
   { src: screenshotCheckin, alt: "Check-in dettagliato", desc: "Check-in — accettazione Pet con riepilogo soggiorno, pagamenti e transazioni per ogni prenotazione." },
-  { src: screenshotRegistro, alt: "Registro animali", desc: "Registro Pet — traccia ingressi e uscite con microchip, razza, sesso e stato di presenza." },
+  { src: screenshotRegistro, alt: "Registro Pets", desc: "Registro Pet — traccia ingressi e uscite con microchip, razza, sesso e stato di presenza." },
   { src: screenshotAreaCliente, alt: "Area riservata cliente", desc: "Area riservata cliente — il tuo cliente può vedere prenotazioni, richiedere preventivi e gestire i propri Pet." },
   { src: screenshotAreaCliente2, alt: "Preventivi cliente", desc: "Portale cliente — dettaglio pratiche con stato pagamenti, download preventivi e moduli di affido." },
 ];
@@ -86,7 +86,7 @@ const BENEFITS = [
   },
   {
     icon: PawPrint,
-    title: "Schede animali complete",
+    title: "Schede Pets complete",
     desc: "Microchip, dieta, allergie, note comportamentali: tutto a portata di mano quando serve davvero.",
     before: "Informazioni sparse su carta, WhatsApp, fogli volanti",
   },
@@ -190,7 +190,7 @@ function DemoRequestForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="demo-message">Messaggio</Label>
-            <Textarea id="demo-message" maxLength={500} rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Quanti animali gestisci? Cosa ti serve?" />
+            <Textarea id="demo-message" maxLength={500} rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Quanti Pets gestisci? Cosa ti serve?" />
           </div>
           <Button type="submit" className="w-full gap-2" size="lg" disabled={sending}>
             <Send className="h-4 w-4" /> {sending ? "Invio in corso..." : "Richiedi Demo Gratuita"}

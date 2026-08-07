@@ -283,7 +283,7 @@ function AnagraficaTab() {
             <Input value={currentTitolareName} onChange={(e) => setTitolareName(e.target.value)} placeholder="Nome e cognome del titolare" />
           </div>
           <div className="space-y-2">
-            <Label>Tipo animale</Label>
+            <Label>Tipo Pet</Label>
             <Select value={currentPetType} onValueChange={(v) => setPetType(v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -501,7 +501,7 @@ function CasetteTab() {
               <div className="space-y-2">
                 <Label>Capienza max pets totale</Label>
                 <Input type="number" min={0} value={mc} onChange={(e) => setMaxCats(Number(e.target.value))} />
-                <p className="text-xs text-muted-foreground">Numero massimo di animali ospitabili complessivamente</p>
+                <p className="text-xs text-muted-foreground">Numero massimo di Pets ospitabili complessivamente</p>
               </div>
               <div className="rounded-lg border bg-muted/30 p-4 space-y-1">
                 <p className="text-sm font-medium">Riepilogo casette</p>
@@ -1071,7 +1071,7 @@ function ListinoTab() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
-                    {tenantPetType === "entrambi" && <TableHead>Animale</TableHead>}
+                    {tenantPetType === "entrambi" && <TableHead>Pet</TableHead>}
                     <TableHead>Tipologia</TableHead>
                     <TableHead>Prezzo</TableHead>
                     <TableHead>Validità</TableHead>
@@ -1140,7 +1140,7 @@ function ListinoTab() {
               </div>
               {tenantPetType === "entrambi" && (
                 <div className="space-y-2">
-                  <Label>Tipo animale</Label>
+                  <Label>Tipo Pet</Label>
                   <Select value={petType} onValueChange={(v) => setPetType(v as "gatti" | "cani")}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>

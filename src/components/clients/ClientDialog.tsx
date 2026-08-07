@@ -245,7 +245,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     if (pet.petType === "entrambi") {
       const missingType = validCats.some((c) => !c.pet_type);
       if (missingType) {
-        toast.error("Seleziona il tipo di animale per ciascun pet");
+        toast.error("Seleziona il tipo di Pet per ciascun pet");
         return;
       }
     }
@@ -482,7 +482,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
                     {pet.petType === "entrambi" && (
                       <div className="space-y-1">
-                        <Label className="text-xs">Tipo animale *</Label>
+                        <Label className="text-xs">Tipo Pet *</Label>
                         <Select
                           value={cat.pet_type || ""}
                           onValueChange={(v) => updateCat(index, "pet_type", v as PetType)}

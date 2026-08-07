@@ -9,7 +9,7 @@ export const prenotazioniHelpSections: HelpSection[] = [
       {
         title: "Elenco prenotazioni",
         description:
-          "La tabella elenca tutte le prenotazioni con numero, cliente, animali, tipo casetta, date, stato corrente e importo. Clicca su una riga per espandere il dettaglio.",
+          "La tabella elenca tutte le prenotazioni con numero, cliente, Pets, tipo casetta, date, stato corrente e importo. Clicca su una riga per espandere il dettaglio.",
       },
       {
         title: "Filtro per stato",
@@ -90,7 +90,7 @@ export const prenotazioniHelpSections: HelpSection[] = [
       {
         title: "Espandi la riga",
         description:
-          "Clicca sulla riga della prenotazione per espandere il dettaglio con tutte le informazioni: animali, date, note, storico pagamenti e stato degli appuntamenti.",
+          "Clicca sulla riga della prenotazione per espandere il dettaglio con tutte le informazioni: Pets, date, note, storico pagamenti e stato degli appuntamenti.",
       },
       {
         title: "Scarica PDF preventivo",

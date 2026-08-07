@@ -4,12 +4,12 @@ export const clientiHelpSections: HelpSection[] = [
   {
     title: "📋 Panoramica",
     description:
-      "La pagina Clienti è l'anagrafica centrale della struttura. Da qui puoi gestire tutti i dati dei proprietari degli animali, visualizzare i loro pet associati, e gestire l'accesso al portale cliente.",
+      "La pagina Clienti è l'anagrafica centrale della struttura. Da qui puoi gestire tutti i dati dei proprietari dei Pets, visualizzare i loro pet associati, e gestire l'accesso al portale cliente.",
     steps: [
       {
         title: "Elenco clienti",
         description:
-          "Nella tabella trovi tutti i clienti registrati con nome, email, telefono, animali associati, stato del portale e stato generale.",
+          "Nella tabella trovi tutti i clienti registrati con nome, email, telefono, Pets associati, stato del portale e stato generale.",
       },
       {
         title: "Ricerca rapida",
@@ -86,7 +86,7 @@ export const clientiHelpSections: HelpSection[] = [
   {
     title: "📧 Invitare un cliente al portale",
     description:
-      "Puoi invitare un cliente ad accedere al portale online per gestire i suoi animali e richiedere preventivi in autonomia.",
+      "Puoi invitare un cliente ad accedere al portale online per gestire i suoi Pets e richiedere preventivi in autonomia.",
     steps: [
       {
         title: "Verifica che il cliente abbia un'email",
@@ -129,19 +129,19 @@ export const clientiHelpSections: HelpSection[] = [
     ],
   },
   {
-    title: "🐱 Animali associati",
+    title: "🐱 Pets associati",
     description:
-      "Nella colonna 'Animali' puoi vedere i nomi dei pet associati a ciascun cliente.",
+      "Nella colonna 'Pets' puoi vedere i nomi dei pet associati a ciascun cliente.",
     steps: [
       {
-        title: "Visualizza gli animali",
+        title: "Visualizza i Pets",
         description:
-          "I nomi degli animali sono elencati direttamente nella tabella clienti.",
+          "I nomi dei Pets sono elencati direttamente nella tabella clienti.",
       },
       {
-        title: "Gestisci gli animali",
+        title: "Gestisci i Pets",
         description:
-          'Per aggiungere o modificare gli animali, vai alla pagina "Gatti" dal menu laterale.',
+          'Per aggiungere o modificare i Pets, vai alla pagina "Gatti" dal menu laterale.',
       },
     ],
   },

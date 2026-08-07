@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { label: "Dashboard", to: "/cliente", icon: LayoutDashboard, end: true },
   { label: "Il Mio Profilo", to: "/cliente/profilo", icon: User },
-  { label: "I Miei Animali", to: "/cliente/animali", icon: PawPrint },
+  { label: "I Miei Pets", to: "/cliente/animali", icon: PawPrint },
   { label: "Preventivi", to: "/cliente/preventivi", icon: FileText },
   { label: "Richiedi Preventivo", to: "/cliente/richiedi-preventivo", icon: FilePlus },
 ];

@@ -69,7 +69,7 @@ export default function ClienteRichiestaPreventivo() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile || selectedCats.length === 0) {
-      toast.error("Seleziona almeno un animale");
+      toast.error("Seleziona almeno un Pet");
       return;
     }
     if (form.check_out_date <= form.check_in_date) {
@@ -111,13 +111,13 @@ export default function ClienteRichiestaPreventivo() {
             <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
             <div>
               <p className="font-medium text-amber-800 dark:text-amber-200 text-sm">
-                Nessun animale registrato
+                Nessun Pet registrato
               </p>
               <p className="text-amber-700 dark:text-amber-300 text-xs mt-1">
-                Per richiedere un preventivo, devi prima registrare i tuoi animali nella sezione "I Miei Animali".
+                Per richiedere un preventivo, devi prima registrare i tuoi Pets nella sezione "I Miei Pets".
               </p>
               <Button variant="outline" size="sm" className="mt-2" onClick={() => navigate("/cliente/animali")}>
-                Registra Animali
+                Registra Pets
               </Button>
             </div>
           </CardContent>
@@ -185,7 +185,7 @@ export default function ClienteRichiestaPreventivo() {
               )}
 
               <div className="space-y-3">
-                <Label>Seleziona i tuoi animali *</Label>
+                <Label>Seleziona i tuoi Pets *</Label>
                 <div className="grid gap-2">
                   {cats?.map((cat: any) => (
                     <label

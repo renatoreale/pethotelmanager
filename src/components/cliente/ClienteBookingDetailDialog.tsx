@@ -301,7 +301,7 @@ export function ClienteBookingDetailDialog({ open, onOpenChange, booking, tenant
 
           {catNames?.length > 0 && (
             <div className="text-sm">
-              <p className="text-muted-foreground text-xs">Animali</p>
+              <p className="text-muted-foreground text-xs">Pets</p>
               <p className="font-medium">🐾 {catNames.join(", ")}</p>
             </div>
           )}

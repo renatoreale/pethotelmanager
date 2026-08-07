@@ -3,25 +3,25 @@ import { useTenantConfig } from "@/hooks/usePensioneConfig";
 export type PetType = "gatti" | "cani" | "entrambi";
 
 interface PetLabels {
-  /** "gatto" / "cane" / "animale" */
+  /** "gatto" / "cane" / "Pet" */
   singular: string;
-  /** "gatti" / "cani" / "animali" */
+  /** "gatti" / "cani" / "Pets" */
   plural: string;
-  /** "Gatto" / "Cane" / "Animale" */
+  /** "Gatto" / "Cane" / "Pet" */
   singularCap: string;
-  /** "Gatti" / "Cani" / "Animali" */
+  /** "Gatti" / "Cani" / "Pets" */
   pluralCap: string;
-  /** "il gatto" / "il cane" / "l'animale" */
+  /** "il gatto" / "il cane" / "il Pet" */
   articleSingular: string;
-  /** "i gatti" / "i cani" / "gli animali" */
+  /** "i gatti" / "i cani" / "i Pets" */
   articlePlural: string;
-  /** "del gatto" / "del cane" / "dell'animale" */
+  /** "del gatto" / "del cane" / "del Pet" */
   ofSingular: string;
-  /** "dei gatti" / "dei cani" / "degli animali" */
+  /** "dei gatti" / "dei cani" / "dei Pets" */
   ofPlural: string;
-  /** "un gatto" / "un cane" / "un animale" */
+  /** "un gatto" / "un cane" / "un Pet" */
   indefiniteSingular: string;
-  /** "Anagrafica felini" / "Anagrafica canini" / "Anagrafica animali" */
+  /** "Anagrafica felini" / "Anagrafica canini" / "Anagrafica Pets" */
   registrySubtitle: string;
   /** Dynamic count label: "1 gatto" / "2 gatti" etc. */
   count: (n: number) => string;
@@ -57,16 +57,16 @@ const LABELS: Record<PetType, Omit<PetLabels, "count" | "petType" | "iconName">>
     registrySubtitle: "Anagrafica canini",
   },
   entrambi: {
-    singular: "animale",
-    plural: "animali",
-    singularCap: "Animale",
-    pluralCap: "Animali",
-    articleSingular: "l'animale",
-    articlePlural: "gli animali",
-    ofSingular: "dell'animale",
-    ofPlural: "degli animali",
-    indefiniteSingular: "un animale",
-    registrySubtitle: "Anagrafica animali",
+    singular: "Pet",
+    plural: "Pets",
+    singularCap: "Pet",
+    pluralCap: "Pets",
+    articleSingular: "il Pet",
+    articlePlural: "i Pets",
+    ofSingular: "del Pet",
+    ofPlural: "dei Pets",
+    indefiniteSingular: "un Pet",
+    registrySubtitle: "Anagrafica Pets",
   },
 };
 

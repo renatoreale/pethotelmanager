@@ -144,7 +144,7 @@ export function GlobalPriceListsTab() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
-                    <TableHead>Animale</TableHead>
+                    <TableHead>Pet</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Stagione</TableHead>
                     <TableHead>€/giorno</TableHead>
@@ -191,7 +191,7 @@ export function GlobalPriceListsTab() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Nome *</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Es. Alta stagione singola" /></div>
               <div className="space-y-2">
-                <Label>Tipo animale *</Label>
+                <Label>Tipo Pet *</Label>
                 <Select value={petType} onValueChange={(v) => setPetType(v as "gatti" | "cani")}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>

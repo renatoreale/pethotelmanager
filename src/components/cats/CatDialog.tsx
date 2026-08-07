@@ -112,7 +112,7 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
 
   const onSubmit = async (values: CatFormValues) => {
     if (pet.petType === "entrambi" && !values.pet_type) {
-      toast.error("Seleziona il tipo di animale");
+      toast.error("Seleziona il tipo di Pet");
       return;
     }
     try {
@@ -193,7 +193,7 @@ export function CatDialog({ open, onOpenChange, cat, defaultClientId }: CatDialo
                 name="pet_type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tipo animale *</FormLabel>
+                    <FormLabel>Tipo Pet *</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>

@@ -145,7 +145,7 @@ export default function ClienteAnimali() {
         const photoUrl = await uploadPhoto(editingId);
         if (photoUrl !== undefined) payload.photo_url = photoUrl;
         await updateCat.mutateAsync({ id: editingId, ...payload });
-        toast.success("Animale aggiornato");
+        toast.success("Pet aggiornato");
       } else {
         const result = await createCat.mutateAsync({
           ...payload,
@@ -159,7 +159,7 @@ export default function ClienteAnimali() {
             await updateCat.mutateAsync({ id: result.id, photo_url: photoUrl });
           }
         }
-        toast.success("Animale aggiunto");
+        toast.success("Pet aggiunto");
       }
       setDialogOpen(false);
     } catch (err: any) {
@@ -170,10 +170,10 @@ export default function ClienteAnimali() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Sei sicuro di voler eliminare questo animale?")) return;
+    if (!confirm("Sei sicuro di voler eliminare questo Pet?")) return;
     try {
       await deleteCat.mutateAsync(id);
-      toast.success("Animale eliminato");
+      toast.success("Pet eliminato");
     } catch (err: any) {
       toast.error(err.message || "Errore nell'eliminazione");
     }
@@ -190,7 +190,7 @@ export default function ClienteAnimali() {
   return (
     <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-serif font-bold">I Miei Animali</h1>
+        <h1 className="text-2xl font-serif font-bold">I Miei Pets</h1>
         <Button onClick={openNew}>
           <Plus className="mr-2 h-4 w-4" />
           Aggiungi
@@ -201,13 +201,13 @@ export default function ClienteAnimali() {
         <Card>
           <CardContent className="py-12 text-center">
             <PawPrint className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
-            <p className="text-muted-foreground">Nessun animale registrato</p>
+            <p className="text-muted-foreground">Nessun Pet registrato</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Aggiungi i tuoi animali per poter richiedere preventivi
+              Aggiungi i tuoi Pets per poter richiedere preventivi
             </p>
             <Button className="mt-4" onClick={openNew}>
               <Plus className="mr-2 h-4 w-4" />
-              Aggiungi il primo animale
+              Aggiungi il primo Pet
             </Button>
           </CardContent>
         </Card>
@@ -254,7 +254,7 @@ export default function ClienteAnimali() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingId ? "Modifica Animale" : "Nuovo Animale"}</DialogTitle>
+            <DialogTitle>{editingId ? "Modifica Pet" : "Nuovo Pet"}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">

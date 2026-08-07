@@ -9,7 +9,7 @@ export const preventiviHelpSections: HelpSection[] = [
       {
         title: "Elenco preventivi",
         description:
-          "La tabella mostra tutti i preventivi attivi con numero, cliente, animali, tipo casetta, date, durata soggiorno, importo totale e caparra prevista.",
+          "La tabella mostra tutti i preventivi attivi con numero, cliente, Pets, tipo casetta, date, durata soggiorno, importo totale e caparra prevista.",
       },
       {
         title: "Ricerca rapida",
@@ -33,9 +33,9 @@ export const preventiviHelpSections: HelpSection[] = [
         tip: "Puoi anche creare un preventivo dalla pagina Clienti.",
       },
       {
-        title: "Seleziona gli animali",
+        title: "Seleziona i Pets",
         description:
-          "Scegli gli animali del cliente che soggiorneranno. Il sistema calcolerà automaticamente il tipo e il numero di casette necessarie.",
+          "Scegli i Pets del cliente che soggiorneranno. Il sistema calcolerà automaticamente il tipo e il numero di casette necessarie.",
       },
       {
         title: "Imposta le date",
@@ -66,7 +66,7 @@ export const preventiviHelpSections: HelpSection[] = [
       {
         title: "Modifica i dati",
         description:
-          "Puoi modificare cliente, animali, date, note e tutti i parametri del preventivo. Il prezzo verrà ricalcolato automaticamente.",
+          "Puoi modificare cliente, Pets, date, note e tutti i parametri del preventivo. Il prezzo verrà ricalcolato automaticamente.",
       },
       {
         title: "Salva le modifiche",
@@ -161,10 +161,10 @@ export const preventiviDialogHelpSections: HelpSection[] = [
         tip: "Il cliente appena creato verrà selezionato automaticamente.",
       },
       {
-        title: "Seleziona gli animali",
+        title: "Seleziona i Pets",
         description:
-          "Spunta gli animali del cliente che soggiorneranno. Il sistema determina automaticamente tipo e numero di casette (singola/doppia) in base ai gruppi fratelli.",
-        tip: "Se un animale necessita di casetta doppia, il sistema lo gestisce automaticamente.",
+          "Spunta i Pets del cliente che soggiorneranno. Il sistema determina automaticamente tipo e numero di casette (singola/doppia) in base ai gruppi fratelli.",
+        tip: "Se un Pet necessita di casetta doppia, il sistema lo gestisce automaticamente.",
       },
       {
         title: "Imposta le date di soggiorno",

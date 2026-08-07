@@ -47,7 +47,7 @@ export default function ClienteDashboard() {
   if (!profile?.phone) missingFields.push("telefono");
   if (!profile?.fiscal_code) missingFields.push("codice fiscale");
   if (!profile?.address) missingFields.push("indirizzo");
-  if (!cats || cats.length === 0) missingFields.push("animali");
+  if (!cats || cats.length === 0) missingFields.push("Pets");
 
   const preventivi = bookings?.filter((b) => b.status === "preventivo") || [];
   const attive = bookings?.filter((b) => 
@@ -133,7 +133,7 @@ export default function ClienteDashboard() {
             </div>
             <div>
               <p className="text-2xl font-bold">{cats?.length || 0}</p>
-              <p className="text-xs text-muted-foreground">Animali registrati</p>
+              <p className="text-xs text-muted-foreground">Pets registrati</p>
             </div>
           </CardContent>
         </Card>
@@ -150,7 +150,7 @@ export default function ClienteDashboard() {
         <Button variant="outline" asChild>
           <Link to="/cliente/animali">
             <PawPrint className="mr-2 h-4 w-4" />
-            Gestisci Animali
+            Gestisci Pets
           </Link>
         </Button>
         <Button variant="outline" asChild>
@@ -186,7 +186,7 @@ export default function ClienteDashboard() {
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    🐾 {q.pet_names || `${q.num_pets} animale/i`}
+                    🐾 {q.pet_names || `${q.num_pets} Pet/s`}
                     {q.notes && ` · ${q.notes.substring(0, 50)}${q.notes.length > 50 ? "..." : ""}`}
                   </p>
                   {q.status === "converted" && linkedBooking && (
