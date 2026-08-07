@@ -341,10 +341,11 @@ Illustrazione inverno con casette riscaldate e animali al calduccio.
 
 ---
 
-## Riepilogo asset
+## Riepilogo asset — COMPLETO (60/60)
 
-- **45 "card" testuali** (post-01...10, post-26...60): generate localmente (sfondo crema/arancio brand, testo reale del post, logo testuale) — nessuna IA generativa, stile controllato al 100%.
-- **15 screenshot reali** (post-11...25, pillar B — funzionalità prodotto): da fare tu nell'app, loggato come titolare della pensione demo **"La Zampa Felice"**. Shot-list precisa qui sotto.
+- **47 "card" testuali** (post-01...10, post-20, post-25, post-26...60): generate localmente (sfondo crema/arancio brand, testo reale del post, logo testuale) — nessuna IA generativa, stile controllato al 100%.
+- **13 screenshot reali** (post-11...19, post-21...24, pillar B — funzionalità prodotto) fatti nell'app sulla pensione demo "La Zampa Felice".
+- **B10 (post-20) e B15 (post-25)**: screenshot non disponibili, sostituiti con card testuale come gli altri post non-funzionalità.
 
 ### Shot-list per gli screenshot reali (B1–B15)
 
