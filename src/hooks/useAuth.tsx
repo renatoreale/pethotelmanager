@@ -19,6 +19,7 @@ interface AuthContextType {
   profileLoading: boolean;
   trialExpired: boolean;
   trialEnd: string | null;
+  subscriptionPaused: boolean;
   profile: {
     id: string;
     full_name: string | null;
@@ -47,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profileLoading, setProfileLoading] = useState(false);
   const [trialExpired, setTrialExpired] = useState(false);
   const [trialEnd, setTrialEnd] = useState<string | null>(null);
+  const [subscriptionPaused, setSubscriptionPaused] = useState(false);
   const queryClient = useQueryClient();
   const loadedUserIdRef = useRef<string | null>(null);
 
@@ -91,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfileLoading(false);
           setTrialExpired(false);
           setTrialEnd(null);
+          setSubscriptionPaused(false);
         }
         setLoading(false);
       }
@@ -118,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [profileRes, rolesRes, tenantsRes] = await Promise.all([
       supabase.from("profiles").select("id, full_name, tenant_id, avatar_url").eq("user_id", userId).single(),
       supabase.from("user_roles").select("role, tenant_id").eq("user_id", userId),
-      supabase.from("tenants").select("id, name"),
+      supabase.from("tenants").select("id, name, subscription_status"),
     ]);
 
     // If no roles, attempt trial provisioning (works if user has is_trial metadata)
@@ -133,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const [p2, r2, t2] = await Promise.all([
             supabase.from("profiles").select("id, full_name, tenant_id, avatar_url").eq("user_id", userId).single(),
             supabase.from("user_roles").select("role, tenant_id").eq("user_id", userId),
-            supabase.from("tenants").select("id, name"),
+            supabase.from("tenants").select("id, name, subscription_status"),
           ]);
           return applyProfileData(userId, p2, r2, t2);
         }
@@ -182,6 +185,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile({ ...profileRes.data, tenant_id: activeTenantId });
       }
     }
+
+    // Abbonamento Mensile sospeso (pause_collection su Stripe): blocca l'accesso finché non viene riattivato
+    const activeTenantRow = tenantsRes.data?.find((t: any) => t.id === activeTenantId);
+    setSubscriptionPaused(activeTenantRow?.subscription_status === "paused");
 
     // Check trial expiration
     const { data: trialData } = await supabase
@@ -243,14 +250,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserTenants([]);
     setTrialExpired(false);
     setTrialEnd(null);
+    setSubscriptionPaused(false);
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, session, loading, profileLoading, trialExpired, trialEnd,
-      profile, roles, 
+    <AuthContext.Provider value={{
+      user, session, loading, profileLoading, trialExpired, trialEnd, subscriptionPaused,
+      profile, roles,
       userTenants, activeTenant,
-      hasRole, switchTenant, signOut 
+      hasRole, switchTenant, signOut
     }}>
       {children}
     </AuthContext.Provider>

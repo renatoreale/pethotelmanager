@@ -83,6 +83,7 @@ serve(async (req) => {
       customer_email: email,
       line_items: [{ price: price_id, quantity: 1 }],
       mode: "subscription",
+      allow_promotion_codes: true,
       success_url: `${origin}/acquisto-completato?session_id={CHECKOUT_SESSION_ID}&request_id=${purchaseRequest.id}`,
       cancel_url: `${origin}/landing?acquisto=cancellato`,
       metadata: {

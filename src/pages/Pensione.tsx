@@ -20,7 +20,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Settings, Clock, Euro, CreditCard, Plus, Pencil, Trash2, Save, RotateCcw, Ban, Building2, Upload, X, FileText, KeyRound, Eye, EyeOff, CheckCircle2, XCircle, ExternalLink, Mail, Receipt } from "lucide-react";
+import { Settings, Clock, Euro, CreditCard, Plus, Pencil, Trash2, Save, RotateCcw, Ban, Building2, Upload, X, FileText, KeyRound, Eye, EyeOff, CheckCircle2, XCircle, ExternalLink, Mail, Receipt, PauseCircle, Loader2 } from "lucide-react";
 import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -35,6 +35,7 @@ import {
   useAllPaymentMethods, useCreatePaymentMethod,
   useTogglePaymentMethod, useDeletePaymentMethod, useUpdatePaymentMethod,
 } from "@/hooks/usePayments";
+import { STRIPE_TIERS } from "@/lib/stripe-config";
 import { CancellationPolicyTab } from "@/components/pensione/CancellationPolicyTab";
 import { PaymentSplitsTab } from "@/components/pensione/PaymentSplitsTab";
 import { EmailTemplatesTab } from "@/components/pensione/EmailTemplatesTab";
@@ -1715,6 +1716,23 @@ function StripeConfigTab() {
 function SubscriptionTab() {
   const supabase = useSupabase();
   const [loading, setLoading] = useState(false);
+  const [pausing, setPausing] = useState(false);
+  const [isMensile, setIsMensile] = useState(false);
+  const [checkingPlan, setCheckingPlan] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("check-subscription");
+        if (error) throw error;
+        setIsMensile(data?.product_id === STRIPE_TIERS.mensile.product_id);
+      } catch {
+        // Se il controllo fallisce, semplicemente non mostriamo l'opzione di sospensione
+      } finally {
+        setCheckingPlan(false);
+      }
+    })();
+  }, [supabase]);
 
   const handleManageSubscription = async () => {
     setLoading(true);
@@ -1729,6 +1747,22 @@ function SubscriptionTab() {
     }
   };
 
+  const handlePauseSubscription = async () => {
+    setPausing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("manage-subscription-pause", {
+        body: { action: "pause" },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error("Sospensione non riuscita");
+      toast.success("Abbonamento sospeso: non riceverai altri addebiti finché non lo riattivi.");
+    } catch (err: any) {
+      toast.error(err.message || "Errore durante la sospensione dell'abbonamento");
+    } finally {
+      setPausing(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -1740,11 +1774,17 @@ function SubscriptionTab() {
           Gestisci il tuo piano, aggiorna il metodo di pagamento o disdici l'abbonamento in qualsiasi momento tramite il portale sicuro di Stripe.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-wrap gap-3">
         <Button onClick={handleManageSubscription} disabled={loading} className="gap-2">
           <ExternalLink className="h-4 w-4" />
           {loading ? "Apertura in corso..." : "Gestisci abbonamento"}
         </Button>
+        {!checkingPlan && isMensile && (
+          <Button onClick={handlePauseSubscription} disabled={pausing} variant="outline" className="gap-2">
+            {pausing ? <Loader2 className="h-4 w-4 animate-spin" /> : <PauseCircle className="h-4 w-4" />}
+            {pausing ? "Sospensione in corso..." : "Sospendi abbonamento"}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

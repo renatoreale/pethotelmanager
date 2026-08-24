@@ -51,8 +51,12 @@ serve(async (req) => {
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
+        // Stripe non cambia lo status a "paused" quando è attivo pause_collection
+        // (resta "active"): lo rileviamo esplicitamente per riflettere la sospensione.
         const status = event.type === "customer.subscription.deleted"
           ? "canceled"
+          : subscription.pause_collection
+          ? "paused"
           : mapSubscriptionStatus(subscription.status);
 
         const { error } = await adminClient

@@ -281,7 +281,7 @@ export default function LandingEn() {
       offers: {
         "@type": "AggregateOffer",
         priceCurrency: "EUR",
-        lowPrice: STRIPE_TIERS.starter.priceYearly,
+        lowPrice: STRIPE_TIERS.annuale.priceYearly,
         highPrice: STRIPE_TIERS.multi.priceYearly,
       },
     },
@@ -310,7 +310,7 @@ export default function LandingEn() {
           name: "How much does pet boarding management software cost?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: `The software starts from €${STRIPE_TIERS.starter.priceYearly}/year for the Single Hotel plan. A free ${trialDays}-day trial is available with no credit card required.`,
+            text: `The software starts from €${STRIPE_TIERS.annuale.priceYearly}/year for the Single Hotel plan. A free ${trialDays}-day trial is available with no credit card required.`,
           },
         },
         {
@@ -543,16 +543,23 @@ export default function LandingEn() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-              One price with all features
+              Choose the plan that fits you
             </h2>
           </div>
-          <div className="max-w-md mx-auto">
-            {/* Single Hotel */}
+          <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {/* Annual */}
             <Card className="relative border-2 border-border hover:border-primary/30 transition-colors">
               <CardHeader className="pb-4">
+                <CardTitle className="text-xl">Annual</CardTitle>
+                <Badge variant="secondary" className="w-fit">
+                  Save €{STRIPE_TIERS.mensile.priceMonthly * 12 - STRIPE_TIERS.annuale.priceYearly}/year vs. the monthly plan
+                </Badge>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.starter.priceMonthly}</span>
-                  <span className="text-muted-foreground">/month</span>
+                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.annuale.priceYearly}</span>
+                  <span className="text-muted-foreground">/year</span>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Billed annually — equivalent to €{STRIPE_TIERS.annuale.priceMonthly}/month
+                  </p>
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -563,7 +570,36 @@ export default function LandingEn() {
                     </li>
                   ))}
                 </ul>
-                <Button className="w-full" variant="outline" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.starter.price_id, "starter")}>
+                <Button className="w-full" variant="outline" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.annuale.price_id, "annuale")}>
+                  <CreditCard className="h-4 w-4 mr-2" />Buy now!
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Monthly */}
+            <Card className="relative border-2 border-border hover:border-primary/30 transition-colors">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl">Monthly</CardTitle>
+                <Badge variant="secondary" className="w-fit">
+                  No commitment, pause anytime
+                </Badge>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.mensile.priceMonthly}</span>
+                  <span className="text-muted-foreground">/month</span>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Pay only for the months you use it, your data is always available
+                  </p>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <ul className="space-y-3">
+                  {STARTER_FEATURES.map((f) => (
+                    <li key={f} className="flex items-start gap-3 text-sm">
+                      <Check className="h-4 w-4 text-accent mt-0.5 shrink-0" /><span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button className="w-full" variant="outline" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.mensile.price_id, "mensile")}>
                   <CreditCard className="h-4 w-4 mr-2" />Buy now!
                 </Button>
               </CardContent>

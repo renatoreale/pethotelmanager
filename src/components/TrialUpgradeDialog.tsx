@@ -45,12 +45,29 @@ interface FormState {
 
 type PlanKey = keyof typeof STRIPE_TIERS;
 
-const PLANS: { key: PlanKey; label: string; monthly: number; yearly: number; features: string[] }[] = [
+const PLANS: { key: PlanKey; label: string; monthly: number; yearly?: number; note?: string; features: string[] }[] = [
   {
-    key: "starter",
-    label: "Singola Pensione",
-    monthly: STRIPE_TIERS.starter.priceMonthly,
-    yearly: STRIPE_TIERS.starter.priceYearly,
+    key: "annuale",
+    label: "Annuale",
+    monthly: STRIPE_TIERS.annuale.priceMonthly,
+    yearly: STRIPE_TIERS.annuale.priceYearly,
+    features: [
+      "Creazione preventivi",
+      "Gestione prenotazioni",
+      "Documenti PDF",
+      "Calendario appuntamenti",
+      "Anagrafica clienti",
+      "Registro presenze",
+      "Occupazione casette",
+      "Report e statistiche",
+      "Area riservata per cliente",
+    ],
+  },
+  {
+    key: "mensile",
+    label: "Mensile",
+    monthly: STRIPE_TIERS.mensile.priceMonthly,
+    note: "Nessun impegno, sospendilo quando vuoi",
     features: [
       "Creazione preventivi",
       "Gestione prenotazioni",
@@ -78,7 +95,7 @@ const PLANS: { key: PlanKey; label: string; monthly: number; yearly: number; fea
 ];
 
 export function TrialUpgradeDialog({ open, onOpenChange, prefill }: TrialUpgradeDialogProps) {
-  const [selectedPlan, setSelectedPlan] = useState<PlanKey>("starter");
+  const [selectedPlan, setSelectedPlan] = useState<PlanKey>("annuale");
   const [form, setForm] = useState<FormState>({
     nome: prefill?.nome ?? "",
     cognome: prefill?.cognome ?? "",
@@ -186,7 +203,9 @@ export function TrialUpgradeDialog({ open, onOpenChange, prefill }: TrialUpgrade
                       €{plan.monthly}
                       <span className="text-xs font-normal text-muted-foreground">/mese</span>
                     </p>
-                    <p className="text-xs text-muted-foreground mb-2">€{plan.yearly}/anno</p>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {plan.yearly ? `€${plan.yearly}/anno` : plan.note}
+                    </p>
                     <ul className="space-y-0.5">
                       {plan.features.map((f) => (
                         <li key={f} className="text-xs text-muted-foreground flex items-center gap-1">

@@ -6,6 +6,20 @@ export const STRIPE_TIERS = {
     priceYearly: 300,
     priceMonthly: 25,
   },
+  annuale: {
+    product_id: "prod_V8DvTbiYjSkZAO",
+    price_id: "price_1U7xTdQYqblmeN590fMWU0g4",
+    name: "Annuale",
+    priceYearly: 300,
+    priceMonthly: 25,
+  },
+  mensile: {
+    product_id: "prod_V8ELiZODy03VqI",
+    price_id: "price_1U7xskQYqblmeN59qt1PlGYO",
+    name: "Mensile",
+    priceYearly: 420,
+    priceMonthly: 35,
+  },
   multi: {
     product_id: "prod_UfQmT7dIRughKY",
     price_id: "price_1Tg5wkQYqblmeN59xiY1BYQt",

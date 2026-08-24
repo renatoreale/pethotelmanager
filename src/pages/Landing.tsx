@@ -531,16 +531,23 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
-              Un solo prezzo con tutte le funzionalità
+              Scegli il piano più adatto a te
             </h2>
           </div>
-          <div className="max-w-md mx-auto">
-            {/* Singola Pensione */}
+          <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {/* Annuale */}
             <Card className="relative border-2 border-border hover:border-primary/30 transition-colors">
               <CardHeader className="pb-4">
+                <CardTitle className="text-xl">{STRIPE_TIERS.annuale.name}</CardTitle>
+                <Badge variant="secondary" className="w-fit">
+                  Risparmi €{STRIPE_TIERS.mensile.priceMonthly * 12 - STRIPE_TIERS.annuale.priceYearly}/anno rispetto al mensile
+                </Badge>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.starter.priceMonthly}</span>
-                  <span className="text-muted-foreground">/mese</span>
+                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.annuale.priceYearly}</span>
+                  <span className="text-muted-foreground">/anno</span>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Pagamento annuale — equivalente a €{STRIPE_TIERS.annuale.priceMonthly}/mese
+                  </p>
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -551,7 +558,36 @@ export default function Landing() {
                     </li>
                   ))}
                 </ul>
-                <Button className="w-full" variant="outline" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.starter.price_id, "starter")}>
+                <Button className="w-full" variant="outline" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.annuale.price_id, "annuale")}>
+                  <CreditCard className="h-4 w-4 mr-2" />Acquista ora!
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Mensile */}
+            <Card className="relative border-2 border-border hover:border-primary/30 transition-colors">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl">{STRIPE_TIERS.mensile.name}</CardTitle>
+                <Badge variant="secondary" className="w-fit">
+                  Nessun impegno, sospendilo quando vuoi
+                </Badge>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.mensile.priceMonthly}</span>
+                  <span className="text-muted-foreground">/mese</span>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Paga solo i mesi che lo usi, i tuoi dati saranno sempre disponibili
+                  </p>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <ul className="space-y-3">
+                  {STARTER_FEATURES.map((f) => (
+                    <li key={f} className="flex items-start gap-3 text-sm">
+                      <Check className="h-4 w-4 text-accent mt-0.5 shrink-0" /><span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button className="w-full" variant="outline" size="lg" onClick={() => handleSubscribe(STRIPE_TIERS.mensile.price_id, "mensile")}>
                   <CreditCard className="h-4 w-4 mr-2" />Acquista ora!
                 </Button>
               </CardContent>
