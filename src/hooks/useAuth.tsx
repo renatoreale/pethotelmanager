@@ -161,10 +161,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       for (const r of rolesRes.data) {
         const role = r.role as UserRole;
         if (!userRoles.includes(role)) userRoles.push(role);
-        if (r.tenant_id && !tenantList.find(t => t.id === r.tenant_id)) {
+        // Se il tenant non è nella lookup (eliminata/inesistente) viene escluso, non mostrato con nome generico
+        const tenantName = tenantLookup.get(r.tenant_id) as string | undefined;
+        if (r.tenant_id && tenantName && !tenantList.find(t => t.id === r.tenant_id)) {
           tenantList.push({
             id: r.tenant_id,
-            name: (tenantLookup.get(r.tenant_id) as string) || "Pensione",
+            name: tenantName,
           });
         }
       }
