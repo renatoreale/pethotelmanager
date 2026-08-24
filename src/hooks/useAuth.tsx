@@ -121,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [profileRes, rolesRes, tenantsRes] = await Promise.all([
       supabase.from("profiles").select("id, full_name, tenant_id, avatar_url").eq("user_id", userId).single(),
       supabase.from("user_roles").select("role, tenant_id").eq("user_id", userId),
-      supabase.from("tenants").select("id, name, subscription_status"),
+      supabase.from("tenants").select("id, name, subscription_status").is("deleted_at", null),
     ]);
 
     // If no roles, attempt trial provisioning (works if user has is_trial metadata)
@@ -136,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const [p2, r2, t2] = await Promise.all([
             supabase.from("profiles").select("id, full_name, tenant_id, avatar_url").eq("user_id", userId).single(),
             supabase.from("user_roles").select("role, tenant_id").eq("user_id", userId),
-            supabase.from("tenants").select("id, name, subscription_status"),
+            supabase.from("tenants").select("id, name, subscription_status").is("deleted_at", null),
           ]);
           return applyProfileData(userId, p2, r2, t2);
         }
@@ -173,9 +173,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserTenants(tenantList);
     setRoles(userRoles);
 
-    // Auto-select first tenant if none is active
+    // Auto-select first tenant if none is active, o se la pensione attiva è stata eliminata
     let activeTenantId = profileRes.data?.tenant_id;
-    if (!activeTenantId && tenantList.length > 0) {
+    const activeTenantStillValid = activeTenantId && tenantList.some(t => t.id === activeTenantId);
+    if (!activeTenantStillValid && tenantList.length > 0) {
       activeTenantId = tenantList[0].id;
       if (profileRes.data) {
         await supabase
