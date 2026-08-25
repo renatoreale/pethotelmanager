@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -211,6 +212,7 @@ function PensioniTab() {
                     <TableHead>Email</TableHead>
                     <TableHead>Telefono</TableHead>
                     <TableHead>Casette</TableHead>
+                    <TableHead>Escludi da audit</TableHead>
                     <TableHead className="w-[100px]">Azioni</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -222,6 +224,13 @@ function PensioniTab() {
                       <TableCell>{tenant.email || "-"}</TableCell>
                       <TableCell>{tenant.phone || "-"}</TableCell>
                       <TableCell>{tenant.num_singole} singole, {tenant.num_doppie} doppie</TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={tenant.audit_excluded}
+                          onCheckedChange={(checked) => updateTenant.mutate({ id: tenant.id, audit_excluded: checked })}
+                          disabled={updateTenant.isPending}
+                        />
+                      </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
                           <Button variant="ghost" size="icon" onClick={() => openEdit(tenant)}><Pencil className="h-4 w-4" /></Button>

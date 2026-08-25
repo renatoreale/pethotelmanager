@@ -24,6 +24,7 @@ export interface Tenant {
   pec: string | null;
   titolare_name: string | null;
   logo_url: string | null;
+  audit_excluded: boolean;
   created_at: string;
 }
 
