@@ -18,7 +18,7 @@ serve(async (req) => {
 
   try {
     const { action } = await req.json();
-    if (action !== "pause" && action !== "resume") {
+    if (action !== "pause" && action !== "resume" && action !== "status") {
       throw new Error("Azione non valida");
     }
 
@@ -62,6 +62,15 @@ serve(async (req) => {
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const subscription = await stripe.subscriptions.retrieve(tenant.stripe_subscription_id);
     const productId = subscription.items.data[0]?.price?.product;
+
+    if (action === "status") {
+      return new Response(JSON.stringify({
+        product_id: productId,
+        is_paused: !!subscription.pause_collection,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (productId !== MENSILE_PRODUCT_ID) {
       throw new Error("La sospensione è disponibile solo per il piano Mensile");

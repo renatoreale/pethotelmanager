@@ -1723,7 +1723,9 @@ function SubscriptionTab() {
   useEffect(() => {
     (async () => {
       try {
-        const { data, error } = await supabase.functions.invoke("check-subscription");
+        const { data, error } = await supabase.functions.invoke("manage-subscription-pause", {
+          body: { action: "status" },
+        });
         if (error) throw error;
         setIsMensile(data?.product_id === STRIPE_TIERS.mensile.product_id);
       } catch {
