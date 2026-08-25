@@ -20,7 +20,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Building2, Users, ShieldCheck, Plus, Pencil, Trash2, Save, Clock, Euro, CreditCard, Ban, Globe, TrendingUp, UserCheck, Database as DatabaseIcon, ShoppingCart, LifeBuoy } from "lucide-react";
+import { Building2, Users, ShieldCheck, Plus, Pencil, Trash2, Save, Clock, Euro, CreditCard, Ban, Globe, TrendingUp, UserCheck, Database as DatabaseIcon, ShoppingCart, LifeBuoy, History } from "lucide-react";
 import { GlobalSlotConfigsTab } from "@/components/admin/GlobalSlotConfigsTab";
 import { GlobalPriceListsTab } from "@/components/admin/GlobalPriceListsTab";
 import { GlobalPaymentMethodsTab } from "@/components/admin/GlobalPaymentMethodsTab";
@@ -31,6 +31,7 @@ import { DemoLeadsTab } from "@/components/admin/DemoLeadsTab";
 import { DatabaseConfigTab } from "@/components/admin/DatabaseConfigTab";
 import { PurchaseRequestsTab } from "@/components/admin/PurchaseRequestsTab";
 import { SupportTicketsTab } from "@/components/admin/SupportTicketsTab";
+import { AuditLogTab } from "@/components/admin/AuditLogTab";
 import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useAuth } from "@/hooks/useAuth";
 import { Database } from "@/integrations/supabase/types";
@@ -113,6 +114,9 @@ export default function Admin() {
           <TabsTrigger value="supporto" className="gap-1.5 text-xs px-2.5 py-1.5">
             <LifeBuoy className="h-3.5 w-3.5 hidden sm:block" /> Supporto
           </TabsTrigger>
+          <TabsTrigger value="audit" className="gap-1.5 text-xs px-2.5 py-1.5">
+            <History className="h-3.5 w-3.5 hidden sm:block" /> Storico
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pensioni"><PensioniTab /></TabsContent>
@@ -128,6 +132,7 @@ export default function Admin() {
         <TabsContent value="database"><DatabaseConfigTab /></TabsContent>
         <TabsContent value="acquisti"><PurchaseRequestsTab /></TabsContent>
         <TabsContent value="supporto"><SupportTicketsTab /></TabsContent>
+        <TabsContent value="audit"><AuditLogTab /></TabsContent>
       </Tabs>
     </div>
   );
