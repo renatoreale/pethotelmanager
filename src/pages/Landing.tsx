@@ -543,10 +543,10 @@ export default function Landing() {
                   Risparmi €{STRIPE_TIERS.mensile.priceMonthly * 12 - STRIPE_TIERS.annuale.priceYearly}/anno rispetto al mensile
                 </Badge>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.annuale.priceYearly}</span>
-                  <span className="text-muted-foreground">/anno</span>
+                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.annuale.priceMonthly}</span>
+                  <span className="text-muted-foreground">/mese</span>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Pagamento annuale — equivalente a €{STRIPE_TIERS.annuale.priceMonthly}/mese
+                    Pagamento annuale — €{STRIPE_TIERS.annuale.priceYearly}/anno
                   </p>
                 </div>
               </CardHeader>

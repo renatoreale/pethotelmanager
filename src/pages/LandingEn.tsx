@@ -555,10 +555,10 @@ export default function LandingEn() {
                   Save €{STRIPE_TIERS.mensile.priceMonthly * 12 - STRIPE_TIERS.annuale.priceYearly}/year vs. the monthly plan
                 </Badge>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.annuale.priceYearly}</span>
-                  <span className="text-muted-foreground">/year</span>
+                  <span className="text-4xl font-bold text-foreground">€{STRIPE_TIERS.annuale.priceMonthly}</span>
+                  <span className="text-muted-foreground">/month</span>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Billed annually — equivalent to €{STRIPE_TIERS.annuale.priceMonthly}/month
+                    Billed annually — €{STRIPE_TIERS.annuale.priceYearly}/year
                   </p>
                 </div>
               </CardHeader>
