@@ -282,7 +282,7 @@ export default function LandingEn() {
         "@type": "AggregateOffer",
         priceCurrency: "EUR",
         lowPrice: STRIPE_TIERS.annuale.priceYearly,
-        highPrice: STRIPE_TIERS.multi.priceYearly,
+        highPrice: STRIPE_TIERS.mensile.priceYearly,
       },
     },
     {

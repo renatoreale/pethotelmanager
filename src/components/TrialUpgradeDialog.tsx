@@ -80,18 +80,6 @@ const PLANS: { key: PlanKey; label: string; monthly: number; yearly?: number; no
       "Area riservata per cliente",
     ],
   },
-  {
-    key: "multi",
-    label: "Multi Pensione",
-    monthly: STRIPE_TIERS.multi.priceMonthly,
-    yearly: STRIPE_TIERS.multi.priceYearly,
-    features: [
-      "Tutto di Singola Pensione",
-      "Fino a 3 pensioni incluse",
-      "€20 per pensione al mese",
-      "Dashboard multi-sede",
-    ],
-  },
 ];
 
 export function TrialUpgradeDialog({ open, onOpenChange, prefill }: TrialUpgradeDialogProps) {
