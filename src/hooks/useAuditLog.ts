@@ -19,6 +19,7 @@ export interface AuditLogFilters {
   tableName: string;
   operation: string;
   recordId: string;
+  tenantId: string;
   limit: number;
 }
 
@@ -34,6 +35,7 @@ export function useAuditLog(filters: AuditLogFilters) {
         .limit(filters.limit);
       if (filters.tableName) query = query.eq("table_name", filters.tableName);
       if (filters.operation) query = query.eq("operation", filters.operation as any);
+      if (filters.tenantId) query = query.eq("tenant_id", filters.tenantId);
       const recordId = filters.recordId.trim();
       if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(recordId)) {
         query = query.eq("record_id", recordId);

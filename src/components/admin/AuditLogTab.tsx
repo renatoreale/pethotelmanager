@@ -66,11 +66,12 @@ export function AuditLogTab() {
   const [tableName, setTableName] = useState("");
   const [operation, setOperation] = useState("");
   const [recordId, setRecordId] = useState("");
+  const [tenantId, setTenantId] = useState("");
   const [limit, setLimit] = useState(50);
   const [detail, setDetail] = useState<AuditLogEntry | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<AuditLogEntry | null>(null);
 
-  const { data: entries, isLoading, refetch, isFetching } = useAuditLog({ tableName, operation, recordId, limit });
+  const { data: entries, isLoading, refetch, isFetching } = useAuditLog({ tableName, operation, recordId, tenantId, limit });
   const { data: tenants } = useAllTenants();
   const { data: users } = useAllUsers();
   const { data: siblings } = useAuditLogSiblings(detail?.operation_id ?? null, detail?.id);
@@ -133,6 +134,13 @@ export function AuditLogTab() {
               <SelectItem value="UPDATE">Modifica</SelectItem>
               <SelectItem value="DELETE">Eliminazione</SelectItem>
               <SelectItem value="RESTORE">Ripristino</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={tenantId || "all"} onValueChange={(v) => setTenantId(v === "all" ? "" : v)}>
+            <SelectTrigger className="w-[200px]"><SelectValue placeholder="Tutte le pensioni" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tutte le pensioni</SelectItem>
+              {tenants?.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
             </SelectContent>
           </Select>
           <Input
