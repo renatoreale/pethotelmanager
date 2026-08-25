@@ -1719,6 +1719,7 @@ function SubscriptionTab() {
   const [pausing, setPausing] = useState(false);
   const [isMensile, setIsMensile] = useState(false);
   const [checkingPlan, setCheckingPlan] = useState(true);
+  const [pauseConfirmOpen, setPauseConfirmOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -1758,9 +1759,9 @@ function SubscriptionTab() {
       if (error) throw error;
       if (!data?.success) throw new Error("Sospensione non riuscita");
       toast.success("Abbonamento sospeso: non riceverai altri addebiti finché non lo riattivi.");
+      window.location.reload();
     } catch (err: any) {
       toast.error(err.message || "Errore durante la sospensione dell'abbonamento");
-    } finally {
       setPausing(false);
     }
   };
@@ -1782,12 +1783,28 @@ function SubscriptionTab() {
           {loading ? "Apertura in corso..." : "Gestisci abbonamento"}
         </Button>
         {!checkingPlan && isMensile && (
-          <Button onClick={handlePauseSubscription} disabled={pausing} variant="outline" className="gap-2">
+          <Button onClick={() => setPauseConfirmOpen(true)} disabled={pausing} variant="outline" className="gap-2">
             {pausing ? <Loader2 className="h-4 w-4 animate-spin" /> : <PauseCircle className="h-4 w-4" />}
             {pausing ? "Sospensione in corso..." : "Sospendi abbonamento"}
           </Button>
         )}
       </CardContent>
+
+      <AlertDialog open={pauseConfirmOpen} onOpenChange={setPauseConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sospendere l'abbonamento?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Non riceverai altri addebiti finché non lo riattivi. Durante la sospensione non potrai accedere al programma:
+              al prossimo login ti verrà chiesto di riattivare l'abbonamento. I tuoi dati restano comunque disponibili.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={handlePauseSubscription}>Sospendi abbonamento</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
