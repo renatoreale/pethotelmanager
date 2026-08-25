@@ -21,3 +21,5 @@ project_id = "idkzlnzvqzqvkdchchnz"
     verify_jwt = false
   [functions.register-user]
     verify_jwt = false
+  [functions.public-quote-request]
+    verify_jwt = false
