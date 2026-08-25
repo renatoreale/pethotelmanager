@@ -240,9 +240,9 @@ export function AuditLogTab() {
           )}
 
           <DialogFooter>
-            {detail?.after_data && (
+            {detail?.before_data && (
               <Button onClick={() => setRestoreTarget(detail)} className="gap-2">
-                <History className="h-4 w-4" /> Ripristina a questa versione
+                <History className="h-4 w-4" /> Ripristina alla versione "Prima"
               </Button>
             )}
           </DialogFooter>
@@ -253,11 +253,12 @@ export function AuditLogTab() {
       <AlertDialog open={!!restoreTarget} onOpenChange={(open) => { if (!open) setRestoreTarget(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Ripristinare questa versione?</AlertDialogTitle>
+            <AlertDialogTitle>Annullare questa modifica?</AlertDialogTitle>
             <AlertDialogDescription>
               Il record <strong className="font-mono">{restoreTarget?.record_id.slice(0, 8)}</strong> nella tabella{" "}
-              <strong className="font-mono">{restoreTarget?.table_name}</strong> verrà sovrascritto con i dati di questa versione
-              (registrata il {restoreTarget && formatDate(restoreTarget.created_at)}). Lo stato attuale non va perso: resterà comunque
+              <strong className="font-mono">{restoreTarget?.table_name}</strong> tornerà allo stato precedente a questa{" "}
+              {restoreTarget?.operation === "DELETE" ? "eliminazione" : "modifica"} (registrata il{" "}
+              {restoreTarget && formatDate(restoreTarget.created_at)}). Lo stato attuale non va perso: resterà comunque
               tracciato nello storico come qualsiasi altra modifica.
             </AlertDialogDescription>
           </AlertDialogHeader>

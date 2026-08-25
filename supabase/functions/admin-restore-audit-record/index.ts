@@ -77,8 +77,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (!entry.after_data) {
-      return new Response(JSON.stringify({ error: "Questa voce non ha uno stato da ripristinare (era un'eliminazione)" }), {
+    if (!entry.before_data) {
+      return new Response(JSON.stringify({ error: "Questa voce non ha uno stato precedente da ripristinare (era una creazione)" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -91,7 +91,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    const snapshot = entry.after_data as Record<string, unknown>;
+    // Ripristina allo stato "prima" di questa modifica (undo). Per una voce
+    // DELETE, before_data e' l'ultimo stato noto prima dell'eliminazione:
+    // ripristinarlo ricrea il record (un-delete).
+    const snapshot = entry.before_data as Record<string, unknown>;
 
     const { data: existing } = await adminClient
       .from(entry.table_name)
