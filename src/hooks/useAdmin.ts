@@ -25,6 +25,7 @@ export interface Tenant {
   titolare_name: string | null;
   logo_url: string | null;
   audit_excluded: boolean;
+  is_trial: boolean;
   created_at: string;
 }
 
