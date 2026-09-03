@@ -538,6 +538,8 @@
     "backToHome": "Torna alla Home",
     "firstName": "Nome",
     "lastName": "Cognome",
+    "pensioneName": "Nome della tua pensione di prova",
+    "pensioneNamePlaceholder": "La Pensione dei Mici",
     "phone": "Telefono",
     "email": "Email",
     "warning": "⚠️ Inserisci dati veritieri: le credenziali di accesso verranno inviate all'email indicata.",
@@ -557,6 +559,7 @@
       "invalidPhone": "Inserisci un numero di telefono valido",
       "invalidPhoneFormat": "Formato telefono non valido",
       "repeatedPhone": "Numero di telefono non valido",
+      "pensioneNameTooLong": "Il nome della pensione è troppo lungo (max 80 caratteri)",
       "acceptPrivacy": "Devi accettare l'informativa sulla privacy per continuare.",
       "fixErrors": "Correggi i campi evidenziati",
       "registrationError": "Errore durante la registrazione. Riprova."

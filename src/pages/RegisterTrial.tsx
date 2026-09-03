@@ -42,6 +42,15 @@ function validateEmail(email: string): string | null {
   return null;
 }
 
+function validatePensioneName(name: string): string | null {
+  const t = i18n.t.bind(i18n);
+  const trimmed = name.trim();
+  if (trimmed.length < 2) return t("registerTrial.errors.minChars");
+  if (trimmed.length > 80) return t("registerTrial.errors.pensioneNameTooLong");
+  if (!/^[a-zA-ZÀ-ÿ0-9' .,&-]+$/.test(trimmed)) return t("registerTrial.errors.invalidChars");
+  return null;
+}
+
 function validatePhone(phone: string): string | null {
   const t = i18n.t.bind(i18n);
   const digits = phone.replace(/[\s\-\+\(\)]/g, "");
@@ -58,15 +67,18 @@ export default function RegisterTrial() {
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [pensioneName, setPensioneName] = useState("");
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [trialDays, setTrialDays] = useState(3);
+  const [newFlowEnabled, setNewFlowEnabled] = useState(false);
   const isEn = i18n.language === "en";
 
   useEffect(() => {
-    supabase.from("landing_config").select("trial_days").limit(1).single().then(({ data }) => {
+    supabase.from("landing_config").select("trial_days, new_trial_flow_enabled").limit(1).single().then(({ data }) => {
       if (data?.trial_days) setTrialDays(data.trial_days);
+      setNewFlowEnabled(data?.new_trial_flow_enabled === true);
     });
   }, []);
 
@@ -84,7 +96,11 @@ export default function RegisterTrial() {
     if (emErr) newErrors.email = emErr;
     const phErr = validatePhone(phone);
     if (phErr) newErrors.phone = phErr;
-    
+    if (newFlowEnabled) {
+      const pnErr = validatePensioneName(pensioneName);
+      if (pnErr) newErrors.pensioneName = pnErr;
+    }
+
     if (!privacyAccepted) {
       toast.error(t("registerTrial.errors.acceptPrivacy"));
       return;
@@ -100,7 +116,9 @@ export default function RegisterTrial() {
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke("register-trial", {
-        body: { email, firstName, lastName, phone },
+        body: newFlowEnabled
+          ? { email, firstName, lastName, phone, pensioneName }
+          : { email, firstName, lastName, phone },
       });
 
       if (fnError) {
@@ -190,6 +208,13 @@ export default function RegisterTrial() {
                 {errors.lastName && <p className="text-xs text-destructive">{errors.lastName}</p>}
               </div>
             </div>
+            {newFlowEnabled && (
+              <div className="space-y-2">
+                <Label htmlFor="pensioneName">{t("registerTrial.pensioneName")} *</Label>
+                <Input id="pensioneName" type="text" placeholder={t("registerTrial.pensioneNamePlaceholder")} value={pensioneName} onChange={(e) => { setPensioneName(e.target.value); setErrors(p => ({...p, pensioneName: ""})); }} required className={errors.pensioneName ? "border-destructive" : ""} />
+                {errors.pensioneName && <p className="text-xs text-destructive">{errors.pensioneName}</p>}
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="phone">{t("registerTrial.phone")} *</Label>
               <Input id="phone" type="tel" placeholder="+39 333 1234567" value={phone} onChange={(e) => { setPhone(e.target.value); setErrors(p => ({...p, phone: ""})); }} required className={errors.phone ? "border-destructive" : ""} />
