@@ -8,6 +8,16 @@ const corsHeaders = {
 
 const DEMO_TENANT_SLUG = "la-zampa-felice";
 
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(new RegExp("[" + String.fromCharCode(0x0300) + "-" + String.fromCharCode(0x036f) + "]", "g"), "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .substring(0, 50);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -57,23 +67,39 @@ Deno.serve(async (req) => {
     const metadata = user.user_metadata || {};
     const fullName = metadata.full_name || user.email;
 
-    // Find demo tenant
-    let { data: demoTenant, error: tenantError } = await adminClient
-      .from("tenants")
-      .select("id")
-      .eq("slug", DEMO_TENANT_SLUG)
+    // Get trial config
+    const { data: landingConfig } = await adminClient
+      .from("landing_config")
+      .select("trial_days, new_trial_flow_enabled")
+      .limit(1)
       .single();
+    const trialDays = landingConfig?.trial_days || 14;
+    const newFlowEnabled = landingConfig?.new_trial_flow_enabled === true;
 
-    // Se non esiste, crealo al volo (primo deploy / dev)
-    if (tenantError || !demoTenant) {
-      console.warn("Demo tenant not found, creating it...");
+    let tenantId: string;
+
+    if (newFlowEnabled) {
+      // Percorso di fallback automatico (nessun form, quindi nessun nome
+      // pensione scelto dall'utente): crea comunque una pensione dedicata,
+      // con un nome derivato, invece di agganciarsi al tenant demo condiviso.
+      const tenantName = `Pensione di ${fullName} TRIAL`;
+      let slug = slugify(tenantName);
+      const { data: existingSlug } = await adminClient
+        .from("tenants")
+        .select("id")
+        .eq("slug", slug)
+        .maybeSingle();
+      if (existingSlug) slug = `${slug}-${Math.random().toString(36).substring(2, 6)}`;
+
       const { data: newTenant, error: createError } = await adminClient
         .from("tenants")
         .insert({
-          name: "La Zampa Felice",
-          slug: DEMO_TENANT_SLUG,
+          name: tenantName,
+          slug,
+          is_trial: true,
           num_singole: 10,
           num_doppie: 5,
+          occupancy_rule_days: 4,
           pet_type: "gatti",
           locale: "it",
         })
@@ -81,24 +107,55 @@ Deno.serve(async (req) => {
         .single();
 
       if (createError || !newTenant) {
-        console.error("Failed to create demo tenant:", createError);
-        return new Response(JSON.stringify({ error: "Demo tenant not found and could not be created: " + (createError?.message ?? "unknown") }), {
+        console.error("Failed to create dedicated trial tenant:", createError);
+        return new Response(JSON.stringify({ error: "Impossibile creare la pensione di prova: " + (createError?.message ?? "unknown") }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      demoTenant = newTenant;
+      tenantId = newTenant.id;
+
+      const { error: templatesError } = await adminClient.rpc("copy_global_templates_to_tenant", { _tenant_id: tenantId });
+      if (templatesError) console.error("Error copying global templates:", templatesError);
+
+      const { error: seedError } = await adminClient.rpc("seed_trial_demo_data", { _tenant_id: tenantId });
+      if (seedError) console.error("Error seeding trial demo data:", seedError);
+    } else {
+      // Comportamento esistente, invariato: tenant demo condiviso.
+      let { data: demoTenant, error: tenantError } = await adminClient
+        .from("tenants")
+        .select("id")
+        .eq("slug", DEMO_TENANT_SLUG)
+        .single();
+
+      // Se non esiste, crealo al volo (primo deploy / dev)
+      if (tenantError || !demoTenant) {
+        console.warn("Demo tenant not found, creating it...");
+        const { data: newTenant, error: createError } = await adminClient
+          .from("tenants")
+          .insert({
+            name: "La Zampa Felice",
+            slug: DEMO_TENANT_SLUG,
+            num_singole: 10,
+            num_doppie: 5,
+            pet_type: "gatti",
+            locale: "it",
+          })
+          .select("id")
+          .single();
+
+        if (createError || !newTenant) {
+          console.error("Failed to create demo tenant:", createError);
+          return new Response(JSON.stringify({ error: "Demo tenant not found and could not be created: " + (createError?.message ?? "unknown") }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        demoTenant = newTenant;
+      }
+
+      tenantId = demoTenant.id;
     }
-
-    const tenantId = demoTenant.id;
-
-    // Get trial days from landing_config
-    const { data: landingConfig } = await adminClient
-      .from("landing_config")
-      .select("trial_days")
-      .limit(1)
-      .single();
-    const trialDays = landingConfig?.trial_days || 14;
 
     // 1. Assign titolare role on demo tenant
     const { error: roleError } = await adminClient.from("user_roles").insert({
@@ -130,7 +187,7 @@ Deno.serve(async (req) => {
       const trialStart = new Date();
       trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
 
-      const { error: trialError } = await adminClient
+      const { data: newTrial, error: trialError } = await adminClient
         .from("trial_registrations")
         .insert({
           user_id: user.id,
@@ -140,10 +197,20 @@ Deno.serve(async (req) => {
           tenant_id: tenantId,
           trial_start: trialStart.toISOString(),
           trial_end: trialEnd.toISOString(),
-        });
+        })
+        .select("id")
+        .single();
 
       if (trialError) {
         console.error("Error creating trial registration:", trialError);
+      } else if (newTrial) {
+        // Fase 5: percorso di fallback (form saltato/interrotto) — lo
+        // segnaliamo comunque nella timeline per visibilità in admin.
+        await adminClient.from("trial_activity_log").insert({
+          trial_id: newTrial.id,
+          action: "registration_submitted",
+          metadata: { via: "fallback" },
+        });
       }
     } else {
       trialEnd = new Date(existingTrial.trial_end);

@@ -18,6 +18,41 @@ const DISPOSABLE_DOMAINS = [
 
 const DEMO_TENANT_SLUG = "la-zampa-felice";
 
+function validatePensioneName(name: string): string | null {
+  const trimmed = (name || "").trim();
+  if (trimmed.length < 2) return "Il nome della pensione deve avere almeno 2 caratteri";
+  if (trimmed.length > 80) return "Il nome della pensione è troppo lungo (max 80 caratteri)";
+  if (!/^[a-zA-Z0-9À-ÿ' .,&-]+$/.test(trimmed)) return "Il nome della pensione contiene caratteri non validi";
+  return null;
+}
+
+// Fase 5: traccia i passaggi del funnel trial (registrazione, email, ecc.)
+// in trial_activity_log per capire dove un utente si blocca. Mai bloccante:
+// un errore qui non deve mai far fallire la registrazione.
+async function logTrialActivity(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  trialId: string | null,
+  action: string,
+): Promise<void> {
+  if (!trialId) return;
+  try {
+    const { error } = await supabaseAdmin.from("trial_activity_log").insert({ trial_id: trialId, action });
+    if (error) console.error(`[register-trial] Error logging activity "${action}":`, error.message);
+  } catch (e) {
+    console.error(`[register-trial] Exception logging activity "${action}":`, (e as Error).message);
+  }
+}
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(new RegExp("[" + String.fromCharCode(0x0300) + "-" + String.fromCharCode(0x036f) + "]", "g"), "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .substring(0, 50);
+}
+
 async function sendEmail(to: string, subject: string, html: string) {
   const resendKey = Deno.env.get("RESEND_API_KEY");
   const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || "noreply@pethotelmanager.com";
@@ -79,7 +114,7 @@ async function provisionTrial(
   fullName: string,
   phone: string,
   trialDays: number,
-): Promise<void> {
+): Promise<string | null> {
   // 1. Find or create demo tenant
   let { data: demoTenant } = await supabaseAdmin
     .from("tenants")
@@ -141,11 +176,124 @@ async function provisionTrial(
     .eq("user_id", userId)
     .maybeSingle();
 
+  let trialId: string | null = existingTrial?.id ?? null;
+
   if (!existingTrial) {
     const trialStart = new Date();
     const trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
 
-    const { error: trialError } = await supabaseAdmin.from("trial_registrations").insert({
+    const { data: newTrial, error: trialError } = await supabaseAdmin
+      .from("trial_registrations")
+      .insert({
+        user_id: userId,
+        email,
+        full_name: fullName,
+        pet_type: "gatti",
+        tenant_id: tenantId,
+        trial_start: trialStart.toISOString(),
+        trial_end: trialEnd.toISOString(),
+      })
+      .select("id")
+      .single();
+    if (trialError) console.error("[register-trial] Error creating trial_registration:", trialError);
+    trialId = newTrial?.id ?? null;
+  }
+
+  console.log(`[register-trial] Provisioning complete for user ${userId}, tenant ${tenantId}`);
+  return trialId;
+}
+
+// Nuovo flusso (dietro landing_config.new_trial_flow_enabled): crea una
+// pensione dedicata per l'utente invece di agganciarlo al tenant demo
+// condiviso "la-zampa-felice". La pensione dedicata prende i default
+// del tenant demo, i template globali (listini, metodi di pagamento,
+// policy di cancellazione) e un set di dati di prova generati da zero.
+async function provisionTrialDedicated(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  userId: string,
+  email: string,
+  fullName: string,
+  phone: string,
+  trialDays: number,
+  pensioneName: string,
+): Promise<string | null> {
+  // Idempotenza: se l'utente ha già una pensione di prova (retry dopo un
+  // errore parziale), non ricrearla.
+  const { data: existingTrial } = await supabaseAdmin
+    .from("trial_registrations")
+    .select("id, tenant_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existingTrial?.tenant_id) {
+    console.log(`[register-trial] User ${userId} already has trial tenant ${existingTrial.tenant_id}, skipping provisioning`);
+    return existingTrial.id;
+  }
+
+  // Nome pensione con suffisso " TRIAL" garantito (identifica in modo
+  // affidabile i tenant di prova, es. per la futura pulizia automatica).
+  let tenantName = pensioneName.trim().replace(/\s+/g, " ");
+  if (!/ trial$/i.test(tenantName)) {
+    tenantName = `${tenantName} TRIAL`;
+  }
+
+  let slug = slugify(tenantName);
+  const { data: existingSlug } = await supabaseAdmin
+    .from("tenants")
+    .select("id")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (existingSlug) slug = `${slug}-${Math.random().toString(36).substring(2, 6)}`;
+
+  const { data: newTenant, error: tenantError } = await supabaseAdmin
+    .from("tenants")
+    .insert({
+      name: tenantName,
+      slug,
+      is_trial: true,
+      num_singole: 10,
+      num_doppie: 5,
+      occupancy_rule_days: 4,
+      pet_type: "gatti",
+      locale: "it",
+    })
+    .select("id")
+    .single();
+
+  if (tenantError || !newTenant) {
+    console.error("[register-trial] Failed to create dedicated trial tenant:", tenantError);
+    throw new Error("Impossibile creare la pensione di prova");
+  }
+
+  const tenantId = newTenant.id;
+
+  // Default di configurazione (listini, metodi di pagamento, policy di
+  // cancellazione) — lo stesso meccanismo usato per i clienti reali.
+  const { error: templatesError } = await supabaseAdmin.rpc("copy_global_templates_to_tenant", { _tenant_id: tenantId });
+  if (templatesError) console.error("[register-trial] Error copying global templates:", templatesError);
+
+  // Dati di prova (anagrafiche, preventivi, prenotazioni passate/presenti/future).
+  const { error: seedError } = await supabaseAdmin.rpc("seed_trial_demo_data", { _tenant_id: tenantId });
+  if (seedError) console.error("[register-trial] Error seeding trial demo data:", seedError);
+
+  const { error: roleError } = await supabaseAdmin.from("user_roles").insert({
+    user_id: userId,
+    role: "titolare",
+    tenant_id: tenantId,
+  });
+  if (roleError) console.error("[register-trial] Error assigning role:", roleError);
+
+  await supabaseAdmin
+    .from("profiles")
+    .update({ tenant_id: tenantId, full_name: fullName, phone })
+    .eq("user_id", userId);
+
+  const trialStart = new Date();
+  const trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
+
+  const { data: newTrial, error: trialError } = await supabaseAdmin
+    .from("trial_registrations")
+    .insert({
       user_id: userId,
       email,
       full_name: fullName,
@@ -153,11 +301,13 @@ async function provisionTrial(
       tenant_id: tenantId,
       trial_start: trialStart.toISOString(),
       trial_end: trialEnd.toISOString(),
-    });
-    if (trialError) console.error("[register-trial] Error creating trial_registration:", trialError);
-  }
+    })
+    .select("id")
+    .single();
+  if (trialError) console.error("[register-trial] Error creating trial_registration:", trialError);
 
-  console.log(`[register-trial] Provisioning complete for user ${userId}, tenant ${tenantId}`);
+  console.log(`[register-trial] Dedicated provisioning complete for user ${userId}, tenant ${tenantId} ("${tenantName}")`);
+  return newTrial?.id ?? null;
 }
 
 Deno.serve(async (req) => {
@@ -171,7 +321,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { email, firstName, lastName, phone } = await req.json();
+    const { email, firstName, lastName, phone, pensioneName } = await req.json();
 
     // Validation
     if (!firstName || firstName.trim().length < 2) {
@@ -205,13 +355,23 @@ Deno.serve(async (req) => {
     const normalizedEmail = email.trim().toLowerCase();
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
 
-    // Get trial days
+    // Get trial config
     const { data: landingConfig } = await supabaseAdmin
       .from("landing_config")
-      .select("trial_days")
+      .select("trial_days, new_trial_flow_enabled")
       .limit(1)
       .single();
     const trialDays = landingConfig?.trial_days || 14;
+    const newFlowEnabled = landingConfig?.new_trial_flow_enabled === true;
+
+    if (newFlowEnabled) {
+      const pensioneErr = validatePensioneName(pensioneName);
+      if (pensioneErr) {
+        return new Response(JSON.stringify({ error: pensioneErr }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     // Create (or find existing) user in Supabase Auth
     let authUserId: string;
@@ -245,7 +405,13 @@ Deno.serve(async (req) => {
     }
 
     // Provision: assign role, profile, trial_registration — server-side with service role
-    await provisionTrial(supabaseAdmin, authUserId, normalizedEmail, fullName, phone.trim(), trialDays);
+    let trialId: string | null;
+    if (newFlowEnabled) {
+      trialId = await provisionTrialDedicated(supabaseAdmin, authUserId, normalizedEmail, fullName, phone.trim(), trialDays, pensioneName);
+    } else {
+      trialId = await provisionTrial(supabaseAdmin, authUserId, normalizedEmail, fullName, phone.trim(), trialDays);
+    }
+    await logTrialActivity(supabaseAdmin, trialId, "registration_submitted");
 
     // Generate recovery link → /reset-password
     const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
@@ -263,6 +429,7 @@ Deno.serve(async (req) => {
       `Imposta la tua password — PetHotelManager`,
       trialWelcomeHtml(firstName.trim(), recoveryLink, trialDays),
     );
+    await logTrialActivity(supabaseAdmin, trialId, "welcome_email_sent");
 
     // Send notification email to admin user (role = 'admin')
     const { data: adminRoles } = await supabaseAdmin

@@ -34,6 +34,7 @@ export function LandingConfigTab() {
       hero_description: config.hero_description,
       cta_text: config.cta_text,
       show_trial_banner: config.show_trial_banner,
+      new_trial_flow_enabled: config.new_trial_flow_enabled,
     }).eq("id", config.id);
 
     if (error) {
@@ -134,6 +135,26 @@ export function LandingConfigTab() {
           <Button onClick={handleSave} disabled={saving} className="gap-2">
             <Save className="h-4 w-4" /> {saving ? "Salvataggio..." : "Salva Configurazione"}
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="border-amber-300">
+        <CardHeader>
+          <CardTitle className="text-amber-700">Nuovo flusso trial (sperimentale)</CardTitle>
+          <CardDescription>
+            Se attivo, ogni nuova registrazione alla prova gratuita crea una pensione dedicata
+            (invece di condividere "La Zampa Felice") con dati di test propri. Non attivare in
+            produzione finché non è stato validato su un ambiente di test.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-3">
+            <Switch
+              checked={!!config.new_trial_flow_enabled}
+              onCheckedChange={(v) => setConfig({ ...config, new_trial_flow_enabled: v })}
+            />
+            <Label>Attiva pensione dedicata per i nuovi trial</Label>
+          </div>
         </CardContent>
       </Card>
     </div>

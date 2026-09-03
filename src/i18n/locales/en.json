@@ -537,6 +537,8 @@
     "backToHome": "Back to Home",
     "firstName": "First name",
     "lastName": "Last name",
+    "pensioneName": "Name of your trial pet hotel",
+    "pensioneNamePlaceholder": "Happy Paws Pet Hotel",
     "phone": "Phone",
     "email": "Email",
     "warning": "⚠️ Enter real information: login credentials will be sent to the email provided.",
@@ -556,6 +558,7 @@
       "invalidPhone": "Enter a valid phone number",
       "invalidPhoneFormat": "Invalid phone number format",
       "repeatedPhone": "Invalid phone number",
+      "pensioneNameTooLong": "The pet hotel name is too long (max 80 characters)",
       "acceptPrivacy": "You must accept the privacy policy to continue.",
       "fixErrors": "Please correct the highlighted fields",
       "registrationError": "Registration error. Please try again."

@@ -219,6 +219,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTimeout(async () => {
           await supabase.auth.signOut();
         }, 3000);
+      } else {
+        // Traccia il primo accesso per la timeline funnel (Fase 5): l'edge
+        // function è idempotente, non registra un evento duplicato se non
+        // è davvero il primo login. Best-effort, non deve mai bloccare l'app.
+        baseClient.functions.invoke("log-trial-event", { body: { event: "login" } }).catch((e) => {
+          console.error("Failed to log trial login event:", e);
+        });
       }
     }
   }

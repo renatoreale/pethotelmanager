@@ -68,6 +68,14 @@ export default function ResetPassword() {
       console.error("[ResetPassword] provision-trial exception:", e);
     }
 
+    // Traccia il passaggio "password impostata" per gli utenti in prova
+    // (no-op silenzioso per tutti gli altri). Non deve mai bloccare il flusso.
+    try {
+      await baseClient.functions.invoke("log-trial-event", { body: { event: "password_set" } });
+    } catch (e) {
+      console.error("[ResetPassword] log-trial-event exception:", e);
+    }
+
     toast.success(t("auth.passwordUpdated"));
     navigate("/dashboard");
     setLoading(false);

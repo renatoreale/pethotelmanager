@@ -41,6 +41,7 @@ interface FormState {
   partita_iva: string;
   privacy: boolean;
   termini: boolean;
+  keepTrialData: boolean;
 }
 
 type PlanKey = keyof typeof STRIPE_TIERS;
@@ -94,6 +95,7 @@ export function TrialUpgradeDialog({ open, onOpenChange, prefill }: TrialUpgrade
     partita_iva: prefill?.partita_iva ?? "",
     privacy: false,
     termini: false,
+    keepTrialData: true,
   });
   const [loading, setLoading] = useState(false);
 
@@ -131,6 +133,7 @@ export function TrialUpgradeDialog({ open, onOpenChange, prefill }: TrialUpgrade
           partita_iva: form.partita_iva.trim(),
           piano: tier.name,
           price_id: tier.price_id,
+          keep_trial_data: form.keepTrialData,
         },
       });
 
@@ -305,6 +308,27 @@ export function TrialUpgradeDialog({ open, onOpenChange, prefill }: TrialUpgrade
               placeholder="IT12345678901 oppure RSSMRA80A01H501X"
               disabled={loading}
             />
+          </div>
+
+          {/* Mantieni dati di prova */}
+          <div className="rounded-lg border p-3 bg-muted/30">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="tu-keep-trial-data"
+                checked={form.keepTrialData}
+                onCheckedChange={(v) => set("keepTrialData", !!v)}
+                disabled={loading}
+                className="mt-0.5"
+              />
+              <Label htmlFor="tu-keep-trial-data" className="text-sm font-normal leading-snug cursor-pointer">
+                Mantieni i dati inseriti durante la prova gratuita (clienti, prenotazioni, ecc.)
+              </Label>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1.5 ml-7">
+              {form.keepTrialData
+                ? "La tua pensione di prova diventerà il tuo account definitivo, con tutti i dati che hai già inserito."
+                : "I dati inseriti durante la prova verranno eliminati e partirai con un account pulito."}
+            </p>
           </div>
 
           {/* Checkboxes */}

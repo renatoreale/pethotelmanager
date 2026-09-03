@@ -43,7 +43,7 @@ serve(async (req) => {
     const {
       nome, cognome, email, telefono,
       nome_pensione, citta_pensione, partita_iva,
-      piano, price_id,
+      piano, price_id, keep_trial_data,
     } = await req.json();
 
     if (!nome || !cognome || !email || !nome_pensione || !citta_pensione || !partita_iva || !piano || !price_id) {
@@ -58,6 +58,36 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
+    // Se la richiesta arriva da un utente autenticato con un trial attivo
+    // (dedicato, non ancora convertito), colleghiamo qui il suo tenant di
+    // prova. Non ci fidiamo di un tenant_id passato dal client: lo
+    // deriviamo server-side dalla sessione autenticata, così un utente non
+    // può mai far "promuovere" il tenant di qualcun altro.
+    let trialTenantId: string | null = null;
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      try {
+        const userClient = createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+          { global: { headers: { Authorization: authHeader } } },
+        );
+        const { data: { user } } = await userClient.auth.getUser();
+        if (user) {
+          const { data: trial } = await supabaseAdmin
+            .from("trial_registrations")
+            .select("tenant_id, is_converted")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          if (trial && !trial.is_converted && trial.tenant_id) {
+            trialTenantId = trial.tenant_id;
+          }
+        }
+      } catch (e) {
+        console.warn("[request-purchase] Could not resolve trial tenant from session:", (e as Error).message);
+      }
+    }
+
     // 1. Inserisce la richiesta in stato pending
     const { data: purchaseRequest, error: insertError } = await supabaseAdmin
       .from("purchase_requests")
@@ -67,6 +97,8 @@ serve(async (req) => {
         nome_pensione, citta_pensione, partita_iva,
         piano, price_id,
         status: "pending",
+        trial_tenant_id: trialTenantId,
+        keep_trial_data: trialTenantId ? keep_trial_data === true : null,
       })
       .select()
       .single();

@@ -78,6 +78,7 @@ export function AuditLogTab() {
   const restore = useRestoreAuditRecord();
 
   const tenantName = (id: string | null) => (id ? tenants?.find((t) => t.id === id)?.name ?? id.slice(0, 8) : "—");
+  const isTrialTenant = (id: string | null) => !!id && !!tenants?.find((t) => t.id === id)?.is_trial;
   const userLabel = (id: string | null) => {
     if (!id) return "Sistema";
     const u = users?.find((u) => u.user_id === id);
@@ -177,7 +178,14 @@ export function AuditLogTab() {
                       <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{formatDate(e.created_at)}</TableCell>
                       <TableCell className="font-mono text-xs">{e.table_name}</TableCell>
                       <TableCell><OperationBadge operation={e.operation} /></TableCell>
-                      <TableCell className="text-sm">{tenantName(e.tenant_id)}</TableCell>
+                      <TableCell className="text-sm">
+                        <span className="inline-flex items-center gap-1.5">
+                          {tenantName(e.tenant_id)}
+                          {isTrialTenant(e.tenant_id) && (
+                            <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 text-[10px] px-1.5 py-0">TRIAL</Badge>
+                          )}
+                        </span>
+                      </TableCell>
                       <TableCell className="text-sm">{userLabel(e.user_id)}</TableCell>
                       <TableCell>
                         <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setDetail(e)}>
@@ -210,6 +218,9 @@ export function AuditLogTab() {
             </DialogTitle>
             <DialogDescription>
               {detail && `${formatDate(detail.created_at)} · ${userLabel(detail.user_id)} (${detail.user_role ?? "—"}) · ${tenantName(detail.tenant_id)}`}
+              {detail && isTrialTenant(detail.tenant_id) && (
+                <Badge variant="outline" className="ml-2 bg-amber-100 text-amber-800 border-amber-200 text-[10px] px-1.5 py-0">TRIAL</Badge>
+              )}
             </DialogDescription>
           </DialogHeader>
           {detail && (
