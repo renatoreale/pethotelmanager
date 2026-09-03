@@ -6,8 +6,26 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const ALLOWED_EVENTS = ["password_set", "login"] as const;
+const ALLOWED_EVENTS = [
+  "password_set",
+  "login",
+  "preventivo_creato",
+  "prenotazione_confermata",
+  "check_in_effettuato",
+  "check_out_effettuato",
+] as const;
 type AllowedEvent = typeof ALLOWED_EVENTS[number];
+
+// Eventi che riflettono un uso reale del prodotto: si registrano ogni volta
+// (non solo la prima), cosi' l'admin vede anche l'attivita' piu' recente,
+// non solo la primissima. password_set/first_login restano invece
+// deduplicati: sono traguardi "una tantum" del funnel di onboarding.
+const PRODUCT_ACTION_EVENTS = [
+  "preventivo_creato",
+  "prenotazione_confermata",
+  "check_in_effettuato",
+  "check_out_effettuato",
+] as const;
 
 // Fase 5: chiamata dal frontend (utente autenticato) per tracciare i
 // passaggi del funnel trial dopo la registrazione — quando imposta la
@@ -88,6 +106,10 @@ Deno.serve(async (req) => {
       if (isFirstLogin) {
         await adminClient.from("trial_activity_log").insert({ trial_id: trial.id, action: "first_login" });
       }
+    } else if ((PRODUCT_ACTION_EVENTS as readonly string[]).includes(typedEvent)) {
+      // Uso reale del prodotto: si registra ad ogni occorrenza (niente dedup),
+      // cosi' la timeline riflette anche l'attivita' piu' recente.
+      await adminClient.from("trial_activity_log").insert({ trial_id: trial.id, action: typedEvent });
     }
 
     return new Response(JSON.stringify({ success: true }), {

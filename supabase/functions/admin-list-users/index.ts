@@ -70,15 +70,16 @@ Deno.serve(async (req) => {
     // Fetch trial_registrations with service role (bypasses RLS)
     const { data: trialRows } = await adminClient
       .from("trial_registrations")
-      .select("id, user_id, trial_start, trial_end, is_converted");
+      .select("id, user_id, trial_start, trial_end, is_converted, last_login_at");
 
-    const trialMap: Record<string, { trial_id: string; trial_start: string; trial_end: string; is_converted: boolean }> = {};
+    const trialMap: Record<string, { trial_id: string; trial_start: string; trial_end: string; is_converted: boolean; last_login_at: string | null }> = {};
     for (const t of trialRows || []) {
       trialMap[t.user_id] = {
         trial_id: t.id,
         trial_start: t.trial_start,
         trial_end: t.trial_end,
         is_converted: t.is_converted,
+        last_login_at: t.last_login_at,
       };
     }
 
@@ -99,6 +100,25 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Fase 5: ultima attività registrata per ogni trial (registrazione, email,
+    // password, login, azioni prodotto) — così il pannello admin la mostra
+    // in tabella senza dover aprire la timeline dettagliata di ognuno.
+    const trialIds = (trialRows || []).map((t) => t.id);
+    const lastActivityByTrialId: Record<string, { action: string; created_at: string }> = {};
+    if (trialIds.length > 0) {
+      const { data: activityRows } = await adminClient
+        .from("trial_activity_log")
+        .select("trial_id, action, created_at")
+        .in("trial_id", trialIds)
+        .order("created_at", { ascending: false });
+      for (const a of activityRows || []) {
+        // Il primo incontrato per trial_id è il più recente (ordinato desc).
+        if (!lastActivityByTrialId[a.trial_id]) {
+          lastActivityByTrialId[a.trial_id] = { action: a.action, created_at: a.created_at };
+        }
+      }
+    }
+
     // Return detailed user info
     const emails: Record<string, string> = {};
     const userDetails: Record<string, {
@@ -113,11 +133,26 @@ Deno.serve(async (req) => {
       trial_end: string | null;
       is_converted: boolean;
       bookings_created: number;
+      last_activity: { action: string; created_at: string } | null;
     }> = {};
 
     for (const u of allUsers) {
       emails[u.id] = u.email || "";
       const trial = trialMap[u.id];
+
+      // L'attività più recente è la più tardiva tra l'ultimo evento tracciato
+      // e l'ultimo login (aggiornato ad ogni accesso, non solo al primo).
+      let lastActivity: { action: string; created_at: string } | null = null;
+      if (trial?.trial_id) {
+        const loggedActivity = lastActivityByTrialId[trial.trial_id] || null;
+        const loginActivity = trial.last_login_at ? { action: "login", created_at: trial.last_login_at } : null;
+        if (loggedActivity && loginActivity) {
+          lastActivity = loggedActivity.created_at >= loginActivity.created_at ? loggedActivity : loginActivity;
+        } else {
+          lastActivity = loggedActivity || loginActivity;
+        }
+      }
+
       userDetails[u.id] = {
         email: u.email || "",
         created_at: u.created_at,
@@ -130,6 +165,7 @@ Deno.serve(async (req) => {
         trial_end: trial?.trial_end || null,
         is_converted: trial?.is_converted || false,
         bookings_created: bookingsCreatedMap[u.id] || 0,
+        last_activity: lastActivity,
       };
     }
 

@@ -36,6 +36,7 @@ interface TrialUser {
   days_remaining: number | null;
   last_sign_in_at: string | null;
   bookings_created: number;
+  last_activity: { action: string; created_at: string } | null;
 }
 
 const ACTIVITY_LABELS: Record<string, string> = {
@@ -43,6 +44,11 @@ const ACTIVITY_LABELS: Record<string, string> = {
   welcome_email_sent: "Email di benvenuto inviata",
   password_set: "Password impostata",
   first_login: "Primo accesso",
+  login: "Accesso",
+  preventivo_creato: "Preventivo creato",
+  prenotazione_confermata: "Prenotazione confermata",
+  check_in_effettuato: "Check-in effettuato",
+  check_out_effettuato: "Check-out effettuato",
 };
 
 interface TrialActivityEvent {
@@ -103,6 +109,7 @@ export function TrialDashboardTab() {
         trial_end: string | null;
         is_converted: boolean;
         bookings_created: number;
+        last_activity: { action: string; created_at: string } | null;
       }> = authRes.data?.userDetails || {};
 
       const trialUsers: TrialUser[] = [];
@@ -143,6 +150,7 @@ export function TrialDashboardTab() {
           days_remaining: daysRemaining,
           last_sign_in_at: auth.last_sign_in_at || null,
           bookings_created: auth.bookings_created || 0,
+          last_activity: auth.last_activity || null,
         });
       }
 
@@ -341,10 +349,15 @@ export function TrialDashboardTab() {
                           : "Mai"}
                       </TableCell>
                       <TableCell>
-                        {u.bookings_created > 0 ? (
-                          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-                            {u.bookings_created} prenotazion{u.bookings_created === 1 ? "e" : "i"}
-                          </Badge>
+                        {u.last_activity ? (
+                          <div className="flex flex-col gap-0.5">
+                            <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 w-fit">
+                              {ACTIVITY_LABELS[u.last_activity.action] || u.last_activity.action}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(u.last_activity.created_at), "dd MMM yyyy HH:mm", { locale: it })}
+                            </span>
+                          </div>
                         ) : (
                           <Badge variant="outline" className="text-muted-foreground">
                             Nessuna

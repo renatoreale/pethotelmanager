@@ -130,6 +130,9 @@ export function useCreatePreventivo() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["preventivi"] });
       qc.invalidateQueries({ queryKey: ["quote-requests"] });
+      // Fase 5: traccia l'azione per la timeline trial in admin (no-op per
+      // utenti non in prova, gestito lato server). Non deve mai bloccare.
+      supabase.functions.invoke("log-trial-event", { body: { event: "preventivo_creato" } }).catch(() => {});
     },
   });
 }

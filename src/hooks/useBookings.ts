@@ -123,6 +123,12 @@ export function getTransitions(status: string) {
   return TRANSITIONS[status] ?? [];
 }
 
+const TRIAL_EVENT_FOR_STATUS: Record<string, string> = {
+  confermata: "prenotazione_confermata",
+  check_in: "check_in_effettuato",
+  check_out: "check_out_effettuato",
+};
+
 export function useTransitionBooking() {
   const qc = useQueryClient();
   const supabase = useSupabase();
@@ -137,7 +143,13 @@ export function useTransitionBooking() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, { newStatus }) => {
+      // Fase 5: traccia l'azione per la timeline trial in admin (no-op per
+      // utenti non in prova, gestito lato server). Non deve mai bloccare.
+      const trialEvent = TRIAL_EVENT_FOR_STATUS[newStatus];
+      if (trialEvent) {
+        supabase.functions.invoke("log-trial-event", { body: { event: trialEvent } }).catch(() => {});
+      }
       qc.invalidateQueries({ queryKey: ["bookings"] });
       qc.invalidateQueries({ queryKey: ["preventivi"] });
       qc.invalidateQueries({ queryKey: ["appointments-by-date"] });
