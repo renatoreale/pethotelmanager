@@ -22,8 +22,9 @@ import {
 import Autoplay from "embla-carousel-autoplay";
 import {
   PawPrint, Calendar, Users, CreditCard, FileText, BarChart3,
-  Check, ArrowRight, Shield, Clock, Zap, Building2, Crown, Video, Send,
-  X, AlertTriangle, Heart, TrendingUp, Phone, Monitor
+  Check, ArrowRight, Shield, Clock, Zap, Crown, Video, Send,
+  X, AlertTriangle, Heart, TrendingUp, Phone, Monitor,
+  LogOut, Star, ClipboardCheck
 } from "lucide-react";
 import landingLogo from "@/assets/pethotelmanager_landing_logo.png";
 
@@ -64,43 +65,51 @@ const STARTER_FEATURES = [
   "Area riservata per cliente",
 ];
 
-/* ── BENEFICI (non funzioni!) ── */
-const BENEFITS = [
+/* ── Cosa succede davvero in pensione (prima/durante/checkout/dopo) ── */
+const STAY_LIFECYCLE = [
+  {
+    icon: FileText,
+    title: "Prima dell'arrivo",
+    desc: "Prenotazioni, preventivi, caparre, documenti e requisiti sotto controllo.",
+  },
+  {
+    icon: Heart,
+    title: "Durante il soggiorno",
+    desc: "Alimentazione, farmaci, attività, note, foto e attività dello staff.",
+  },
+  {
+    icon: LogOut,
+    title: "Al check-out",
+    desc: "Saldo, extra, chiusura soggiorno e storico del cliente.",
+  },
+  {
+    icon: Star,
+    title: "Dopo il soggiorno",
+    desc: "Recensioni, ri-prenotazioni e clienti da ricontattare.",
+  },
+];
+
+/* ── Feature organizzate per categoria (non una lista piatta) ── */
+const FEATURE_CATEGORIES = [
   {
     icon: Calendar,
-    title: "Zero overbooking",
-    desc: "Il calendario in tempo reale ti mostra subito le casette libere. Mai più doppie prenotazioni o clienti delusi.",
-    before: "Controllo manuale su fogli Excel, errori frequenti",
-  },
-  {
-    icon: Clock,
-    title: "Risparmia 10+ ore a settimana",
-    desc: "Preventivi automatici, PDF pronti in un click, check-in/out guidati. Il lavoro manuale ripetitivo sparisce.",
-    before: "Ore perse a compilare fogli, scrivere email, calcolare prezzi",
-  },
-  {
-    icon: CreditCard,
-    title: "Pagamenti sempre sotto controllo",
-    desc: "Caparre, saldi, rimborsi: tutto tracciato. Sai sempre chi ha pagato, quanto e quando.",
-    before: "Post-it, promemoria mentali, caparre dimenticate",
+    title: "Prenotazioni",
+    items: ["Calendario", "Disponibilità", "Preventivi", "Caparre", "Check-in/out"],
   },
   {
     icon: PawPrint,
-    title: "Schede Pets complete",
-    desc: "Microchip, dieta, allergie, note comportamentali: tutto a portata di mano quando serve davvero.",
-    before: "Informazioni sparse su carta, WhatsApp, fogli volanti",
+    title: "Gestione animale",
+    items: ["Scheda pet", "Alimentazione", "Farmaci", "Esigenze speciali", "Documenti"],
+  },
+  {
+    icon: ClipboardCheck,
+    title: "Operatività",
+    items: ["Task", "Staff", "Attività giornaliere", "Note", "Foto", "Aggiornamenti cliente"],
   },
   {
     icon: BarChart3,
-    title: "Decisioni basate sui dati",
-    desc: "Statistiche su occupazione, fatturato e tendenze per capire come far crescere la tua pensione.",
-    before: "Nessuna visibilità su ricavi, periodi di punta, trend",
-  },
-  {
-    icon: Building2,
-    title: "Multi-sede? Nessun problema",
-    desc: "Gestisci più pensioni da un'unica dashboard, ognuna con i propri dati, listini e configurazioni.",
-    before: "Fogli separati per ogni sede, impossibile avere una visione d'insieme",
+    title: "Controllo del business",
+    items: ["Incassi", "Occupazione", "Clienti", "Servizi extra", "Statistiche"],
   },
 ];
 
@@ -353,22 +362,21 @@ export default function Landing() {
           </Badge>
 
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground leading-tight mb-4">
-            Gestisci la tua pensione per animali
-            <span className="text-primary block mt-1">in un solo software</span>
+            La tua pensione.
+            <span className="text-primary block mt-1">Finalmente sotto controllo.</span>
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed">
-            Basta Excel, post-it e WhatsApp.
-            <strong className="text-foreground"> Pet Hotel Manager</strong> automatizza prenotazioni, pagamenti e comunicazioni
-            — così risparmi <strong className="text-foreground">ore ogni settimana</strong> e non perdi più una prenotazione.
+            <strong className="text-foreground">Pet Hotel Manager</strong> è il software gestionale creato da chi ha gestito davvero pensioni per animali.
+            Prenotazioni, clienti, animali, pagamenti e operatività quotidiana in un unico posto.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="text-base px-8 py-6 gap-2 shadow-lg shadow-primary/20" onClick={handleStartTrial}>
-              Prova Gratis — {trialDays} Giorni <ArrowRight className="h-4 w-4" />
+              Prova gratis per {trialDays} giorni <ArrowRight className="h-4 w-4" />
             </Button>
             <Button size="lg" variant="outline" className="text-base px-8 py-6 gap-2" asChild>
-              <a href="#demo"><Video className="h-4 w-4" /> Richiedi una Demo Live</a>
+              <a href="#funzionalita">Scopri come funziona</a>
             </Button>
           </div>
 
@@ -380,21 +388,70 @@ export default function Landing() {
         </div>
       </header>
 
-      {/* ══════════ 1bis. STATISTICHE ══════════ */}
-      <section className="py-8">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="rounded-xl border bg-background p-6 flex items-center gap-4 text-center md:text-left justify-center md:justify-start">
-              <PawPrint className="h-8 w-8 text-primary shrink-0" />
-              <div>
-                <div className="font-semibold text-foreground">Nato dall'esperienza diretta</div>
-                <div className="text-sm text-muted-foreground mt-1">nella creazione e gestione di due pensioni in Lombardia</div>
+      {/* ══════════ 1bis. NON È SOLO UN CALENDARIO ══════════ */}
+      <section className="py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">Non è solo un calendario.</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Pet Hotel Manager gestisce quello che succede realmente in pensione.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {STAY_LIFECYCLE.map((s) => (
+              <div key={s.title} className="rounded-xl border bg-background p-6 text-center">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <s.icon className="h-6 w-6 text-primary" />
+                </div>
+                <div className="font-semibold text-foreground mb-2">{s.title}</div>
+                <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════ 1ter. CREATO DA CHI LO FA ══════════ */}
+      <section className="py-20 bg-card/50">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="grid md:grid-cols-[auto_1fr] gap-8 items-center">
+            <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto md:mx-0 shrink-0">
+              <PawPrint className="h-8 w-8 text-primary" />
             </div>
-            <div className="rounded-xl border bg-background p-6 text-center">
-              <div className="text-3xl font-bold text-primary">10h+</div>
-              <div className="text-sm text-muted-foreground mt-1">Risparmiate a settimana</div>
+            <div className="text-center md:text-left">
+              <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-4">
+                Lo abbiamo costruito perché ne avevamo bisogno noi per primi.
+              </h2>
+              <p className="text-muted-foreground text-base md:text-lg leading-relaxed mb-6">
+                Pet Hotel Manager nasce dall'esperienza diretta nella gestione di due pensioni per gatti a Milano.
+                Non abbiamo immaginato come dovrebbe funzionare una pensione. Abbiamo trasformato in software i problemi
+                che affrontiamo realmente ogni giorno: prenotazioni, check-in, documenti, pagamenti, organizzazione dello
+                staff e cura degli animali.
+              </p>
+              <Button variant="outline" className="gap-2" onClick={handleStartTrial}>
+                Scopri Pet Hotel Manager <ArrowRight className="h-4 w-4" />
+              </Button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════ 1quater. OGGI — Preview dashboard ══════════ */}
+      <section className="py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
+              <Monitor className="h-3.5 w-3.5 mr-1.5" /> La dashboard
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+              Apri Pet Hotel Manager e sai subito cosa sta succedendo.
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Arrivi, partenze, animali presenti, farmaci, task e pagamenti da incassare: tutto in un'unica schermata.
+            </p>
+          </div>
+          <div className="rounded-2xl border shadow-xl overflow-hidden bg-background">
+            <img src={screenshotDashboard} alt="Dashboard operativa di Pet Hotel Manager" className="w-full h-auto" loading="lazy" />
           </div>
         </div>
       </section>
@@ -426,8 +483,8 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ══════════ 3. LA SOLUZIONE — Benefici (non funzioni) ══════════ */}
-      <section className="py-24">
+      {/* ══════════ 3. LA SOLUZIONE — Feature per categoria ══════════ */}
+      <section id="funzionalita" className="py-24 scroll-mt-20">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
@@ -437,24 +494,26 @@ export default function Landing() {
               Ecco cosa cambia con Pet Hotel Manager
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Non ti elenchiamo funzioni. Ti mostriamo i <strong className="text-foreground">risultati concreti</strong> che ottieni.
+              Tutto quello che ti serve per gestire la pensione, organizzato come lavori davvero.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {BENEFITS.map((b) => (
-              <Card key={b.title} className="border-none bg-card shadow-md hover:shadow-lg transition-shadow group">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {FEATURE_CATEGORIES.map((cat) => (
+              <Card key={cat.title} className="border-none bg-card shadow-md hover:shadow-lg transition-shadow group">
                 <CardHeader className="pb-3">
                   <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
-                    <b.icon className="h-6 w-6 text-primary" />
+                    <cat.icon className="h-6 w-6 text-primary" />
                   </div>
-                  <CardTitle className="text-lg">{b.title}</CardTitle>
+                  <CardTitle className="text-lg">{cat.title}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-muted-foreground text-sm leading-relaxed">{b.desc}</p>
-                  <div className="flex items-start gap-2 pt-2 border-t border-border/50">
-                    <span className="text-xs font-medium text-destructive/70 bg-destructive/5 px-2 py-1 rounded">Prima:</span>
-                    <p className="text-xs text-muted-foreground italic">{b.before}</p>
-                  </div>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {cat.items.map((item) => (
+                      <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Check className="h-3.5 w-3.5 text-primary shrink-0" /> {item}
+                      </li>
+                    ))}
+                  </ul>
                 </CardContent>
               </Card>
             ))}
