@@ -187,7 +187,7 @@ Deno.serve(async (req) => {
       const trialStart = new Date();
       trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
 
-      const { error: trialError } = await adminClient
+      const { data: newTrial, error: trialError } = await adminClient
         .from("trial_registrations")
         .insert({
           user_id: user.id,
@@ -197,10 +197,20 @@ Deno.serve(async (req) => {
           tenant_id: tenantId,
           trial_start: trialStart.toISOString(),
           trial_end: trialEnd.toISOString(),
-        });
+        })
+        .select("id")
+        .single();
 
       if (trialError) {
         console.error("Error creating trial registration:", trialError);
+      } else if (newTrial) {
+        // Fase 5: percorso di fallback (form saltato/interrotto) — lo
+        // segnaliamo comunque nella timeline per visibilità in admin.
+        await adminClient.from("trial_activity_log").insert({
+          trial_id: newTrial.id,
+          action: "registration_submitted",
+          metadata: { via: "fallback" },
+        });
       }
     } else {
       trialEnd = new Date(existingTrial.trial_end);

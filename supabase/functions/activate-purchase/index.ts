@@ -89,33 +89,93 @@ serve(async (req) => {
     const fullName = `${purchase.nome} ${purchase.cognome}`;
     const pianoLabel = purchase.piano.charAt(0).toUpperCase() + purchase.piano.slice(1);
 
-    // 2. Genera slug univoco
-    let slug = slugify(purchase.nome_pensione);
-    const { data: existingSlug } = await adminClient
-      .from("tenants")
-      .select("slug")
-      .eq("slug", slug)
-      .maybeSingle();
-    if (existingSlug) slug = `${slug}-${Math.random().toString(36).substring(2, 6)}`;
+    // 2-3. Determina il tenant: se l'utente ha scelto di mantenere i dati di
+    // prova e il suo tenant trial dedicato è ancora valido, lo promuove a
+    // tenant definitivo (senza copiare nulla). Altrimenti crea un tenant
+    // nuovo, esattamente come per ogni acquisto (comportamento invariato).
+    let tenant: any = null;
+    let promotedTrialTenantId: string | null = null;
 
-    // 3. Crea il tenant
-    const { data: tenant, error: tenantError } = await adminClient
-      .from("tenants")
-      .insert({
-        name: purchase.nome_pensione,
-        slug,
-        email: purchase.email,
-        phone: purchase.telefono || null,
-        address: purchase.citta_pensione,
-        num_singole: 0,
-        num_doppie: 0,
-        pet_type: "gatti",
-        locale: "it",
-      })
-      .select()
-      .single();
+    if (purchase.trial_tenant_id && purchase.keep_trial_data === true) {
+      const { data: trialTenant } = await adminClient
+        .from("tenants")
+        .select("id, slug, name, is_trial, trial_purged_at")
+        .eq("id", purchase.trial_tenant_id)
+        .maybeSingle();
 
-    if (tenantError || !tenant) throw new Error("Errore creazione tenant: " + tenantError?.message);
+      const nameLooksLikeTrial = !!trialTenant && /trial$/i.test((trialTenant.name || "").trim());
+      let uniquelyLinked = false;
+      if (trialTenant) {
+        const { count } = await adminClient
+          .from("trial_registrations")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", trialTenant.id);
+        uniquelyLinked = count === 1;
+      }
+
+      if (trialTenant && trialTenant.is_trial === true && !trialTenant.trial_purged_at && nameLooksLikeTrial && uniquelyLinked) {
+        let promotedSlug = slugify(purchase.nome_pensione);
+        if (promotedSlug !== trialTenant.slug) {
+          const { data: slugClash } = await adminClient
+            .from("tenants")
+            .select("id")
+            .eq("slug", promotedSlug)
+            .maybeSingle();
+          if (slugClash) promotedSlug = `${promotedSlug}-${Math.random().toString(36).substring(2, 6)}`;
+        } else {
+          promotedSlug = trialTenant.slug;
+        }
+
+        const { data: updatedTenant, error: promoteError } = await adminClient
+          .from("tenants")
+          .update({
+            name: purchase.nome_pensione,
+            slug: promotedSlug,
+            email: purchase.email,
+            phone: purchase.telefono || null,
+            address: purchase.citta_pensione,
+            is_trial: false,
+          })
+          .eq("id", trialTenant.id)
+          .select()
+          .single();
+
+        if (promoteError || !updatedTenant) throw new Error("Errore promozione pensione di prova: " + promoteError?.message);
+        tenant = updatedTenant;
+        promotedTrialTenantId = trialTenant.id;
+      } else {
+        console.warn("[activate-purchase] trial_tenant_id non più valido per la promozione, si procede con un tenant nuovo:", purchase.trial_tenant_id);
+      }
+    }
+
+    if (!tenant) {
+      let slug = slugify(purchase.nome_pensione);
+      const { data: existingSlug } = await adminClient
+        .from("tenants")
+        .select("slug")
+        .eq("slug", slug)
+        .maybeSingle();
+      if (existingSlug) slug = `${slug}-${Math.random().toString(36).substring(2, 6)}`;
+
+      const { data: newTenant, error: tenantError } = await adminClient
+        .from("tenants")
+        .insert({
+          name: purchase.nome_pensione,
+          slug,
+          email: purchase.email,
+          phone: purchase.telefono || null,
+          address: purchase.citta_pensione,
+          num_singole: 0,
+          num_doppie: 0,
+          pet_type: "gatti",
+          locale: "it",
+        })
+        .select()
+        .single();
+
+      if (tenantError || !newTenant) throw new Error("Errore creazione tenant: " + tenantError?.message);
+      tenant = newTenant;
+    }
 
     // 3bis. Collega il tenant al cliente/abbonamento Stripe della richiesta pagata
     if (purchase.stripe_session_id) {
@@ -163,25 +223,50 @@ serve(async (req) => {
       newUserId = createData.user.id;
     }
 
-    // 5. Rimuovi associazioni con il tenant demo (la-zampa-felice) se presenti
-    const { data: demoTenant } = await adminClient
-      .from("tenants")
-      .select("id")
-      .eq("slug", "la-zampa-felice")
-      .maybeSingle();
-
-    if (demoTenant) {
-      await adminClient
-        .from("user_roles")
-        .delete()
-        .eq("user_id", newUserId)
-        .eq("tenant_id", demoTenant.id);
-
-      // Marca trial come convertito
+    // 5. Chiude il trial e ripulisce il vecchio tenant di prova, se presente
+    if (promotedTrialTenantId) {
+      // Promosso a tenant definitivo: solo marcare il trial come convertito.
       await adminClient
         .from("trial_registrations")
         .update({ is_converted: true })
-        .eq("user_id", newUserId);
+        .eq("tenant_id", promotedTrialTenantId);
+    } else if (purchase.trial_tenant_id) {
+      // Aveva un tenant di prova dedicato ma non è stato promosso (l'utente
+      // ha scelto di non mantenere i dati, oppure la promozione non era più
+      // valida): marca comunque il trial come convertito così il cron di
+      // pulizia non lo tocca più, ed elimina subito i dati operativi del
+      // vecchio tenant di prova solo se la scelta esplicita era di eliminarli.
+      // L'utente non viene mai disattivato: ha appena pagato, resta attivo
+      // sul tenant nuovo creato sopra.
+      await adminClient
+        .from("trial_registrations")
+        .update({ is_converted: true })
+        .eq("tenant_id", purchase.trial_tenant_id);
+
+      if (purchase.keep_trial_data === false) {
+        const { error: purgeError } = await adminClient.rpc("purge_trial_tenant_data", { _tenant_id: purchase.trial_tenant_id });
+        if (purgeError) console.error("[activate-purchase] Errore pulizia dati trial:", purgeError.message);
+      }
+    } else {
+      // Percorso esistente, invariato: tenant demo condiviso "la-zampa-felice".
+      const { data: demoTenant } = await adminClient
+        .from("tenants")
+        .select("id")
+        .eq("slug", "la-zampa-felice")
+        .maybeSingle();
+
+      if (demoTenant) {
+        await adminClient
+          .from("user_roles")
+          .delete()
+          .eq("user_id", newUserId)
+          .eq("tenant_id", demoTenant.id);
+
+        await adminClient
+          .from("trial_registrations")
+          .update({ is_converted: true })
+          .eq("user_id", newUserId);
+      }
     }
 
     // 6. Assegna ruolo titolare (skip se già esiste)
@@ -258,7 +343,7 @@ serve(async (req) => {
       .update({ status: "attivato" })
       .eq("id", purchase_request_id);
 
-    return new Response(JSON.stringify({ success: true, tenant_id: tenant.id, slug }), {
+    return new Response(JSON.stringify({ success: true, tenant_id: tenant.id, slug: tenant.slug }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });

@@ -26,6 +26,23 @@ function validatePensioneName(name: string): string | null {
   return null;
 }
 
+// Fase 5: traccia i passaggi del funnel trial (registrazione, email, ecc.)
+// in trial_activity_log per capire dove un utente si blocca. Mai bloccante:
+// un errore qui non deve mai far fallire la registrazione.
+async function logTrialActivity(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  trialId: string | null,
+  action: string,
+): Promise<void> {
+  if (!trialId) return;
+  try {
+    const { error } = await supabaseAdmin.from("trial_activity_log").insert({ trial_id: trialId, action });
+    if (error) console.error(`[register-trial] Error logging activity "${action}":`, error.message);
+  } catch (e) {
+    console.error(`[register-trial] Exception logging activity "${action}":`, (e as Error).message);
+  }
+}
+
 function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -97,7 +114,7 @@ async function provisionTrial(
   fullName: string,
   phone: string,
   trialDays: number,
-): Promise<void> {
+): Promise<string | null> {
   // 1. Find or create demo tenant
   let { data: demoTenant } = await supabaseAdmin
     .from("tenants")
@@ -159,23 +176,31 @@ async function provisionTrial(
     .eq("user_id", userId)
     .maybeSingle();
 
+  let trialId: string | null = existingTrial?.id ?? null;
+
   if (!existingTrial) {
     const trialStart = new Date();
     const trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
 
-    const { error: trialError } = await supabaseAdmin.from("trial_registrations").insert({
-      user_id: userId,
-      email,
-      full_name: fullName,
-      pet_type: "gatti",
-      tenant_id: tenantId,
-      trial_start: trialStart.toISOString(),
-      trial_end: trialEnd.toISOString(),
-    });
+    const { data: newTrial, error: trialError } = await supabaseAdmin
+      .from("trial_registrations")
+      .insert({
+        user_id: userId,
+        email,
+        full_name: fullName,
+        pet_type: "gatti",
+        tenant_id: tenantId,
+        trial_start: trialStart.toISOString(),
+        trial_end: trialEnd.toISOString(),
+      })
+      .select("id")
+      .single();
     if (trialError) console.error("[register-trial] Error creating trial_registration:", trialError);
+    trialId = newTrial?.id ?? null;
   }
 
   console.log(`[register-trial] Provisioning complete for user ${userId}, tenant ${tenantId}`);
+  return trialId;
 }
 
 // Nuovo flusso (dietro landing_config.new_trial_flow_enabled): crea una
@@ -191,7 +216,7 @@ async function provisionTrialDedicated(
   phone: string,
   trialDays: number,
   pensioneName: string,
-): Promise<void> {
+): Promise<string | null> {
   // Idempotenza: se l'utente ha già una pensione di prova (retry dopo un
   // errore parziale), non ricrearla.
   const { data: existingTrial } = await supabaseAdmin
@@ -202,7 +227,7 @@ async function provisionTrialDedicated(
 
   if (existingTrial?.tenant_id) {
     console.log(`[register-trial] User ${userId} already has trial tenant ${existingTrial.tenant_id}, skipping provisioning`);
-    return;
+    return existingTrial.id;
   }
 
   // Nome pensione con suffisso " TRIAL" garantito (identifica in modo
@@ -266,18 +291,23 @@ async function provisionTrialDedicated(
   const trialStart = new Date();
   const trialEnd = new Date(trialStart.getTime() + trialDays * 24 * 60 * 60 * 1000);
 
-  const { error: trialError } = await supabaseAdmin.from("trial_registrations").insert({
-    user_id: userId,
-    email,
-    full_name: fullName,
-    pet_type: "gatti",
-    tenant_id: tenantId,
-    trial_start: trialStart.toISOString(),
-    trial_end: trialEnd.toISOString(),
-  });
+  const { data: newTrial, error: trialError } = await supabaseAdmin
+    .from("trial_registrations")
+    .insert({
+      user_id: userId,
+      email,
+      full_name: fullName,
+      pet_type: "gatti",
+      tenant_id: tenantId,
+      trial_start: trialStart.toISOString(),
+      trial_end: trialEnd.toISOString(),
+    })
+    .select("id")
+    .single();
   if (trialError) console.error("[register-trial] Error creating trial_registration:", trialError);
 
   console.log(`[register-trial] Dedicated provisioning complete for user ${userId}, tenant ${tenantId} ("${tenantName}")`);
+  return newTrial?.id ?? null;
 }
 
 Deno.serve(async (req) => {
@@ -375,11 +405,13 @@ Deno.serve(async (req) => {
     }
 
     // Provision: assign role, profile, trial_registration — server-side with service role
+    let trialId: string | null;
     if (newFlowEnabled) {
-      await provisionTrialDedicated(supabaseAdmin, authUserId, normalizedEmail, fullName, phone.trim(), trialDays, pensioneName);
+      trialId = await provisionTrialDedicated(supabaseAdmin, authUserId, normalizedEmail, fullName, phone.trim(), trialDays, pensioneName);
     } else {
-      await provisionTrial(supabaseAdmin, authUserId, normalizedEmail, fullName, phone.trim(), trialDays);
+      trialId = await provisionTrial(supabaseAdmin, authUserId, normalizedEmail, fullName, phone.trim(), trialDays);
     }
+    await logTrialActivity(supabaseAdmin, trialId, "registration_submitted");
 
     // Generate recovery link → /reset-password
     const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
@@ -397,6 +429,7 @@ Deno.serve(async (req) => {
       `Imposta la tua password — PetHotelManager`,
       trialWelcomeHtml(firstName.trim(), recoveryLink, trialDays),
     );
+    await logTrialActivity(supabaseAdmin, trialId, "welcome_email_sent");
 
     // Send notification email to admin user (role = 'admin')
     const { data: adminRoles } = await supabaseAdmin

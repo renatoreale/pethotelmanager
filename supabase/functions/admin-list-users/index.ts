@@ -70,11 +70,12 @@ Deno.serve(async (req) => {
     // Fetch trial_registrations with service role (bypasses RLS)
     const { data: trialRows } = await adminClient
       .from("trial_registrations")
-      .select("user_id, trial_start, trial_end, is_converted");
+      .select("id, user_id, trial_start, trial_end, is_converted");
 
-    const trialMap: Record<string, { trial_start: string; trial_end: string; is_converted: boolean }> = {};
+    const trialMap: Record<string, { trial_id: string; trial_start: string; trial_end: string; is_converted: boolean }> = {};
     for (const t of trialRows || []) {
       trialMap[t.user_id] = {
+        trial_id: t.id,
         trial_start: t.trial_start,
         trial_end: t.trial_end,
         is_converted: t.is_converted,
@@ -107,6 +108,7 @@ Deno.serve(async (req) => {
       banned_until: string | null;
       last_sign_in_at: string | null;
       user_metadata: Record<string, any>;
+      trial_id: string | null;
       trial_start: string | null;
       trial_end: string | null;
       is_converted: boolean;
@@ -123,6 +125,7 @@ Deno.serve(async (req) => {
         banned_until: u.banned_until || null,
         last_sign_in_at: u.last_sign_in_at || null,
         user_metadata: u.user_metadata || {},
+        trial_id: trial?.trial_id || null,
         trial_start: trial?.trial_start || null,
         trial_end: trial?.trial_end || null,
         is_converted: trial?.is_converted || false,

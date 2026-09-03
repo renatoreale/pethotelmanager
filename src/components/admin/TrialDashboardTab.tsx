@@ -13,15 +13,19 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
 import { format, isPast, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
-import { Users, Clock, CheckCircle, XCircle, RefreshCw, Trash2, Search, Mail, Activity } from "lucide-react";
+import { Users, Clock, CheckCircle, XCircle, RefreshCw, Trash2, Search, Mail, Activity, History, Loader2 as Loader2Icon } from "lucide-react";
 import { toast } from "sonner";
 
 type TrialStatus = "richiesta" | "attiva" | "scaduta";
 
 interface TrialUser {
   user_id: string;
+  trial_id: string | null;
   full_name: string | null;
   email: string;
   phone: string | null;
@@ -32,6 +36,21 @@ interface TrialUser {
   days_remaining: number | null;
   last_sign_in_at: string | null;
   bookings_created: number;
+}
+
+const ACTIVITY_LABELS: Record<string, string> = {
+  registration_submitted: "Registrazione inviata",
+  welcome_email_sent: "Email di benvenuto inviata",
+  password_set: "Password impostata",
+  first_login: "Primo accesso",
+};
+
+interface TrialActivityEvent {
+  id: string;
+  action: string;
+  page: string | null;
+  metadata: Record<string, any> | null;
+  created_at: string;
 }
 
 function getStatusBadge(status: TrialStatus, daysRemaining: number | null) {
@@ -79,6 +98,7 @@ export function TrialDashboardTab() {
         user_metadata: Record<string, any>;
         banned_until: string | null;
         last_sign_in_at: string | null;
+        trial_id: string | null;
         trial_start: string | null;
         trial_end: string | null;
         is_converted: boolean;
@@ -112,6 +132,7 @@ export function TrialDashboardTab() {
 
         trialUsers.push({
           user_id: userId,
+          trial_id: auth.trial_id || null,
           full_name: meta.full_name || null,
           email: auth.email,
           phone: meta.phone || null,
@@ -136,6 +157,30 @@ export function TrialDashboardTab() {
   };
 
   useEffect(() => { if (session) fetchAll(); }, [session]);
+
+  const [timelineUser, setTimelineUser] = useState<TrialUser | null>(null);
+  const [timelineLoading, setTimelineLoading] = useState(false);
+  const [timelineEvents, setTimelineEvents] = useState<TrialActivityEvent[]>([]);
+
+  const openTimeline = async (u: TrialUser) => {
+    setTimelineUser(u);
+    if (!u.trial_id) {
+      setTimelineEvents([]);
+      return;
+    }
+    setTimelineLoading(true);
+    try {
+      const { data, error } = await baseClient.functions.invoke("admin-trial-timeline", {
+        body: { trial_id: u.trial_id },
+      });
+      if (error) throw error;
+      setTimelineEvents(data?.events || []);
+    } catch (e: any) {
+      toast.error("Errore nel caricamento della timeline: " + e.message);
+      setTimelineEvents([]);
+    }
+    setTimelineLoading(false);
+  };
 
   const handleDelete = async () => {
     if (!deletingUser) return;
@@ -307,14 +352,24 @@ export function TrialDashboardTab() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeletingUser(u)}
-                          title="Elimina"
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openTimeline(u)}
+                            title="Timeline registrazione"
+                          >
+                            <History className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setDeletingUser(u)}
+                            title="Elimina"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -348,6 +403,50 @@ export function TrialDashboardTab() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Timeline registrazione */}
+      <Dialog open={!!timelineUser} onOpenChange={(open) => { if (!open) setTimelineUser(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-4 w-4" /> Timeline registrazione
+            </DialogTitle>
+            <DialogDescription>
+              {timelineUser?.full_name || timelineUser?.email}
+            </DialogDescription>
+          </DialogHeader>
+          {timelineLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2Icon className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : !timelineUser?.trial_id ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              Nessuna registrazione trial associata a questo account.
+            </p>
+          ) : !timelineEvents.length ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              Nessun passaggio ancora registrato.
+            </p>
+          ) : (
+            <ol className="space-y-3 py-2">
+              {timelineEvents.map((ev, i) => (
+                <li key={ev.id} className="flex items-start gap-3">
+                  <div className="flex flex-col items-center pt-0.5">
+                    <div className="h-2 w-2 rounded-full bg-primary shrink-0" />
+                    {i < timelineEvents.length - 1 && <div className="w-px flex-1 bg-border mt-1" style={{ minHeight: 16 }} />}
+                  </div>
+                  <div className="pb-1">
+                    <p className="text-sm font-medium">{ACTIVITY_LABELS[ev.action] || ev.action}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(ev.created_at), "dd MMM yyyy HH:mm", { locale: it })}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
