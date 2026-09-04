@@ -3,17 +3,20 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 
 export interface CarePlanFeeding {
+  catId: string;
   food: string;
   quantity: string;
   time: string;
 }
 export interface CarePlanMedication {
+  catId: string;
   name: string;
   dose: string;
   time: string;
   duration: string;
 }
 export interface CarePlanActivity {
+  catId: string;
   activity: string;
   frequency: string;
   time: string;

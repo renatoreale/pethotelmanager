@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -8,14 +8,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, UtensilsCrossed, Pill, Activity, StickyNote, ClipboardList, Sparkles } from "lucide-react";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Plus, Trash2, UtensilsCrossed, Pill, Activity, StickyNote, ClipboardList, Sparkles, PawPrint } from "lucide-react";
 import { toast } from "sonner";
-import { useUpdateCarePlan, type CarePlan } from "@/hooks/useBookings";
+import {
+  useUpdateCarePlan, type CarePlan, type CarePlanFeeding, type CarePlanMedication, type CarePlanActivity,
+} from "@/hooks/useBookings";
 import { useTasksForBooking, useGenerateTasksFromCarePlan } from "@/hooks/usePlanningTasks";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
 const EMPTY_PLAN: CarePlan = { feeding: [], medications: [], activities: [], special_notes: "" };
+const ALL_PETS = "__all__";
 
 interface CarePlanDialogProps {
   open: boolean;
@@ -29,6 +35,13 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
   const { data: tasks } = useTasksForBooking(open ? booking?.id : undefined);
 
   const [plan, setPlan] = useState<CarePlan>(EMPTY_PLAN);
+
+  const pets: { id: string; name: string }[] = useMemo(
+    () => (booking?.booking_cats ?? []).map((bc: any) => ({ id: bc.cat_id ?? bc.cat?.id, name: bc.cat?.name })).filter((p: any) => p.id && p.name),
+    [booking]
+  );
+  const hasMultiplePets = pets.length > 1;
+  const defaultCatId = pets.length === 1 ? pets[0].id : "";
 
   useEffect(() => {
     if (open) {
@@ -44,7 +57,9 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
 
   if (!booking) return null;
 
-  const catNames = (booking.booking_cats ?? []).map((bc: any) => bc.cat?.name).filter(Boolean).join(", ") || "il pet";
+  const petNameById = (catId: string | undefined) => pets.find((p) => p.id === catId)?.name;
+  const allCatNames = pets.map((p) => p.name).join(", ") || "il pet";
+  const labelForCat = (catId: string | undefined) => petNameById(catId) ?? allCatNames;
 
   const handleSave = async () => {
     try {
@@ -60,21 +75,21 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
     for (const f of plan.feeding) {
       if (!f.food.trim()) continue;
       newTasks.push({
-        title: `Alimentazione — ${catNames}${f.time ? ` (${f.time})` : ""}`,
+        title: `Alimentazione — ${labelForCat(f.catId)}${f.time ? ` (${f.time})` : ""}`,
         description: [f.food, f.quantity].filter(Boolean).join(" — "),
       });
     }
     for (const m of plan.medications) {
       if (!m.name.trim()) continue;
       newTasks.push({
-        title: `Farmaco — ${catNames}${m.time ? ` (${m.time})` : ""}`,
+        title: `Farmaco — ${labelForCat(m.catId)}${m.time ? ` (${m.time})` : ""}`,
         description: [m.name, m.dose].filter(Boolean).join(" — "),
       });
     }
     for (const a of plan.activities) {
       if (!a.activity.trim()) continue;
       newTasks.push({
-        title: `${a.activity} — ${catNames}${a.time ? ` (${a.time})` : ""}`,
+        title: `${a.activity} — ${labelForCat(a.catId)}${a.time ? ` (${a.time})` : ""}`,
         description: a.frequency || undefined,
       });
     }
@@ -82,9 +97,14 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
       toast.error("Aggiungi almeno una voce al piano prima di generare le task");
       return;
     }
+    // Le task generate qui sono per il lavoro di oggi, non per la data di
+    // check-in originale del preventivo: altrimenti restano "invisibili"
+    // nella dashboard "Oggi in pensione" (che mostra solo le task del giorno
+    // selezionato).
+    const taskDate = format(new Date(), "yyyy-MM-dd");
     try {
-      await generateTasks.mutateAsync({ bookingId: booking.id, taskDate: booking.check_in_date, tasks: newTasks });
-      toast.success(`${newTasks.length} task generate per il ${format(new Date(booking.check_in_date + "T00:00:00"), "dd MMM yyyy", { locale: it })}`);
+      await generateTasks.mutateAsync({ bookingId: booking.id, taskDate, tasks: newTasks });
+      toast.success(`${newTasks.length} task generate per il ${format(new Date(taskDate + "T00:00:00"), "dd MMM yyyy", { locale: it })}`);
     } catch (err: any) {
       toast.error(err.message || "Errore nella generazione delle task");
     }
@@ -94,7 +114,19 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-serif">Piano di cura — {catNames}</DialogTitle>
+          <DialogTitle className="font-serif">Piano di cura — {booking.booking_number}</DialogTitle>
+          <div className="flex items-center gap-2 flex-wrap text-sm text-muted-foreground">
+            <span>
+              {format(new Date(booking.check_in_date + "T00:00:00"), "dd MMM yyyy", { locale: it })}
+              {" → "}
+              {format(new Date(booking.check_out_date + "T00:00:00"), "dd MMM yyyy", { locale: it })}
+            </span>
+            {pets.map((p) => (
+              <Badge key={p.id} variant="outline" className="gap-1 text-xs">
+                <PawPrint className="h-3 w-3" /> {p.name}
+              </Badge>
+            ))}
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -103,12 +135,13 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
             title="Alimentazione"
             rows={plan.feeding}
             onChange={(rows) => setPlan({ ...plan, feeding: rows })}
-            newRow={{ food: "", quantity: "", time: "" }}
+            newRow={{ catId: defaultCatId, food: "", quantity: "", time: "" } as CarePlanFeeding}
             fields={[
               { key: "food", placeholder: "Cosa (es. crocchette)" },
               { key: "quantity", placeholder: "Quanto (es. 50g)" },
               { key: "time", placeholder: "Quando (es. 08:00)" },
             ]}
+            pets={hasMultiplePets ? pets : []}
           />
 
           <ListSection
@@ -116,13 +149,14 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
             title="Farmaci"
             rows={plan.medications}
             onChange={(rows) => setPlan({ ...plan, medications: rows })}
-            newRow={{ name: "", dose: "", time: "", duration: "" }}
+            newRow={{ catId: defaultCatId, name: "", dose: "", time: "", duration: "" } as CarePlanMedication}
             fields={[
               { key: "name", placeholder: "Cosa (es. antibiotico)" },
               { key: "dose", placeholder: "Dose (es. 1 compressa)" },
               { key: "time", placeholder: "Quando (es. 08:00, 20:00)" },
               { key: "duration", placeholder: "Durata (es. 7 giorni)" },
             ]}
+            pets={hasMultiplePets ? pets : []}
           />
 
           <ListSection
@@ -130,12 +164,13 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
             title="Attività"
             rows={plan.activities}
             onChange={(rows) => setPlan({ ...plan, activities: rows })}
-            newRow={{ activity: "", frequency: "", time: "" }}
+            newRow={{ catId: defaultCatId, activity: "", frequency: "", time: "" } as CarePlanActivity}
             fields={[
               { key: "activity", placeholder: "Attività (es. passeggiata)" },
               { key: "frequency", placeholder: "Frequenza (es. 2 volte al giorno)" },
               { key: "time", placeholder: "Orario" },
             ]}
+            pets={hasMultiplePets ? pets : []}
           />
 
           <div className="space-y-2">
@@ -192,8 +227,8 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
   );
 }
 
-function ListSection<T extends Record<string, string>>({
-  icon: Icon, title, rows, onChange, newRow, fields,
+function ListSection<T extends { catId: string }>({
+  icon: Icon, title, rows, onChange, newRow, fields, pets,
 }: {
   icon: any;
   title: string;
@@ -201,6 +236,7 @@ function ListSection<T extends Record<string, string>>({
   onChange: (rows: T[]) => void;
   newRow: T;
   fields: { key: keyof T; placeholder: string }[];
+  pets: { id: string; name: string }[];
 }) {
   return (
     <div className="space-y-2">
@@ -218,11 +254,31 @@ function ListSection<T extends Record<string, string>>({
         <div className="space-y-2">
           {rows.map((row, i) => (
             <div key={i} className="flex items-center gap-2">
+              {pets.length > 0 && (
+                <Select
+                  value={row.catId || ALL_PETS}
+                  onValueChange={(v) => {
+                    const next = [...rows];
+                    next[i] = { ...next[i], catId: v === ALL_PETS ? "" : v };
+                    onChange(next);
+                  }}
+                >
+                  <SelectTrigger className="w-[110px] shrink-0 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL_PETS}>Tutti</SelectItem>
+                    {pets.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               {fields.map((f) => (
                 <Input
                   key={String(f.key)}
                   placeholder={f.placeholder}
-                  value={row[f.key] ?? ""}
+                  value={(row[f.key] as string) ?? ""}
                   onChange={(e) => {
                     const next = [...rows];
                     next[i] = { ...next[i], [f.key]: e.target.value };
