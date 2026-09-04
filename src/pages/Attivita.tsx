@@ -14,7 +14,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { CalendarIcon, ClipboardList, Plus, Trash2, PawPrint } from "lucide-react";
+import { CalendarIcon, ClipboardList, Plus, Trash2, PawPrint, Check } from "lucide-react";
 import { format, isToday as isTodayFn } from "date-fns";
 import { it } from "date-fns/locale";
 import { toast } from "sonner";
@@ -172,23 +172,34 @@ export default function Attivita() {
           ) : (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs text-muted-foreground pb-1">
-                <Checkbox checked={allSelected} onCheckedChange={(c) => toggleSelectAll(c === true)} />
-                Seleziona tutte
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-4 w-4 rounded-full border-2 border-muted-foreground/40 inline-block" />
+                  Fatta
+                </span>
+                <span className="text-muted-foreground/40">·</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Checkbox checked={allSelected} onCheckedChange={(c) => toggleSelectAll(c === true)} />
+                  Seleziona tutte per eliminare
+                </span>
               </div>
               {sortedTasks.map((tk) => (
-                <div key={tk.id} className="flex items-start gap-3 py-2.5 border-b last:border-0 flex-wrap sm:flex-nowrap">
+                <div key={tk.id} className="flex items-start gap-2.5 py-2.5 border-b last:border-0 flex-wrap sm:flex-nowrap">
+                  <button
+                    type="button"
+                    title={tk.completed ? "Segna come da fare" : "Segna come completata"}
+                    onClick={() => completeTask.mutate({ id: tk.id, completed: !tk.completed })}
+                    className={cn(
+                      "h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors",
+                      tk.completed ? "bg-success border-success text-success-foreground" : "border-muted-foreground/40 hover:border-primary"
+                    )}
+                  >
+                    {tk.completed && <Check className="h-3 w-3" />}
+                  </button>
                   <Checkbox
-                    title="Seleziona per azioni di gruppo"
+                    title="Seleziona per eliminare in blocco"
                     checked={selectedIds.has(tk.id)}
                     onCheckedChange={(checked) => toggleSelected(tk.id, checked === true)}
-                    className="mt-0.5"
-                  />
-                  <div className="w-px self-stretch bg-border" />
-                  <Checkbox
-                    title="Segna come completata"
-                    checked={tk.completed}
-                    onCheckedChange={(checked) => completeTask.mutate({ id: tk.id, completed: checked === true })}
-                    className="mt-0.5"
+                    className="mt-1"
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
