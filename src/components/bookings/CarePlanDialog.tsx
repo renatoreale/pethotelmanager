@@ -11,11 +11,9 @@ import { Separator } from "@/components/ui/separator";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Plus, Trash2, UtensilsCrossed, Pill, Activity, StickyNote, ClipboardList, Sparkles,
-  PawPrint, CalendarIcon,
+  PawPrint, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -361,7 +359,16 @@ function CareDatesEditor({ value, onChange, minDate, maxDate }: {
   maxDate: string;
 }) {
   const mode = value?.mode ?? "period";
-  const selectedDates = (value?.dates ?? []).map((d) => new Date(d + "T00:00:00"));
+  const dates = value?.dates ?? [];
+  const [draftDate, setDraftDate] = useState("");
+
+  const addDate = () => {
+    if (!draftDate) return;
+    if (!dates.includes(draftDate)) {
+      onChange({ ...value, dates: [...dates, draftDate].sort() });
+    }
+    setDraftDate("");
+  };
 
   return (
     <div className="space-y-2 pt-1 border-t">
@@ -395,24 +402,34 @@ function CareDatesEditor({ value, onChange, minDate, maxDate }: {
           />
         </div>
       ) : (
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs h-8">
-              <CalendarIcon className="h-3.5 w-3.5" />
-              {selectedDates.length > 0 ? `${selectedDates.length} date selezionate` : "Scegli le date"}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="multiple"
-              selected={selectedDates}
-              onSelect={(days) => onChange({ ...value, dates: (days ?? []).map((d) => format(d, "yyyy-MM-dd")) })}
-              fromDate={new Date(minDate + "T00:00:00")}
-              toDate={new Date(maxDate + "T00:00:00")}
-              initialFocus
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Input
+              type="date" className="text-sm h-8" min={minDate} max={maxDate}
+              value={draftDate}
+              onChange={(e) => setDraftDate(e.target.value)}
             />
-          </PopoverContent>
-        </Popover>
+            <Button type="button" size="sm" variant="outline" className="h-8 text-xs gap-1.5 shrink-0" onClick={addDate} disabled={!draftDate}>
+              <Plus className="h-3.5 w-3.5" /> Aggiungi data
+            </Button>
+          </div>
+          {dates.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {dates.map((d) => (
+                <Badge key={d} variant="secondary" className="text-xs gap-1 pr-1">
+                  {format(new Date(d + "T00:00:00"), "dd MMM", { locale: it })}
+                  <button
+                    type="button"
+                    className="rounded-full hover:bg-muted-foreground/20"
+                    onClick={() => onChange({ ...value, dates: dates.filter((x) => x !== d) })}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
