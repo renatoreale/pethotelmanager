@@ -106,7 +106,7 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
   };
 
   const handleGenerateTasks = async () => {
-    const newTasks: { taskDate: string; catId: string | null; title: string; description?: string }[] = [];
+    const candidates: { taskDate: string; catId: string | null; title: string; description?: string }[] = [];
 
     const buildTasks = (
       entries: { catId: string; dateSelection: CareDateSelection }[],
@@ -118,7 +118,7 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
         if (!hasContent(e)) continue;
         const dates = expandDates(e.dateSelection, booking.check_in_date, booking.check_out_date);
         for (const d of dates) {
-          newTasks.push({ taskDate: d, catId: e.catId || null, title: titlePrefix(e), description: description(e) });
+          candidates.push({ taskDate: d, catId: e.catId || null, title: titlePrefix(e), description: description(e) });
         }
       }
     };
@@ -139,13 +139,29 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
       (a) => a.frequency || undefined,
     );
 
-    if (newTasks.length === 0) {
+    if (candidates.length === 0) {
       toast.error("Aggiungi almeno una voce al piano prima di generare le task");
+      return;
+    }
+
+    // "Genera task" è idempotente: non ricrea le task già generate in un giro
+    // precedente (stesso giorno, stesso pet, stesso titolo/descrizione),
+    // altrimenti ogni click duplicherebbe tutto il piano invece di aggiungere
+    // solo le voci nuove.
+    const taskKey = (t: { taskDate: string; catId: string | null; title: string; description?: string }) =>
+      `${t.taskDate}|${t.catId ?? ""}|${t.title}|${t.description ?? ""}`;
+    const existingKeys = new Set((tasks ?? []).map((t) => taskKey({
+      taskDate: t.task_date, catId: t.cat_id, title: t.title, description: t.description ?? undefined,
+    })));
+    const newTasks = candidates.filter((c) => !existingKeys.has(taskKey(c)));
+
+    if (newTasks.length === 0) {
+      toast.info("Tutte le task di questo piano erano già state generate.");
       return;
     }
     try {
       await generateTasks.mutateAsync({ bookingId: booking.id, tasks: newTasks });
-      toast.success(`${newTasks.length} task generate`);
+      toast.success(`${newTasks.length} nuove task generate`);
     } catch (err: any) {
       toast.error(err.message || "Errore nella generazione delle task");
     }
