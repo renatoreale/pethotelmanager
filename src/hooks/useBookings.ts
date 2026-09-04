@@ -87,6 +87,34 @@ export function useBookings(statusFilter?: string) {
   });
 }
 
+export function usePetBookings(catId: string | undefined) {
+  const supabase = useSupabase();
+  return useQuery({
+    queryKey: ["pet-bookings", catId],
+    queryFn: async () => {
+      if (!catId) return [];
+      const { data, error } = await supabase
+        .from("booking_cats")
+        .select(`
+          booking:bookings(
+            *,
+            client:clients(id, first_name, last_name, email, phone),
+            booking_cats(id, cat_id, cat:cats(id, name)),
+            appointments(id, appointment_type, scheduled_at),
+            payments(id, payment_type, amount)
+          )
+        `)
+        .eq("cat_id", catId);
+      if (error) throw error;
+      return (data ?? [])
+        .map((row: any) => row.booking)
+        .filter(Boolean)
+        .sort((a: any, b: any) => (a.check_in_date < b.check_in_date ? 1 : -1)) as unknown as Booking[];
+    },
+    enabled: !!catId,
+  });
+}
+
 // Valid transitions map
 const TRANSITIONS: Record<string, { next: string; label: string }[]> = {
   confermata: [

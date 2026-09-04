@@ -160,7 +160,9 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   // Check page-level permissions — avoid redirecting to the same page
-  const resource = ROUTE_RESOURCE_MAP[location.pathname];
+  // (route params like /gatti/:id fall back to their parent resource)
+  const resource = ROUTE_RESOURCE_MAP[location.pathname]
+    ?? (location.pathname.startsWith("/gatti/") ? "gatti" : undefined);
   if (resource && !canRead(resource)) {
     if (location.pathname === "/dashboard") {
       // Already on dashboard but no read permission — show message instead of loop

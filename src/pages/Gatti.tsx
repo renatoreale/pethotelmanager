@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useCats, useDeleteCat } from "@/hooks/useCats";
 import { CatDialog } from "@/components/cats/CatDialog";
 import { Button } from "@/components/ui/button";
@@ -22,12 +23,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, Pencil, Trash2, Cat as CatIcon, Dog, PawPrint } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Cat as CatIcon, Dog, PawPrint, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { usePetLabels } from "@/hooks/usePetLabels";
 
 export default function Gatti() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCat, setEditingCat] = useState<any | null>(null);
@@ -124,7 +126,11 @@ export default function Gatti() {
                          </TableCell>
                        )}
                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/gatti/${cat.id}`)}
+                            className="flex items-center gap-2 hover:underline underline-offset-2 text-left"
+                          >
                             {cat.photo_url ? (
                               <img src={cat.photo_url} alt={cat.name} className="h-8 w-8 rounded-full object-cover border border-border shrink-0" />
                             ) : pet.petType === "entrambi"
@@ -132,7 +138,7 @@ export default function Gatti() {
                               : <PetIcon className="h-4 w-4 text-primary shrink-0" />
                             }
                             {cat.name}
-                          </div>
+                          </button>
                         </TableCell>
                       <TableCell className="text-muted-foreground">
                         {cat.clients ? `${cat.clients.last_name} ${cat.clients.first_name}` : "—"}
@@ -156,10 +162,13 @@ export default function Gatti() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(cat)}>
+                          <Button variant="ghost" size="icon" title="Apri scheda" onClick={() => navigate(`/gatti/${cat.id}`)}>
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" title="Modifica dati anagrafici" onClick={() => handleEdit(cat)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => setDeletingCat(cat)}>
+                          <Button variant="ghost" size="icon" title="Elimina" onClick={() => setDeletingCat(cat)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
