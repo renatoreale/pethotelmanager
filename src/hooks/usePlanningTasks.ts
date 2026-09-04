@@ -164,6 +164,22 @@ export function useDeleteTask() {
   });
 }
 
+export function useDeleteTasks() {
+  const qc = useQueryClient();
+  const supabase = useSupabase();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (ids.length === 0) return;
+      const { error } = await supabase.from("planning_tasks").delete().in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["planning-tasks"] });
+      qc.invalidateQueries({ queryKey: ["planning-tasks-booking"] });
+    },
+  });
+}
+
 export function useCompleteTask() {
   const qc = useQueryClient();
   const { user } = useAuth();

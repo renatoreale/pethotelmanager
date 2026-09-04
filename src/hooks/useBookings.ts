@@ -16,6 +16,7 @@ export interface CarePlanFeeding {
   food: string;
   quantity: string;
   time: string;
+  dateSelection: CareDateSelection;
 }
 export interface CarePlanMedication {
   catId: string;
@@ -29,6 +30,7 @@ export interface CarePlanActivity {
   activity: string;
   frequency: string;
   time: string;
+  dateSelection: CareDateSelection;
 }
 export interface CarePlan {
   feeding: CarePlanFeeding[];

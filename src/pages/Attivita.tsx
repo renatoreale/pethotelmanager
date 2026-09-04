@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +19,7 @@ import { format, isToday as isTodayFn } from "date-fns";
 import { it } from "date-fns/locale";
 import { toast } from "sonner";
 import {
-  useTasksForDate, useCreateTask, useUpdateTask, useDeleteTask, useCompleteTask,
+  useTasksForDate, useCreateTask, useUpdateTask, useDeleteTask, useDeleteTasks, useCompleteTask,
 } from "@/hooks/usePlanningTasks";
 import { useCats } from "@/hooks/useCats";
 import { useUsers } from "@/hooks/useUsers";
@@ -37,6 +37,7 @@ export default function Attivita() {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
   const isSelectedToday = isTodayFn(selectedDate);
@@ -47,6 +48,7 @@ export default function Attivita() {
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
+  const deleteTasks = useDeleteTasks();
   const completeTask = useCompleteTask();
 
   const sortedTasks = useMemo(() => {
@@ -55,6 +57,10 @@ export default function Attivita() {
       return a.created_at.localeCompare(b.created_at);
     });
   }, [tasks]);
+
+  // La selezione non sopravvive al cambio di data: eviterebbe di eliminare
+  // per sbaglio task di un altro giorno rimaste "selezionate" per errore.
+  useEffect(() => setSelectedIds(new Set()), [selectedDateStr]);
 
   const handleCreate = async () => {
     if (!form.title.trim()) {
@@ -80,10 +86,35 @@ export default function Attivita() {
   const handleDelete = async (id: string) => {
     try {
       await deleteTask.mutateAsync(id);
+      setSelectedIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
       toast.success("Task eliminata");
     } catch (err: any) {
       toast.error(err.message || "Errore nell'eliminazione");
     }
+  };
+
+  const handleDeleteSelected = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    try {
+      await deleteTasks.mutateAsync(ids);
+      setSelectedIds(new Set());
+      toast.success(`${ids.length} task eliminate`);
+    } catch (err: any) {
+      toast.error(err.message || "Errore nell'eliminazione");
+    }
+  };
+
+  const allSelected = sortedTasks.length > 0 && selectedIds.size === sortedTasks.length;
+  const toggleSelectAll = (checked: boolean) => {
+    setSelectedIds(checked ? new Set(sortedTasks.map((t) => t.id)) : new Set());
+  };
+  const toggleSelected = (id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id); else next.delete(id);
+      return next;
+    });
   };
 
   return (
@@ -121,12 +152,17 @@ export default function Attivita() {
       </div>
 
       <Card className="border shadow-sm">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-base flex items-center gap-2">
             <ClipboardList className="h-5 w-5" />
             {isSelectedToday ? "Task di oggi" : `Task — ${format(selectedDate, "dd MMM yyyy", { locale: it })}`}
             {tasks && tasks.length > 0 && ` (${tasks.length})`}
           </CardTitle>
+          {selectedIds.size > 0 && (
+            <Button size="sm" variant="destructive" className="gap-1.5" onClick={handleDeleteSelected} disabled={deleteTasks.isPending}>
+              <Trash2 className="h-4 w-4" /> Elimina selezionate ({selectedIds.size})
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -135,9 +171,21 @@ export default function Attivita() {
             <p className="text-sm text-muted-foreground text-center py-6">Nessuna task per questa data.</p>
           ) : (
             <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground pb-1">
+                <Checkbox checked={allSelected} onCheckedChange={(c) => toggleSelectAll(c === true)} />
+                Seleziona tutte
+              </div>
               {sortedTasks.map((tk) => (
                 <div key={tk.id} className="flex items-start gap-3 py-2.5 border-b last:border-0 flex-wrap sm:flex-nowrap">
                   <Checkbox
+                    title="Seleziona per azioni di gruppo"
+                    checked={selectedIds.has(tk.id)}
+                    onCheckedChange={(checked) => toggleSelected(tk.id, checked === true)}
+                    className="mt-0.5"
+                  />
+                  <div className="w-px self-stretch bg-border" />
+                  <Checkbox
+                    title="Segna come completata"
                     checked={tk.completed}
                     onCheckedChange={(checked) => completeTask.mutate({ id: tk.id, completed: checked === true })}
                     className="mt-0.5"
