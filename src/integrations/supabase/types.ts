@@ -1057,6 +1057,7 @@ export type Database = {
         Row: {
           assigned_to: string | null
           booking_id: string | null
+          cat_id: string | null
           completed: boolean
           completed_at: string | null
           completed_by: string | null
@@ -1071,6 +1072,7 @@ export type Database = {
         Insert: {
           assigned_to?: string | null
           booking_id?: string | null
+          cat_id?: string | null
           completed?: boolean
           completed_at?: string | null
           completed_by?: string | null
@@ -1085,6 +1087,7 @@ export type Database = {
         Update: {
           assigned_to?: string | null
           booking_id?: string | null
+          cat_id?: string | null
           completed?: boolean
           completed_at?: string | null
           completed_by?: string | null
@@ -1102,6 +1105,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planning_tasks_cat_id_fkey"
+            columns: ["cat_id"]
+            isOneToOne: false
+            referencedRelation: "cats"
             referencedColumns: ["id"]
           },
           {

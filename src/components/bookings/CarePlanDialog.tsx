@@ -11,17 +11,34 @@ import { Separator } from "@/components/ui/separator";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, UtensilsCrossed, Pill, Activity, StickyNote, ClipboardList, Sparkles, PawPrint } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Plus, Trash2, UtensilsCrossed, Pill, Activity, StickyNote, ClipboardList, Sparkles,
+  PawPrint, CalendarIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import {
-  useUpdateCarePlan, type CarePlan, type CarePlanFeeding, type CarePlanMedication, type CarePlanActivity,
+  useUpdateCarePlan, type CarePlan, type CarePlanFeeding, type CarePlanActivity, type CareDateSelection,
 } from "@/hooks/useBookings";
-import { useTasksForBooking, useGenerateTasksFromCarePlan } from "@/hooks/usePlanningTasks";
-import { format } from "date-fns";
+import { useTasksForBooking, useGenerateTasksFromCarePlan, useDeleteTask } from "@/hooks/usePlanningTasks";
+import { format, eachDayOfInterval } from "date-fns";
 import { it } from "date-fns/locale";
 
 const EMPTY_PLAN: CarePlan = { feeding: [], medications: [], activities: [], special_notes: "" };
 const ALL_PETS = "__all__";
+
+function expandDates(sel: CareDateSelection | undefined, minDate: string, maxDate: string): string[] {
+  if (!sel) return [];
+  if (sel.mode === "dates") {
+    return Array.from(new Set(sel.dates ?? [])).sort();
+  }
+  const from = sel.from || minDate;
+  const to = sel.to || maxDate;
+  if (from > to) return [];
+  return eachDayOfInterval({ start: new Date(from + "T00:00:00"), end: new Date(to + "T00:00:00") })
+    .map((d) => format(d, "yyyy-MM-dd"));
+}
 
 interface CarePlanDialogProps {
   open: boolean;
@@ -32,6 +49,7 @@ interface CarePlanDialogProps {
 export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogProps) {
   const updateCarePlan = useUpdateCarePlan();
   const generateTasks = useGenerateTasksFromCarePlan();
+  const deleteTask = useDeleteTask();
   const { data: tasks } = useTasksForBooking(open ? booking?.id : undefined);
 
   const [plan, setPlan] = useState<CarePlan>(EMPTY_PLAN);
@@ -44,11 +62,17 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
   const defaultCatId = pets.length === 1 ? pets[0].id : "";
 
   useEffect(() => {
-    if (open) {
+    if (open && booking) {
       const existing = booking?.care_plan as CarePlan | null | undefined;
       setPlan({
         feeding: existing?.feeding ?? [],
-        medications: existing?.medications ?? [],
+        medications: (existing?.medications ?? []).map((m: any) => ({
+          catId: m.catId ?? "",
+          name: m.name ?? "",
+          dose: m.dose ?? "",
+          time: m.time ?? "",
+          dateSelection: m.dateSelection ?? { mode: "period", from: booking.check_in_date, to: booking.check_out_date },
+        })),
         activities: existing?.activities ?? [],
         special_notes: existing?.special_notes ?? "",
       });
@@ -71,24 +95,35 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
   };
 
   const handleGenerateTasks = async () => {
-    const newTasks: { title: string; description?: string }[] = [];
+    const todayStr = format(new Date(), "yyyy-MM-dd");
+    const newTasks: { taskDate: string; catId: string | null; title: string; description?: string }[] = [];
+
     for (const f of plan.feeding) {
       if (!f.food.trim()) continue;
       newTasks.push({
+        taskDate: todayStr,
+        catId: f.catId || null,
         title: `Alimentazione — ${labelForCat(f.catId)}${f.time ? ` (${f.time})` : ""}`,
         description: [f.food, f.quantity].filter(Boolean).join(" — "),
       });
     }
     for (const m of plan.medications) {
       if (!m.name.trim()) continue;
-      newTasks.push({
-        title: `Farmaco — ${labelForCat(m.catId)}${m.time ? ` (${m.time})` : ""}`,
-        description: [m.name, m.dose].filter(Boolean).join(" — "),
-      });
+      const dates = expandDates(m.dateSelection, booking.check_in_date, booking.check_out_date);
+      for (const d of dates) {
+        newTasks.push({
+          taskDate: d,
+          catId: m.catId || null,
+          title: `Farmaco — ${labelForCat(m.catId)}${m.time ? ` (${m.time})` : ""}`,
+          description: [m.name, m.dose].filter(Boolean).join(" — "),
+        });
+      }
     }
     for (const a of plan.activities) {
       if (!a.activity.trim()) continue;
       newTasks.push({
+        taskDate: todayStr,
+        catId: a.catId || null,
         title: `${a.activity} — ${labelForCat(a.catId)}${a.time ? ` (${a.time})` : ""}`,
         description: a.frequency || undefined,
       });
@@ -97,16 +132,20 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
       toast.error("Aggiungi almeno una voce al piano prima di generare le task");
       return;
     }
-    // Le task generate qui sono per il lavoro di oggi, non per la data di
-    // check-in originale del preventivo: altrimenti restano "invisibili"
-    // nella dashboard "Oggi in pensione" (che mostra solo le task del giorno
-    // selezionato).
-    const taskDate = format(new Date(), "yyyy-MM-dd");
     try {
-      await generateTasks.mutateAsync({ bookingId: booking.id, taskDate, tasks: newTasks });
-      toast.success(`${newTasks.length} task generate per il ${format(new Date(taskDate + "T00:00:00"), "dd MMM yyyy", { locale: it })}`);
+      await generateTasks.mutateAsync({ bookingId: booking.id, tasks: newTasks });
+      toast.success(`${newTasks.length} task generate`);
     } catch (err: any) {
       toast.error(err.message || "Errore nella generazione delle task");
+    }
+  };
+
+  const handleDeleteTask = async (id: string) => {
+    try {
+      await deleteTask.mutateAsync(id);
+      toast.success("Task eliminata");
+    } catch (err: any) {
+      toast.error(err.message || "Errore nell'eliminazione");
     }
   };
 
@@ -144,20 +183,103 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
             pets={hasMultiplePets ? pets : []}
           />
 
-          <ListSection
-            icon={Pill}
-            title="Farmaci"
-            rows={plan.medications}
-            onChange={(rows) => setPlan({ ...plan, medications: rows })}
-            newRow={{ catId: defaultCatId, name: "", dose: "", time: "", duration: "" } as CarePlanMedication}
-            fields={[
-              { key: "name", placeholder: "Cosa (es. antibiotico)" },
-              { key: "dose", placeholder: "Dose (es. 1 compressa)" },
-              { key: "time", placeholder: "Quando (es. 08:00, 20:00)" },
-              { key: "duration", placeholder: "Durata (es. 7 giorni)" },
-            ]}
-            pets={hasMultiplePets ? pets : []}
-          />
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-1.5 text-sm font-semibold">
+                <Pill className="h-4 w-4" /> Farmaci
+              </Label>
+              <Button
+                type="button" size="sm" variant="ghost" className="gap-1.5 h-7"
+                onClick={() => setPlan({
+                  ...plan,
+                  medications: [...plan.medications, {
+                    catId: defaultCatId, name: "", dose: "", time: "",
+                    dateSelection: { mode: "period", from: booking.check_in_date, to: booking.check_out_date },
+                  }],
+                })}
+              >
+                <Plus className="h-3.5 w-3.5" /> Aggiungi
+              </Button>
+            </div>
+            {plan.medications.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Nessuna voce.</p>
+            ) : (
+              <div className="space-y-3">
+                {plan.medications.map((m, i) => (
+                  <div key={i} className="rounded-md border p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      {hasMultiplePets && (
+                        <Select
+                          value={m.catId || ALL_PETS}
+                          onValueChange={(v) => {
+                            const next = [...plan.medications];
+                            next[i] = { ...next[i], catId: v === ALL_PETS ? "" : v };
+                            setPlan({ ...plan, medications: next });
+                          }}
+                        >
+                          <SelectTrigger className="w-[110px] shrink-0 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={ALL_PETS}>Pets</SelectItem>
+                            {pets.map((p) => (
+                              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                      <Input
+                        placeholder="Cosa (es. antibiotico)"
+                        value={m.name}
+                        onChange={(e) => {
+                          const next = [...plan.medications];
+                          next[i] = { ...next[i], name: e.target.value };
+                          setPlan({ ...plan, medications: next });
+                        }}
+                        className="text-sm"
+                      />
+                      <Input
+                        placeholder="Dose (es. 1 compressa)"
+                        value={m.dose}
+                        onChange={(e) => {
+                          const next = [...plan.medications];
+                          next[i] = { ...next[i], dose: e.target.value };
+                          setPlan({ ...plan, medications: next });
+                        }}
+                        className="text-sm"
+                      />
+                      <Input
+                        placeholder="Orario (es. 08:00, 20:00)"
+                        value={m.time}
+                        onChange={(e) => {
+                          const next = [...plan.medications];
+                          next[i] = { ...next[i], time: e.target.value };
+                          setPlan({ ...plan, medications: next });
+                        }}
+                        className="text-sm"
+                      />
+                      <Button
+                        type="button" size="icon" variant="ghost" className="shrink-0 h-9 w-9"
+                        onClick={() => setPlan({ ...plan, medications: plan.medications.filter((_, idx) => idx !== i) })}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                    <CareDatesEditor
+                      value={m.dateSelection}
+                      onChange={(v) => {
+                        const next = [...plan.medications];
+                        next[i] = { ...next[i], dateSelection: v };
+                        setPlan({ ...plan, medications: next });
+                      }}
+                      minDate={booking.check_in_date}
+                      maxDate={booking.check_out_date}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           <ListSection
             icon={Activity}
@@ -201,14 +323,19 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
             ) : (
               <div className="space-y-1.5">
                 {tasks.map((t) => (
-                  <div key={t.id} className="flex items-center justify-between text-sm border-b py-1.5 last:border-0">
-                    <div>
+                  <div key={t.id} className="flex items-center justify-between gap-2 text-sm border-b py-1.5 last:border-0">
+                    <div className="min-w-0">
                       <span className={t.completed ? "line-through text-muted-foreground" : ""}>{t.title}</span>
                       {t.description && <span className="text-muted-foreground"> — {t.description}</span>}
                     </div>
-                    <Badge variant={t.completed ? "secondary" : "outline"} className="text-xs shrink-0 ml-2">
-                      {t.completed ? "Completata" : format(new Date(t.task_date + "T00:00:00"), "dd MMM", { locale: it })}
-                    </Badge>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Badge variant={t.completed ? "secondary" : "outline"} className="text-xs">
+                        {t.completed ? "Completata" : format(new Date(t.task_date + "T00:00:00"), "dd MMM", { locale: it })}
+                      </Badge>
+                      <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleDeleteTask(t.id)}>
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -224,6 +351,70 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function CareDatesEditor({ value, onChange, minDate, maxDate }: {
+  value: CareDateSelection;
+  onChange: (v: CareDateSelection) => void;
+  minDate: string;
+  maxDate: string;
+}) {
+  const mode = value?.mode ?? "period";
+  const selectedDates = (value?.dates ?? []).map((d) => new Date(d + "T00:00:00"));
+
+  return (
+    <div className="space-y-2 pt-1 border-t">
+      <div className="flex items-center gap-1.5">
+        <Button
+          type="button" size="sm" variant={mode === "period" ? "secondary" : "outline"} className="h-6 text-xs px-2"
+          onClick={() => onChange({ ...value, mode: "period", from: value?.from || minDate, to: value?.to || maxDate })}
+        >
+          Periodo
+        </Button>
+        <Button
+          type="button" size="sm" variant={mode === "dates" ? "secondary" : "outline"} className="h-6 text-xs px-2"
+          onClick={() => onChange({ ...value, mode: "dates", dates: value?.dates ?? [] })}
+        >
+          Date singole
+        </Button>
+      </div>
+
+      {mode === "period" ? (
+        <div className="flex items-center gap-2">
+          <Input
+            type="date" className="text-sm h-8" min={minDate} max={maxDate}
+            value={value?.from || minDate}
+            onChange={(e) => onChange({ ...value, from: e.target.value })}
+          />
+          <span className="text-muted-foreground text-xs">→</span>
+          <Input
+            type="date" className="text-sm h-8" min={value?.from || minDate} max={maxDate}
+            value={value?.to || maxDate}
+            onChange={(e) => onChange({ ...value, to: e.target.value })}
+          />
+        </div>
+      ) : (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs h-8">
+              <CalendarIcon className="h-3.5 w-3.5" />
+              {selectedDates.length > 0 ? `${selectedDates.length} date selezionate` : "Scegli le date"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="multiple"
+              selected={selectedDates}
+              onSelect={(days) => onChange({ ...value, dates: (days ?? []).map((d) => format(d, "yyyy-MM-dd")) })}
+              fromDate={new Date(minDate + "T00:00:00")}
+              toDate={new Date(maxDate + "T00:00:00")}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      )}
+    </div>
   );
 }
 
@@ -267,7 +458,7 @@ function ListSection<T extends { catId: string }>({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={ALL_PETS}>Tutti</SelectItem>
+                    <SelectItem value={ALL_PETS}>Pets</SelectItem>
                     {pets.map((p) => (
                       <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                     ))}

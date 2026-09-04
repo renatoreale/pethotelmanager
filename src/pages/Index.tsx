@@ -14,10 +14,13 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { useBookings } from "@/hooks/useBookings";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useTasksForDate, useCompleteTask } from "@/hooks/usePlanningTasks";
+import { useTasksForDate, useCompleteTask, useUpdateTask } from "@/hooks/usePlanningTasks";
 import { useUsers } from "@/hooks/useUsers";
 import { format, isToday as isTodayFn, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -42,6 +45,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 // Stati che non rappresentano un soggiorno attivo (preventivo non ancora confermato, scaduto, annullato)
 const INACTIVE_STATUSES = ["preventivo", "scaduto", "cancellata", "rimborsata"];
+const UNASSIGNED = "__unassigned__";
 
 function calcNetPaid(payments: any[]) {
   const paid = payments
@@ -108,6 +112,7 @@ export default function Index() {
   const { data: tasks } = useTasksForDate(canSeeTasks ? selectedDateStr : undefined);
   const { users: staffUsers } = useUsers();
   const completeTask = useCompleteTask();
+  const updateTask = useUpdateTask();
 
   const stats = useMemo(() => {
     if (!bookings) return null;
@@ -552,20 +557,42 @@ export default function Index() {
               ) : (
                 <div className="space-y-2">
                   {(tasks ?? []).map((tk) => (
-                    <div key={tk.id} className="flex items-start gap-3 py-2.5 border-b last:border-0">
+                    <div key={tk.id} className="flex items-start gap-3 py-2.5 border-b last:border-0 flex-wrap sm:flex-nowrap">
                       <Checkbox
                         checked={tk.completed}
                         onCheckedChange={(checked) => completeTask.mutate({ id: tk.id, completed: checked === true })}
                         className="mt-0.5"
                       />
                       <div className="min-w-0 flex-1">
-                        <p className={cn("text-sm font-medium", tk.completed && "line-through text-muted-foreground")}>{tk.title}</p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className={cn("text-sm font-medium", tk.completed && "line-through text-muted-foreground")}>{tk.title}</p>
+                          {tk.cat?.name && (
+                            <Badge variant="outline" className="text-xs gap-1 shrink-0">
+                              <PawPrint className="h-3 w-3" /> {tk.cat.name}
+                            </Badge>
+                          )}
+                        </div>
                         {tk.description && <p className="text-xs text-muted-foreground mt-0.5">{tk.description}</p>}
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {tk.assigned_to ? (staffNameById.get(tk.assigned_to) ?? "—") : t("dashboard.unassigned")}
-                          {tk.completed && tk.completed_at && ` · ${t("dashboard.completedBy", { name: tk.completed_by ? (staffNameById.get(tk.completed_by) ?? "—") : "—", time: format(new Date(tk.completed_at), "HH:mm") })}`}
-                        </p>
+                        {tk.completed && tk.completed_at && (
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {t("dashboard.completedBy", { name: tk.completed_by ? (staffNameById.get(tk.completed_by) ?? "—") : "—", time: format(new Date(tk.completed_at), "HH:mm") })}
+                          </p>
+                        )}
                       </div>
+                      <Select
+                        value={tk.assigned_to ?? UNASSIGNED}
+                        onValueChange={(v) => updateTask.mutate({ id: tk.id, assigned_to: v === UNASSIGNED ? null : v })}
+                      >
+                        <SelectTrigger className="w-[160px] shrink-0 text-xs h-8">
+                          <SelectValue placeholder={t("dashboard.unassigned")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={UNASSIGNED}>{t("dashboard.unassigned")}</SelectItem>
+                          {(staffUsers ?? []).map((u: any) => (
+                            <SelectItem key={u.user_id} value={u.user_id}>{u.full_name || "—"}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   ))}
                 </div>

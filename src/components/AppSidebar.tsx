@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, FileText, CalendarCheck, Calendar, LogIn, LogOut,
-  CreditCard, Users, Cat, ClipboardList, Shield, Mail, Building2,
+  CreditCard, Users, Cat, ClipboardList, ListTodo, Shield, Mail, Building2,
   Power, Grid3X3, Settings2, PawPrint, BarChart3, LifeBuoy } from
 "lucide-react";
 import { NavLink } from "@/components/NavLink";
@@ -31,6 +31,7 @@ const mainNav: NavItem[] = [
 { titleKey: "sidebar.checkIn", url: "/check-in", icon: LogIn, resource: "check-in" },
 { titleKey: "sidebar.checkOut", url: "/check-out", icon: LogOut, resource: "check-out" },
 { titleKey: "sidebar.attendance", url: "/presenze", icon: PawPrint, resource: "presenze" },
+{ titleKey: "sidebar.tasks", url: "/attivita", icon: ListTodo, resource: "planning" },
 { titleKey: "sidebar.payments", url: "/pagamenti", icon: CreditCard, resource: "pagamenti" }];
 
 

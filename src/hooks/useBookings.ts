@@ -2,6 +2,15 @@ import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 
+// Quando somministrare: un elenco di date singole oppure un intero periodo
+// (sempre vincolato, in UI, alle date di check-in/check-out del soggiorno).
+export interface CareDateSelection {
+  mode: "period" | "dates";
+  from?: string;
+  to?: string;
+  dates?: string[];
+}
+
 export interface CarePlanFeeding {
   catId: string;
   food: string;
@@ -13,7 +22,7 @@ export interface CarePlanMedication {
   name: string;
   dose: string;
   time: string;
-  duration: string;
+  dateSelection: CareDateSelection;
 }
 export interface CarePlanActivity {
   catId: string;
