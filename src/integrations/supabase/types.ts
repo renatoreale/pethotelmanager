@@ -178,6 +178,7 @@ export type Database = {
         Row: {
           booking_number: string
           cage_pool_type: Database["public"]["Enums"]["cage_pool_type"]
+          care_plan: Json | null
           check_in_date: string
           check_out_date: string
           client_id: string
@@ -198,6 +199,7 @@ export type Database = {
         Insert: {
           booking_number: string
           cage_pool_type?: Database["public"]["Enums"]["cage_pool_type"]
+          care_plan?: Json | null
           check_in_date: string
           check_out_date: string
           client_id: string
@@ -218,6 +220,7 @@ export type Database = {
         Update: {
           booking_number?: string
           cage_pool_type?: Database["public"]["Enums"]["cage_pool_type"]
+          care_plan?: Json | null
           check_in_date?: string
           check_out_date?: string
           client_id?: string
@@ -1053,6 +1056,7 @@ export type Database = {
       planning_tasks: {
         Row: {
           assigned_to: string | null
+          booking_id: string | null
           completed: boolean
           completed_at: string | null
           completed_by: string | null
@@ -1066,6 +1070,7 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          booking_id?: string | null
           completed?: boolean
           completed_at?: string | null
           completed_by?: string | null
@@ -1079,6 +1084,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          booking_id?: string | null
           completed?: boolean
           completed_at?: string | null
           completed_by?: string | null
@@ -1091,6 +1097,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "planning_tasks_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "planning_tasks_tenant_id_fkey"
             columns: ["tenant_id"]

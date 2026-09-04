@@ -5,6 +5,7 @@ import { usePetBookings } from "@/hooks/useBookings";
 import { useDocumentsForBookings } from "@/hooks/useDocuments";
 import { usePetLabels } from "@/hooks/usePetLabels";
 import { CatDialog } from "@/components/cats/CatDialog";
+import { CarePlanDialog } from "@/components/bookings/CarePlanDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   ArrowLeft, Pencil, Cat as CatIcon, Dog, PawPrint, FileText,
-  UtensilsCrossed, Pill, Heart, Home, History,
+  UtensilsCrossed, Pill, Heart, Home, History, ClipboardList,
 } from "lucide-react";
 import { format, differenceInYears, differenceInMonths } from "date-fns";
 import { it } from "date-fns/locale";
@@ -78,6 +79,7 @@ export default function SchedaPet() {
   const { data: cat, isLoading } = useCat(id);
   const { data: bookings } = usePetBookings(id);
   const [editOpen, setEditOpen] = useState(false);
+  const [carePlanOpen, setCarePlanOpen] = useState(false);
 
   const bookingIds = useMemo(() => (bookings ?? []).map((b: any) => b.id), [bookings]);
   const { data: documents } = useDocumentsForBookings(bookingIds);
@@ -179,7 +181,14 @@ export default function SchedaPet() {
         {/* SOGGIORNO ATTUALE */}
         <TabsContent value="soggiorno">
           <Card className="border shadow-sm">
-            <CardHeader><CardTitle className="text-base">Soggiorno attuale</CardTitle></CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-base">Soggiorno attuale</CardTitle>
+              {currentBooking && (
+                <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setCarePlanOpen(true)}>
+                  <ClipboardList className="h-3.5 w-3.5" /> Piano di cura
+                </Button>
+              )}
+            </CardHeader>
             <CardContent>
               {!currentBooking ? (
                 <p className="text-sm text-muted-foreground text-center py-6">Nessun soggiorno in corso.</p>
@@ -289,6 +298,7 @@ export default function SchedaPet() {
       </Tabs>
 
       <CatDialog open={editOpen} onOpenChange={setEditOpen} cat={cat} />
+      <CarePlanDialog open={carePlanOpen} onOpenChange={setCarePlanOpen} booking={currentBooking ?? null} />
     </div>
   );
 }

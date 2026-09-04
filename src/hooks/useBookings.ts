@@ -2,6 +2,29 @@ import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 
+export interface CarePlanFeeding {
+  food: string;
+  quantity: string;
+  time: string;
+}
+export interface CarePlanMedication {
+  name: string;
+  dose: string;
+  time: string;
+  duration: string;
+}
+export interface CarePlanActivity {
+  activity: string;
+  frequency: string;
+  time: string;
+}
+export interface CarePlan {
+  feeding: CarePlanFeeding[];
+  medications: CarePlanMedication[];
+  activities: CarePlanActivity[];
+  special_notes: string;
+}
+
 export interface Booking {
   id: string;
   booking_number: string;
@@ -19,6 +42,7 @@ export interface Booking {
   updated_at: string;
   created_by: string | null;
   price_breakdown: any;
+  care_plan?: CarePlan | null;
   pet_type?: "gatti" | "cani" | "entrambi" | null;
   client?: {
     id: string;
@@ -84,6 +108,24 @@ export function useBookings(statusFilter?: string) {
       return data as unknown as Booking[];
     },
     enabled: !!profile?.tenant_id,
+  });
+}
+
+export function useUpdateCarePlan() {
+  const qc = useQueryClient();
+  const supabase = useSupabase();
+  return useMutation({
+    mutationFn: async ({ id, carePlan }: { id: string; carePlan: CarePlan }) => {
+      const { error } = await supabase
+        .from("bookings")
+        .update({ care_plan: carePlan as any })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["bookings"] });
+      qc.invalidateQueries({ queryKey: ["pet-bookings"] });
+    },
   });
 }
 
