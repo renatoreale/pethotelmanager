@@ -13,6 +13,9 @@ export interface ClienteProfile {
   address: string | null;
   notes: string | null;
   is_blacklisted: boolean;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  emergency_contact_relation: string | null;
 }
 
 export function useClienteProfile() {
@@ -24,7 +27,7 @@ export function useClienteProfile() {
       if (!user) return null;
       const { data, error } = await supabase
         .from("clients")
-        .select("id, tenant_id, first_name, last_name, email, phone, fiscal_code, address, notes, is_blacklisted")
+        .select("id, tenant_id, first_name, last_name, email, phone, fiscal_code, address, notes, is_blacklisted, emergency_contact_name, emergency_contact_phone, emergency_contact_relation")
         .eq("user_id" as any, user.id)
         .maybeSingle();
       if (error) throw error;

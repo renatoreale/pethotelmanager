@@ -16,6 +16,9 @@ export interface Client {
   blacklist_reason: string | null;
   user_id: string | null;
   portal_activated: boolean;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  emergency_contact_relation: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -46,6 +46,9 @@ const clientSchema = z.object({
   phone: z.string().trim().max(50).optional(),
   fiscal_code: z.string().trim().max(20).optional(),
   address: z.string().trim().max(500).optional(),
+  emergency_contact_name: z.string().trim().max(200).optional(),
+  emergency_contact_phone: z.string().trim().max(50).optional(),
+  emergency_contact_relation: z.string().trim().max(100).optional(),
   notes: z.string().trim().max(2000).optional(),
   is_blacklisted: z.boolean().default(false),
   blacklist_reason: z.string().trim().max(500).optional(),
@@ -188,6 +191,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       phone: "",
       fiscal_code: "",
       address: "",
+      emergency_contact_name: "",
+      emergency_contact_phone: "",
+      emergency_contact_relation: "",
       notes: "",
       is_blacklisted: false,
       blacklist_reason: "",
@@ -204,6 +210,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         phone: client?.phone ?? "",
         fiscal_code: client?.fiscal_code ?? "",
         address: client?.address ?? "",
+        emergency_contact_name: client?.emergency_contact_name ?? "",
+        emergency_contact_phone: client?.emergency_contact_phone ?? "",
+        emergency_contact_relation: client?.emergency_contact_relation ?? "",
         notes: client?.notes ?? "",
         is_blacklisted: client?.is_blacklisted ?? false,
         blacklist_reason: client?.blacklist_reason ?? "",
@@ -263,6 +272,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           phone: values.phone || null,
           fiscal_code: values.fiscal_code || null,
           address: values.address || null,
+          emergency_contact_name: values.emergency_contact_name || null,
+          emergency_contact_phone: values.emergency_contact_phone || null,
+          emergency_contact_relation: values.emergency_contact_relation || null,
           notes: values.notes || null,
           blacklist_reason: values.is_blacklisted ? (values.blacklist_reason || null) : null,
         });
@@ -277,6 +289,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           phone: values.phone || null,
           fiscal_code: values.fiscal_code || null,
           address: values.address || null,
+          emergency_contact_name: values.emergency_contact_name || null,
+          emergency_contact_phone: values.emergency_contact_phone || null,
+          emergency_contact_relation: values.emergency_contact_relation || null,
           notes: values.notes || null,
           blacklist_reason: values.is_blacklisted ? (values.blacklist_reason || null) : null,
         });
@@ -381,6 +396,32 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                 <FormMessage />
               </FormItem>
             )} />
+
+            <Label className="text-sm font-medium">Contatto di emergenza</Label>
+            <div className="grid grid-cols-3 gap-3">
+              <FormField control={form.control} name="emergency_contact_name" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Nome</FormLabel>
+                  <FormControl><Input {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="emergency_contact_phone" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Telefono</FormLabel>
+                  <FormControl><Input {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="emergency_contact_relation" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Relazione</FormLabel>
+                  <FormControl><Input placeholder="Familiare" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
+
             <FormField control={form.control} name="notes" render={({ field }) => (
               <FormItem>
                 <FormLabel>Note</FormLabel>

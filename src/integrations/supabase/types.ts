@@ -527,6 +527,9 @@ export type Database = {
           blacklist_reason: string | null
           created_at: string
           email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relation: string | null
           first_name: string
           fiscal_code: string | null
           id: string
@@ -544,6 +547,9 @@ export type Database = {
           blacklist_reason?: string | null
           created_at?: string
           email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relation?: string | null
           first_name: string
           fiscal_code?: string | null
           id?: string
@@ -561,6 +567,9 @@ export type Database = {
           blacklist_reason?: string | null
           created_at?: string
           email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relation?: string | null
           first_name?: string
           fiscal_code?: string | null
           id?: string
@@ -1193,6 +1202,73 @@ export type Database = {
           },
           {
             foreignKeyName: "planning_tasks_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pre_checkin_submissions: {
+        Row: {
+          booking_id: string
+          client_id: string
+          completed_at: string | null
+          consents_accepted_at: string | null
+          created_at: string
+          feeding_notes: string | null
+          id: string
+          medication_notes: string | null
+          privacy_accepted_version: string | null
+          regolamento_accepted_version: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          client_id: string
+          completed_at?: string | null
+          consents_accepted_at?: string | null
+          created_at?: string
+          feeding_notes?: string | null
+          id?: string
+          medication_notes?: string | null
+          privacy_accepted_version?: string | null
+          regolamento_accepted_version?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          client_id?: string
+          completed_at?: string | null
+          consents_accepted_at?: string | null
+          created_at?: string
+          feeding_notes?: string | null
+          id?: string
+          medication_notes?: string | null
+          privacy_accepted_version?: string | null
+          regolamento_accepted_version?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pre_checkin_submissions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pre_checkin_submissions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pre_checkin_submissions_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"

@@ -20,6 +20,9 @@ export default function ClienteProfilo() {
     phone: "",
     fiscal_code: "",
     address: "",
+    emergency_contact_name: "",
+    emergency_contact_phone: "",
+    emergency_contact_relation: "",
   });
 
   useEffect(() => {
@@ -31,6 +34,9 @@ export default function ClienteProfilo() {
         phone: profile.phone || "",
         fiscal_code: profile.fiscal_code || "",
         address: profile.address || "",
+        emergency_contact_name: profile.emergency_contact_name || "",
+        emergency_contact_phone: profile.emergency_contact_phone || "",
+        emergency_contact_relation: profile.emergency_contact_relation || "",
       });
     }
   }, [profile]);
@@ -47,6 +53,9 @@ export default function ClienteProfilo() {
         phone: form.phone || null,
         fiscal_code: form.fiscal_code || null,
         address: form.address || null,
+        emergency_contact_name: form.emergency_contact_name || null,
+        emergency_contact_phone: form.emergency_contact_phone || null,
+        emergency_contact_relation: form.emergency_contact_relation || null,
       } as any);
       toast.success("Profilo aggiornato");
       navigate("/cliente/dashboard");
@@ -124,6 +133,30 @@ export default function ClienteProfilo() {
                 onChange={(e) => setForm({ ...form, address: e.target.value })}
                 placeholder="Via Roma 1, 00100 Roma"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Contatto di emergenza</Label>
+              <p className="text-[10px] text-muted-foreground -mt-1">
+                Da contattare in caso non fossimo in grado di raggiungerti durante il soggiorno del tuo pet.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Input
+                  placeholder="Nome e cognome"
+                  value={form.emergency_contact_name}
+                  onChange={(e) => setForm({ ...form, emergency_contact_name: e.target.value })}
+                />
+                <Input
+                  placeholder="Telefono"
+                  value={form.emergency_contact_phone}
+                  onChange={(e) => setForm({ ...form, emergency_contact_phone: e.target.value })}
+                />
+                <Input
+                  placeholder="Relazione (es. familiare)"
+                  value={form.emergency_contact_relation}
+                  onChange={(e) => setForm({ ...form, emergency_contact_relation: e.target.value })}
+                />
+              </div>
             </div>
 
             <div className="flex justify-end pt-2">

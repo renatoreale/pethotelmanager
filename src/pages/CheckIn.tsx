@@ -34,6 +34,7 @@ import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDocumentsForBookings } from "@/hooks/useDocuments";
 import { DOCUMENT_TYPE_LABELS, REQUIRED_DOCUMENT_TYPES } from "@/lib/documentTypes";
+import { usePreCheckinSubmission } from "@/hooks/usePreCheckin";
 import { useTasksForBooking, useGenerateTasksForBooking, dedupeNewTasks } from "@/hooks/usePlanningTasks";
 import { CHECKIN_CHECKLIST } from "@/lib/checklists";
 import { ChecklistPreview } from "@/components/ChecklistPreview";
@@ -90,6 +91,7 @@ export default function CheckIn() {
   const confirmBookingIds = useMemo(() => (confirmBooking ? [confirmBooking.id] : []), [confirmBooking?.id]);
   const { data: confirmBookingDocuments } = useDocumentsForBookings(confirmBookingIds);
   const { data: confirmBookingTasks } = useTasksForBooking(confirmBooking?.id);
+  const { data: preCheckinSubmission } = usePreCheckinSubmission(confirmBooking?.id);
   const missingRequiredDocs = useMemo(
     () => REQUIRED_DOCUMENT_TYPES.filter(
       (type) => !(confirmBookingDocuments ?? []).some((d) => d.document_type === type)
@@ -593,6 +595,23 @@ export default function CheckIn() {
                   </span>
                 </div>
               </div>
+
+              {/* Pre-check-in online (Blocco 14): informativo, non blocca il check-in */}
+              {preCheckinSubmission?.completed_at ? (
+                <div className="rounded-md border border-success/30 bg-success/10 px-3 py-2 text-xs space-y-1">
+                  <p className="font-medium text-success">✓ Pre-check-in online completato</p>
+                  {preCheckinSubmission.feeding_notes && (
+                    <p><span className="text-muted-foreground">Alimentazione (segnalata dal cliente):</span> {preCheckinSubmission.feeding_notes}</p>
+                  )}
+                  {preCheckinSubmission.medication_notes && (
+                    <p><span className="text-muted-foreground">Farmaci (segnalati dal cliente):</span> {preCheckinSubmission.medication_notes}</p>
+                  )}
+                </div>
+              ) : (
+                <div className="rounded-md border border-muted-foreground/20 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                  Pre-check-in online non ancora completato dal cliente.
+                </div>
+              )}
 
               {/* Requisiti documenti (informativo, non blocca il check-in) */}
               {missingRequiredDocs.length > 0 && (
