@@ -6,6 +6,7 @@ import { useDocumentsForBookings } from "@/hooks/useDocuments";
 import { usePetLabels } from "@/hooks/usePetLabels";
 import { CatDialog } from "@/components/cats/CatDialog";
 import { CarePlanDialog } from "@/components/bookings/CarePlanDialog";
+import { DiarioTab } from "@/components/cats/DiarioTab";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   ArrowLeft, Pencil, Cat as CatIcon, Dog, PawPrint, FileText,
-  UtensilsCrossed, Pill, Heart, Home, History, ClipboardList,
+  UtensilsCrossed, Pill, Heart, Home, History, ClipboardList, Camera,
 } from "lucide-react";
 import { format, differenceInYears, differenceInMonths } from "date-fns";
 import { it } from "date-fns/locale";
@@ -152,6 +153,7 @@ export default function SchedaPet() {
           <TabsList className="flex w-max min-w-full">
             <TabsTrigger value="panoramica" className="gap-2 whitespace-nowrap"><PetIcon className="h-4 w-4" /> Panoramica</TabsTrigger>
             <TabsTrigger value="soggiorno" className="gap-2 whitespace-nowrap"><Home className="h-4 w-4" /> Soggiorno attuale</TabsTrigger>
+            <TabsTrigger value="diario" className="gap-2 whitespace-nowrap"><Camera className="h-4 w-4" /> Diario</TabsTrigger>
             <TabsTrigger value="alimentazione" className="gap-2 whitespace-nowrap"><UtensilsCrossed className="h-4 w-4" /> Alimentazione</TabsTrigger>
             <TabsTrigger value="farmaci" className="gap-2 whitespace-nowrap"><Pill className="h-4 w-4" /> Farmaci</TabsTrigger>
             <TabsTrigger value="comportamento" className="gap-2 whitespace-nowrap"><Heart className="h-4 w-4" /> Comportamento</TabsTrigger>
@@ -206,6 +208,11 @@ export default function SchedaPet() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* DIARIO */}
+        <TabsContent value="diario">
+          <DiarioTab catId={cat.id} bookingId={currentBooking?.id ?? null} />
         </TabsContent>
 
         {/* ALIMENTAZIONE */}

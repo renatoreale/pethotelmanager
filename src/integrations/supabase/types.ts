@@ -631,6 +631,61 @@ export type Database = {
         }
         Relationships: []
       }
+      diario_entries: {
+        Row: {
+          booking_id: string | null
+          cat_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string
+          photo_path: string | null
+          tenant_id: string
+        }
+        Insert: {
+          booking_id?: string | null
+          cat_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note: string
+          photo_path?: string | null
+          tenant_id: string
+        }
+        Update: {
+          booking_id?: string | null
+          cat_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string
+          photo_path?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diario_entries_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diario_entries_cat_id_fkey"
+            columns: ["cat_id"]
+            isOneToOne: false
+            referencedRelation: "cats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diario_entries_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           booking_id: string | null
