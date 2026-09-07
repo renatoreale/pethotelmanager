@@ -13,6 +13,60 @@ const PERSISTENT_DOCUMENT_TYPES = ["libretto_vaccinazioni", "documento_identita"
 
 const INACTIVE_STATUSES = ["preventivo", "scaduto", "cancellata", "rimborsata"];
 
+// Template predefiniti: stesso pattern già in uso per preventivo_email_body
+// / appuntamento_email_body — testo semplice con placeholder {{var}}, usato
+// solo se il titolare non ha personalizzato il template dal pannello
+// Impostazioni Pensione > Template Email > Automazioni.
+const DEFAULT_TEMPLATES = {
+  upcoming_stay: {
+    subject: "{{numero_prenotazione}} - Ci vediamo tra una settimana!",
+    body: "Ciao {{nome_cliente}},\n\nManca una settimana al soggiorno di {{pet_nomi}}, in arrivo il {{data_checkin}}.\n\nA presto,\n{{nome_pensione}}",
+  },
+  documents: {
+    subject: "{{numero_prenotazione}} - Documenti da caricare prima dell'arrivo",
+    body: "Ciao {{nome_cliente}},\n\nIl check-in del {{data_checkin}} si avvicina: mancano ancora questi documenti: {{documenti_mancanti}}.\n\nPuoi caricarli (anche con una foto dal telefono) dalla tua area riservata ({{link_area_riservata}}), oppure portarli con te il giorno dell'arrivo.\n\nA presto,\n{{nome_pensione}}",
+  },
+  checkin: {
+    subject: "{{numero_prenotazione}} - Ci vediamo domani!",
+    body: "Ciao {{nome_cliente}},\n\nTi aspettiamo domani, {{data_checkin}}, per il check-in di {{pet_nomi}}.\n\nA presto,\n{{nome_pensione}}",
+  },
+  checkout: {
+    subject: "{{numero_prenotazione}} - Il check-out è domani",
+    body: "Ciao {{nome_cliente}},\n\nTi ricordiamo che domani, {{data_checkout}}, è previsto il check-out di {{pet_nomi}}.\n\nA presto,\n{{nome_pensione}}",
+  },
+  checkout_summary: {
+    subject: "{{numero_prenotazione}} - Riepilogo del soggiorno",
+    body: "Ciao {{nome_cliente}},\n\nIl soggiorno di {{pet_nomi}} si conclude oggi, {{data_checkout}}.\n\nDal {{data_checkin}} al {{data_checkout}} — totale € {{totale}}.\n\n{{riga_saldo}}\n\nGrazie per averci scelto,\n{{nome_pensione}}",
+  },
+  balance: {
+    subject: "{{numero_prenotazione}} - Saldo da regolare",
+    body: "Ciao {{nome_cliente}},\n\nRisulta ancora un saldo di € {{saldo}} da regolare per il soggiorno concluso il {{data_checkout}}.\n\nContattaci per sistemarlo appena possibile.\n\nGrazie,\n{{nome_pensione}}",
+  },
+  review_request: {
+    subject: "Com'è andato il soggiorno da {{nome_pensione}}?",
+    body: "Ciao {{nome_cliente}},\n\nGrazie per aver scelto {{nome_pensione}}! Se ti va, raccontaci com'è andata con una recensione:\n{{link_recensione}}\n\nGrazie,\n{{nome_pensione}}",
+  },
+  winback: {
+    subject: "{{pet_nomi}} ci manca!",
+    body: "Ciao {{nome_cliente}},\n\nSono passati {{giorni}} giorni dall'ultimo soggiorno di {{pet_nomi}}. Se stai organizzando una prossima trasferta, siamo qui!\n\nA presto,\n{{nome_pensione}}",
+  },
+} as const;
+
+function renderTemplate(template: string, vars: Record<string, string>) {
+  let out = template;
+  for (const [key, value] of Object.entries(vars)) {
+    out = out.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), value);
+  }
+  return out;
+}
+
+function toHtml(rawBody: string) {
+  return rawBody
+    .split("\n")
+    .map((line) => (line.trim() === "" ? "<br>" : `<p style="margin:0 0 8px">${line}</p>`))
+    .join("");
+}
+
 function calcRemaining(totalAmount: number, payments: { amount: number; payment_type: string }[]) {
   const paid = payments
     .filter((p) => p.payment_type !== "rimborso" && p.payment_type !== "gestione_pratica")
@@ -40,6 +94,22 @@ interface TenantAutomations {
   automation_balance_reminder_enabled: boolean;
   automation_review_request_enabled: boolean;
   automation_winback_enabled: boolean;
+  automation_upcoming_stay_subject: string | null;
+  automation_upcoming_stay_body: string | null;
+  automation_documents_subject: string | null;
+  automation_documents_body: string | null;
+  automation_checkin_subject: string | null;
+  automation_checkin_body: string | null;
+  automation_checkout_subject: string | null;
+  automation_checkout_body: string | null;
+  automation_checkout_summary_subject: string | null;
+  automation_checkout_summary_body: string | null;
+  automation_balance_subject: string | null;
+  automation_balance_body: string | null;
+  automation_review_request_subject: string | null;
+  automation_review_request_body: string | null;
+  automation_winback_subject: string | null;
+  automation_winback_body: string | null;
 }
 
 Deno.serve(async (req) => {
@@ -108,6 +178,19 @@ Deno.serve(async (req) => {
     const wrapHtml = (bodyHtml: string) =>
       `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;">${bodyHtml}</div>`;
 
+    const renderEmail = (
+      tenant: TenantAutomations,
+      key: keyof typeof DEFAULT_TEMPLATES,
+      subjectCol: keyof TenantAutomations,
+      bodyCol: keyof TenantAutomations,
+      vars: Record<string, string>,
+    ) => {
+      const defaults = DEFAULT_TEMPLATES[key];
+      const subject = renderTemplate((tenant[subjectCol] as string | null) || defaults.subject, vars);
+      const html = wrapHtml(toHtml(renderTemplate((tenant[bodyCol] as string | null) || defaults.body, vars)));
+      return { subject, html };
+    };
+
     // Interruttore master per pensione (pannello super admin, default OFF
     // per tutte): se spento, nessuna automazione parte per quel tenant,
     // indipendentemente dalle singole automazioni attivate dal titolare.
@@ -116,7 +199,11 @@ Deno.serve(async (req) => {
       .select(
         "id, name, review_url, automation_upcoming_stay_reminder_enabled, automation_documents_reminder_enabled, " +
         "automation_checkin_reminder_enabled, automation_checkout_reminder_enabled, automation_checkout_summary_enabled, " +
-        "automation_balance_reminder_enabled, automation_review_request_enabled, automation_winback_enabled"
+        "automation_balance_reminder_enabled, automation_review_request_enabled, automation_winback_enabled, " +
+        "automation_upcoming_stay_subject, automation_upcoming_stay_body, automation_documents_subject, automation_documents_body, " +
+        "automation_checkin_subject, automation_checkin_body, automation_checkout_subject, automation_checkout_body, " +
+        "automation_checkout_summary_subject, automation_checkout_summary_body, automation_balance_subject, automation_balance_body, " +
+        "automation_review_request_subject, automation_review_request_body, automation_winback_subject, automation_winback_body"
       )
       .eq("client_reminders_enabled", true);
     const tenants = (tenantsData ?? []) as TenantAutomations[];
@@ -147,18 +234,16 @@ Deno.serve(async (req) => {
 
         for (const b of bookings ?? []) {
           const client = (b as any).client;
-          const tenantName = tenantById.get(b.tenant_id)?.name || "La Pensione";
+          const tenant = tenantById.get(b.tenant_id)!;
           if (!client?.email) continue;
           if (await alreadySent("upcoming_stay_reminder", b.id)) continue;
           const petNames = ((b as any).booking_cats ?? []).map((bc: any) => bc.cats?.name).filter(Boolean).join(", ");
-          const subject = `${b.booking_number} - Ci vediamo tra una settimana!`;
-          const html = wrapHtml(`
-            <p>Ciao ${client.first_name || ""},</p>
-            <p>Manca una settimana al soggiorno${petNames ? ` di ${petNames}` : ""}, in arrivo il ${formatDate(b.check_in_date)}.</p>
-            <p>A presto,<br>${tenantName}</p>
-          `);
+          const { subject, html } = renderEmail(tenant, "upcoming_stay", "automation_upcoming_stay_subject", "automation_upcoming_stay_body", {
+            nome_cliente: client.first_name || "", pet_nomi: petNames || "il tuo pet",
+            data_checkin: formatDate(b.check_in_date), numero_prenotazione: b.booking_number, nome_pensione: tenant.name,
+          });
           try {
-            const ok = await sendEmail({ type: "upcoming_stay_reminder", bookingId: b.id, tenantId: b.tenant_id, tenantName, to: client.email, subject, html });
+            const ok = await sendEmail({ type: "upcoming_stay_reminder", bookingId: b.id, tenantId: b.tenant_id, tenantName: tenant.name, to: client.email, subject, html });
             if (ok) sent++;
           } catch (e: any) { errors.push(e.message); }
         }
@@ -178,18 +263,16 @@ Deno.serve(async (req) => {
 
         for (const b of bookings ?? []) {
           const client = (b as any).client;
-          const tenantName = tenantById.get(b.tenant_id)?.name || "La Pensione";
+          const tenant = tenantById.get(b.tenant_id)!;
           if (!client?.email) continue;
           if (await alreadySent("checkin_reminder", b.id)) continue;
           const petNames = ((b as any).booking_cats ?? []).map((bc: any) => bc.cats?.name).filter(Boolean).join(", ");
-          const subject = `${b.booking_number} - Ci vediamo domani!`;
-          const html = wrapHtml(`
-            <p>Ciao ${client.first_name || ""},</p>
-            <p>Ti aspettiamo domani, ${formatDate(b.check_in_date)}, per il check-in${petNames ? ` di ${petNames}` : ""}.</p>
-            <p>A presto,<br>${tenantName}</p>
-          `);
+          const { subject, html } = renderEmail(tenant, "checkin", "automation_checkin_subject", "automation_checkin_body", {
+            nome_cliente: client.first_name || "", pet_nomi: petNames || "il tuo pet",
+            data_checkin: formatDate(b.check_in_date), numero_prenotazione: b.booking_number, nome_pensione: tenant.name,
+          });
           try {
-            const ok = await sendEmail({ type: "checkin_reminder", bookingId: b.id, tenantId: b.tenant_id, tenantName, to: client.email, subject, html });
+            const ok = await sendEmail({ type: "checkin_reminder", bookingId: b.id, tenantId: b.tenant_id, tenantName: tenant.name, to: client.email, subject, html });
             if (ok) sent++;
           } catch (e: any) { errors.push(e.message); }
         }
@@ -209,18 +292,16 @@ Deno.serve(async (req) => {
 
         for (const b of bookings ?? []) {
           const client = (b as any).client;
-          const tenantName = tenantById.get(b.tenant_id)?.name || "La Pensione";
+          const tenant = tenantById.get(b.tenant_id)!;
           if (!client?.email) continue;
           if (await alreadySent("checkout_reminder", b.id)) continue;
           const petNames = ((b as any).booking_cats ?? []).map((bc: any) => bc.cats?.name).filter(Boolean).join(", ");
-          const subject = `${b.booking_number} - Il check-out è domani`;
-          const html = wrapHtml(`
-            <p>Ciao ${client.first_name || ""},</p>
-            <p>Ti ricordiamo che domani, ${formatDate(b.check_out_date)}, è previsto il check-out${petNames ? ` di ${petNames}` : ""}.</p>
-            <p>A presto,<br>${tenantName}</p>
-          `);
+          const { subject, html } = renderEmail(tenant, "checkout", "automation_checkout_subject", "automation_checkout_body", {
+            nome_cliente: client.first_name || "", pet_nomi: petNames || "il tuo pet",
+            data_checkout: formatDate(b.check_out_date), numero_prenotazione: b.booking_number, nome_pensione: tenant.name,
+          });
           try {
-            const ok = await sendEmail({ type: "checkout_reminder", bookingId: b.id, tenantId: b.tenant_id, tenantName, to: client.email, subject, html });
+            const ok = await sendEmail({ type: "checkout_reminder", bookingId: b.id, tenantId: b.tenant_id, tenantName: tenant.name, to: client.email, subject, html });
             if (ok) sent++;
           } catch (e: any) { errors.push(e.message); }
         }
@@ -240,7 +321,7 @@ Deno.serve(async (req) => {
 
         for (const b of bookings ?? []) {
           const client = (b as any).client;
-          const tenantName = tenantById.get(b.tenant_id)?.name || "La Pensione";
+          const tenant = tenantById.get(b.tenant_id)!;
           if (!client?.email) continue;
           if (await alreadySent("documents_reminder", b.id)) continue;
 
@@ -262,15 +343,12 @@ Deno.serve(async (req) => {
           };
           const missingList = missing.map((t) => labels[t] ?? t).join(", ");
           const portalUrl = `${siteUrl}/cliente/preventivi`;
-          const subject = `${b.booking_number} - Documenti da caricare prima dell'arrivo`;
-          const html = wrapHtml(`
-            <p>Ciao ${client.first_name || ""},</p>
-            <p>Il check-in del ${formatDate(b.check_in_date)} si avvicina: mancano ancora questi documenti: <strong>${missingList}</strong>.</p>
-            <p>Puoi caricarli (anche con una foto dal telefono) dalla tua <a href="${portalUrl}">area riservata</a>, oppure portarli con te il giorno dell'arrivo.</p>
-            <p>A presto,<br>${tenantName}</p>
-          `);
+          const { subject, html } = renderEmail(tenant, "documents", "automation_documents_subject", "automation_documents_body", {
+            nome_cliente: client.first_name || "", data_checkin: formatDate(b.check_in_date), documenti_mancanti: missingList,
+            numero_prenotazione: b.booking_number, link_area_riservata: portalUrl, nome_pensione: tenant.name,
+          });
           try {
-            const ok = await sendEmail({ type: "documents_reminder", bookingId: b.id, tenantId: b.tenant_id, tenantName, to: client.email, subject, html });
+            const ok = await sendEmail({ type: "documents_reminder", bookingId: b.id, tenantId: b.tenant_id, tenantName: tenant.name, to: client.email, subject, html });
             if (ok) sent++;
           } catch (e: any) { errors.push(e.message); }
         }
@@ -290,23 +368,22 @@ Deno.serve(async (req) => {
 
         for (const b of bookings ?? []) {
           const client = (b as any).client;
-          const tenantName = tenantById.get(b.tenant_id)?.name || "La Pensione";
+          const tenant = tenantById.get(b.tenant_id)!;
           if (!client?.email) continue;
           if (await alreadySent("checkout_summary", b.id)) continue;
           const petNames = ((b as any).booking_cats ?? []).map((bc: any) => bc.cats?.name).filter(Boolean).join(", ");
           const remaining = calcRemaining(Number(b.total_amount ?? 0), (b as any).payments ?? []);
-          const subject = `${b.booking_number} - Riepilogo del soggiorno`;
-          const html = wrapHtml(`
-            <p>Ciao ${client.first_name || ""},</p>
-            <p>Il soggiorno${petNames ? ` di ${petNames}` : ""} si conclude oggi, ${formatDate(b.check_out_date)}.</p>
-            <p>Dal ${formatDate(b.check_in_date)} al ${formatDate(b.check_out_date)} — totale € ${Number(b.total_amount ?? 0).toFixed(2)}.</p>
-            ${remaining > 0
-              ? `<p>Saldo residuo: <strong>€ ${remaining.toFixed(2)}</strong>.</p>`
-              : `<p>Nessun saldo residuo, grazie!</p>`}
-            <p>Grazie per averci scelto,<br>${tenantName}</p>
-          `);
+          const rigaSaldo = remaining > 0
+            ? `Saldo residuo: € ${remaining.toFixed(2)}.`
+            : "Nessun saldo residuo, grazie!";
+          const { subject, html } = renderEmail(tenant, "checkout_summary", "automation_checkout_summary_subject", "automation_checkout_summary_body", {
+            nome_cliente: client.first_name || "", pet_nomi: petNames || "il tuo pet",
+            data_checkin: formatDate(b.check_in_date), data_checkout: formatDate(b.check_out_date),
+            totale: Number(b.total_amount ?? 0).toFixed(2), riga_saldo: rigaSaldo,
+            numero_prenotazione: b.booking_number, nome_pensione: tenant.name,
+          });
           try {
-            const ok = await sendEmail({ type: "checkout_summary", bookingId: b.id, tenantId: b.tenant_id, tenantName, to: client.email, subject, html });
+            const ok = await sendEmail({ type: "checkout_summary", bookingId: b.id, tenantId: b.tenant_id, tenantName: tenant.name, to: client.email, subject, html });
             if (ok) sent++;
           } catch (e: any) { errors.push(e.message); }
         }
@@ -326,21 +403,18 @@ Deno.serve(async (req) => {
 
         for (const b of bookings ?? []) {
           const client = (b as any).client;
-          const tenantName = tenantById.get(b.tenant_id)?.name || "La Pensione";
+          const tenant = tenantById.get(b.tenant_id)!;
           if (!client?.email) continue;
           const remaining = calcRemaining(Number(b.total_amount ?? 0), (b as any).payments ?? []);
           if (remaining <= 0) continue;
           if (await alreadySent("balance_reminder", b.id)) continue;
 
-          const subject = `${b.booking_number} - Saldo da regolare`;
-          const html = wrapHtml(`
-            <p>Ciao ${client.first_name || ""},</p>
-            <p>Risulta ancora un saldo di <strong>€ ${remaining.toFixed(2)}</strong> da regolare per il soggiorno concluso il ${formatDate(b.check_out_date)}.</p>
-            <p>Contattaci per sistemarlo appena possibile.</p>
-            <p>Grazie,<br>${tenantName}</p>
-          `);
+          const { subject, html } = renderEmail(tenant, "balance", "automation_balance_subject", "automation_balance_body", {
+            nome_cliente: client.first_name || "", saldo: remaining.toFixed(2),
+            data_checkout: formatDate(b.check_out_date), numero_prenotazione: b.booking_number, nome_pensione: tenant.name,
+          });
           try {
-            const ok = await sendEmail({ type: "balance_reminder", bookingId: b.id, tenantId: b.tenant_id, tenantName, to: client.email, subject, html });
+            const ok = await sendEmail({ type: "balance_reminder", bookingId: b.id, tenantId: b.tenant_id, tenantName: tenant.name, to: client.email, subject, html });
             if (ok) sent++;
           } catch (e: any) { errors.push(e.message); }
         }
@@ -360,19 +434,14 @@ Deno.serve(async (req) => {
 
         for (const b of bookings ?? []) {
           const client = (b as any).client;
-          const tenant = tenantById.get(b.tenant_id);
-          const tenantName = tenant?.name || "La Pensione";
-          if (!client?.email || !tenant?.review_url) continue;
+          const tenant = tenantById.get(b.tenant_id)!;
+          if (!client?.email || !tenant.review_url) continue;
           if (await alreadySent("review_request", b.id)) continue;
-          const subject = `Com'è andato il soggiorno da ${tenantName}?`;
-          const html = wrapHtml(`
-            <p>Ciao ${client.first_name || ""},</p>
-            <p>Grazie per aver scelto ${tenantName}! Se ti va, raccontaci com'è andata con una recensione:</p>
-            <p><a href="${tenant.review_url}">Lascia una recensione</a></p>
-            <p>Grazie,<br>${tenantName}</p>
-          `);
+          const { subject, html } = renderEmail(tenant, "review_request", "automation_review_request_subject", "automation_review_request_body", {
+            nome_cliente: client.first_name || "", link_recensione: tenant.review_url, nome_pensione: tenant.name,
+          });
           try {
-            const ok = await sendEmail({ type: "review_request", bookingId: b.id, tenantId: b.tenant_id, tenantName, to: client.email, subject, html });
+            const ok = await sendEmail({ type: "review_request", bookingId: b.id, tenantId: b.tenant_id, tenantName: tenant.name, to: client.email, subject, html });
             if (ok) sent++;
           } catch (e: any) { errors.push(e.message); }
         }
@@ -398,18 +467,16 @@ Deno.serve(async (req) => {
           const type = `winback_${days}`;
           for (const b of bookings ?? []) {
             const client = (b as any).client;
-            const tenantName = tenantById.get(b.tenant_id)?.name || "La Pensione";
+            const tenant = tenantById.get(b.tenant_id)!;
             if (!client?.email) continue;
             if (await alreadySent(type, b.id)) continue;
             const petNames = ((b as any).booking_cats ?? []).map((bc: any) => bc.cats?.name).filter(Boolean).join(", ");
-            const subject = `${petNames || "Il tuo pet"} ci manca!`;
-            const html = wrapHtml(`
-              <p>Ciao ${client.first_name || ""},</p>
-              <p>Sono passati ${days} giorni dall'ultimo soggiorno${petNames ? ` di ${petNames}` : ""}. Se stai organizzando una prossima trasferta, siamo qui!</p>
-              <p>A presto,<br>${tenantName}</p>
-            `);
+            const { subject, html } = renderEmail(tenant, "winback", "automation_winback_subject", "automation_winback_body", {
+              nome_cliente: client.first_name || "", pet_nomi: petNames || "il tuo pet",
+              giorni: String(days), nome_pensione: tenant.name,
+            });
             try {
-              const ok = await sendEmail({ type, bookingId: b.id, tenantId: b.tenant_id, tenantName, to: client.email, subject, html });
+              const ok = await sendEmail({ type, bookingId: b.id, tenantId: b.tenant_id, tenantName: tenant.name, to: client.email, subject, html });
               if (ok) sent++;
             } catch (e: any) { errors.push(e.message); }
           }

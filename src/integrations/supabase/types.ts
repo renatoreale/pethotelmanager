@@ -1625,14 +1625,30 @@ export type Database = {
       tenants: {
         Row: {
           address: string | null
+          automation_balance_body: string | null
           automation_balance_reminder_enabled: boolean
+          automation_balance_subject: string | null
+          automation_checkin_body: string | null
           automation_checkin_reminder_enabled: boolean
+          automation_checkin_subject: string | null
+          automation_checkout_body: string | null
           automation_checkout_reminder_enabled: boolean
+          automation_checkout_subject: string | null
+          automation_checkout_summary_body: string | null
           automation_checkout_summary_enabled: boolean
+          automation_checkout_summary_subject: string | null
+          automation_documents_body: string | null
           automation_documents_reminder_enabled: boolean
+          automation_documents_subject: string | null
+          automation_review_request_body: string | null
           automation_review_request_enabled: boolean
+          automation_review_request_subject: string | null
+          automation_upcoming_stay_body: string | null
           automation_upcoming_stay_reminder_enabled: boolean
+          automation_upcoming_stay_subject: string | null
+          automation_winback_body: string | null
           automation_winback_enabled: boolean
+          automation_winback_subject: string | null
           bank_name: string | null
           bollo_amount: number
           cap: string | null
@@ -1672,14 +1688,30 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          automation_balance_body?: string | null
           automation_balance_reminder_enabled?: boolean
+          automation_balance_subject?: string | null
+          automation_checkin_body?: string | null
           automation_checkin_reminder_enabled?: boolean
+          automation_checkin_subject?: string | null
+          automation_checkout_body?: string | null
           automation_checkout_reminder_enabled?: boolean
+          automation_checkout_subject?: string | null
+          automation_checkout_summary_body?: string | null
           automation_checkout_summary_enabled?: boolean
+          automation_checkout_summary_subject?: string | null
+          automation_documents_body?: string | null
           automation_documents_reminder_enabled?: boolean
+          automation_documents_subject?: string | null
+          automation_review_request_body?: string | null
           automation_review_request_enabled?: boolean
+          automation_review_request_subject?: string | null
+          automation_upcoming_stay_body?: string | null
           automation_upcoming_stay_reminder_enabled?: boolean
+          automation_upcoming_stay_subject?: string | null
+          automation_winback_body?: string | null
           automation_winback_enabled?: boolean
+          automation_winback_subject?: string | null
           bank_name?: string | null
           bollo_amount?: number
           cap?: string | null
@@ -1719,14 +1751,30 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          automation_balance_body?: string | null
           automation_balance_reminder_enabled?: boolean
+          automation_balance_subject?: string | null
+          automation_checkin_body?: string | null
           automation_checkin_reminder_enabled?: boolean
+          automation_checkin_subject?: string | null
+          automation_checkout_body?: string | null
           automation_checkout_reminder_enabled?: boolean
+          automation_checkout_subject?: string | null
+          automation_checkout_summary_body?: string | null
           automation_checkout_summary_enabled?: boolean
+          automation_checkout_summary_subject?: string | null
+          automation_documents_body?: string | null
           automation_documents_reminder_enabled?: boolean
+          automation_documents_subject?: string | null
+          automation_review_request_body?: string | null
           automation_review_request_enabled?: boolean
+          automation_review_request_subject?: string | null
+          automation_upcoming_stay_body?: string | null
           automation_upcoming_stay_reminder_enabled?: boolean
+          automation_upcoming_stay_subject?: string | null
+          automation_winback_body?: string | null
           automation_winback_enabled?: boolean
+          automation_winback_subject?: string | null
           bank_name?: string | null
           bollo_amount?: number
           cap?: string | null
