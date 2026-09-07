@@ -56,6 +56,7 @@ import ClienteSetPassword from "./pages/cliente/ClienteSetPassword";
 import ClienteDashboard from "./pages/cliente/ClienteDashboard";
 import ClienteProfilo from "./pages/cliente/ClienteProfilo";
 import ClienteAnimali from "./pages/cliente/ClienteAnimali";
+import ClienteDiario from "./pages/cliente/ClienteDiario";
 import ClientePreventivi from "./pages/cliente/ClientePreventivi";
 import ClienteRichiestaPreventivo from "./pages/cliente/ClienteRichiestaPreventivo";
 
@@ -115,6 +116,7 @@ const App = () => {
                 <Route path="/cliente" element={<ClienteDashboard />} />
                 <Route path="/cliente/profilo" element={<ClienteProfilo />} />
                 <Route path="/cliente/animali" element={<ClienteAnimali />} />
+                <Route path="/cliente/diario" element={<ClienteDiario />} />
                 <Route path="/cliente/preventivi" element={<ClientePreventivi />} />
                 <Route path="/cliente/richiedi-preventivo" element={<ClienteRichiestaPreventivo />} />
               </Route>

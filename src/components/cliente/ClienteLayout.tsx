@@ -2,7 +2,7 @@ import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useClienteProfile, useClienteTenant } from "@/hooks/useClienteAuth";
 import {
-  LayoutDashboard, User, PawPrint, FileText, FilePlus, Power, Menu, X,
+  LayoutDashboard, User, PawPrint, FileText, FilePlus, Power, Menu, X, Camera,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ const navItems = [
   { label: "Dashboard", to: "/cliente", icon: LayoutDashboard, end: true },
   { label: "Il Mio Profilo", to: "/cliente/profilo", icon: User },
   { label: "I Miei Pets", to: "/cliente/animali", icon: PawPrint },
+  { label: "Diario", to: "/cliente/diario", icon: Camera },
   { label: "Preventivi", to: "/cliente/preventivi", icon: FileText },
   { label: "Richiedi Preventivo", to: "/cliente/richiedi-preventivo", icon: FilePlus },
 ];
