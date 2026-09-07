@@ -4,12 +4,15 @@ import { useDiarioForCat } from "@/hooks/useDiario";
 import { useSupabase } from "@/hooks/useSupabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Camera, PawPrint } from "lucide-react";
+import { Camera, PawPrint, Download, Maximize2 } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { toast } from "sonner";
 
 export default function ClienteDiario() {
   const supabase = useSupabase();
@@ -23,10 +26,37 @@ export default function ClienteDiario() {
   }, [cats, selectedCatId]);
 
   const { data: entries, isLoading } = useDiarioForCat(selectedCatId || undefined);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   const photoUrl = (photoPath: string | null) => {
     if (!photoPath) return null;
     return supabase.storage.from("diario-photos").getPublicUrl(photoPath).data.publicUrl;
+  };
+
+  // Il download diretto via <a download> non è affidabile su URL cross-origin
+  // (il browser spesso apre l'immagine invece di scaricarla): si scarica il
+  // file e si forza il salvataggio da un blob URL, che è sempre same-origin.
+  const handleDownload = async (url: string) => {
+    setDownloading(true);
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Download non riuscito");
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const ext = blob.type.split("/")[1] || "jpg";
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `diario-foto.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      toast.error("Errore nel download della foto");
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -75,7 +105,17 @@ export default function ClienteDiario() {
                     return (
                       <div key={entry.id} className="flex gap-3 border-b pb-4 last:border-0 last:pb-0">
                         {url && (
-                          <img src={url} alt="Aggiornamento" className="w-20 h-20 object-cover rounded-md border shrink-0" />
+                          <button
+                            type="button"
+                            onClick={() => setLightboxUrl(url)}
+                            className="relative shrink-0 group"
+                            title="Ingrandisci foto"
+                          >
+                            <img src={url} alt="Aggiornamento" className="w-20 h-20 object-cover rounded-md border" />
+                            <span className="absolute inset-0 rounded-md bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                              <Maximize2 className="h-4 w-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </span>
+                          </button>
                         )}
                         <div className="min-w-0 flex-1">
                           <p className="text-sm whitespace-pre-wrap leading-relaxed">{entry.note}</p>
@@ -96,6 +136,25 @@ export default function ClienteDiario() {
           </Card>
         </>
       )}
+
+      <Dialog open={!!lightboxUrl} onOpenChange={(open) => !open && setLightboxUrl(null)}>
+        <DialogContent className="max-w-3xl p-2">
+          <DialogHeader className="px-2 pt-2">
+            <DialogTitle className="text-sm font-normal text-muted-foreground">Foto del diario</DialogTitle>
+          </DialogHeader>
+          {lightboxUrl && (
+            <div className="space-y-2">
+              <img src={lightboxUrl} alt="Aggiornamento" className="w-full max-h-[75vh] object-contain rounded-md" />
+              <Button
+                type="button" className="gap-1.5 w-full sm:w-auto"
+                onClick={() => handleDownload(lightboxUrl)} disabled={downloading}
+              >
+                <Download className="h-4 w-4" /> {downloading ? "Download..." : "Scarica foto"}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
