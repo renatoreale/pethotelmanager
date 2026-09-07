@@ -2,11 +2,11 @@ import { useState, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useCat } from "@/hooks/useCats";
 import { usePetBookings } from "@/hooks/useBookings";
-import { useDocumentsForBookings } from "@/hooks/useDocuments";
 import { usePetLabels } from "@/hooks/usePetLabels";
 import { CatDialog } from "@/components/cats/CatDialog";
 import { CarePlanDialog } from "@/components/bookings/CarePlanDialog";
 import { DiarioTab } from "@/components/cats/DiarioTab";
+import { DocumentiTab } from "@/components/cats/DocumentiTab";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,7 +83,10 @@ export default function SchedaPet() {
   const [carePlanOpen, setCarePlanOpen] = useState(false);
 
   const bookingIds = useMemo(() => (bookings ?? []).map((b: any) => b.id), [bookings]);
-  const { data: documents } = useDocumentsForBookings(bookingIds);
+  const bookingNumberById = useMemo(
+    () => new Map((bookings ?? []).map((b: any) => [b.id, b.booking_number])),
+    [bookings]
+  );
 
   const currentBooking = useMemo(
     () => (bookings ?? []).find((b: any) => ACTIVE_STAY_STATUSES.includes(b.status)),
@@ -247,28 +250,12 @@ export default function SchedaPet() {
 
         {/* DOCUMENTI */}
         <TabsContent value="documenti">
-          <Card className="border shadow-sm">
-            <CardHeader><CardTitle className="text-base">Documenti</CardTitle></CardHeader>
-            <CardContent>
-              {!documents?.length ? (
-                <p className="text-sm text-muted-foreground text-center py-6">Nessun documento caricato.</p>
-              ) : (
-                <div className="space-y-2">
-                  {documents.map((doc) => (
-                    <div key={doc.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{doc.file_name}</p>
-                          <p className="text-xs text-muted-foreground">{doc.document_type} · {format(new Date(doc.created_at), "dd MMM yyyy", { locale: it })}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <DocumentiTab
+            catId={cat.id}
+            bookingId={currentBooking?.id ?? null}
+            bookingIds={bookingIds}
+            bookingNumberById={bookingNumberById}
+          />
         </TabsContent>
 
         {/* STORICO */}

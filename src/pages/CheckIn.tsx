@@ -32,6 +32,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTenantConfig, usePriceLists } from "@/hooks/usePensioneConfig";
 import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
+import { useDocumentsForBookings } from "@/hooks/useDocuments";
+import { DOCUMENT_TYPE_LABELS, REQUIRED_DOCUMENT_TYPES } from "@/lib/documentTypes";
 
 const CHECKIN_STATUSES = ["check_in", "appuntamento_in_fissato", "appuntamento_in_out_fissato"];
 
@@ -77,6 +79,17 @@ export default function CheckIn() {
   const [loadingCats, setLoadingCats] = useState(false);
   const [bookingPaidAmount, setBookingPaidAmount] = useState(0);
   const [manualExtraCost, setManualExtraCost] = useState<string | null>(null);
+
+  // Requisiti (documenti richiesti) del soggiorno in check-in: solo un
+  // riepilogo informativo, non blocca la conferma — vedi Blocco 9.
+  const confirmBookingIds = useMemo(() => (confirmBooking ? [confirmBooking.id] : []), [confirmBooking?.id]);
+  const { data: confirmBookingDocuments } = useDocumentsForBookings(confirmBookingIds);
+  const missingRequiredDocs = useMemo(
+    () => REQUIRED_DOCUMENT_TYPES.filter(
+      (type) => !(confirmBookingDocuments ?? []).some((d) => d.document_type === type)
+    ),
+    [confirmBookingDocuments]
+  );
 
   const stayCalcType = tenantConfig?.stay_calc_type ?? "notti";
   const countCheckinDay = tenantConfig?.count_checkin_day ?? true;
@@ -546,6 +559,14 @@ export default function CheckIn() {
                   </span>
                 </div>
               </div>
+
+              {/* Requisiti documenti (informativo, non blocca il check-in) */}
+              {missingRequiredDocs.length > 0 && (
+                <div className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning-foreground">
+                  Documenti da raccogliere: {missingRequiredDocs.map((t) => DOCUMENT_TYPE_LABELS[t]).join(", ")}.
+                  {" "}Puoi caricarli dalla scheda pet, tab "Documenti".
+                </div>
+              )}
 
               {/* Cat details section */}
               {catDetails.length > 0 && (
