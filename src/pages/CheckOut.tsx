@@ -28,6 +28,8 @@ import { toast } from "sonner";
 import { useBookings, useTransitionBooking } from "@/hooks/useBookings";
 import { useUpdateCatRegistryCheckout } from "@/hooks/useCatRegistry";
 import { useCreatePayment, usePaymentMethods } from "@/hooks/usePayments";
+import { useTasksForBooking, useGenerateTasksForBooking, dedupeNewTasks } from "@/hooks/usePlanningTasks";
+import { CHECKOUT_CHECKLIST } from "@/lib/checklists";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenantConfig, usePriceLists } from "@/hooks/usePensioneConfig";
 import { useSupabase } from "@/hooks/useSupabaseClient";
@@ -56,9 +58,11 @@ export default function CheckOut() {
   const transitionBooking = useTransitionBooking();
   const updateCatRegistryCheckout = useUpdateCatRegistryCheckout();
   const createPayment = useCreatePayment();
+  const generateTasks = useGenerateTasksForBooking();
 
   const [search, setSearch] = useState("");
   const [confirmBooking, setConfirmBooking] = useState<any>(null);
+  const { data: confirmBookingTasks } = useTasksForBooking(confirmBooking?.id);
 
   // Date state
   const [actualCheckOutDate, setActualCheckOutDate] = useState<Date>(new Date());
@@ -316,6 +320,22 @@ export default function CheckOut() {
           payment_method_id: txMethodId,
           notes: txNotes || null,
         });
+      }
+
+      // 5. Genera la checklist di check-out (idempotente, non blocca il
+      // check-out se fallisce: è un aiuto operativo, non un requisito).
+      try {
+        const todayStr = format(new Date(), "yyyy-MM-dd");
+        const candidates = CHECKOUT_CHECKLIST.map((item) => ({
+          taskDate: todayStr, catId: null as string | null, title: item.title,
+          description: item.description, category: "check_out" as const,
+        }));
+        const newTasks = dedupeNewTasks(confirmBookingTasks ?? [], candidates);
+        if (newTasks.length > 0) {
+          await generateTasks.mutateAsync({ bookingId: booking.id, tasks: newTasks });
+        }
+      } catch {
+        // non bloccante
       }
 
       toast.success(`Check-out completato per ${clientName}`);

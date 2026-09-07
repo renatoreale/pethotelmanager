@@ -34,6 +34,8 @@ import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDocumentsForBookings } from "@/hooks/useDocuments";
 import { DOCUMENT_TYPE_LABELS, REQUIRED_DOCUMENT_TYPES } from "@/lib/documentTypes";
+import { useTasksForBooking, useGenerateTasksForBooking, dedupeNewTasks } from "@/hooks/usePlanningTasks";
+import { CHECKIN_CHECKLIST } from "@/lib/checklists";
 
 const CHECKIN_STATUSES = ["check_in", "appuntamento_in_fissato", "appuntamento_in_out_fissato"];
 
@@ -58,6 +60,7 @@ export default function CheckIn() {
   const transitionBooking = useTransitionBooking();
   const insertCatRegistry = useInsertCatRegistry();
   const createPayment = useCreatePayment();
+  const generateTasks = useGenerateTasksForBooking();
 
   const [search, setSearch] = useState("");
   const [confirmBooking, setConfirmBooking] = useState<any>(null);
@@ -84,6 +87,7 @@ export default function CheckIn() {
   // riepilogo informativo, non blocca la conferma — vedi Blocco 9.
   const confirmBookingIds = useMemo(() => (confirmBooking ? [confirmBooking.id] : []), [confirmBooking?.id]);
   const { data: confirmBookingDocuments } = useDocumentsForBookings(confirmBookingIds);
+  const { data: confirmBookingTasks } = useTasksForBooking(confirmBooking?.id);
   const missingRequiredDocs = useMemo(
     () => REQUIRED_DOCUMENT_TYPES.filter(
       (type) => !(confirmBookingDocuments ?? []).some((d) => d.document_type === type)
@@ -343,6 +347,22 @@ export default function CheckIn() {
           payment_method_id: txMethodId,
           notes: txNotes || null,
         });
+      }
+
+      // 5. Genera la checklist di check-in (idempotente, non blocca il check-in
+      // se fallisce: è un aiuto operativo, non un requisito).
+      try {
+        const todayStr = format(new Date(), "yyyy-MM-dd");
+        const candidates = CHECKIN_CHECKLIST.map((item) => ({
+          taskDate: todayStr, catId: null as string | null, title: item.title,
+          description: item.description, category: "check_in" as const,
+        }));
+        const newTasks = dedupeNewTasks(confirmBookingTasks ?? [], candidates);
+        if (newTasks.length > 0) {
+          await generateTasks.mutateAsync({ bookingId: booking.id, tasks: newTasks });
+        }
+      } catch {
+        // non bloccante
       }
 
       toast.success(`Check-in completato per ${clientName}`);

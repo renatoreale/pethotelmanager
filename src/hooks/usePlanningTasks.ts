@@ -64,7 +64,10 @@ export function useTasksForBooking(bookingId: string | undefined) {
   });
 }
 
-export function useGenerateTasksFromCarePlan() {
+// Nome generico: usata sia per generare le task dal piano di cura (Blocco 4)
+// sia per le checklist di check-in/check-out (Blocco 10) — inserisce più
+// task per una prenotazione in un'unica chiamata.
+export function useGenerateTasksForBooking() {
   const qc = useQueryClient();
   const { profile } = useAuth();
   const supabase = useSupabase();
@@ -251,4 +254,18 @@ export function useMarkTaskAdministered() {
       qc.invalidateQueries({ queryKey: ["planning-tasks-booking"] });
     },
   });
+}
+
+// Filtra via i candidati già presenti tra le task esistenti di una
+// prenotazione (stesso giorno, stesso pet, stesso titolo/descrizione),
+// così generare una checklist più volte non duplica le voci già create.
+export function dedupeNewTasks<T extends { taskDate: string; catId?: string | null; title: string; description?: string }>(
+  existing: PlanningTask[], candidates: T[]
+): T[] {
+  const key = (t: { taskDate: string; catId?: string | null; title: string; description?: string }) =>
+    `${t.taskDate}|${t.catId ?? ""}|${t.title}|${t.description ?? ""}`;
+  const existingKeys = new Set(existing.map((t) => key({
+    taskDate: t.task_date, catId: t.cat_id, title: t.title, description: t.description ?? undefined,
+  })));
+  return candidates.filter((c) => !existingKeys.has(key(c)));
 }

@@ -21,7 +21,7 @@ import {
   useUpdateCarePlan, type CarePlan, type CarePlanFeeding, type CarePlanMedication, type CarePlanActivity,
   type CareDateSelection,
 } from "@/hooks/useBookings";
-import { useTasksForBooking, useGenerateTasksFromCarePlan, useDeleteTask, useDeleteTasks } from "@/hooks/usePlanningTasks";
+import { useTasksForBooking, useGenerateTasksForBooking, useDeleteTask, useDeleteTasks } from "@/hooks/usePlanningTasks";
 import type { TaskCategory } from "@/lib/taskCategories";
 import { format, eachDayOfInterval } from "date-fns";
 import { it } from "date-fns/locale";
@@ -75,7 +75,7 @@ interface CarePlanDialogProps {
 
 export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogProps) {
   const updateCarePlan = useUpdateCarePlan();
-  const generateTasks = useGenerateTasksFromCarePlan();
+  const generateTasks = useGenerateTasksForBooking();
   const deleteTask = useDeleteTask();
   const deleteTasks = useDeleteTasks();
   const { data: tasks } = useTasksForBooking(open ? booking?.id : undefined);
