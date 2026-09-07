@@ -18,6 +18,7 @@ const ROUTE_RESOURCE_MAP: Record<string, Resource> = {
   "/gatti": "gatti",
   "/registro-gatti": "registro-gatti",
   "/attivita": "planning",
+  "/farmaci": "planning",
   "/occupazione": "occupazione",
   "/statistiche": "statistiche",
   "/utenti": "utenti",

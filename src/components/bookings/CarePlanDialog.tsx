@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -55,6 +55,18 @@ function normalizeEntries<T extends { catId?: string; dateSelection?: CareDateSe
   })) as T[];
 }
 
+// I piani salvati prima dell'introduzione dei più orari avevano un solo campo
+// "time: string" per farmaco: qui lo convertiamo nel nuovo "times: string[]".
+function normalizeMedications(entries: any[] | undefined, booking: any): CarePlanMedication[] {
+  return (entries ?? []).map((e: any) => ({
+    catId: e.catId ?? "",
+    name: e.name ?? "",
+    dose: e.dose ?? "",
+    times: Array.isArray(e.times) ? e.times : (e.time ? [e.time] : []),
+    dateSelection: e.dateSelection ?? defaultDateSelection(booking),
+  }));
+}
+
 interface CarePlanDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -83,7 +95,7 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
       const existing = booking?.care_plan as CarePlan | null | undefined;
       setPlan({
         feeding: normalizeEntries<CarePlanFeeding>(existing?.feeding, booking),
-        medications: normalizeEntries<CarePlanMedication>(existing?.medications, booking),
+        medications: normalizeMedications(existing?.medications, booking),
         activities: normalizeEntries<CarePlanActivity>(existing?.activities, booking),
         special_notes: existing?.special_notes ?? "",
       });
@@ -107,7 +119,7 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
   };
 
   const handleGenerateTasks = async () => {
-    const candidates: { taskDate: string; catId: string | null; title: string; description?: string; category: TaskCategory }[] = [];
+    const candidates: { taskDate: string; catId: string | null; title: string; description?: string; category: TaskCategory; scheduledTime?: string | null }[] = [];
 
     const buildTasks = (
       entries: { catId: string; dateSelection: CareDateSelection }[],
@@ -115,12 +127,13 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
       titlePrefix: (e: any) => string,
       description: (e: any) => string | undefined,
       category: TaskCategory,
+      scheduledTime: (e: any) => string | null,
     ) => {
       for (const e of entries) {
         if (!hasContent(e)) continue;
         const dates = expandDates(e.dateSelection, booking.check_in_date, booking.check_out_date);
         for (const d of dates) {
-          candidates.push({ taskDate: d, catId: e.catId || null, title: titlePrefix(e), description: description(e), category });
+          candidates.push({ taskDate: d, catId: e.catId || null, title: titlePrefix(e), description: description(e), category, scheduledTime: scheduledTime(e) });
         }
       }
     };
@@ -130,18 +143,35 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
       (f) => `Alimentazione — ${labelForCat(f.catId)}${f.time ? ` (${f.time})` : ""}`,
       (f) => [f.food, f.quantity].filter(Boolean).join(" — "),
       "alimentazione",
+      (f) => f.time || null,
     );
-    buildTasks(
-      plan.medications, (m) => m.name.trim(),
-      (m) => `Farmaco — ${labelForCat(m.catId)}${m.time ? ` (${m.time})` : ""}`,
-      (m) => [m.name, m.dose].filter(Boolean).join(" — "),
-      "farmaco",
-    );
+
+    // Farmaci: un task distinto per ciascuna combinazione data × orario, dato che
+    // uno stesso farmaco può avere più somministrazioni nello stesso giorno.
+    for (const m of plan.medications) {
+      if (!m.name.trim()) continue;
+      const dates = expandDates(m.dateSelection, booking.check_in_date, booking.check_out_date);
+      const times: (string | null)[] = m.times.length > 0 ? m.times : [null];
+      for (const d of dates) {
+        for (const time of times) {
+          candidates.push({
+            taskDate: d,
+            catId: m.catId || null,
+            title: `Farmaco — ${labelForCat(m.catId)}${time ? ` (${time})` : ""}`,
+            description: [m.name, m.dose].filter(Boolean).join(" — "),
+            category: "farmaco",
+            scheduledTime: time,
+          });
+        }
+      }
+    }
+
     buildTasks(
       plan.activities, (a) => a.activity.trim(),
       (a) => `${a.activity} — ${labelForCat(a.catId)}${a.time ? ` (${a.time})` : ""}`,
       (a) => a.frequency || undefined,
       "altro",
+      (a) => a.time || null,
     );
 
     if (candidates.length === 0) {
@@ -247,15 +277,20 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
             title="Farmaci"
             rows={plan.medications}
             onChange={(rows) => setPlan({ ...plan, medications: rows })}
-            newRow={{ catId: defaultCatId, name: "", dose: "", time: "", dateSelection: defaultDateSelection(booking) }}
+            newRow={{ catId: defaultCatId, name: "", dose: "", times: [], dateSelection: defaultDateSelection(booking) }}
             fields={[
               { key: "name", placeholder: "Cosa (es. antibiotico)" },
               { key: "dose", placeholder: "Dose (es. 1 compressa)" },
-              { key: "time", placeholder: "Orario (es. 08:00, 20:00)" },
             ]}
             pets={hasMultiplePets ? pets : []}
             minDate={booking.check_in_date}
             maxDate={booking.check_out_date}
+            renderExtra={(row, update) => (
+              <MedicationTimesEditor
+                value={row.times ?? []}
+                onChange={(times) => update({ times } as Partial<CarePlanMedication>)}
+              />
+            )}
           />
 
           <CarePlanSection<CarePlanActivity>
@@ -433,8 +468,56 @@ function CareDatesEditor({ value, onChange, minDate, maxDate }: {
   );
 }
 
+// Orari di somministrazione multipli per lo stesso farmaco (es. 08:00, 14:00, 20:00),
+// con lo stesso pattern a chip usato per le date singole in CareDatesEditor.
+function MedicationTimesEditor({ value, onChange }: {
+  value: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const [draftTime, setDraftTime] = useState("");
+
+  const addTime = () => {
+    if (!draftTime) return;
+    if (!value.includes(draftTime)) {
+      onChange([...value, draftTime].sort());
+    }
+    setDraftTime("");
+  };
+
+  return (
+    <div className="space-y-2 pt-1 border-t">
+      <div className="flex items-center gap-2">
+        <Input
+          type="time" className="text-sm h-8 w-28"
+          value={draftTime}
+          onChange={(e) => setDraftTime(e.target.value)}
+        />
+        <Button type="button" size="sm" variant="outline" className="h-8 text-xs gap-1.5 shrink-0" onClick={addTime} disabled={!draftTime}>
+          <Plus className="h-3.5 w-3.5" /> Aggiungi orario
+        </Button>
+      </div>
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {value.map((t) => (
+            <Badge key={t} variant="secondary" className="text-xs gap-1 pr-1">
+              {t}
+              <button
+                type="button"
+                className="rounded-full hover:bg-muted-foreground/20"
+                onClick={() => onChange(value.filter((x) => x !== t))}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CarePlanSection<T extends { catId: string; dateSelection: CareDateSelection }>({
-  icon: Icon, title, rows, onChange, newRow, fields, pets, minDate, maxDate,
+  icon: Icon, title, rows, onChange, newRow, fields, pets, minDate, maxDate, renderExtra,
 }: {
   icon: any;
   title: string;
@@ -445,6 +528,7 @@ function CarePlanSection<T extends { catId: string; dateSelection: CareDateSelec
   pets: { id: string; name: string }[];
   minDate: string;
   maxDate: string;
+  renderExtra?: (row: T, update: (patch: Partial<T>) => void) => ReactNode;
 }) {
   return (
     <div className="space-y-2">
@@ -503,6 +587,11 @@ function CarePlanSection<T extends { catId: string; dateSelection: CareDateSelec
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
+              {renderExtra && renderExtra(row, (patch) => {
+                const next = [...rows];
+                next[i] = { ...next[i], ...patch };
+                onChange(next);
+              })}
               <CareDatesEditor
                 value={row.dateSelection}
                 onChange={(v) => {

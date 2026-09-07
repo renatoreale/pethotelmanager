@@ -192,6 +192,19 @@ export default function Index() {
 
   const openTasks = useMemo(() => (tasks ?? []).filter(tk => !tk.completed), [tasks]);
   const unassignedOpenTasks = useMemo(() => openTasks.filter(tk => !tk.assigned_to), [openTasks]);
+  const openMedications = useMemo(() => openTasks.filter(tk => tk.category === "farmaco"), [openTasks]);
+  // Somministrazioni con orario entro i prossimi 30 minuti (solo vista "oggi").
+  const imminentMedications = useMemo(() => {
+    if (!isTodayFn(selectedDate)) return [];
+    return openMedications.filter(tk => {
+      if (!tk.scheduled_time) return false;
+      const [hh, mm] = tk.scheduled_time.split(":").map(Number);
+      const target = new Date();
+      target.setHours(hh, mm, 0, 0);
+      const msUntil = target.getTime() - Date.now();
+      return msUntil >= 0 && msUntil <= 30 * 60 * 1000;
+    });
+  }, [openMedications, selectedDate]);
   // Stesso ordine della pagina Attività: urgenti, poi per orario, poi per priorità.
   const sortedTasks = useMemo(() => {
     return [...(tasks ?? [])].sort((a, b) => {
@@ -273,6 +286,14 @@ export default function Index() {
       });
     }
     if (canSeeTasks) {
+      for (const tk of imminentMedications) {
+        items.push({
+          key: `med-${tk.id}`, severity: "orange",
+          label: t("dashboard.attentionImminentMedication"),
+          detail: `${tk.title}${tk.scheduled_time ? ` · ${tk.scheduled_time.slice(0, 5)}` : ""}`,
+          actionLabel: t("dashboard.open"), onAction: () => navigate("/farmaci"),
+        });
+      }
       for (const tk of unassignedOpenTasks) {
         items.push({
           key: `task-${tk.id}`, severity: "yellow",
@@ -284,7 +305,7 @@ export default function Index() {
     }
     const rank: Record<Severity, number> = { red: 0, orange: 1, yellow: 2 };
     return items.sort((a, b) => rank[a.severity] - rank[b.severity]);
-  }, [stats, isOperatoreRestricted, canSeeMoney, canSeeTasks, unassignedOpenTasks, dateLocale, t, navigate]);
+  }, [stats, isOperatoreRestricted, canSeeMoney, canSeeTasks, unassignedOpenTasks, imminentMedications, dateLocale, t, navigate]);
 
   if (loadingBookings) {
     return (
@@ -326,10 +347,10 @@ export default function Index() {
       onClick: () => navigate("/presenze"),
     },
     {
-      key: "medications", title: t("dashboard.kpiMedications"), value: "0",
+      key: "medications", title: t("dashboard.kpiMedications"), value: String(openMedications.length),
       subtitle: t("dashboard.kpiMedicationsSubtitle"),
-      icon: Pill, color: "text-accent", bg: "bg-accent/10", show: true,
-      onClick: undefined,
+      icon: Pill, color: "text-accent", bg: "bg-accent/10", show: canSeeTasks,
+      onClick: () => navigate("/farmaci"),
     },
     {
       key: "tasks", title: t("dashboard.kpiTasks"), value: String(openTasks.length),

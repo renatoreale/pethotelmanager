@@ -22,7 +22,9 @@ export interface CarePlanMedication {
   catId: string;
   name: string;
   dose: string;
-  time: string;
+  // Più orari di somministrazione nello stesso giorno (es. 08:00, 14:00, 20:00):
+  // "Genera task" crea una somministrazione distinta per ciascun orario x data.
+  times: string[];
   dateSelection: CareDateSelection;
 }
 export interface CarePlanActivity {

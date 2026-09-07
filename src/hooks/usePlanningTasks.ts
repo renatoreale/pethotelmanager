@@ -71,7 +71,10 @@ export function useGenerateTasksFromCarePlan() {
   return useMutation({
     mutationFn: async (input: {
       bookingId: string;
-      tasks: { taskDate: string; catId?: string | null; title: string; description?: string; category?: TaskCategory }[];
+      tasks: {
+        taskDate: string; catId?: string | null; title: string; description?: string;
+        category?: TaskCategory; scheduledTime?: string | null;
+      }[];
     }) => {
       if (!profile?.tenant_id) throw new Error("Tenant non configurato");
       if (input.tasks.length === 0) return [];
@@ -82,6 +85,7 @@ export function useGenerateTasksFromCarePlan() {
           booking_id: input.bookingId,
           cat_id: t.catId || null,
           task_date: t.taskDate,
+          scheduled_time: t.scheduledTime || null,
           title: t.title,
           description: t.description ?? null,
           category: t.category ?? "altro",
@@ -211,6 +215,35 @@ export function useCompleteTask() {
           completed_by: completed ? (user?.id ?? null) : null,
         })
         .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["planning-tasks"] });
+      qc.invalidateQueries({ queryKey: ["planning-tasks-booking"] });
+    },
+  });
+}
+
+// Somministrazione farmaco: a differenza di useCompleteTask, questa mutation
+// è a senso unico (non permette di "de-somministrare"). Una volta registrata,
+// chi/quando restano nello storico — niente modifiche silenziose, come
+// richiesto dal Blocco 6.
+export function useMarkMedicationAdministered() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  const supabase = useSupabase();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!user?.id) throw new Error("Utente non autenticato");
+      const { error } = await supabase
+        .from("planning_tasks")
+        .update({
+          completed: true,
+          completed_at: new Date().toISOString(),
+          completed_by: user.id,
+        })
+        .eq("id", id)
+        .eq("completed", false);
       if (error) throw error;
     },
     onSuccess: () => {
