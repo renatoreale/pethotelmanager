@@ -361,14 +361,16 @@ export default function CheckIn() {
       }
 
       // 5. Genera la checklist di check-in (idempotente, non blocca il check-in
-      // se fallisce: è un aiuto operativo, non un requisito).
+      // se fallisce: è un aiuto operativo, non un requisito). Una copia per
+      // pet, così ogni task mostra il riferimento al pet corretto.
       try {
         const todayStr = format(new Date(), "yyyy-MM-dd");
-        const candidates = CHECKIN_CHECKLIST.map((item) => ({
-          taskDate: todayStr, catId: null as string | null, title: item.title,
+        const petIds: (string | null)[] = catDetails.length > 0 ? catDetails.map((c) => c.id) : [null];
+        const candidates = petIds.flatMap((catId) => CHECKIN_CHECKLIST.map((item) => ({
+          taskDate: todayStr, catId, title: item.title,
           description: item.description, category: "check_in" as const,
           completed: checkedChecklistItems.has(item.title),
-        }));
+        })));
         const newTasks = dedupeNewTasks(confirmBookingTasks ?? [], candidates);
         if (newTasks.length > 0) {
           await generateTasks.mutateAsync({ bookingId: booking.id, tasks: newTasks });
@@ -605,6 +607,11 @@ export default function CheckIn() {
                 title="Checklist di check-in" items={CHECKIN_CHECKLIST}
                 checked={checkedChecklistItems} onToggle={toggleChecklistItem}
               />
+              {catDetails.length > 1 && (
+                <p className="text-xs text-muted-foreground -mt-2">
+                  Verrà generata una checklist per ciascuno dei {catDetails.length} pet del soggiorno.
+                </p>
+              )}
 
               {/* Cat details section */}
               {catDetails.length > 0 && (

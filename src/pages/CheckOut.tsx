@@ -334,14 +334,16 @@ export default function CheckOut() {
       }
 
       // 5. Genera la checklist di check-out (idempotente, non blocca il
-      // check-out se fallisce: è un aiuto operativo, non un requisito).
+      // check-out se fallisce: è un aiuto operativo, non un requisito). Una
+      // copia per pet, così ogni task mostra il riferimento al pet corretto.
       try {
         const todayStr = format(new Date(), "yyyy-MM-dd");
-        const candidates = CHECKOUT_CHECKLIST.map((item) => ({
-          taskDate: todayStr, catId: null as string | null, title: item.title,
+        const petIds: (string | null)[] = catDetails.length > 0 ? catDetails.map((c) => c.id) : [null];
+        const candidates = petIds.flatMap((catId) => CHECKOUT_CHECKLIST.map((item) => ({
+          taskDate: todayStr, catId, title: item.title,
           description: item.description, category: "check_out" as const,
           completed: checkedChecklistItems.has(item.title),
-        }));
+        })));
         const newTasks = dedupeNewTasks(confirmBookingTasks ?? [], candidates);
         if (newTasks.length > 0) {
           await generateTasks.mutateAsync({ bookingId: booking.id, tasks: newTasks });
@@ -596,6 +598,11 @@ export default function CheckOut() {
                 title="Checklist di check-out" items={CHECKOUT_CHECKLIST}
                 checked={checkedChecklistItems} onToggle={toggleChecklistItem}
               />
+              {catDetails.length > 1 && (
+                <p className="text-xs text-muted-foreground -mt-2">
+                  Verrà generata una checklist per ciascuno dei {catDetails.length} pet del soggiorno.
+                </p>
+              )}
 
               {/* Cat details section */}
               {catDetails.length > 0 && (
