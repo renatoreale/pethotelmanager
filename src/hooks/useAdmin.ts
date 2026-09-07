@@ -26,6 +26,7 @@ export interface Tenant {
   logo_url: string | null;
   audit_excluded: boolean;
   is_trial: boolean;
+  client_reminders_enabled: boolean;
   created_at: string;
 }
 

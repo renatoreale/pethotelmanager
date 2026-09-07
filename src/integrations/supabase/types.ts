@@ -1553,6 +1553,7 @@ export type Database = {
           bollo_amount: number
           cap: string | null
           city: string | null
+          client_reminders_enabled: boolean
           count_checkin_day: boolean
           count_checkout_day: boolean
           created_at: string
@@ -1590,6 +1591,7 @@ export type Database = {
           bollo_amount?: number
           cap?: string | null
           city?: string | null
+          client_reminders_enabled?: boolean
           count_checkin_day?: boolean
           count_checkout_day?: boolean
           created_at?: string
@@ -1627,6 +1629,7 @@ export type Database = {
           bollo_amount?: number
           cap?: string | null
           city?: string | null
+          client_reminders_enabled?: boolean
           count_checkin_day?: boolean
           count_checkout_day?: boolean
           created_at?: string

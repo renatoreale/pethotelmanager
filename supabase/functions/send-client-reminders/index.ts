@@ -89,6 +89,21 @@ Deno.serve(async (req) => {
     const wrapHtml = (bodyHtml: string) =>
       `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;">${bodyHtml}</div>`;
 
+    // Solo le pensioni che hanno attivato questa automazione dal pannello
+    // super admin (di default disattivata per tutte).
+    const { data: enabledTenants } = await supabaseAdmin
+      .from("tenants")
+      .select("id")
+      .eq("client_reminders_enabled", true);
+    const enabledTenantIds = (enabledTenants ?? []).map((t) => t.id);
+
+    if (enabledTenantIds.length === 0) {
+      return new Response(
+        JSON.stringify({ success: true, sent: 0, errors: [], skipped: "Nessuna pensione ha attivato i promemoria" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     let sent = 0;
     const errors: string[] = [];
 
@@ -98,6 +113,7 @@ Deno.serve(async (req) => {
         .from("bookings")
         .select("id, tenant_id, booking_number, check_in_date, client:clients(first_name, email), booking_cats(cats(name)), tenants(name)")
         .eq("check_in_date", tomorrowStr)
+        .in("tenant_id", enabledTenantIds)
         .not("status", "in", `(${INACTIVE_STATUSES.join(",")})`);
 
       for (const b of bookings ?? []) {
@@ -125,6 +141,7 @@ Deno.serve(async (req) => {
         .from("bookings")
         .select("id, tenant_id, booking_number, check_out_date, client:clients(first_name, email), booking_cats(cats(name)), tenants(name)")
         .eq("check_out_date", tomorrowStr)
+        .in("tenant_id", enabledTenantIds)
         .not("status", "in", `(${INACTIVE_STATUSES.join(",")})`);
 
       for (const b of bookings ?? []) {
@@ -152,6 +169,7 @@ Deno.serve(async (req) => {
         .from("bookings")
         .select("id, tenant_id, client_id, booking_number, check_in_date, client:clients(first_name, email), tenants(name)")
         .eq("check_in_date", in3DaysStr)
+        .in("tenant_id", enabledTenantIds)
         .not("status", "in", `(${INACTIVE_STATUSES.join(",")})`);
 
       for (const b of bookings ?? []) {
@@ -198,6 +216,7 @@ Deno.serve(async (req) => {
         .from("bookings")
         .select("id, tenant_id, booking_number, check_out_date, total_amount, client:clients(first_name, email), payments(amount, payment_type), tenants(name)")
         .lt("check_out_date", todayStr)
+        .in("tenant_id", enabledTenantIds)
         .not("status", "in", `(${INACTIVE_STATUSES.join(",")})`);
 
       for (const b of bookings ?? []) {
