@@ -26,7 +26,7 @@ export default function ClienteDiario() {
   }, [cats, selectedCatId]);
 
   const { data: entries, isLoading } = useDiarioForCat(selectedCatId || undefined);
-  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [lightboxEntry, setLightboxEntry] = useState<{ url: string; catName: string; createdAt: string } | null>(null);
   const [downloading, setDownloading] = useState(false);
 
   const photoUrl = (photoPath: string | null) => {
@@ -34,20 +34,30 @@ export default function ClienteDiario() {
     return supabase.storage.from("diario-photos").getPublicUrl(photoPath).data.publicUrl;
   };
 
+  // Nome file: "NomePet-2026-09-07.ext" — ripulito da caratteri non adatti a
+  // un nome di file (spazi/accenti/simboli collassati in "-").
+  const downloadFileName = (catName: string, createdAt: string, ext: string) => {
+    const safeName = catName
+      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-zA-Z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "pet";
+    return `${safeName}-${format(new Date(createdAt), "yyyy-MM-dd")}.${ext}`;
+  };
+
   // Il download diretto via <a download> non è affidabile su URL cross-origin
   // (il browser spesso apre l'immagine invece di scaricarla): si scarica il
   // file e si forza il salvataggio da un blob URL, che è sempre same-origin.
-  const handleDownload = async (url: string) => {
+  const handleDownload = async (entry: { url: string; catName: string; createdAt: string }) => {
     setDownloading(true);
     try {
-      const res = await fetch(url);
+      const res = await fetch(entry.url);
       if (!res.ok) throw new Error("Download non riuscito");
       const blob = await res.blob();
       const blobUrl = URL.createObjectURL(blob);
       const ext = blob.type.split("/")[1] || "jpg";
       const a = document.createElement("a");
       a.href = blobUrl;
-      a.download = `diario-foto.${ext}`;
+      a.download = downloadFileName(entry.catName, entry.createdAt, ext);
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -107,7 +117,10 @@ export default function ClienteDiario() {
                         {url && (
                           <button
                             type="button"
-                            onClick={() => setLightboxUrl(url)}
+                            onClick={() => setLightboxEntry({
+                              url, createdAt: entry.created_at,
+                              catName: cats.find((c: any) => c.id === selectedCatId)?.name ?? "",
+                            })}
                             className="relative shrink-0 group"
                             title="Ingrandisci foto"
                           >
@@ -137,17 +150,17 @@ export default function ClienteDiario() {
         </>
       )}
 
-      <Dialog open={!!lightboxUrl} onOpenChange={(open) => !open && setLightboxUrl(null)}>
+      <Dialog open={!!lightboxEntry} onOpenChange={(open) => !open && setLightboxEntry(null)}>
         <DialogContent className="max-w-3xl p-2">
           <DialogHeader className="px-2 pt-2">
             <DialogTitle className="text-sm font-normal text-muted-foreground">Foto del diario</DialogTitle>
           </DialogHeader>
-          {lightboxUrl && (
+          {lightboxEntry && (
             <div className="space-y-2">
-              <img src={lightboxUrl} alt="Aggiornamento" className="w-full max-h-[75vh] object-contain rounded-md" />
+              <img src={lightboxEntry.url} alt="Aggiornamento" className="w-full max-h-[75vh] object-contain rounded-md" />
               <Button
                 type="button" className="gap-1.5 w-full sm:w-auto"
-                onClick={() => handleDownload(lightboxUrl)} disabled={downloading}
+                onClick={() => handleDownload(lightboxEntry)} disabled={downloading}
               >
                 <Download className="h-4 w-4" /> {downloading ? "Download..." : "Scarica foto"}
               </Button>
