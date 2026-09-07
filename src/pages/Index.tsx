@@ -644,6 +644,9 @@ export default function Index() {
                               <PawPrint className="h-3 w-3" /> {tk.cat.name}
                             </Badge>
                           )}
+                          {tk.booking?.booking_number && (
+                            <Badge variant="secondary" className="text-xs shrink-0">{tk.booking.booking_number}</Badge>
+                          )}
                         </div>
                         {tk.description && <p className="text-xs text-muted-foreground mt-0.5">{tk.description}</p>}
                         {tk.completed && tk.completed_at && (
