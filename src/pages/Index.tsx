@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Cat, Dog, LogIn, LogOut, AlertTriangle, CalendarIcon, AlertCircle,
-  PawPrint, Pill, ClipboardList, Wallet,
+  PawPrint, Pill, ClipboardList, Wallet, Clock,
 } from "lucide-react";
+import {
+  TASK_CATEGORY_LABELS, TASK_CATEGORY_ICONS, TASK_PRIORITY_LABELS, TASK_PRIORITY_BADGE, TASK_PRIORITY_RANK,
+} from "@/lib/taskCategories";
 import { AvailabilityCheckDialog } from "@/components/AvailabilityCheckDialog";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { Progress } from "@/components/ui/progress";
@@ -189,6 +192,23 @@ export default function Index() {
 
   const openTasks = useMemo(() => (tasks ?? []).filter(tk => !tk.completed), [tasks]);
   const unassignedOpenTasks = useMemo(() => openTasks.filter(tk => !tk.assigned_to), [openTasks]);
+  // Stesso ordine della pagina Attività: urgenti, poi per orario, poi per priorità.
+  const sortedTasks = useMemo(() => {
+    return [...(tasks ?? [])].sort((a, b) => {
+      if (a.completed !== b.completed) return a.completed ? 1 : -1;
+      if (a.priority === "urgente" && b.priority !== "urgente") return -1;
+      if (b.priority === "urgente" && a.priority !== "urgente") return 1;
+      if (a.scheduled_time && b.scheduled_time) {
+        const cmp = a.scheduled_time.localeCompare(b.scheduled_time);
+        if (cmp !== 0) return cmp;
+      } else if (a.scheduled_time || b.scheduled_time) {
+        return a.scheduled_time ? -1 : 1;
+      }
+      const prioCmp = (TASK_PRIORITY_RANK[a.priority] ?? 9) - (TASK_PRIORITY_RANK[b.priority] ?? 9);
+      if (prioCmp !== 0) return prioCmp;
+      return a.created_at.localeCompare(b.created_at);
+    });
+  }, [tasks]);
   const staffNameById = useMemo(() => {
     const map = new Map<string, string>();
     (staffUsers ?? []).forEach((u: any) => map.set(u.user_id, u.full_name || "—"));
@@ -556,7 +576,9 @@ export default function Index() {
                 <p className="text-sm text-muted-foreground text-center py-4">{t("dashboard.noTasks")}</p>
               ) : (
                 <div className="space-y-2">
-                  {(tasks ?? []).map((tk) => (
+                  {sortedTasks.map((tk) => {
+                    const CategoryIcon = TASK_CATEGORY_ICONS[tk.category] ?? TASK_CATEGORY_ICONS.altro;
+                    return (
                     <div key={tk.id} className="flex items-start gap-3 py-2.5 border-b last:border-0 flex-wrap sm:flex-nowrap">
                       <Checkbox
                         checked={tk.completed}
@@ -565,7 +587,20 @@ export default function Index() {
                       />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
+                          {tk.scheduled_time && (
+                            <span className="text-xs font-mono text-muted-foreground flex items-center gap-0.5 shrink-0">
+                              <Clock className="h-3 w-3" /> {tk.scheduled_time.slice(0, 5)}
+                            </span>
+                          )}
                           <p className={cn("text-sm font-medium", tk.completed && "line-through text-muted-foreground")}>{tk.title}</p>
+                          <Badge variant="outline" className="text-xs gap-1 shrink-0">
+                            <CategoryIcon className="h-3 w-3" /> {TASK_CATEGORY_LABELS[tk.category]}
+                          </Badge>
+                          {tk.priority !== "media" && (
+                            <Badge className={cn("text-xs shrink-0", TASK_PRIORITY_BADGE[tk.priority])}>
+                              {TASK_PRIORITY_LABELS[tk.priority]}
+                            </Badge>
+                          )}
                           {tk.cat?.name && (
                             <Badge variant="outline" className="text-xs gap-1 shrink-0">
                               <PawPrint className="h-3 w-3" /> {tk.cat.name}
@@ -594,7 +629,8 @@ export default function Index() {
                         </SelectContent>
                       </Select>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

@@ -22,6 +22,7 @@ import {
   type CareDateSelection,
 } from "@/hooks/useBookings";
 import { useTasksForBooking, useGenerateTasksFromCarePlan, useDeleteTask, useDeleteTasks } from "@/hooks/usePlanningTasks";
+import type { TaskCategory } from "@/lib/taskCategories";
 import { format, eachDayOfInterval } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -106,19 +107,20 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
   };
 
   const handleGenerateTasks = async () => {
-    const candidates: { taskDate: string; catId: string | null; title: string; description?: string }[] = [];
+    const candidates: { taskDate: string; catId: string | null; title: string; description?: string; category: TaskCategory }[] = [];
 
     const buildTasks = (
       entries: { catId: string; dateSelection: CareDateSelection }[],
       hasContent: (e: any) => boolean,
       titlePrefix: (e: any) => string,
       description: (e: any) => string | undefined,
+      category: TaskCategory,
     ) => {
       for (const e of entries) {
         if (!hasContent(e)) continue;
         const dates = expandDates(e.dateSelection, booking.check_in_date, booking.check_out_date);
         for (const d of dates) {
-          candidates.push({ taskDate: d, catId: e.catId || null, title: titlePrefix(e), description: description(e) });
+          candidates.push({ taskDate: d, catId: e.catId || null, title: titlePrefix(e), description: description(e), category });
         }
       }
     };
@@ -127,16 +129,19 @@ export function CarePlanDialog({ open, onOpenChange, booking }: CarePlanDialogPr
       plan.feeding, (f) => f.food.trim(),
       (f) => `Alimentazione — ${labelForCat(f.catId)}${f.time ? ` (${f.time})` : ""}`,
       (f) => [f.food, f.quantity].filter(Boolean).join(" — "),
+      "alimentazione",
     );
     buildTasks(
       plan.medications, (m) => m.name.trim(),
       (m) => `Farmaco — ${labelForCat(m.catId)}${m.time ? ` (${m.time})` : ""}`,
       (m) => [m.name, m.dose].filter(Boolean).join(" — "),
+      "farmaco",
     );
     buildTasks(
       plan.activities, (a) => a.activity.trim(),
       (a) => `${a.activity} — ${labelForCat(a.catId)}${a.time ? ` (${a.time})` : ""}`,
       (a) => a.frequency || undefined,
+      "altro",
     );
 
     if (candidates.length === 0) {

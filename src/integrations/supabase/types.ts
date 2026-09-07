@@ -1058,12 +1058,15 @@ export type Database = {
           assigned_to: string | null
           booking_id: string | null
           cat_id: string | null
+          category: string
           completed: boolean
           completed_at: string | null
           completed_by: string | null
           created_at: string
           description: string | null
           id: string
+          priority: string
+          scheduled_time: string | null
           task_date: string
           tenant_id: string
           title: string
@@ -1073,12 +1076,15 @@ export type Database = {
           assigned_to?: string | null
           booking_id?: string | null
           cat_id?: string | null
+          category?: string
           completed?: boolean
           completed_at?: string | null
           completed_by?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          priority?: string
+          scheduled_time?: string | null
           task_date: string
           tenant_id: string
           title: string
@@ -1088,12 +1094,15 @@ export type Database = {
           assigned_to?: string | null
           booking_id?: string | null
           cat_id?: string | null
+          category?: string
           completed?: boolean
           completed_at?: string | null
           completed_by?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          priority?: string
+          scheduled_time?: string | null
           task_date?: string
           tenant_id?: string
           title?: string

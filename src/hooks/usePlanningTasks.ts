@@ -1,6 +1,7 @@
 import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
+import type { TaskCategory, TaskPriority } from "@/lib/taskCategories";
 
 export interface PlanningTask {
   id: string;
@@ -8,6 +9,9 @@ export interface PlanningTask {
   booking_id: string | null;
   cat_id: string | null;
   task_date: string;
+  scheduled_time: string | null;
+  category: TaskCategory;
+  priority: TaskPriority;
   title: string;
   description: string | null;
   assigned_to: string | null;
@@ -65,7 +69,10 @@ export function useGenerateTasksFromCarePlan() {
   const { profile } = useAuth();
   const supabase = useSupabase();
   return useMutation({
-    mutationFn: async (input: { bookingId: string; tasks: { taskDate: string; catId?: string | null; title: string; description?: string }[] }) => {
+    mutationFn: async (input: {
+      bookingId: string;
+      tasks: { taskDate: string; catId?: string | null; title: string; description?: string; category?: TaskCategory }[];
+    }) => {
       if (!profile?.tenant_id) throw new Error("Tenant non configurato");
       if (input.tasks.length === 0) return [];
       const { data, error } = await supabase
@@ -77,6 +84,7 @@ export function useGenerateTasksFromCarePlan() {
           task_date: t.taskDate,
           title: t.title,
           description: t.description ?? null,
+          category: t.category ?? "altro",
         })))
         .select();
       if (error) throw error;
@@ -98,6 +106,9 @@ export function useCreateTask() {
       title: string;
       description?: string | null;
       task_date: string;
+      scheduled_time?: string | null;
+      category?: TaskCategory;
+      priority?: TaskPriority;
       assigned_to?: string | null;
       cat_id?: string | null;
     }) => {
@@ -109,6 +120,9 @@ export function useCreateTask() {
           title: input.title,
           description: input.description || null,
           task_date: input.task_date,
+          scheduled_time: input.scheduled_time || null,
+          category: input.category ?? "altro",
+          priority: input.priority ?? "media",
           assigned_to: input.assigned_to || null,
           cat_id: input.cat_id || null,
         })
@@ -133,6 +147,9 @@ export function useUpdateTask() {
       title?: string;
       description?: string | null;
       task_date?: string;
+      scheduled_time?: string | null;
+      category?: TaskCategory;
+      priority?: TaskPriority;
       assigned_to?: string | null;
       cat_id?: string | null;
     }) => {
