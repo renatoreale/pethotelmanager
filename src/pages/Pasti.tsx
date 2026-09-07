@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Pill, PawPrint, Check, Clock } from "lucide-react";
+import { CalendarIcon, UtensilsCrossed, PawPrint, Check, Clock } from "lucide-react";
 import { format, isToday as isTodayFn } from "date-fns";
 import { it } from "date-fns/locale";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ import { useUsers } from "@/hooks/useUsers";
 import { usePetLabels } from "@/hooks/usePetLabels";
 import { cn } from "@/lib/utils";
 
-export default function Farmaci() {
+export default function Pasti() {
   const pet = usePetLabels();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -23,7 +23,7 @@ export default function Farmaci() {
 
   const { data: tasks, isLoading } = useTasksForDate(selectedDateStr);
   const { users: staffUsers } = useUsers();
-  const markAdministered = useMarkTaskAdministered();
+  const markGiven = useMarkTaskAdministered();
 
   const userNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -31,18 +31,18 @@ export default function Farmaci() {
     return map;
   }, [staffUsers]);
 
-  // Solo le task "farmaco", raggruppate per pet e ordinate per orario — le
-  // somministrazioni senza pet associato (piano di cura generico) finiscono
-  // in un gruppo a parte in fondo.
+  // Solo le task "alimentazione", raggruppate per pet e ordinate per orario —
+  // i pasti senza pet associato (piano di cura generico) finiscono in un
+  // gruppo a parte in fondo.
   const groups = useMemo(() => {
-    const meds = (tasks ?? []).filter((t) => t.category === "farmaco");
-    const byPet = new Map<string, { petName: string | null; items: typeof meds }>();
-    for (const m of meds) {
+    const meals = (tasks ?? []).filter((t) => t.category === "alimentazione");
+    const byPet = new Map<string, { petName: string | null; items: typeof meals }>();
+    for (const m of meals) {
       const key = m.cat_id ?? "__none__";
       if (!byPet.has(key)) byPet.set(key, { petName: m.cat?.name ?? null, items: [] });
       byPet.get(key)!.items.push(m);
     }
-    const sortByTime = (a: typeof meds[number], b: typeof meds[number]) => {
+    const sortByTime = (a: typeof meals[number], b: typeof meals[number]) => {
       if (a.scheduled_time && b.scheduled_time) return a.scheduled_time.localeCompare(b.scheduled_time);
       if (a.scheduled_time || b.scheduled_time) return a.scheduled_time ? -1 : 1;
       return a.created_at.localeCompare(b.created_at);
@@ -55,10 +55,10 @@ export default function Farmaci() {
   const totalCount = groups.reduce((sum, g) => sum + g.items.length, 0);
   const pendingCount = groups.reduce((sum, g) => sum + g.items.filter((t) => !t.completed).length, 0);
 
-  const handleAdminister = async (id: string) => {
+  const handleGive = async (id: string) => {
     try {
-      await markAdministered.mutateAsync(id);
-      toast.success("Somministrazione registrata");
+      await markGiven.mutateAsync(id);
+      toast.success("Pasto registrato");
     } catch (err: any) {
       toast.error(err.message || "Errore nella registrazione");
     }
@@ -68,9 +68,9 @@ export default function Farmaci() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Farmaci</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Pasti</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Somministrazioni previste dai piani di cura, per {pet.singular}.
+            Pasti previsti dai piani di cura, per {pet.singular}.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -100,8 +100,8 @@ export default function Farmaci() {
       <Card className="border shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Pill className="h-5 w-5" />
-            {isSelectedToday ? "Somministrazioni di oggi" : `Somministrazioni — ${format(selectedDate, "dd MMM yyyy", { locale: it })}`}
+            <UtensilsCrossed className="h-5 w-5" />
+            {isSelectedToday ? "Pasti di oggi" : `Pasti — ${format(selectedDate, "dd MMM yyyy", { locale: it })}`}
             {totalCount > 0 && ` (${pendingCount} da fare su ${totalCount})`}
           </CardTitle>
         </CardHeader>
@@ -110,7 +110,7 @@ export default function Farmaci() {
             <p className="text-sm text-muted-foreground text-center py-6">Caricamento...</p>
           ) : groups.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">
-              Nessun farmaco da somministrare per questa data.
+              Nessun pasto previsto per questa data.
             </p>
           ) : (
             <div className="space-y-5">
@@ -138,7 +138,7 @@ export default function Farmaci() {
                         {t.completed ? (
                           <div className="shrink-0 text-right">
                             <Badge className="bg-success text-success-foreground gap-1 text-xs">
-                              <Check className="h-3 w-3" /> Somministrato
+                              <Check className="h-3 w-3" /> Dato
                             </Badge>
                             {t.completed_at && (
                               <p className="text-xs text-muted-foreground mt-1">
@@ -149,10 +149,10 @@ export default function Farmaci() {
                         ) : (
                           <Button
                             size="sm" variant="outline" className="shrink-0 gap-1.5"
-                            onClick={() => handleAdminister(t.id)}
-                            disabled={markAdministered.isPending}
+                            onClick={() => handleGive(t.id)}
+                            disabled={markGiven.isPending}
                           >
-                            <Check className="h-3.5 w-3.5" /> Segna come somministrato
+                            <Check className="h-3.5 w-3.5" /> Segna come dato
                           </Button>
                         )}
                       </div>

@@ -224,11 +224,11 @@ export function useCompleteTask() {
   });
 }
 
-// Somministrazione farmaco: a differenza di useCompleteTask, questa mutation
-// è a senso unico (non permette di "de-somministrare"). Una volta registrata,
-// chi/quando restano nello storico — niente modifiche silenziose, come
-// richiesto dal Blocco 6.
-export function useMarkMedicationAdministered() {
+// Somministrazione farmaco / pasto: a differenza di useCompleteTask, questa
+// mutation è a senso unico (non permette di tornare indietro). Una volta
+// registrata, chi/quando restano nello storico — niente modifiche silenziose,
+// come richiesto dal Blocco 6 (farmaci) e dal Blocco 7 (pasti).
+export function useMarkTaskAdministered() {
   const qc = useQueryClient();
   const { user } = useAuth();
   const supabase = useSupabase();

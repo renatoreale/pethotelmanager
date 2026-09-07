@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, FileText, CalendarCheck, Calendar, LogIn, LogOut,
   CreditCard, Users, Cat, ClipboardList, ListTodo, Shield, Mail, Building2,
-  Power, Grid3X3, Settings2, PawPrint, BarChart3, LifeBuoy, Pill } from
+  Power, Grid3X3, Settings2, PawPrint, BarChart3, LifeBuoy, Pill, UtensilsCrossed } from
 "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -33,6 +33,7 @@ const mainNav: NavItem[] = [
 { titleKey: "sidebar.attendance", url: "/presenze", icon: PawPrint, resource: "presenze" },
 { titleKey: "sidebar.tasks", url: "/attivita", icon: ListTodo, resource: "planning" },
 { titleKey: "sidebar.medications", url: "/farmaci", icon: Pill, resource: "planning" },
+{ titleKey: "sidebar.meals", url: "/pasti", icon: UtensilsCrossed, resource: "planning" },
 { titleKey: "sidebar.payments", url: "/pagamenti", icon: CreditCard, resource: "pagamenti" }];
 
 

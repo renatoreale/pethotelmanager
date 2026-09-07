@@ -26,6 +26,7 @@ import Gatti from "./pages/Gatti";
 import SchedaPet from "./pages/SchedaPet";
 import Attivita from "./pages/Attivita";
 import Farmaci from "./pages/Farmaci";
+import Pasti from "./pages/Pasti";
 
 import Utenti from "./pages/Utenti";
 import TemplateEmail from "./pages/TemplateEmail";
@@ -141,6 +142,7 @@ const App = () => {
               <Route path="/presenze" element={<Presenze />} />
               <Route path="/attivita" element={<Attivita />} />
               <Route path="/farmaci" element={<Farmaci />} />
+              <Route path="/pasti" element={<Pasti />} />
 
               <Route path="/utenti" element={<Utenti />} />
               <Route path="/template-email" element={<TemplateEmail />} />

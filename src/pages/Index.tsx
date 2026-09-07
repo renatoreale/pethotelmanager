@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Cat, Dog, LogIn, LogOut, AlertTriangle, CalendarIcon, AlertCircle,
-  PawPrint, Pill, ClipboardList, Wallet, Clock,
+  PawPrint, Pill, ClipboardList, Wallet, Clock, UtensilsCrossed,
 } from "lucide-react";
 import {
   TASK_CATEGORY_LABELS, TASK_CATEGORY_ICONS, TASK_PRIORITY_LABELS, TASK_PRIORITY_BADGE, TASK_PRIORITY_RANK,
@@ -193,18 +193,21 @@ export default function Index() {
   const openTasks = useMemo(() => (tasks ?? []).filter(tk => !tk.completed), [tasks]);
   const unassignedOpenTasks = useMemo(() => openTasks.filter(tk => !tk.assigned_to), [openTasks]);
   const openMedications = useMemo(() => openTasks.filter(tk => tk.category === "farmaco"), [openTasks]);
-  // Somministrazioni con orario entro i prossimi 30 minuti (solo vista "oggi").
-  const imminentMedications = useMemo(() => {
+  const openMeals = useMemo(() => openTasks.filter(tk => tk.category === "alimentazione"), [openTasks]);
+  // Task con orario entro i prossimi 30 minuti (solo vista "oggi").
+  const imminentByTime = (items: typeof openTasks, minutes = 30) => {
     if (!isTodayFn(selectedDate)) return [];
-    return openMedications.filter(tk => {
+    return items.filter(tk => {
       if (!tk.scheduled_time) return false;
       const [hh, mm] = tk.scheduled_time.split(":").map(Number);
       const target = new Date();
       target.setHours(hh, mm, 0, 0);
       const msUntil = target.getTime() - Date.now();
-      return msUntil >= 0 && msUntil <= 30 * 60 * 1000;
+      return msUntil >= 0 && msUntil <= minutes * 60 * 1000;
     });
-  }, [openMedications, selectedDate]);
+  };
+  const imminentMedications = useMemo(() => imminentByTime(openMedications), [openMedications, selectedDate]);
+  const imminentMeals = useMemo(() => imminentByTime(openMeals), [openMeals, selectedDate]);
   // Stesso ordine della pagina Attività: urgenti, poi per orario, poi per priorità.
   const sortedTasks = useMemo(() => {
     return [...(tasks ?? [])].sort((a, b) => {
@@ -294,6 +297,14 @@ export default function Index() {
           actionLabel: t("dashboard.open"), onAction: () => navigate("/farmaci"),
         });
       }
+      for (const tk of imminentMeals) {
+        items.push({
+          key: `meal-${tk.id}`, severity: "orange",
+          label: t("dashboard.attentionImminentMeal"),
+          detail: `${tk.title}${tk.scheduled_time ? ` · ${tk.scheduled_time.slice(0, 5)}` : ""}`,
+          actionLabel: t("dashboard.open"), onAction: () => navigate("/pasti"),
+        });
+      }
       for (const tk of unassignedOpenTasks) {
         items.push({
           key: `task-${tk.id}`, severity: "yellow",
@@ -305,7 +316,7 @@ export default function Index() {
     }
     const rank: Record<Severity, number> = { red: 0, orange: 1, yellow: 2 };
     return items.sort((a, b) => rank[a.severity] - rank[b.severity]);
-  }, [stats, isOperatoreRestricted, canSeeMoney, canSeeTasks, unassignedOpenTasks, imminentMedications, dateLocale, t, navigate]);
+  }, [stats, isOperatoreRestricted, canSeeMoney, canSeeTasks, unassignedOpenTasks, imminentMedications, imminentMeals, dateLocale, t, navigate]);
 
   if (loadingBookings) {
     return (
@@ -351,6 +362,12 @@ export default function Index() {
       subtitle: t("dashboard.kpiMedicationsSubtitle"),
       icon: Pill, color: "text-accent", bg: "bg-accent/10", show: canSeeTasks,
       onClick: () => navigate("/farmaci"),
+    },
+    {
+      key: "meals", title: t("dashboard.kpiMeals"), value: String(openMeals.length),
+      subtitle: t("dashboard.kpiMealsSubtitle"),
+      icon: UtensilsCrossed, color: "text-accent", bg: "bg-accent/10", show: canSeeTasks,
+      onClick: () => navigate("/pasti"),
     },
     {
       key: "tasks", title: t("dashboard.kpiTasks"), value: String(openTasks.length),
