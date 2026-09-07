@@ -12,7 +12,7 @@ export function useTenantConfig() {
       if (!profile?.tenant_id) return null;
       const { data, error } = await supabase
         .from("tenants")
-        .select("id, name, slug, num_singole, num_doppie, max_cats, occupancy_rule_days, email, phone, address, cap, city, stay_calc_type, count_checkin_day, count_checkout_day, partita_iva, pec, titolare_name, logo_url, pet_type, num_singole_gatti, num_doppie_gatti, num_singole_cani, num_doppie_cani, iban, bank_name, iban_holder, bollo_amount, preventivo_validity_days, preventivo_footer_text, preventivo_email_body, preventivo_email_subject, appuntamento_email_subject, appuntamento_email_body, locale")
+        .select("id, name, slug, num_singole, num_doppie, max_cats, occupancy_rule_days, email, phone, address, cap, city, stay_calc_type, count_checkin_day, count_checkout_day, partita_iva, pec, titolare_name, logo_url, pet_type, num_singole_gatti, num_doppie_gatti, num_singole_cani, num_doppie_cani, iban, bank_name, iban_holder, bollo_amount, preventivo_validity_days, preventivo_footer_text, preventivo_email_body, preventivo_email_subject, appuntamento_email_subject, appuntamento_email_body, locale, regolamento_version, privacy_version")
         .eq("id", profile.tenant_id)
         .single();
       if (error) throw error;
@@ -60,6 +60,8 @@ export function useUpdateTenantConfig() {
       appuntamento_email_subject?: string | null;
       appuntamento_email_body?: string | null;
       locale?: string;
+      regolamento_version?: string | null;
+      privacy_version?: string | null;
     }) => {
       const { id, ...rest } = updates;
       const { data, error } = await supabase

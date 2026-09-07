@@ -37,6 +37,7 @@ import { useCreateCat, useCats, useDeleteCat, useUpdateCat } from "@/hooks/useCa
 import { useSupabase } from "@/hooks/useSupabaseClient";
 import { usePetLabels, type PetType } from "@/hooks/usePetLabels";
 import { BreedCombobox } from "@/components/BreedCombobox";
+import { ClientDocumentiSection } from "@/components/clients/ClientDocumentiSection";
 
 const clientSchema = z.object({
   first_name: z.string().trim().min(1, "Nome obbligatorio").max(100),
@@ -623,6 +624,13 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                 );
               })}
             </div>
+
+            {isEditing && client?.id && (
+              <>
+                <Separator />
+                <ClientDocumentiSection clientId={client.id} />
+              </>
+            )}
 
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

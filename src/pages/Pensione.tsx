@@ -144,6 +144,8 @@ function AnagraficaTab() {
   const [titolareName, setTitolareName] = useState<string | null>(null);
   const [petType, setPetType] = useState<string | null>(null);
   const [locale, setLocale] = useState<string | null>(null);
+  const [regolamentoVersion, setRegolamentoVersion] = useState<string | null>(null);
+  const [privacyVersion, setPrivacyVersion] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -158,6 +160,8 @@ function AnagraficaTab() {
   const currentTitolareName = titolareName ?? (config as any)?.titolare_name ?? "";
   const currentPetType = petType ?? (config as any)?.pet_type ?? "gatti";
   const currentLocale = locale ?? (config as any)?.locale ?? "it";
+  const currentRegolamentoVersion = regolamentoVersion ?? (config as any)?.regolamento_version ?? "";
+  const currentPrivacyVersion = privacyVersion ?? (config as any)?.privacy_version ?? "";
   const currentLogoUrl = (config as any)?.logo_url ?? null;
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -206,12 +210,14 @@ function AnagraficaTab() {
         titolare_name: currentTitolareName || null,
         pet_type: currentPetType as "gatti" | "cani" | "entrambi",
         locale: currentLocale,
+        regolamento_version: currentRegolamentoVersion || null,
+        privacy_version: currentPrivacyVersion || null,
       });
       toast.success("Anagrafica salvata");
       setName(null); setEmail(null); setPhone(null); setAddress(null);
       setCap(null); setCity(null);
       setPartitaIva(null); setPec(null); setTitolareName(null); setPetType(null);
-      setLocale(null);
+      setLocale(null); setRegolamentoVersion(null); setPrivacyVersion(null);
     } catch (err: any) {
       toast.error(err.message || "Errore nel salvataggio");
     }
@@ -349,6 +355,21 @@ function AnagraficaTab() {
           <div className="space-y-2">
             <Label>Città</Label>
             <Input value={currentCity} onChange={(e) => setCity(e.target.value)} placeholder="Roma" />
+          </div>
+        </div>
+
+        {/* Versione documenti: aggiornarla segnala in scheda cliente chi ha
+            firmato una versione precedente di regolamento/privacy */}
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Versione regolamento attuale</Label>
+            <Input value={currentRegolamentoVersion} onChange={(e) => setRegolamentoVersion(e.target.value)} placeholder="Es. v2 — gennaio 2026" />
+            <p className="text-xs text-muted-foreground">Aggiornala quando cambi il testo del regolamento: i clienti con una versione firmata diversa verranno segnalati.</p>
+          </div>
+          <div className="space-y-2">
+            <Label>Versione informativa privacy attuale</Label>
+            <Input value={currentPrivacyVersion} onChange={(e) => setPrivacyVersion(e.target.value)} placeholder="Es. v1 — marzo 2026" />
+            <p className="text-xs text-muted-foreground">Stessa logica del regolamento, applicata all'informativa privacy.</p>
           </div>
         </div>
 

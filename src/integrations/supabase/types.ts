@@ -689,9 +689,11 @@ export type Database = {
       documents: {
         Row: {
           booking_id: string | null
+          client_id: string | null
           created_at: string
           created_by: string | null
           document_type: string
+          document_version: string | null
           file_name: string
           id: string
           mime_type: string | null
@@ -700,9 +702,11 @@ export type Database = {
         }
         Insert: {
           booking_id?: string | null
+          client_id?: string | null
           created_at?: string
           created_by?: string | null
           document_type: string
+          document_version?: string | null
           file_name: string
           id?: string
           mime_type?: string | null
@@ -711,9 +715,11 @@ export type Database = {
         }
         Update: {
           booking_id?: string | null
+          client_id?: string | null
           created_at?: string
           created_by?: string | null
           document_type?: string
+          document_version?: string | null
           file_name?: string
           id?: string
           mime_type?: string | null
@@ -726,6 +732,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
           {
@@ -1564,6 +1577,8 @@ export type Database = {
           phone: string | null
           preventivo_footer_text: string | null
           preventivo_validity_days: number
+          privacy_version: string | null
+          regolamento_version: string | null
           slug: string
           stay_calc_type: string
           titolare_name: string | null
@@ -1599,6 +1614,8 @@ export type Database = {
           phone?: string | null
           preventivo_footer_text?: string | null
           preventivo_validity_days?: number
+          privacy_version?: string | null
+          regolamento_version?: string | null
           slug: string
           stay_calc_type?: string
           titolare_name?: string | null
@@ -1634,6 +1651,8 @@ export type Database = {
           phone?: string | null
           preventivo_footer_text?: string | null
           preventivo_validity_days?: number
+          privacy_version?: string | null
+          regolamento_version?: string | null
           slug?: string
           stay_calc_type?: string
           titolare_name?: string | null
