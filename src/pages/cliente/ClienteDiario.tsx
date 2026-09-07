@@ -78,6 +78,9 @@ export default function ClienteDiario() {
         <p className="text-muted-foreground text-sm mt-1">
           Gli aggiornamenti pubblicati dallo staff sul soggiorno del tuo pet.
         </p>
+        <p className="text-xs text-muted-foreground mt-2">
+          Le foto restano disponibili per 15 giorni dopo la fine del soggiorno: scaricale prima se vuoi conservarle.
+        </p>
       </div>
 
       {!cats?.length ? (

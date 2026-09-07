@@ -72,8 +72,15 @@ export function useCreateDiarioEntry() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (_data, vars) => {
+    onSuccess: (data, vars) => {
       qc.invalidateQueries({ queryKey: ["diario", vars.catId] });
+      // Notifica via email il cliente: non deve mai bloccare la pubblicazione
+      // dell'aggiornamento (se Resend è giù, l'aggiornamento resta comunque
+      // pubblicato). La function stessa non invia nulla se la voce non è
+      // legata a una prenotazione o il cliente non ha un'email.
+      supabase.functions
+        .invoke("send-diario-update", { body: { diario_entry_id: (data as any).id } })
+        .catch(() => {});
     },
   });
 }

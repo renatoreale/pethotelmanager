@@ -94,6 +94,10 @@ export function DiarioTab({ catId, bookingId }: DiarioTabProps) {
     <Card className="border shadow-sm">
       <CardHeader><CardTitle className="text-base">Diario</CardTitle></CardHeader>
       <CardContent className="space-y-5">
+        <p className="text-xs text-muted-foreground -mt-2">
+          Le foto restano disponibili fino a 15 giorni dopo il check-out del soggiorno: trascorso questo periodo,
+          il diario di quel soggiorno viene svuotato automaticamente (testo e foto).
+        </p>
         {canPost && (
           <div className="rounded-md border p-3 space-y-2.5">
             <Textarea
