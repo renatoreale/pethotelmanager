@@ -44,3 +44,16 @@ export const DOCUMENT_TYPE_ICONS: Record<DocumentType, LucideIcon> = Object.from
 // segnala come da raccogliere. Gli altri tipi restano caricabili ma non
 // sono considerati bloccanti.
 export const REQUIRED_DOCUMENT_TYPES: DocumentType[] = ["libretto_vaccinazioni", "modulo_affido"];
+
+// Libretto vaccinazioni e documento d'identità non cambiano da un soggiorno
+// all'altro: una volta caricati restano validi per tutti i soggiorni futuri
+// (agganciati al cliente, non alla singola prenotazione) e non vanno
+// richiesti di nuovo ogni volta. Modulo di affido e certificato sanitario
+// restano invece specifici del singolo soggiorno.
+export const PERSISTENT_DOCUMENT_TYPES: DocumentType[] = ["libretto_vaccinazioni", "documento_identita"];
+
+// Tipi che il CLIENTE può caricare da solo in fase di pre-check-in online
+// (esclusi privacy/regolamento, gestiti dallo staff, ed "altro").
+export const CLIENT_UPLOAD_DOCUMENT_TYPES: DocumentType[] = [
+  "libretto_vaccinazioni", "certificato_sanitario", "modulo_affido", "documento_identita",
+];

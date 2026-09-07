@@ -252,6 +252,7 @@ export default function SchedaPet() {
         <TabsContent value="documenti">
           <DocumentiTab
             catId={cat.id}
+            clientId={(cat as any).client_id ?? null}
             bookingId={currentBooking?.id ?? null}
             bookingIds={bookingIds}
             bookingNumberById={bookingNumberById}

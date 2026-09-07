@@ -10,38 +10,50 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { toast } from "sonner";
 import {
-  useDocumentsForBookings, useUploadDocument, useDeleteDocument, getDocumentSignedUrl,
+  useDocumentsForBookings, useDocumentsForClient, useUploadDocument, useDeleteDocument, getDocumentSignedUrl,
 } from "@/hooks/useDocuments";
 import { useSupabase } from "@/hooks/useSupabaseClient";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
   DOCUMENT_TYPES, DOCUMENT_TYPE_LABELS, DOCUMENT_TYPE_ICONS, REQUIRED_DOCUMENT_TYPES,
-  type DocumentType,
+  PERSISTENT_DOCUMENT_TYPES, type DocumentType,
 } from "@/lib/documentTypes";
 
 interface DocumentiTabProps {
   catId: string;
+  clientId: string | null;
   bookingId: string | null;
   bookingIds: string[];
   bookingNumberById: Map<string, string>;
 }
 
-export function DocumentiTab({ catId, bookingId, bookingIds, bookingNumberById }: DocumentiTabProps) {
+export function DocumentiTab({ catId, clientId, bookingId, bookingIds, bookingNumberById }: DocumentiTabProps) {
   const { canWrite } = usePermissions();
   const canManage = canWrite("prenotazioni");
   const supabase = useSupabase();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: documents, isLoading } = useDocumentsForBookings(bookingIds);
+  const { data: bookingDocuments, isLoading: loadingBookingDocs } = useDocumentsForBookings(bookingIds);
+  // Libretto vaccinazioni e documento d'identità sono agganciati al cliente
+  // (persistenti tra un soggiorno e l'altro), non alla singola prenotazione.
+  const { data: clientDocuments, isLoading: loadingClientDocs } = useDocumentsForClient(clientId ?? undefined);
   const uploadDocument = useUploadDocument();
   const deleteDocument = useDeleteDocument();
 
   const [documentType, setDocumentType] = useState<DocumentType>("libretto_vaccinazioni");
 
-  const currentBookingDocs = useMemo(
-    () => (documents ?? []).filter((d) => d.booking_id === bookingId),
-    [documents, bookingId]
+  const documents = useMemo(
+    () => [...(bookingDocuments ?? []), ...(clientDocuments ?? [])]
+      .sort((a, b) => b.created_at.localeCompare(a.created_at)),
+    [bookingDocuments, clientDocuments]
   );
+
+  const isRequirementSatisfied = (type: DocumentType) => {
+    if (PERSISTENT_DOCUMENT_TYPES.includes(type)) {
+      return (clientDocuments ?? []).some((d) => d.document_type === type);
+    }
+    return (bookingDocuments ?? []).some((d) => d.booking_id === bookingId && d.document_type === type);
+  };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -52,7 +64,14 @@ export function DocumentiTab({ catId, bookingId, bookingIds, bookingNumberById }
       return;
     }
     try {
-      await uploadDocument.mutateAsync({ bookingId, catId, documentType, file });
+      // I documenti "persistenti" (libretto vaccinazioni, documento
+      // d'identità) si agganciano al cliente, non al soggiorno.
+      const isPersistent = PERSISTENT_DOCUMENT_TYPES.includes(documentType);
+      await uploadDocument.mutateAsync(
+        isPersistent
+          ? { clientId, documentType, file }
+          : { bookingId, catId, documentType, file }
+      );
       toast.success("Documento caricato");
     } catch (err: any) {
       toast.error(err.message || "Errore nel caricamento");
@@ -92,7 +111,7 @@ export function DocumentiTab({ catId, bookingId, bookingIds, bookingNumberById }
           ) : (
             <div className="space-y-2">
               {REQUIRED_DOCUMENT_TYPES.map((type) => {
-                const has = currentBookingDocs.some((d) => d.document_type === type);
+                const has = isRequirementSatisfied(type);
                 const Icon = DOCUMENT_TYPE_ICONS[type];
                 return (
                   <div key={type} className="flex items-center gap-2.5 text-sm">
@@ -141,7 +160,7 @@ export function DocumentiTab({ catId, bookingId, bookingIds, bookingNumberById }
             </div>
           )}
 
-          {isLoading ? (
+          {(loadingBookingDocs || loadingClientDocs) ? (
             <p className="text-sm text-muted-foreground text-center py-6">Caricamento...</p>
           ) : !documents?.length ? (
             <p className="text-sm text-muted-foreground text-center py-6">Nessun documento caricato.</p>

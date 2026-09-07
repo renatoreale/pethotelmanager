@@ -14,6 +14,12 @@ import { CalendarDays, Clock, Info, MapPin, CreditCard, Calendar } from "lucide-
 import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { generateTimeSlots } from "@/hooks/useAppointments";
+import { ClientePreCheckinDocs } from "@/components/cliente/ClientePreCheckinDocs";
+
+const PRE_CHECKIN_STATUSES = [
+  "confermata", "appuntamento_fissato", "appuntamento_in_fissato",
+  "appuntamento_out_fissato", "appuntamento_in_out_fissato", "check_in", "in_corso",
+];
 
 interface Props {
   open: boolean;
@@ -436,6 +442,13 @@ export function ClienteBookingDetailDialog({ open, onOpenChange, booking, tenant
               </div>
             )}
           </div>
+
+          {PRE_CHECKIN_STATUSES.includes(booking.status) && (
+            <>
+              <Separator />
+              <ClientePreCheckinDocs bookingId={booking.id} clientId={booking.client_id} />
+            </>
+          )}
         </div>
 
         <DialogFooter>
