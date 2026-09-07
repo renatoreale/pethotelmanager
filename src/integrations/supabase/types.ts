@@ -1625,6 +1625,14 @@ export type Database = {
       tenants: {
         Row: {
           address: string | null
+          automation_balance_reminder_enabled: boolean
+          automation_checkin_reminder_enabled: boolean
+          automation_checkout_reminder_enabled: boolean
+          automation_checkout_summary_enabled: boolean
+          automation_documents_reminder_enabled: boolean
+          automation_review_request_enabled: boolean
+          automation_upcoming_stay_reminder_enabled: boolean
+          automation_winback_enabled: boolean
           bank_name: string | null
           bollo_amount: number
           cap: string | null
@@ -1656,6 +1664,7 @@ export type Database = {
           preventivo_validity_days: number
           privacy_version: string | null
           regolamento_version: string | null
+          review_url: string | null
           slug: string
           stay_calc_type: string
           titolare_name: string | null
@@ -1663,6 +1672,14 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          automation_balance_reminder_enabled?: boolean
+          automation_checkin_reminder_enabled?: boolean
+          automation_checkout_reminder_enabled?: boolean
+          automation_checkout_summary_enabled?: boolean
+          automation_documents_reminder_enabled?: boolean
+          automation_review_request_enabled?: boolean
+          automation_upcoming_stay_reminder_enabled?: boolean
+          automation_winback_enabled?: boolean
           bank_name?: string | null
           bollo_amount?: number
           cap?: string | null
@@ -1694,6 +1711,7 @@ export type Database = {
           preventivo_validity_days?: number
           privacy_version?: string | null
           regolamento_version?: string | null
+          review_url?: string | null
           slug: string
           stay_calc_type?: string
           titolare_name?: string | null
@@ -1701,6 +1719,14 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          automation_balance_reminder_enabled?: boolean
+          automation_checkin_reminder_enabled?: boolean
+          automation_checkout_reminder_enabled?: boolean
+          automation_checkout_summary_enabled?: boolean
+          automation_documents_reminder_enabled?: boolean
+          automation_review_request_enabled?: boolean
+          automation_upcoming_stay_reminder_enabled?: boolean
+          automation_winback_enabled?: boolean
           bank_name?: string | null
           bollo_amount?: number
           cap?: string | null
@@ -1732,6 +1758,7 @@ export type Database = {
           preventivo_validity_days?: number
           privacy_version?: string | null
           regolamento_version?: string | null
+          review_url?: string | null
           slug?: string
           stay_calc_type?: string
           titolare_name?: string | null

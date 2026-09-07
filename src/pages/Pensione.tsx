@@ -20,7 +20,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Settings, Clock, Euro, CreditCard, Plus, Pencil, Trash2, Save, RotateCcw, Ban, Building2, Upload, X, FileText, KeyRound, Eye, EyeOff, CheckCircle2, XCircle, ExternalLink, Mail, Receipt, PauseCircle, Loader2 } from "lucide-react";
+import { Settings, Clock, Euro, CreditCard, Plus, Pencil, Trash2, Save, RotateCcw, Ban, Building2, Upload, X, FileText, KeyRound, Eye, EyeOff, CheckCircle2, XCircle, ExternalLink, Mail, Receipt, PauseCircle, Loader2, Zap } from "lucide-react";
 import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -37,6 +37,7 @@ import {
 } from "@/hooks/usePayments";
 import { STRIPE_TIERS } from "@/lib/stripe-config";
 import { CancellationPolicyTab } from "@/components/pensione/CancellationPolicyTab";
+import { AutomazioniTab } from "@/components/pensione/AutomazioniTab";
 import { PaymentSplitsTab } from "@/components/pensione/PaymentSplitsTab";
 import { EmailTemplatesTab } from "@/components/pensione/EmailTemplatesTab";
 
@@ -82,6 +83,7 @@ export default function Pensione() {
             <TabsTrigger value="cancellazione" className="gap-2 whitespace-nowrap"><Ban className="h-4 w-4" /> Cancellazione</TabsTrigger>
             <TabsTrigger value="preventivo-config" className="gap-2 whitespace-nowrap"><FileText className="h-4 w-4" /> Config. Preventivo</TabsTrigger>
             <TabsTrigger value="email-templates" className="gap-2 whitespace-nowrap"><Mail className="h-4 w-4" /> Template Email</TabsTrigger>
+            <TabsTrigger value="automazioni" className="gap-2 whitespace-nowrap"><Zap className="h-4 w-4" /> Automazioni</TabsTrigger>
             <TabsTrigger value="stripe" className="gap-2 whitespace-nowrap"><KeyRound className="h-4 w-4" /> Stripe</TabsTrigger>
             <TabsTrigger value="abbonamento" className="gap-2 whitespace-nowrap"><Receipt className="h-4 w-4" /> Abbonamento</TabsTrigger>
           </TabsList>
@@ -96,6 +98,7 @@ export default function Pensione() {
           <TabsContent value="cancellazione"><CancellationPolicyTab /></TabsContent>
           <TabsContent value="preventivo-config"><PaymentSplitsTab /></TabsContent>
           <TabsContent value="email-templates"><EmailTemplatesTab /></TabsContent>
+          <TabsContent value="automazioni"><AutomazioniTab /></TabsContent>
           <TabsContent value="stripe"><StripeConfigTab /></TabsContent>
           <TabsContent value="abbonamento"><SubscriptionTab /></TabsContent>
         </div>
