@@ -30,6 +30,7 @@ import { useUpdateCatRegistryCheckout } from "@/hooks/useCatRegistry";
 import { useCreatePayment, usePaymentMethods } from "@/hooks/usePayments";
 import { useTasksForBooking, useGenerateTasksForBooking, dedupeNewTasks } from "@/hooks/usePlanningTasks";
 import { CHECKOUT_CHECKLIST } from "@/lib/checklists";
+import { ChecklistPreview } from "@/components/ChecklistPreview";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenantConfig, usePriceLists } from "@/hooks/usePensioneConfig";
 import { useSupabase } from "@/hooks/useSupabaseClient";
@@ -578,6 +579,9 @@ export default function CheckOut() {
                   Il registro pets verrà aggiornato con la data di check-out selezionata e motivazione <strong>"Ritorno a casa"</strong>.
                 </p>
               </div>
+
+              {/* Checklist di check-out (anteprima) */}
+              <ChecklistPreview title="Checklist di check-out" items={CHECKOUT_CHECKLIST} />
 
               {/* Cat details section */}
               {catDetails.length > 0 && (

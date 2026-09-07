@@ -36,6 +36,7 @@ import { useDocumentsForBookings } from "@/hooks/useDocuments";
 import { DOCUMENT_TYPE_LABELS, REQUIRED_DOCUMENT_TYPES } from "@/lib/documentTypes";
 import { useTasksForBooking, useGenerateTasksForBooking, dedupeNewTasks } from "@/hooks/usePlanningTasks";
 import { CHECKIN_CHECKLIST } from "@/lib/checklists";
+import { ChecklistPreview } from "@/components/ChecklistPreview";
 
 const CHECKIN_STATUSES = ["check_in", "appuntamento_in_fissato", "appuntamento_in_out_fissato"];
 
@@ -587,6 +588,9 @@ export default function CheckIn() {
                   {" "}Puoi caricarli dalla scheda pet, tab "Documenti".
                 </div>
               )}
+
+              {/* Checklist di check-in (anteprima) */}
+              <ChecklistPreview title="Checklist di check-in" items={CHECKIN_CHECKLIST} />
 
               {/* Cat details section */}
               {catDetails.length > 0 && (
