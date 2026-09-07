@@ -28,11 +28,11 @@ const DEFAULT_TEMPLATES = {
   },
   checkin: {
     subject: "{{numero_prenotazione}} - Ci vediamo domani!",
-    body: "Ciao {{nome_cliente}},\n\nTi aspettiamo domani, {{data_checkin}}, per il check-in di {{pet_nomi}}.\n\nA presto,\n{{nome_pensione}}",
+    body: "Ciao {{nome_cliente}},\n\nTi aspettiamo domani, {{data_checkin}}, per il check-in di {{pet_nomi}} (orario: {{orario_checkin}}).\n\nA presto,\n{{nome_pensione}}",
   },
   checkout: {
     subject: "{{numero_prenotazione}} - Il check-out è domani",
-    body: "Ciao {{nome_cliente}},\n\nTi ricordiamo che domani, {{data_checkout}}, è previsto il check-out di {{pet_nomi}}.\n\nA presto,\n{{nome_pensione}}",
+    body: "Ciao {{nome_cliente}},\n\nTi ricordiamo che domani, {{data_checkout}}, è previsto il check-out di {{pet_nomi}} (orario: {{orario_checkout}}).\n\nA presto,\n{{nome_pensione}}",
   },
   checkout_summary: {
     subject: "{{numero_prenotazione}} - Riepilogo del soggiorno",
@@ -80,6 +80,15 @@ function calcRemaining(totalAmount: number, payments: { amount: number; payment_
 function formatDate(iso: string) {
   const d = new Date(iso + "T00:00:00Z");
   return `${String(d.getUTCDate()).padStart(2, "0")}/${String(d.getUTCMonth() + 1).padStart(2, "0")}/${d.getUTCFullYear()}`;
+}
+
+// Orario dell'appuntamento fissato dal cliente (appointments.scheduled_at,
+// stesso formato "YYYY-MM-DDTHH:MM:SS" usato in ClienteBookingDetailDialog).
+// Se non è ancora stato fissato un orario, si segnala esplicitamente invece
+// di lasciare un buco nel testo.
+function extractTime(scheduledAt: string) {
+  const tIndex = scheduledAt.indexOf("T");
+  return tIndex >= 0 ? scheduledAt.slice(tIndex + 1, tIndex + 6) : null;
 }
 
 interface TenantAutomations {
@@ -256,7 +265,7 @@ Deno.serve(async (req) => {
       if (tenantIds.length > 0) {
         const { data: bookings } = await supabaseAdmin
           .from("bookings")
-          .select("id, tenant_id, booking_number, check_in_date, client:clients(first_name, email), booking_cats(cats(name))")
+          .select("id, tenant_id, booking_number, check_in_date, client:clients(first_name, email), booking_cats(cats(name)), appointments(appointment_type, scheduled_at)")
           .eq("check_in_date", tomorrowStr)
           .in("tenant_id", tenantIds)
           .not("status", "in", `(${INACTIVE_STATUSES.join(",")})`);
@@ -267,9 +276,12 @@ Deno.serve(async (req) => {
           if (!client?.email) continue;
           if (await alreadySent("checkin_reminder", b.id)) continue;
           const petNames = ((b as any).booking_cats ?? []).map((bc: any) => bc.cats?.name).filter(Boolean).join(", ");
+          const checkinAppt = ((b as any).appointments ?? []).find((a: any) => a.appointment_type === "check_in");
+          const orarioCheckin = checkinAppt ? extractTime(checkinAppt.scheduled_at) : null;
           const { subject, html } = renderEmail(tenant, "checkin", "automation_checkin_subject", "automation_checkin_body", {
             nome_cliente: client.first_name || "", pet_nomi: petNames || "il tuo pet",
-            data_checkin: formatDate(b.check_in_date), numero_prenotazione: b.booking_number, nome_pensione: tenant.name,
+            data_checkin: formatDate(b.check_in_date), orario_checkin: orarioCheckin || "da confermare",
+            numero_prenotazione: b.booking_number, nome_pensione: tenant.name,
           });
           try {
             const ok = await sendEmail({ type: "checkin_reminder", bookingId: b.id, tenantId: b.tenant_id, tenantName: tenant.name, to: client.email, subject, html });
@@ -285,7 +297,7 @@ Deno.serve(async (req) => {
       if (tenantIds.length > 0) {
         const { data: bookings } = await supabaseAdmin
           .from("bookings")
-          .select("id, tenant_id, booking_number, check_out_date, client:clients(first_name, email), booking_cats(cats(name))")
+          .select("id, tenant_id, booking_number, check_out_date, client:clients(first_name, email), booking_cats(cats(name)), appointments(appointment_type, scheduled_at)")
           .eq("check_out_date", tomorrowStr)
           .in("tenant_id", tenantIds)
           .not("status", "in", `(${INACTIVE_STATUSES.join(",")})`);
@@ -296,9 +308,12 @@ Deno.serve(async (req) => {
           if (!client?.email) continue;
           if (await alreadySent("checkout_reminder", b.id)) continue;
           const petNames = ((b as any).booking_cats ?? []).map((bc: any) => bc.cats?.name).filter(Boolean).join(", ");
+          const checkoutAppt = ((b as any).appointments ?? []).find((a: any) => a.appointment_type === "check_out");
+          const orarioCheckout = checkoutAppt ? extractTime(checkoutAppt.scheduled_at) : null;
           const { subject, html } = renderEmail(tenant, "checkout", "automation_checkout_subject", "automation_checkout_body", {
             nome_cliente: client.first_name || "", pet_nomi: petNames || "il tuo pet",
-            data_checkout: formatDate(b.check_out_date), numero_prenotazione: b.booking_number, nome_pensione: tenant.name,
+            data_checkout: formatDate(b.check_out_date), orario_checkout: orarioCheckout || "da confermare",
+            numero_prenotazione: b.booking_number, nome_pensione: tenant.name,
           });
           try {
             const ok = await sendEmail({ type: "checkout_reminder", bookingId: b.id, tenantId: b.tenant_id, tenantName: tenant.name, to: client.email, subject, html });
