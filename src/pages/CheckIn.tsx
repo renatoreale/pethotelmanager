@@ -83,6 +83,7 @@ export default function CheckIn() {
   const [loadingCats, setLoadingCats] = useState(false);
   const [bookingPaidAmount, setBookingPaidAmount] = useState(0);
   const [manualExtraCost, setManualExtraCost] = useState<string | null>(null);
+  const [checkedChecklistItems, setCheckedChecklistItems] = useState<Set<string>>(new Set());
 
   // Requisiti (documenti richiesti) del soggiorno in check-in: solo un
   // riepilogo informativo, non blocca la conferma — vedi Blocco 9.
@@ -189,6 +190,15 @@ export default function CheckIn() {
     setTxNotes("");
     setCatDetails([]);
     setManualExtraCost(null);
+    setCheckedChecklistItems(new Set());
+  };
+
+  const toggleChecklistItem = (title: string) => {
+    setCheckedChecklistItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(title)) next.delete(title); else next.add(title);
+      return next;
+    });
   };
 
   const openConfirm = async (b: any) => {
@@ -357,6 +367,7 @@ export default function CheckIn() {
         const candidates = CHECKIN_CHECKLIST.map((item) => ({
           taskDate: todayStr, catId: null as string | null, title: item.title,
           description: item.description, category: "check_in" as const,
+          completed: checkedChecklistItems.has(item.title),
         }));
         const newTasks = dedupeNewTasks(confirmBookingTasks ?? [], candidates);
         if (newTasks.length > 0) {
@@ -590,7 +601,10 @@ export default function CheckIn() {
               )}
 
               {/* Checklist di check-in (anteprima) */}
-              <ChecklistPreview title="Checklist di check-in" items={CHECKIN_CHECKLIST} />
+              <ChecklistPreview
+                title="Checklist di check-in" items={CHECKIN_CHECKLIST}
+                checked={checkedChecklistItems} onToggle={toggleChecklistItem}
+              />
 
               {/* Cat details section */}
               {catDetails.length > 0 && (

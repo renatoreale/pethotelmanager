@@ -69,18 +69,19 @@ export function useTasksForBooking(bookingId: string | undefined) {
 // task per una prenotazione in un'unica chiamata.
 export function useGenerateTasksForBooking() {
   const qc = useQueryClient();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const supabase = useSupabase();
   return useMutation({
     mutationFn: async (input: {
       bookingId: string;
       tasks: {
         taskDate: string; catId?: string | null; title: string; description?: string;
-        category?: TaskCategory; scheduledTime?: string | null;
+        category?: TaskCategory; scheduledTime?: string | null; completed?: boolean;
       }[];
     }) => {
       if (!profile?.tenant_id) throw new Error("Tenant non configurato");
       if (input.tasks.length === 0) return [];
+      const now = new Date().toISOString();
       const { data, error } = await supabase
         .from("planning_tasks")
         .insert(input.tasks.map((t) => ({
@@ -92,6 +93,9 @@ export function useGenerateTasksForBooking() {
           title: t.title,
           description: t.description ?? null,
           category: t.category ?? "altro",
+          completed: t.completed ?? false,
+          completed_at: t.completed ? now : null,
+          completed_by: t.completed ? (user?.id ?? null) : null,
         })))
         .select();
       if (error) throw error;

@@ -82,6 +82,7 @@ export default function CheckOut() {
   const [bookingPaidAmount, setBookingPaidAmount] = useState(0);
   const [manualExtraCost, setManualExtraCost] = useState<string | null>(null);
   const [manualTotal, setManualTotal] = useState<string | null>(null);
+  const [checkedChecklistItems, setCheckedChecklistItems] = useState<Set<string>>(new Set());
 
   const stayCalcType = tenantConfig?.stay_calc_type ?? "notti";
   const countCheckinDay = tenantConfig?.count_checkin_day ?? true;
@@ -182,6 +183,15 @@ export default function CheckOut() {
     setCatDetails([]);
     setManualExtraCost(null);
     setManualTotal(null);
+    setCheckedChecklistItems(new Set());
+  };
+
+  const toggleChecklistItem = (title: string) => {
+    setCheckedChecklistItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(title)) next.delete(title); else next.add(title);
+      return next;
+    });
   };
 
   const openConfirm = async (b: any) => {
@@ -330,6 +340,7 @@ export default function CheckOut() {
         const candidates = CHECKOUT_CHECKLIST.map((item) => ({
           taskDate: todayStr, catId: null as string | null, title: item.title,
           description: item.description, category: "check_out" as const,
+          completed: checkedChecklistItems.has(item.title),
         }));
         const newTasks = dedupeNewTasks(confirmBookingTasks ?? [], candidates);
         if (newTasks.length > 0) {
@@ -581,7 +592,10 @@ export default function CheckOut() {
               </div>
 
               {/* Checklist di check-out (anteprima) */}
-              <ChecklistPreview title="Checklist di check-out" items={CHECKOUT_CHECKLIST} />
+              <ChecklistPreview
+                title="Checklist di check-out" items={CHECKOUT_CHECKLIST}
+                checked={checkedChecklistItems} onToggle={toggleChecklistItem}
+              />
 
               {/* Cat details section */}
               {catDetails.length > 0 && (
