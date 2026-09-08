@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useBookings } from "@/hooks/useBookings";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import { OccupancyGrid } from "@/components/OccupancyGrid";
+import { OccupancySummary } from "@/components/OccupancySummary";
 
 export default function OccupazioneCasette() {
   const today = new Date();
@@ -101,6 +102,13 @@ export default function OccupazioneCasette() {
         <>
           <div className="space-y-1">
             <h2 className="text-base font-semibold">🐱 Casette Gatti</h2>
+            <OccupancySummary
+              bookings={bookingsForGatti}
+              occupancyDays={occupancyDays}
+              totalSingole={singoleGatti}
+              totalDoppie={doppieGatti}
+              petType="gatti"
+            />
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <div className="flex items-center gap-1.5">
                 <div className="w-3 h-3 rounded-sm bg-primary/70" />
@@ -125,6 +133,13 @@ export default function OccupazioneCasette() {
 
           <div className="space-y-1 mt-6">
             <h2 className="text-base font-semibold">🐶 Casette Cani</h2>
+            <OccupancySummary
+              bookings={bookingsForCani}
+              occupancyDays={occupancyDays}
+              totalSingole={singoleCani}
+              totalDoppie={doppieCani}
+              petType="cani"
+            />
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <div className="flex items-center gap-1.5">
                 <div className="w-3 h-3 rounded-sm bg-primary/70" />
@@ -145,6 +160,13 @@ export default function OccupazioneCasette() {
         </>
       ) : (
         <>
+          <OccupancySummary
+            bookings={bookings ?? []}
+            occupancyDays={occupancyDays}
+            totalSingole={totalSingole}
+            totalDoppie={totalDoppie}
+            petType={petType}
+          />
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-sm bg-primary/70" />
