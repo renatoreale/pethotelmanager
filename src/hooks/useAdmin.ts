@@ -28,6 +28,7 @@ export interface Tenant {
   is_trial: boolean;
   client_reminders_enabled: boolean;
   marketing_promo_enabled: boolean;
+  ai_assistant_enabled: boolean;
   created_at: string;
 }
 
