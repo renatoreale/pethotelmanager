@@ -203,6 +203,7 @@ export function useUpsertPriceList() {
       id?: string;
       tenant_id?: string | null;
       name: string;
+      description?: string | null;
       tariff_type: TariffType;
       season?: string | null;
       price_per_day?: number;

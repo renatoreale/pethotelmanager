@@ -19,12 +19,13 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, CalendarDays, MoreHorizontal, Pencil, CalendarClock, CreditCard, ChevronDown, Trash2, FileDown, Mail, Send, ClipboardList } from "lucide-react";
+import { Search, CalendarDays, MoreHorizontal, Pencil, CalendarClock, CreditCard, ChevronDown, Trash2, FileDown, Mail, Send, ClipboardList, Sparkles } from "lucide-react";
 import { BookingDrillDown } from "@/components/BookingDrillDown";
 import { AutocompleteSearch } from "@/components/AutocompleteSearch";
 import { AppointmentScheduleDialog } from "@/components/preventivi/AppointmentScheduleDialog";
 import { BookingPaymentsDialog } from "@/components/payments/BookingPaymentsDialog";
 import { CarePlanDialog } from "@/components/bookings/CarePlanDialog";
+import { AddExtraServiceDialog } from "@/components/bookings/AddExtraServiceDialog";
 import { PreventivoDialog } from "@/components/preventivi/PreventivoDialog";
 import { toast } from "sonner";
 import { format, parseISO, differenceInDays } from "date-fns";
@@ -92,6 +93,7 @@ export default function Prenotazioni() {
   const [editingBooking, setEditingBooking] = useState<any>(null);
   const [paymentsBooking, setPaymentsBooking] = useState<any>(null);
   const [carePlanBooking, setCarePlanBooking] = useState<any>(null);
+  const [extraServiceBooking, setExtraServiceBooking] = useState<any>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const { data: bookings, isLoading } = useBookings(statusFilter);
@@ -494,6 +496,10 @@ export default function Prenotazioni() {
                                   <ClipboardList className="h-4 w-4 mr-2" />
                                   Piano di cura
                                 </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setTimeout(() => setExtraServiceBooking(b), 0)}>
+                                  <Sparkles className="h-4 w-4 mr-2" />
+                                  Aggiungi servizio extra
+                                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleDownloadPDF(b)}>
                                   <FileDown className="h-4 w-4 mr-2" />
                                   Scarica Preventivo PDF
@@ -619,6 +625,12 @@ export default function Prenotazioni() {
         open={!!carePlanBooking}
         onOpenChange={(v) => { if (!v) setCarePlanBooking(null); }}
         booking={carePlanBooking}
+      />
+
+      <AddExtraServiceDialog
+        open={!!extraServiceBooking}
+        onOpenChange={(v) => { if (!v) setExtraServiceBooking(null); }}
+        booking={extraServiceBooking}
       />
     </div>
   );

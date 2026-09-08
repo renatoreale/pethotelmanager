@@ -1330,6 +1330,7 @@ export type Database = {
         Row: {
           cage_pool_type: Database["public"]["Enums"]["cage_pool_type"] | null
           created_at: string
+          description: string | null
           extra_cat_supplement: number | null
           extra_km_cost: number | null
           fixed_cost: number | null
@@ -1351,6 +1352,7 @@ export type Database = {
         Insert: {
           cage_pool_type?: Database["public"]["Enums"]["cage_pool_type"] | null
           created_at?: string
+          description?: string | null
           extra_cat_supplement?: number | null
           extra_km_cost?: number | null
           fixed_cost?: number | null
@@ -1372,6 +1374,7 @@ export type Database = {
         Update: {
           cage_pool_type?: Database["public"]["Enums"]["cage_pool_type"] | null
           created_at?: string
+          description?: string | null
           extra_cat_supplement?: number | null
           extra_km_cost?: number | null
           fixed_cost?: number | null

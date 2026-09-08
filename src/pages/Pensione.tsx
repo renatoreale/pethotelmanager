@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -963,6 +964,7 @@ function ListinoTab() {
 
   // Form state
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [tariffType, setTariffType] = useState<TariffType>("stagionale");
   const [season, setSeason] = useState("");
   const [pricePerDay, setPricePerDay] = useState(0);
@@ -980,6 +982,7 @@ function ListinoTab() {
   const openNew = () => {
     setEditing(null);
     setName("");
+    setDescription("");
     setTariffType("stagionale");
     setSeason("");
     setPricePerDay(0);
@@ -999,6 +1002,7 @@ function ListinoTab() {
   const openEdit = (p: any) => {
     setEditing(p);
     setName(p.name);
+    setDescription(p.description ?? "");
     setTariffType(p.tariff_type ?? "stagionale");
     setSeason(p.season ?? "");
     setPricePerDay(p.price_per_day ?? 0);
@@ -1022,6 +1026,7 @@ function ListinoTab() {
         id: editing?.id,
         tenant_id: profile?.tenant_id,
         name: name.trim(),
+        description: description.trim() || null,
         tariff_type: tariffType,
         season: tariffType === "stagionale" ? (season || null) : null,
         price_per_day: (tariffType === "stagionale" || tariffType === "extra_giornaliero") ? pricePerDay : 0,
@@ -1137,6 +1142,7 @@ function ListinoTab() {
                     <Badge variant={p.is_active ? "default" : "secondary"}>{p.is_active ? "Attivo" : "Inattivo"}</Badge>
                   </div>
                   <p className="text-xs mt-1.5">{renderPriceInfo(p)}</p>
+                  {p.description && <p className="text-xs text-muted-foreground mt-0.5">{p.description}</p>}
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {p.valid_from && p.valid_to ? `${p.valid_from} → ${p.valid_to}` : p.valid_from ? `dal ${p.valid_from}` : "Sempre"}
                   </p>
@@ -1167,6 +1173,7 @@ function ListinoTab() {
                             {SEASON_OPTIONS.find(s => s.value === p.season)?.label ?? p.season}
                           </Badge>
                         )}
+                        {p.description && <p className="text-xs font-normal text-muted-foreground mt-0.5">{p.description}</p>}
                       </TableCell>
                       {tenantPetType === "entrambi" && (
                         <TableCell>
@@ -1239,6 +1246,14 @@ function ListinoTab() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Descrizione (facoltativa)</Label>
+              <Textarea
+                value={description} onChange={(e) => setDescription(e.target.value)} rows={2}
+                placeholder="Es. Passeggiata di 30 minuti con operatore dedicato"
+              />
             </div>
 
             {/* Stagionale: season + price/day + supplement */}
