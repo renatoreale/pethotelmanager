@@ -48,6 +48,8 @@ const TARIFF_TYPE_LABELS: Record<TariffType, string> = {
   extra_giornaliero: "Extra giornaliero",
   extra_km: "Extra con km",
   extra_una_tantum: "Extra una tantum",
+  weekend: "Supplemento weekend",
+  durata_soggiorno: "Sconto durata soggiorno",
 };
 
 const SEASON_OPTIONS = [
@@ -968,6 +970,8 @@ function ListinoTab() {
   const [includedKm, setIncludedKm] = useState(0);
   const [extraKmCost, setExtraKmCost] = useState(0);
   const [extraSupplement, setExtraSupplement] = useState(0);
+  const [percentage, setPercentage] = useState(0);
+  const [minNights, setMinNights] = useState(1);
   const [validFrom, setValidFrom] = useState("");
   const [validTo, setValidTo] = useState("");
   const [active, setActive] = useState(true);
@@ -983,6 +987,8 @@ function ListinoTab() {
     setIncludedKm(0);
     setExtraKmCost(0);
     setExtraSupplement(0);
+    setPercentage(0);
+    setMinNights(1);
     setValidFrom("");
     setValidTo("");
     setActive(true);
@@ -1000,6 +1006,8 @@ function ListinoTab() {
     setIncludedKm(p.included_km ?? 0);
     setExtraKmCost(p.extra_km_cost ?? 0);
     setExtraSupplement(p.extra_cat_supplement ?? 0);
+    setPercentage(p.percentage ?? 0);
+    setMinNights(p.min_nights ?? 1);
     setValidFrom(p.valid_from ?? "");
     setValidTo(p.valid_to ?? "");
     setActive(p.is_active);
@@ -1021,6 +1029,8 @@ function ListinoTab() {
         included_km: tariffType === "extra_km" ? includedKm : 0,
         extra_km_cost: tariffType === "extra_km" ? extraKmCost : 0,
         extra_cat_supplement: tariffType === "stagionale" ? (extraSupplement || null) : null,
+        percentage: (tariffType === "weekend" || tariffType === "durata_soggiorno") ? percentage : null,
+        min_nights: tariffType === "durata_soggiorno" ? minNights : null,
         valid_from: validFrom || null,
         valid_to: validTo || null,
         is_active: active,
@@ -1055,6 +1065,10 @@ function ListinoTab() {
         return `€ ${Number(p.fixed_cost).toFixed(2)} base + € ${Number(p.extra_km_cost).toFixed(2)}/km extra (incl. ${p.included_km} km)`;
       case "extra_una_tantum":
         return `€ ${Number(p.fixed_cost).toFixed(2)} una tantum`;
+      case "weekend":
+        return `+${Number(p.percentage).toFixed(0)}% su sabato/domenica`;
+      case "durata_soggiorno":
+        return `-${Number(p.percentage).toFixed(0)}% da ${p.min_nights} notti`;
       default:
         return "—";
     }
@@ -1290,6 +1304,32 @@ function ListinoTab() {
                 <Label>Costo una tantum (€)</Label>
                 <Input type="number" min={0} step={0.5} value={fixedCost} onChange={(e) => setFixedCost(Number(e.target.value))} />
                 <p className="text-xs text-muted-foreground">Es. visita veterinaria</p>
+              </div>
+            )}
+
+            {/* Weekend: percentuale supplemento sulle notti sabato/domenica */}
+            {tariffType === "weekend" && (
+              <div className="space-y-2">
+                <Label>Supplemento (%)</Label>
+                <Input type="number" min={0} step={1} value={percentage} onChange={(e) => setPercentage(Number(e.target.value))} />
+                <p className="text-xs text-muted-foreground">
+                  Applicato automaticamente nel preventivo alle notti di sabato e domenica comprese nel soggiorno.
+                </p>
+              </div>
+            )}
+
+            {/* Durata soggiorno: sconto percentuale da N notti in su */}
+            {tariffType === "durata_soggiorno" && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Da notti (minimo)</Label>
+                  <Input type="number" min={1} value={minNights} onChange={(e) => setMinNights(Number(e.target.value))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Sconto (%)</Label>
+                  <Input type="number" min={0} step={1} value={percentage} onChange={(e) => setPercentage(Number(e.target.value))} />
+                  <p className="text-xs text-muted-foreground">Es. 10 per uno sconto del 10%</p>
+                </div>
               </div>
             )}
 

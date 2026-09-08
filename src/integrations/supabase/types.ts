@@ -1336,7 +1336,9 @@ export type Database = {
           id: string
           included_km: number | null
           is_active: boolean
+          min_nights: number | null
           name: string
+          percentage: number | null
           pet_type: Database["public"]["Enums"]["pet_type"] | null
           price_per_day: number
           season: string | null
@@ -1355,7 +1357,9 @@ export type Database = {
           id?: string
           included_km?: number | null
           is_active?: boolean
+          min_nights?: number | null
           name: string
+          percentage?: number | null
           pet_type?: Database["public"]["Enums"]["pet_type"] | null
           price_per_day?: number
           season?: string | null
@@ -1374,7 +1378,9 @@ export type Database = {
           id?: string
           included_km?: number | null
           is_active?: boolean
+          min_nights?: number | null
           name?: string
+          percentage?: number | null
           pet_type?: Database["public"]["Enums"]["pet_type"] | null
           price_per_day?: number
           season?: string | null
@@ -2126,6 +2132,8 @@ export type Database = {
         | "extra_giornaliero"
         | "extra_km"
         | "extra_una_tantum"
+        | "weekend"
+        | "durata_soggiorno"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2287,6 +2295,8 @@ export const Constants = {
         "extra_giornaliero",
         "extra_km",
         "extra_una_tantum",
+        "weekend",
+        "durata_soggiorno",
       ],
     },
   },

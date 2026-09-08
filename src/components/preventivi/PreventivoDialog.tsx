@@ -135,6 +135,7 @@ export function PreventivoDialog({
   const [seasonPeriods, setSeasonPeriods] = useState<SeasonPeriod[]>([]);
   const [extraServices, setExtraServices] = useState<ExtraServiceLine[]>([]);
   const [discounts, setDiscounts] = useState<DiscountLine[]>([]);
+  const [durationSuggestionDismissed, setDurationSuggestionDismissed] = useState(false);
 
   // ── Availability check data ──
   const { data: allBookings } = useBookings();
@@ -263,6 +264,7 @@ export function PreventivoDialog({
 
   // ── Reset on open ──
   const resetForm = () => {
+    setDurationSuggestionDismissed(false);
     if (editing) {
       setClientId(editing.client_id);
       const editClient = clients?.find((c: any) => c.id === editing.client_id);
@@ -406,10 +408,44 @@ export function PreventivoDialog({
     if (!priceLists) return [];
     return priceLists.filter((pl: any) => {
       if (pl.tariff_type === "stagionale" || !pl.is_active) return false;
+      if (pl.tariff_type === "weekend" || pl.tariff_type === "durata_soggiorno") return false;
       if (!pl.pet_type || !tenantPetType || tenantPetType === "entrambi") return true;
       return pl.pet_type === tenantPetType;
     });
   }, [priceLists, tenantPetType]);
+
+  // ── Regole tariffarie automatiche: supplemento weekend + sconto durata soggiorno ──
+  const weekendTariffs = useMemo(() => {
+    if (!priceLists) return [];
+    return priceLists.filter((pl: any) => {
+      if (pl.tariff_type !== "weekend" || !pl.is_active) return false;
+      if (!pl.pet_type || !tenantPetType || tenantPetType === "entrambi") return true;
+      return pl.pet_type === tenantPetType;
+    });
+  }, [priceLists, tenantPetType]);
+
+  const durationTariffs = useMemo(() => {
+    if (!priceLists) return [];
+    return priceLists.filter((pl: any) => {
+      if (pl.tariff_type !== "durata_soggiorno" || !pl.is_active) return false;
+      if (!pl.pet_type || !tenantPetType || tenantPetType === "entrambi") return true;
+      return pl.pet_type === tenantPetType;
+    });
+  }, [priceLists, tenantPetType]);
+
+  // Notti di sabato/domenica in [fromDate, toDate), stessa convenzione di
+  // calcPeriodDays (in modalità "giorni" toDate è incluso).
+  const countWeekendNights = useCallback((fromDate: string, toDate: string) => {
+    if (!fromDate || !toDate) return 0;
+    const start = parseISO(fromDate);
+    const totalDays = calcPeriodDays(fromDate, toDate);
+    let count = 0;
+    for (let i = 0; i < totalDays; i++) {
+      const day = addDays(start, i).getDay();
+      if (day === 0 || day === 6) count++;
+    }
+    return count;
+  }, [calcPeriodDays]);
 
   // ── Period cost calculation helper ──
   const calcPeriodCost = useCallback((days: number, tariff: any, numCats: number) => {
@@ -525,6 +561,21 @@ export function PreventivoDialog({
     setDiscounts(prev => prev.filter((_, i) => i !== idx));
   };
 
+  // Applica lo sconto durata soggiorno suggerito come riga sconto normale:
+  // resta visibile, modificabile e rimovibile come qualsiasi altro sconto.
+  const applyDurationDiscount = () => {
+    if (!applicableDurationTariff) return;
+    const value = Math.abs(Number(applicableDurationTariff.percentage));
+    setDiscounts(prev => [...prev, {
+      id: genId(),
+      reason: "durata_soggiorno",
+      type: "percentuale",
+      value,
+      amount: Math.round(seasonTotal * value) / 100,
+    }]);
+    setDurationSuggestionDismissed(true);
+  };
+
   // ── Grand total calculation ──
   const seasonTotal = useMemo(() => seasonPeriods.reduce((sum, p) => sum + p.total, 0), [seasonPeriods]);
   const extrasTotal = useMemo(() => extraServices.reduce((sum, s) => sum + s.total, 0), [extraServices]);
@@ -551,7 +602,33 @@ export function PreventivoDialog({
 
   const discountTotal = useMemo(() => discounts.reduce((sum, d) => sum + d.amount, 0), [discounts]);
   const discountedStay = Math.max(0, seasonTotal - discountTotal);
-  const grandTotal = discountedStay + extrasTotal;
+
+  // Supplemento weekend: applicato automaticamente alle notti di sabato/
+  // domenica di ogni periodo, calcolato sulla tariffa stagionale di quel
+  // periodo. Se sono definite più regole weekend attive, si usa la prima
+  // (caso comune: una sola regola per pensione).
+  const weekendTariff = weekendTariffs[0];
+  const weekendSurchargeTotal = useMemo(() => {
+    if (!weekendTariff || numSelectedCats === 0) return 0;
+    return seasonPeriods.reduce((sum, p) => {
+      const tariff = seasonalTariffs.find((t: any) => t.id === p.tariffId);
+      if (!tariff) return sum;
+      const weekendNights = countWeekendNights(p.fromDate, p.toDate);
+      return sum + weekendNights * Number(tariff.price_per_day) * numSelectedCats * (Number(weekendTariff.percentage) / 100);
+    }, 0);
+  }, [seasonPeriods, seasonalTariffs, weekendTariff, numSelectedCats, countWeekendNights]);
+
+  // Sconto durata soggiorno: si sceglie la regola attiva con la soglia
+  // "da notti" più alta ancora soddisfatta dalla durata corrente (sconto
+  // più profondo tra quelli applicabili). Viene solo suggerito: il
+  // titolare lo applica con un click, restando libero di non farlo.
+  const applicableDurationTariff = useMemo(() => {
+    return durationTariffs
+      .filter((t: any) => duration >= (t.min_nights ?? 1))
+      .sort((a: any, b: any) => (b.min_nights ?? 0) - (a.min_nights ?? 0))[0];
+  }, [durationTariffs, duration]);
+
+  const grandTotal = discountedStay + weekendSurchargeTotal + extrasTotal;
 
   // ── Period validation ──
   const periodDaysTotal = useMemo(() => seasonPeriods.reduce((sum, p) => sum + p.days, 0), [seasonPeriods]);
@@ -660,6 +737,7 @@ export function PreventivoDialog({
       extrasTotal,
       discountTotal,
       discountedStay,
+      weekendSurchargeTotal,
       grandTotal,
     };
 
@@ -683,9 +761,15 @@ export function PreventivoDialog({
       });
       breakdownParts.push(`[Periodi: ${parts.join("; ")}]`);
     }
+    if (weekendSurchargeTotal > 0) {
+      breakdownParts.push(`[Supplemento weekend: €${weekendSurchargeTotal.toFixed(2)}]`);
+    }
     if (discounts.length > 0) {
       const parts = discounts.filter(d => d.amount > 0).map(d => {
-        const label = d.reason === "lungo_periodo" ? "Lungo periodo" : d.reason === "multi_gatto" ? "Multi-gatto" : "Altro";
+        const label = d.reason === "lungo_periodo" ? "Lungo periodo"
+          : d.reason === "multi_gatto" ? "Multi-gatto"
+          : d.reason === "durata_soggiorno" ? "Durata soggiorno"
+          : "Altro";
         return `${label}: -€${d.amount.toFixed(2)}`;
       });
       if (parts.length > 0) breakdownParts.push(`[Sconti: ${parts.join("; ")}]`);
@@ -1199,6 +1283,20 @@ export function PreventivoDialog({
                 </div>
               )}
 
+              {/* Suggerimento sconto durata soggiorno */}
+              {seasonPeriods.length > 0 && applicableDurationTariff && !durationSuggestionDismissed
+                && !discounts.some(d => d.reason === "durata_soggiorno") && (
+                <div className="rounded-md border border-primary/30 bg-primary/5 p-3 flex items-center justify-between gap-3 text-sm">
+                  <span>
+                    Sconto durata soggiorno disponibile: <strong>-{Number(applicableDurationTariff.percentage).toFixed(0)}%</strong> (da {applicableDurationTariff.min_nights} notti)
+                  </span>
+                  <div className="flex gap-2 shrink-0">
+                    <Button size="sm" onClick={applyDurationDiscount}>Applica</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setDurationSuggestionDismissed(true)}>Ignora</Button>
+                  </div>
+                </div>
+              )}
+
               {/* Sconti */}
               {seasonPeriods.length > 0 && (
                 <>
@@ -1217,6 +1315,7 @@ export function PreventivoDialog({
                           <SelectContent>
                             <SelectItem value="lungo_periodo">Lungo periodo</SelectItem>
                             <SelectItem value="multi_gatto">Multi-gatto</SelectItem>
+                            <SelectItem value="durata_soggiorno">Durata soggiorno</SelectItem>
                             <SelectItem value="altro">Altro</SelectItem>
                           </SelectContent>
                         </Select>
@@ -1253,9 +1352,15 @@ export function PreventivoDialog({
                       <span>-€ {discountTotal.toFixed(2)}</span>
                     </div>
                   )}
+                  {weekendSurchargeTotal > 0 && (
+                    <div className="text-sm flex justify-between">
+                      <span className="text-muted-foreground">Supplemento weekend</span>
+                      <span>€ {weekendSurchargeTotal.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="text-sm font-bold flex justify-between border-t border-primary/20 pt-1">
                     <span>Totale soggiorno</span>
-                    <span>€ {discountedStay.toFixed(2)}</span>
+                    <span>€ {(discountedStay + weekendSurchargeTotal).toFixed(2)}</span>
                   </div>
                 </div>
               )}
@@ -1345,6 +1450,12 @@ export function PreventivoDialog({
                   <div className="text-sm flex justify-between">
                     <span className="text-muted-foreground">Soggiorno{discountTotal > 0 ? " (scontato)" : ""}</span>
                     <span>€ {discountedStay.toFixed(2)}</span>
+                  </div>
+                )}
+                {weekendSurchargeTotal > 0 && (
+                  <div className="text-sm flex justify-between">
+                    <span className="text-muted-foreground">Supplemento weekend</span>
+                    <span>€ {weekendSurchargeTotal.toFixed(2)}</span>
                   </div>
                 )}
                 {extrasTotal > 0 && (

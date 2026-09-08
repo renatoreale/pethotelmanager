@@ -175,7 +175,7 @@ export function useDeleteSlotConfig() {
 }
 
 // ── Price lists (tariffe) ──
-export type TariffType = "stagionale" | "extra_giornaliero" | "extra_km" | "extra_una_tantum";
+export type TariffType = "stagionale" | "extra_giornaliero" | "extra_km" | "extra_una_tantum" | "weekend" | "durata_soggiorno";
 
 export function usePriceLists() {
   const { profile } = useAuth();
@@ -210,6 +210,8 @@ export function useUpsertPriceList() {
       included_km?: number;
       extra_km_cost?: number;
       extra_cat_supplement?: number | null;
+      percentage?: number | null;
+      min_nights?: number | null;
       valid_from?: string | null;
       valid_to?: string | null;
       is_active?: boolean;
