@@ -216,6 +216,7 @@ function PensioniTab() {
                     <TableHead>Promemoria email clienti</TableHead>
                     <TableHead>Promozioni marketing AI</TableHead>
                     <TableHead>Assistente AI</TableHead>
+                    <TableHead>Estrazione richieste AI</TableHead>
                     <TableHead className="w-[100px]">Azioni</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -256,6 +257,14 @@ function PensioniTab() {
                           onCheckedChange={(checked) => updateTenant.mutate({ id: tenant.id, ai_assistant_enabled: checked })}
                           disabled={updateTenant.isPending}
                           title="Assistente virtuale con accesso in sola lettura ai dati della pensione"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={tenant.ai_quote_extraction_enabled}
+                          onCheckedChange={(checked) => updateTenant.mutate({ id: tenant.id, ai_quote_extraction_enabled: checked })}
+                          disabled={updateTenant.isPending}
+                          title="Estrai dati strutturati da richieste clienti in testo libero (Preventivi)"
                         />
                       </TableCell>
                       <TableCell>

@@ -12,8 +12,9 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Search, CheckCircle2, FileText, Download, Inbox, XCircle, Mail, MailCheck } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, CheckCircle2, FileText, Download, Inbox, XCircle, Mail, MailCheck, Sparkles } from "lucide-react";
 import { ConfirmPreventivoDialog } from "@/components/preventivi/ConfirmPreventivoDialog";
+import { ExtractQuoteRequestDialog } from "@/components/preventivi/ExtractQuoteRequestDialog";
 import { toast } from "sonner";
 import { format, differenceInDays, parseISO } from "date-fns";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
@@ -56,6 +57,7 @@ export default function Preventivi() {
   const [rejectingQuote, setRejectingQuote] = useState<any>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [sendingIds, setSendingIds] = useState<Set<string>>(new Set());
+  const [extractDialogOpen, setExtractDialogOpen] = useState(false);
 
   // Stay config
   const stayCalcType = (tenantConfig as any)?.stay_calc_type ?? "notti";
@@ -167,7 +169,14 @@ export default function Preventivi() {
             sections={preventiviHelpSections}
           />
         </div>
-        <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> {t("quotes.newQuote")}</Button>
+        <div className="flex gap-2">
+          {tenantConfig?.ai_quote_extraction_enabled && (
+            <Button variant="outline" onClick={() => setExtractDialogOpen(true)} className="gap-2">
+              <Sparkles className="h-4 w-4" /> Estrai da testo libero
+            </Button>
+          )}
+          <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> {t("quotes.newQuote")}</Button>
+        </div>
       </div>
 
       {/* Incoming quote requests from clients */}
@@ -352,6 +361,16 @@ export default function Preventivi() {
         countCheckinDay={countCheckinDay}
         countCheckoutDay={countCheckoutDay}
         prefill={quotePrefill}
+      />
+
+      <ExtractQuoteRequestDialog
+        open={extractDialogOpen}
+        onOpenChange={setExtractDialogOpen}
+        onConfirm={(prefill) => {
+          setEditing(null);
+          setQuotePrefill(prefill);
+          setDialogOpen(true);
+        }}
       />
 
       <ConfirmPreventivoDialog

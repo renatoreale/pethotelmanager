@@ -1713,6 +1713,7 @@ export type Database = {
           cap: string | null
           city: string | null
           ai_assistant_enabled: boolean
+          ai_quote_extraction_enabled: boolean
           client_reminders_enabled: boolean
           count_checkin_day: boolean
           count_checkout_day: boolean
@@ -1754,6 +1755,7 @@ export type Database = {
         Insert: {
           address?: string | null
           ai_assistant_enabled?: boolean
+          ai_quote_extraction_enabled?: boolean
           automation_balance_body?: string | null
           automation_balance_reminder_enabled?: boolean
           automation_balance_subject?: string | null
@@ -1823,6 +1825,7 @@ export type Database = {
         Update: {
           address?: string | null
           ai_assistant_enabled?: boolean
+          ai_quote_extraction_enabled?: boolean
           automation_balance_body?: string | null
           automation_balance_reminder_enabled?: boolean
           automation_balance_subject?: string | null

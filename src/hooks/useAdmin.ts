@@ -29,6 +29,7 @@ export interface Tenant {
   client_reminders_enabled: boolean;
   marketing_promo_enabled: boolean;
   ai_assistant_enabled: boolean;
+  ai_quote_extraction_enabled: boolean;
   created_at: string;
 }
 
