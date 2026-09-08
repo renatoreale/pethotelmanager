@@ -9,9 +9,13 @@ import { InfoTooltip } from "@/components/InfoTooltip";
 import type { Booking } from "@/hooks/useBookings";
 
 // Stessa lista di stati "reali" usata altrove (useClientOpportunities,
-// useBusinessOverview): esclude preventivi, cancellazioni e rimborsi.
+// useBusinessOverview): esclude preventivi, cancellazioni e rimborsi. Include
+// anche le varianti "appuntamento_*_fissato" (prodotte da
+// AppointmentScheduleDialog), prima mancanti qui.
 const ACTIVE_BOOKING_STATUSES = new Set([
-  "confermata", "appuntamento_fissato", "check_in", "in_corso", "check_out", "chiusa",
+  "confermata", "appuntamento_fissato", "appuntamento_in_fissato",
+  "appuntamento_out_fissato", "appuntamento_in_out_fissato",
+  "check_in", "in_corso", "check_out", "chiusa",
 ]);
 
 const PERIODS = [7, 30, 60, 90] as const;

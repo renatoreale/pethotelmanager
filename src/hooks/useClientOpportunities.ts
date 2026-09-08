@@ -7,10 +7,15 @@ import type { Client } from "@/hooks/useClients";
 
 // Stessa distinzione "soggiorno reale" usata in send-client-reminders: si
 // escludono preventivi, cancellazioni e rimborsi dal calcolo di ricorrenza,
-// valore e inattività del cliente.
+// valore e inattività del cliente. Include anche le varianti
+// "appuntamento_*_fissato" (prodotte da AppointmentScheduleDialog), prima
+// mancanti qui: senza di esse questi clienti sparivano dalle opportunità.
 const ACTIVE_BOOKING_STATUSES = [
   "confermata",
   "appuntamento_fissato",
+  "appuntamento_in_fissato",
+  "appuntamento_out_fissato",
+  "appuntamento_in_out_fissato",
   "check_in",
   "in_corso",
   "check_out",

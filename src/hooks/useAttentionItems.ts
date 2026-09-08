@@ -8,17 +8,20 @@ import { format, addDays, differenceInMinutes, differenceInDays, parseISO } from
 
 // Stesso elenco di stati "reali" usato altrove (useClientOpportunities,
 // useBusinessOverview, send-client-reminders): esclude preventivi,
-// cancellazioni e rimborsi.
+// cancellazioni e rimborsi. Include anche le varianti
+// "appuntamento_*_fissato" (prodotte da AppointmentScheduleDialog), prima
+// mancanti qui: senza di esse questi documenti/pagamenti/check-in
+// sparivano dalle notifiche pur riguardando soggiorni reali.
 const ACTIVE_STATUSES = [
-  "confermata", "appuntamento_fissato", "check_in", "in_corso", "check_out", "chiusa",
+  "confermata", "appuntamento_fissato", "appuntamento_in_fissato",
+  "appuntamento_out_fissato", "appuntamento_in_out_fissato",
+  "check_in", "in_corso", "check_out", "chiusa",
 ];
 
 // Stati raggiunti PRIMA che il check-in venga effettivamente registrato
-// (vedi TRANSITIONS in useBookings.ts e CheckIn.tsx): includono anche le
-// varianti "appuntamento_*_fissato" prodotte da AppointmentScheduleDialog,
-// che ACTIVE_STATUSES sopra non copre — per questo controllo servono per
-// intero, altrimenti una prenotazione con solo il check-out fissato
-// (appuntamento_out_fissato) resterebbe invisibile a qualunque verifica.
+// (vedi TRANSITIONS in useBookings.ts e CheckIn.tsx) — sottoinsieme mirato di
+// ACTIVE_STATUSES, usato per distinguere "non ancora arrivato" da "già in
+// pensione" nei due controlli qui sotto.
 const PRE_CHECKIN_STATUSES = [
   "confermata", "appuntamento_fissato", "appuntamento_in_fissato",
   "appuntamento_out_fissato", "appuntamento_in_out_fissato", "check_in",

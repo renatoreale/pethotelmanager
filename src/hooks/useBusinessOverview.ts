@@ -9,8 +9,14 @@ import {
 
 // Stessa distinzione "soggiorno reale" usata altrove (send-client-reminders,
 // useClientOpportunities): esclude preventivi, cancellazioni e rimborsi.
+// Include anche le varianti "appuntamento_*_fissato" (prodotte da
+// AppointmentScheduleDialog quando si fissano gli appuntamenti separatamente
+// per check-in/check-out), prima mancanti qui: senza di esse queste
+// prenotazioni sparivano dalle statistiche pur essendo soggiorni reali.
 const ACTIVE_BOOKING_STATUSES = [
-  "confermata", "appuntamento_fissato", "check_in", "in_corso", "check_out", "chiusa",
+  "confermata", "appuntamento_fissato", "appuntamento_in_fissato",
+  "appuntamento_out_fissato", "appuntamento_in_out_fissato",
+  "check_in", "in_corso", "check_out", "chiusa",
 ];
 // Sottoinsieme di soggiorni conclusi/in corso, stessa definizione già usata
 // in Statistiche.tsx per durata media soggiorno.

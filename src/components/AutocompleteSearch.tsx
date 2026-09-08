@@ -6,8 +6,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useAuth } from "@/hooks/useAuth";
 
+// "chiusa" resta esclusa deliberatamente: questi suggerimenti servono per
+// prenotazioni ancora "attive" (non per ricercare soggiorni già conclusi).
+// Mancava però la variante generica "appuntamento_fissato" (accanto alle
+// varianti in/out/in_out già presenti), aggiunta qui.
 const ACTIVE_STATUSES = [
   "confermata",
+  "appuntamento_fissato",
   "appuntamento_in_fissato",
   "appuntamento_out_fissato",
   "appuntamento_in_out_fissato",
