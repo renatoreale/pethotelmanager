@@ -5,7 +5,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { InfoTooltip } from "@/components/InfoTooltip";
@@ -13,7 +12,8 @@ import { SlideshowRecorder } from "@/components/marketing/SlideshowRecorder";
 import {
   usePromoPhotoCandidates, useGenerateMarketingPromo, type MarketingPromotion,
 } from "@/hooks/useMarketingPromo";
-import { Sparkles, Copy, RotateCcw } from "lucide-react";
+import { Sparkles, Copy, RotateCcw, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 function copyToClipboard(text: string, label: string) {
@@ -47,12 +47,19 @@ function PhotoPicker({
           <button
             key={c.url}
             type="button"
+            aria-pressed={isSelected}
             onClick={() => onToggle(c.url)}
             className={`relative rounded-md overflow-hidden border-2 aspect-square ${isSelected ? "border-primary" : "border-transparent"}`}
           >
             <img src={c.url} alt={c.label} className="w-full h-full object-cover" />
-            <div className="absolute top-1 left-1">
-              <Checkbox checked={isSelected} className="bg-white/90" />
+            <div
+              aria-hidden="true"
+              className={cn(
+                "absolute top-1 left-1 h-4 w-4 rounded-sm border flex items-center justify-center",
+                isSelected ? "bg-primary border-primary text-primary-foreground" : "bg-white/90 border-input"
+              )}
+            >
+              {isSelected && <Check className="h-3 w-3" />}
             </div>
             <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] px-1 py-0.5 truncate">
               {c.label}
