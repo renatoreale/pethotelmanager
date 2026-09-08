@@ -189,7 +189,7 @@ export default function ClienteAnimali() {
 
   return (
     <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <h1 className="text-2xl font-serif font-bold">I Miei Pets</h1>
         <Button onClick={openNew}>
           <Plus className="mr-2 h-4 w-4" />

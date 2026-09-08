@@ -83,7 +83,7 @@ export default function Utenti() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Utenti & Ruoli</h1>
           <p className="text-muted-foreground text-sm">

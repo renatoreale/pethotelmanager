@@ -103,9 +103,9 @@ export function AppLayout() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : currentTenant ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0">
                 <TenantLogo logoUrl={currentLogoUrl} name={currentTenant.name} />
-                <span className="font-semibold text-sm">{currentTenant.name}</span>
+                <span className="font-semibold text-sm truncate max-w-[160px] sm:max-w-[250px]">{currentTenant.name}</span>
               </div>
             ) : null}
 

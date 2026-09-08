@@ -190,7 +190,7 @@ function PensioniTab() {
   return (
     <>
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
+        <CardHeader className="flex-row items-center justify-between flex-wrap gap-3">
           <div>
             <CardTitle>Pensioni</CardTitle>
             <CardDescription>Ogni pensione registrata, con le funzionalità AI abilitate per ciascuna</CardDescription>
@@ -425,7 +425,7 @@ function UtentiTab() {
   return (
     <>
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
+        <CardHeader className="flex-row items-center justify-between flex-wrap gap-3">
           <div>
             <CardTitle>Utenti & Ruoli</CardTitle>
             <CardDescription>Tutti gli utenti della piattaforma, la pensione a cui appartengono e il loro ruolo</CardDescription>
@@ -664,7 +664,7 @@ function PermessiTab() {
 
   return (
     <Card>
-      <CardHeader className="flex-row items-center justify-between">
+      <CardHeader className="flex-row items-center justify-between flex-wrap gap-3">
         <div>
           <CardTitle>Permessi per Ruolo</CardTitle>
           <CardDescription>

@@ -177,7 +177,7 @@ export default function ClienteDashboard() {
 
                 return (
                 <div key={q.id} className="p-3 rounded-lg bg-muted/50 space-y-1">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
                     <p className="font-medium text-sm">
                       {format(new Date(q.check_in_date), "dd MMM yyyy", { locale: it })} → {format(new Date(q.check_out_date), "dd MMM yyyy", { locale: it })}
                     </p>
