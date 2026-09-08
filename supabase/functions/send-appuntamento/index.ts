@@ -5,6 +5,25 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Stessa intestazione (logo + nome pensione, colore primario del sito) su
+// tutte le email verso i clienti — duplicata in ogni edge function per lo
+// stesso motivo delle altre costanti di questo progetto: nessun import
+// condiviso tra le funzioni.
+const BRAND_COLOR = "#D2691E";
+function emailShell(tenantName: string, logoUrl: string | null | undefined, bodyHtml: string): string {
+  return `
+    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;border:1px solid #eee;border-radius:8px;overflow:hidden;">
+      <div style="background:${BRAND_COLOR};padding:20px 24px;text-align:center;">
+        ${logoUrl ? `<img src="${logoUrl}" alt="${tenantName}" style="max-height:48px;max-width:220px;display:block;margin:0 auto 6px;">` : ""}
+        <span style="color:#fff;font-size:17px;font-weight:600;font-family:sans-serif;">${tenantName}</span>
+      </div>
+      <div style="padding:32px 24px;">
+        ${bodyHtml}
+      </div>
+    </div>
+  `;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -42,7 +61,7 @@ Deno.serve(async (req) => {
     // Fetch tenant
     const { data: tenant } = await supabaseAdmin
       .from("tenants")
-      .select("name, appuntamento_email_body, appuntamento_email_subject")
+      .select("name, logo_url, appuntamento_email_body, appuntamento_email_subject")
       .eq("id", booking.tenant_id)
       .single();
     const tenantName = tenant?.name || "La Pensione";
@@ -91,7 +110,7 @@ Deno.serve(async (req) => {
       .map((line: string) => line.trim() === "" ? "<br>" : `<p style="margin:0 0 8px">${line}</p>`)
       .join("");
 
-    const html = `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;">${bodyHtml}</div>`;
+    const html = emailShell(tenantName, tenant?.logo_url, bodyHtml);
 
     const pdfFilename = filename || `Modulo_Affido_${booking.booking_number}.pdf`;
 

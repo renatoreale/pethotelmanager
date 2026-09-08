@@ -27,34 +27,47 @@ async function sendEmail(to: string, subject: string, html: string, fromName: st
   }
 }
 
-function inviteEmailHtml(firstName: string, tenantName: string, recoveryLink: string): string {
+// Stessa intestazione (logo + nome pensione, colore primario del sito) su
+// tutte le email verso i clienti — duplicata in ogni edge function per lo
+// stesso motivo delle altre costanti di questo progetto: nessun import
+// condiviso tra le funzioni.
+const BRAND_COLOR = "#D2691E";
+function emailShell(tenantName: string, logoUrl: string | null | undefined, bodyHtml: string): string {
   return `
-    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;">
-      <h2 style="color:#1a1a1a;">Benvenuto nel portale clienti di ${tenantName}</h2>
-      <p>Ciao <strong>${firstName}</strong>,</p>
-      <p>Sei stato invitato ad accedere all'area riservata clienti. Clicca sul pulsante qui sotto per impostare la tua password e attivare l'account.</p>
-      <a href="${recoveryLink}" style="display:inline-block;margin:24px 0;padding:12px 28px;background:#e67e22;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;">
-        Attiva il tuo account
-      </a>
-      <p style="color:#666;font-size:13px;">Il link è valido per 24 ore. Se non hai richiesto questo accesso, ignora questa email.</p>
-      <p style="color:#999;font-size:12px;">${tenantName}</p>
+    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;border:1px solid #eee;border-radius:8px;overflow:hidden;">
+      <div style="background:${BRAND_COLOR};padding:20px 24px;text-align:center;">
+        ${logoUrl ? `<img src="${logoUrl}" alt="${tenantName}" style="max-height:48px;max-width:220px;display:block;margin:0 auto 6px;">` : ""}
+        <span style="color:#fff;font-size:17px;font-weight:600;font-family:sans-serif;">${tenantName}</span>
+      </div>
+      <div style="padding:32px 24px;">
+        ${bodyHtml}
+      </div>
     </div>
   `;
 }
 
-function resetPasswordEmailHtml(firstName: string, tenantName: string, recoveryLink: string): string {
-  return `
-    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;">
-      <h2 style="color:#1a1a1a;">Reset password - ${tenantName}</h2>
-      <p>Ciao <strong>${firstName}</strong>,</p>
-      <p>È stata richiesta la reimpostazione della tua password. Clicca sul pulsante qui sotto per scegliere una nuova password.</p>
-      <a href="${recoveryLink}" style="display:inline-block;margin:24px 0;padding:12px 28px;background:#e67e22;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;">
-        Reimposta password
-      </a>
-      <p style="color:#666;font-size:13px;">Il link è valido per 24 ore. Se non hai richiesto questa operazione, ignora questa email.</p>
-      <p style="color:#999;font-size:12px;">${tenantName}</p>
-    </div>
-  `;
+function inviteEmailHtml(firstName: string, tenantName: string, logoUrl: string | null | undefined, recoveryLink: string): string {
+  return emailShell(tenantName, logoUrl, `
+    <h2 style="color:#1a1a1a;">Benvenuto nel portale clienti di ${tenantName}</h2>
+    <p>Ciao <strong>${firstName}</strong>,</p>
+    <p>Sei stato invitato ad accedere all'area riservata clienti. Clicca sul pulsante qui sotto per impostare la tua password e attivare l'account.</p>
+    <a href="${recoveryLink}" style="display:inline-block;margin:24px 0;padding:12px 28px;background:${BRAND_COLOR};color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;">
+      Attiva il tuo account
+    </a>
+    <p style="color:#666;font-size:13px;">Il link è valido per 24 ore. Se non hai richiesto questo accesso, ignora questa email.</p>
+  `);
+}
+
+function resetPasswordEmailHtml(firstName: string, tenantName: string, logoUrl: string | null | undefined, recoveryLink: string): string {
+  return emailShell(tenantName, logoUrl, `
+    <h2 style="color:#1a1a1a;">Reset password - ${tenantName}</h2>
+    <p>Ciao <strong>${firstName}</strong>,</p>
+    <p>È stata richiesta la reimpostazione della tua password. Clicca sul pulsante qui sotto per scegliere una nuova password.</p>
+    <a href="${recoveryLink}" style="display:inline-block;margin:24px 0;padding:12px 28px;background:${BRAND_COLOR};color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;">
+      Reimposta password
+    </a>
+    <p style="color:#666;font-size:13px;">Il link è valido per 24 ore. Se non hai richiesto questa operazione, ignora questa email.</p>
+  `);
 }
 
 async function callMySQL(action: string, params: Record<string, any>) {
@@ -101,10 +114,11 @@ Deno.serve(async (req) => {
     // Fetch tenant name for email
     const { data: tenant } = await supabaseAdmin
       .from("tenants")
-      .select("name")
+      .select("name, logo_url")
       .eq("id", client.tenant_id)
       .single();
     const tenantName = tenant?.name || "La Pensione";
+    const logoUrl = tenant?.logo_url ?? null;
 
     const origin = req.headers.get("origin") || Deno.env.get("SITE_URL") || "";
 
@@ -123,7 +137,7 @@ Deno.serve(async (req) => {
       await sendEmail(
         client.email,
         `Il tuo accesso al portale clienti - ${tenantName}`,
-        inviteEmailHtml(client.first_name, tenantName, recoveryLink),
+        inviteEmailHtml(client.first_name, tenantName, logoUrl, recoveryLink),
         tenantName,
       );
 
@@ -142,7 +156,7 @@ Deno.serve(async (req) => {
         tenant_id: client.tenant_id, client_id, direction: "sent",
         email_type: "invito", subject: `Benvenuto nel portale clienti - ${tenantName}`,
         recipient_email: client.email, status: "sent",
-        body_html: inviteEmailHtml(client.first_name, tenantName, recoveryLink),
+        body_html: inviteEmailHtml(client.first_name, tenantName, logoUrl, recoveryLink),
       });
 
       return new Response(
@@ -167,7 +181,7 @@ Deno.serve(async (req) => {
       await sendEmail(
         client.email,
         `Reset password - ${tenantName}`,
-        resetPasswordEmailHtml(client.first_name, tenantName, recoveryLink),
+        resetPasswordEmailHtml(client.first_name, tenantName, logoUrl, recoveryLink),
         tenantName,
       );
 
@@ -184,7 +198,7 @@ Deno.serve(async (req) => {
         tenant_id: client.tenant_id, client_id, direction: "sent",
         email_type: "reset_password", subject: `Reset password - ${tenantName}`,
         recipient_email: client.email, status: "sent",
-        body_html: resetPasswordEmailHtml(client.first_name, tenantName, recoveryLink),
+        body_html: resetPasswordEmailHtml(client.first_name, tenantName, logoUrl, recoveryLink),
       });
 
       return new Response(
@@ -238,7 +252,7 @@ Deno.serve(async (req) => {
     await sendEmail(
       client.email,
       `Benvenuto nel portale clienti - ${tenantName}`,
-      inviteEmailHtml(client.first_name, tenantName, recoveryLink),
+      inviteEmailHtml(client.first_name, tenantName, logoUrl, recoveryLink),
       tenantName,
     );
 

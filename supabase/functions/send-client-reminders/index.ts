@@ -67,6 +67,25 @@ function toHtml(rawBody: string) {
     .join("");
 }
 
+// Stessa intestazione (logo + nome pensione, colore primario del sito) su
+// tutte le email verso i clienti — duplicata in ogni edge function per lo
+// stesso motivo delle altre costanti di questo progetto: nessun import
+// condiviso tra le funzioni.
+const BRAND_COLOR = "#D2691E";
+function emailShell(tenantName: string, logoUrl: string | null | undefined, bodyHtml: string): string {
+  return `
+    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;border:1px solid #eee;border-radius:8px;overflow:hidden;">
+      <div style="background:${BRAND_COLOR};padding:20px 24px;text-align:center;">
+        ${logoUrl ? `<img src="${logoUrl}" alt="${tenantName}" style="max-height:48px;max-width:220px;display:block;margin:0 auto 6px;">` : ""}
+        <span style="color:#fff;font-size:17px;font-weight:600;font-family:sans-serif;">${tenantName}</span>
+      </div>
+      <div style="padding:32px 24px;">
+        ${bodyHtml}
+      </div>
+    </div>
+  `;
+}
+
 function calcRemaining(totalAmount: number, payments: { amount: number; payment_type: string }[]) {
   const paid = payments
     .filter((p) => p.payment_type !== "rimborso" && p.payment_type !== "gestione_pratica")
@@ -94,6 +113,7 @@ function extractTime(scheduledAt: string) {
 interface TenantAutomations {
   id: string;
   name: string;
+  logo_url: string | null;
   review_url: string | null;
   automation_upcoming_stay_reminder_enabled: boolean;
   automation_documents_reminder_enabled: boolean;
@@ -184,9 +204,6 @@ Deno.serve(async (req) => {
       return res.ok;
     };
 
-    const wrapHtml = (bodyHtml: string) =>
-      `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;">${bodyHtml}</div>`;
-
     const renderEmail = (
       tenant: TenantAutomations,
       key: keyof typeof DEFAULT_TEMPLATES,
@@ -196,7 +213,7 @@ Deno.serve(async (req) => {
     ) => {
       const defaults = DEFAULT_TEMPLATES[key];
       const subject = renderTemplate((tenant[subjectCol] as string | null) || defaults.subject, vars);
-      const html = wrapHtml(toHtml(renderTemplate((tenant[bodyCol] as string | null) || defaults.body, vars)));
+      const html = emailShell(tenant.name, tenant.logo_url, toHtml(renderTemplate((tenant[bodyCol] as string | null) || defaults.body, vars)));
       return { subject, html };
     };
 
@@ -206,7 +223,7 @@ Deno.serve(async (req) => {
     const { data: tenantsData } = await supabaseAdmin
       .from("tenants")
       .select(
-        "id, name, review_url, automation_upcoming_stay_reminder_enabled, automation_documents_reminder_enabled, " +
+        "id, name, logo_url, review_url, automation_upcoming_stay_reminder_enabled, automation_documents_reminder_enabled, " +
         "automation_checkin_reminder_enabled, automation_checkout_reminder_enabled, automation_checkout_summary_enabled, " +
         "automation_balance_reminder_enabled, automation_review_request_enabled, automation_winback_enabled, " +
         "automation_upcoming_stay_subject, automation_upcoming_stay_body, automation_documents_subject, automation_documents_body, " +
