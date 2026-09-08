@@ -87,7 +87,7 @@ export default function Utenti() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Utenti & Ruoli</h1>
           <p className="text-muted-foreground text-sm">
-            Gestione degli utenti e assegnazione dei ruoli all'interno della pensione.
+            Chi ha accesso alla pensione e cosa può fare in ogni sezione.
           </p>
         </div>
         {canManageRoles && (

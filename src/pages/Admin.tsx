@@ -70,7 +70,7 @@ export default function Admin() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Amministrazione Sistema</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Gestione pensioni, utenti, ruoli e permessi
+          Pensioni, utenti, permessi, configurazioni globali e richieste della piattaforma
         </p>
       </div>
 
@@ -193,7 +193,7 @@ function PensioniTab() {
         <CardHeader className="flex-row items-center justify-between">
           <div>
             <CardTitle>Pensioni</CardTitle>
-            <CardDescription>Gestisci le pensioni nel sistema</CardDescription>
+            <CardDescription>Ogni pensione registrata, con le funzionalità AI abilitate per ciascuna</CardDescription>
           </div>
           <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Nuova Pensione</Button>
         </CardHeader>
@@ -428,7 +428,7 @@ function UtentiTab() {
         <CardHeader className="flex-row items-center justify-between">
           <div>
             <CardTitle>Utenti & Ruoli</CardTitle>
-            <CardDescription>Gestisci gli utenti di sistema e i loro ruoli</CardDescription>
+            <CardDescription>Tutti gli utenti della piattaforma, la pensione a cui appartengono e il loro ruolo</CardDescription>
           </div>
           <Button onClick={() => setDialogOpen(true)}><Plus className="mr-2 h-4 w-4" /> Nuovo Utente</Button>
         </CardHeader>

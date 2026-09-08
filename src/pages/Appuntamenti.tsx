@@ -420,7 +420,7 @@ export default function Appuntamenti() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Appuntamenti</h1>
-          <p className="text-muted-foreground text-sm mt-1">Gestisci gli appuntamenti di check-in e check-out</p>
+          <p className="text-muted-foreground text-sm mt-1">Calendario degli appuntamenti di check-in e check-out fissati con i clienti</p>
         </div>
 
         {/* View mode selector */}

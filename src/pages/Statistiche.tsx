@@ -194,7 +194,7 @@ export default function Statistiche() {
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <BarChart3 className="h-6 w-6" /> Statistiche
         </h1>
-        <p className="text-sm text-muted-foreground">Analisi conversioni, ricavi e soggiorni</p>
+        <p className="text-sm text-muted-foreground">Fatturato, occupazione e andamento dei soggiorni, oggi e nel tempo</p>
       </div>
 
       <Tabs defaultValue="overview">

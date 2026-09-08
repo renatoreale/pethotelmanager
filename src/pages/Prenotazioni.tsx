@@ -330,7 +330,7 @@ export default function Prenotazioni() {
       <div className="flex items-center gap-2">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Prenotazioni</h1>
-          <p className="text-muted-foreground text-sm mt-1">Gestisci il workflow delle prenotazioni confermate</p>
+          <p className="text-muted-foreground text-sm mt-1">Stato di ogni soggiorno confermato: check-in, check-out, extra e pagamenti</p>
         </div>
         <HelpButton
           pageTitle="Guida — Prenotazioni"
