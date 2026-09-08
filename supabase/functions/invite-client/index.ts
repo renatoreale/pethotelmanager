@@ -76,7 +76,6 @@ function emailShell(tenant: EmailTenantInfo, bodyHtml: string): string {
             </td>
             <td style="vertical-align:middle;padding-left:14px;">
               <div style="color:#fff;font-size:19px;font-weight:700;font-family:sans-serif;">${tenant.name}</div>
-              ${socials ? `<div style="margin-top:8px;">${socials}</div>` : ""}
             </td>
           </tr>
         </table>
@@ -88,6 +87,7 @@ function emailShell(tenant: EmailTenantInfo, bodyHtml: string): string {
         <p style="margin:0;color:#fff;font-size:13px;font-weight:700;font-family:sans-serif;">${tenant.name}</p>
         ${addressLine ? `<p style="margin:4px 0 0;color:#ffffffdd;font-size:12px;font-family:sans-serif;">${addressLine}</p>` : ""}
         ${contactLine ? `<p style="margin:4px 0 0;color:#ffffffdd;font-size:12px;font-family:sans-serif;">${contactLine}</p>` : ""}
+        ${socials ? `<div style="margin-top:10px;">${socials}</div>` : ""}
       </div>
     </div>
   `;
