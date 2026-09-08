@@ -4,6 +4,8 @@ import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BusinessOverview } from "@/components/statistiche/BusinessOverview";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
 import { TrendingUp, TrendingDown, Users, PawPrint, Euro, FileText, CalendarCheck, BarChart3 } from "lucide-react";
@@ -188,13 +190,25 @@ export default function Statistiche() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <BarChart3 className="h-6 w-6" /> Statistiche
-          </h1>
-          <p className="text-sm text-muted-foreground">Analisi conversioni, ricavi e soggiorni</p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          <BarChart3 className="h-6 w-6" /> Statistiche
+        </h1>
+        <p className="text-sm text-muted-foreground">Analisi conversioni, ricavi e soggiorni</p>
+      </div>
+
+      <Tabs defaultValue="overview">
+        <TabsList>
+          <TabsTrigger value="overview">Panoramica business</TabsTrigger>
+          <TabsTrigger value="trend">Andamento storico</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="mt-4">
+          <BusinessOverview />
+        </TabsContent>
+
+        <TabsContent value="trend" className="mt-4 space-y-6">
+      <div className="flex justify-end">
         <Select value={selectedYear} onValueChange={setSelectedYear}>
           <SelectTrigger className="w-[140px]">
             <SelectValue />
@@ -371,6 +385,8 @@ export default function Statistiche() {
           </CardContent>
         </Card>
       </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
