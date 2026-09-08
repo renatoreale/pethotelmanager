@@ -4,8 +4,9 @@ import {
 } from "@/hooks/useBusinessOverview";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  Euro, CalendarCheck, Grid3X3, Clock, TrendingUp, TrendingDown, Minus, Sparkles, UserPlus, Repeat, Wallet,
+  Euro, CalendarCheck, Grid3X3, Clock, TrendingUp, TrendingDown, Minus, Sparkles, UserPlus, Repeat, Wallet, Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -43,10 +44,11 @@ function Delta({ current, previous }: { current: number; previous: number }) {
 }
 
 function KpiTile({
-  icon: Icon, label, current, previous, format,
+  icon: Icon, label, description, current, previous, format,
 }: {
   icon: React.ElementType;
   label: string;
+  description: string;
   current: number;
   previous: number;
   format: (v: number) => string;
@@ -54,9 +56,19 @@ function KpiTile({
   return (
     <Card className="border-border/50">
       <CardContent className="p-4 flex flex-col gap-1.5">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Icon className="h-4 w-4 text-muted-foreground" />
           <span className="text-[11px] text-muted-foreground">{label}</span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button type="button" className="text-muted-foreground/70 hover:text-foreground">
+                <Info className="h-3 w-3" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-[220px] text-xs">
+              {description}
+            </TooltipContent>
+          </Tooltip>
         </div>
         <p className="text-xl font-bold text-foreground">{format(current)}</p>
         <Delta current={current} previous={previous} />
@@ -92,25 +104,66 @@ export function BusinessOverview() {
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <KpiTile icon={Euro} label="Fatturato" current={current.revenue} previous={previous.revenue} format={formatEuro} />
-            <KpiTile icon={CalendarCheck} label="Prenotazioni" current={current.bookingsCount} previous={previous.bookingsCount} format={(v) => v.toString()} />
+            <KpiTile
+              icon={Euro} label="Fatturato"
+              description="Incassi netti nel periodo selezionato (pagamenti ricevuti, meno eventuali rimborsi), a confronto con il periodo precedente di pari durata."
+              current={current.revenue} previous={previous.revenue} format={formatEuro}
+            />
+            <KpiTile
+              icon={CalendarCheck} label="Prenotazioni"
+              description="Prenotazioni confermate create nel periodo selezionato (esclusi preventivi non confermati, cancellazioni e rimborsi)."
+              current={current.bookingsCount} previous={previous.bookingsCount} format={(v) => v.toString()}
+            />
             <KpiTile
               icon={Grid3X3} label="Occupazione"
+              description="Stima della percentuale di posti occupati nel periodo, calcolata sulla capacità totale configurata (casette singole + doppie). È una stima aggregata: per il dettaglio giorno per giorno usa Occupazione Casette."
               current={current.occupancyPct} previous={previous.occupancyPct}
               format={(v) => hasCapacityConfigured ? `${v.toFixed(0)}%` : "N/D"}
             />
-            <KpiTile icon={Clock} label="Durata media soggiorno" current={current.avgStayDays} previous={previous.avgStayDays} format={(v) => `${v.toFixed(1)} gg`} />
-            <KpiTile icon={Sparkles} label="Valore medio soggiorno" current={current.avgStayValue} previous={previous.avgStayValue} format={formatEuro} />
-            <KpiTile icon={Euro} label="Extra" current={current.extraRevenue} previous={previous.extraRevenue} format={formatEuro} />
-            <KpiTile icon={UserPlus} label="Clienti nuovi" current={current.newClients} previous={previous.newClients} format={(v) => v.toString()} />
-            <KpiTile icon={Repeat} label="Clienti ricorrenti" current={current.returningClients} previous={previous.returningClients} format={(v) => v.toString()} />
+            <KpiTile
+              icon={Clock} label="Durata media soggiorno"
+              description="Numero medio di notti dei soggiorni con check-out avvenuto nel periodo selezionato."
+              current={current.avgStayDays} previous={previous.avgStayDays} format={(v) => `${v.toFixed(1)} gg`}
+            />
+            <KpiTile
+              icon={Sparkles} label="Valore medio soggiorno"
+              description="Importo medio (totale prenotazione) dei soggiorni con check-out avvenuto nel periodo selezionato."
+              current={current.avgStayValue} previous={previous.avgStayValue} format={formatEuro}
+            />
+            <KpiTile
+              icon={Euro} label="Extra"
+              description="Incassi da pagamenti di tipo 'extra' registrati nel periodo selezionato (es. servizi aggiuntivi, giorni extra)."
+              current={current.extraRevenue} previous={previous.extraRevenue} format={formatEuro}
+            />
+            <KpiTile
+              icon={UserPlus} label="Clienti nuovi"
+              description="Clienti che hanno effettuato in questo periodo la loro prima prenotazione in assoluto presso la pensione."
+              current={current.newClients} previous={previous.newClients} format={(v) => v.toString()}
+            />
+            <KpiTile
+              icon={Repeat} label="Clienti ricorrenti"
+              description="Clienti che hanno prenotato in questo periodo e avevano già almeno una prenotazione precedente."
+              current={current.returningClients} previous={previous.returningClients} format={(v) => v.toString()}
+            />
           </div>
 
           <Card className="border-border/50">
             <CardContent className="p-4 flex items-center gap-3">
               <Wallet className="h-5 w-5 text-amber-600 shrink-0" />
               <div>
-                <p className="text-xs text-muted-foreground">Pagamenti aperti (saldo attuale, tutti i soggiorni attivi)</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs text-muted-foreground">Pagamenti aperti (saldo attuale, tutti i soggiorni attivi)</p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button type="button" className="text-muted-foreground/70 hover:text-foreground">
+                        <Info className="h-3 w-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[220px] text-xs">
+                      Saldo ancora da incassare su tutte le prenotazioni attive, a prescindere dal periodo selezionato: è la situazione attuale, non una metrica storica.
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
                 <p className="text-lg font-bold text-amber-600">{formatEuro(openBalance ?? 0)}</p>
               </div>
             </CardContent>
