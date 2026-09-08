@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { TrialUpgradeDialog } from "@/components/TrialUpgradeDialog";
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { NotificationBell } from "@/components/NotificationBell";
 
 function TenantLogo({ logoUrl, name, size = "sm" }: { logoUrl?: string | null; name?: string; size?: "sm" | "md" }) {
   const cls = size === "sm" ? "h-6 w-6" : "h-8 w-8";
@@ -111,6 +112,8 @@ export function AppLayout() {
               <GlobalSearch />
             </div>
             <div className="flex-1 sm:hidden" />
+
+            <NotificationBell />
 
             {isTrial && (
               <Button
