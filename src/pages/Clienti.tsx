@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useClients, useDeleteClient, type Client } from "@/hooks/useClients";
 import { ClientDialog } from "@/components/clients/ClientDialog";
 import { EmailHistoryDialog } from "@/components/clients/EmailHistoryDialog";
@@ -30,7 +31,12 @@ export default function Clienti() {
   const supabase = useSupabase();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
+  const [searchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get("q") ?? "");
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q) setSearch(q);
+  }, [searchParams]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [deletingClient, setDeletingClient] = useState<Client | null>(null);

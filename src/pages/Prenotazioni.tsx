@@ -1,4 +1,5 @@
-import { useState, useMemo, Fragment } from "react";
+import { useState, useMemo, useEffect, Fragment } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { HelpButton } from "@/components/HelpButton";
 import { prenotazioniHelpSections } from "@/components/help/prenotazioniHelp";
@@ -86,7 +87,12 @@ export default function Prenotazioni() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("tutti");
-  const [search, setSearch] = useState("");
+  const [searchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get("q") ?? "");
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q) setSearch(q);
+  }, [searchParams]);
   const [transitioning, setTransitioning] = useState<{ id: string; bookingNumber: string; newStatus: string; label: string } | null>(null);
   const [deleting, setDeleting] = useState<{ id: string; bookingNumber: string } | null>(null);
   const [schedulingBooking, setSchedulingBooking] = useState<any>(null);
