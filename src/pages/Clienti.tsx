@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useClients, useDeleteClient, type Client } from "@/hooks/useClients";
 import { ClientDialog } from "@/components/clients/ClientDialog";
 import { EmailHistoryDialog } from "@/components/clients/EmailHistoryDialog";
+import { ClientOpportunities } from "@/components/clients/ClientOpportunities";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -102,6 +104,13 @@ export default function Clienti() {
         </Button>
       </div>
 
+      <Tabs defaultValue="list">
+        <TabsList>
+          <TabsTrigger value="list">{t("clients.opportunities.listTab")}</TabsTrigger>
+          <TabsTrigger value="opportunities">{t("clients.opportunities.tab")}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="list" className="mt-4">
       <Card className="border-none shadow-sm">
         <CardContent className="pt-6">
           <div className="mb-4">
@@ -227,6 +236,12 @@ export default function Clienti() {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="opportunities" className="mt-4">
+          <ClientOpportunities />
+        </TabsContent>
+      </Tabs>
 
       <ClientDialog
         open={dialogOpen}

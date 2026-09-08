@@ -187,7 +187,42 @@
     "firstName": "First Name",
     "lastName": "Last Name",
     "fiscalCode": "Tax ID",
-    "blacklistReason": "Blacklist reason"
+    "blacklistReason": "Blacklist reason",
+    "opportunities": {
+      "tab": "Opportunities",
+      "listTab": "List",
+      "subtitle": "Segments computed automatically from stay history, to know who to reach out to and who to focus on.",
+      "inactiveDaysLabel": "Inactivity days",
+      "highValueThresholdLabel": "High-value threshold (€)",
+      "contact": "Contact client",
+      "sendEmail": "Send email",
+      "call": "Call",
+      "noContact": "No contact available",
+      "toContact": {
+        "title": "Clients to re-contact",
+        "description": "No recent or upcoming stay.",
+        "lastStay": "Last stay ended on {{date}} ({{days}} days ago)",
+        "empty": "No clients inactive beyond the set threshold."
+      },
+      "recurring": {
+        "title": "Recurring clients",
+        "description": "Clients with more than one stay.",
+        "stays": "{{count}} stays",
+        "empty": "No clients with multiple stays yet."
+      },
+      "seasonal": {
+        "title": "Seasonal return",
+        "description": "Stayed in this period last year, but nothing booked yet.",
+        "lastYear": "Last year: {{checkin}} to {{checkout}}",
+        "empty": "No clients in this seasonal window."
+      },
+      "highValue": {
+        "title": "High-value clients",
+        "description": "Total spend above the set threshold.",
+        "total": "Total spent: € {{amount}}",
+        "empty": "No clients above the set threshold."
+      }
+    }
   },
   "pets": {
     "owner": "Owner",

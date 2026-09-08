@@ -188,7 +188,42 @@
     "firstName": "Nome",
     "lastName": "Cognome",
     "fiscalCode": "Codice Fiscale",
-    "blacklistReason": "Motivo blacklist"
+    "blacklistReason": "Motivo blacklist",
+    "opportunities": {
+      "tab": "Opportunità",
+      "listTab": "Elenco",
+      "subtitle": "Segmenti calcolati automaticamente dallo storico soggiorni, per sapere chi ricontattare e su chi puntare.",
+      "inactiveDaysLabel": "Giorni di inattività",
+      "highValueThresholdLabel": "Soglia cliente di valore (€)",
+      "contact": "Contatta cliente",
+      "sendEmail": "Invia email",
+      "call": "Chiama",
+      "noContact": "Nessun contatto disponibile",
+      "toContact": {
+        "title": "Clienti da ricontattare",
+        "description": "Nessun soggiorno recente né in programma.",
+        "lastStay": "Ultimo soggiorno concluso il {{date}} ({{days}} giorni fa)",
+        "empty": "Nessun cliente inattivo oltre la soglia impostata."
+      },
+      "recurring": {
+        "title": "Clienti ricorrenti",
+        "description": "Clienti con più soggiorni all'attivo.",
+        "stays": "{{count}} soggiorni",
+        "empty": "Ancora nessun cliente con più soggiorni."
+      },
+      "seasonal": {
+        "title": "Ritorno stagionale",
+        "description": "Hanno soggiornato in questo periodo lo scorso anno, ma non hanno ancora nulla in programma.",
+        "lastYear": "Lo scorso anno: dal {{checkin}} al {{checkout}}",
+        "empty": "Nessun cliente in questa fascia stagionale."
+      },
+      "highValue": {
+        "title": "Clienti ad alto valore",
+        "description": "Spesa complessiva sopra la soglia impostata.",
+        "total": "Totale speso: € {{amount}}",
+        "empty": "Nessun cliente sopra la soglia impostata."
+      }
+    }
   },
   "pets": {
     "owner": "Proprietario",
