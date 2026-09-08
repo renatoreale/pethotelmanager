@@ -987,6 +987,56 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_promotions: {
+        Row: {
+          context_note: string | null
+          created_at: string
+          created_by: string | null
+          google_ad_description: string | null
+          google_ad_headline: string | null
+          id: string
+          photo_urls: Json
+          social_caption: string | null
+          social_hashtags: string | null
+          tenant_id: string
+          video_slides: Json
+        }
+        Insert: {
+          context_note?: string | null
+          created_at?: string
+          created_by?: string | null
+          google_ad_description?: string | null
+          google_ad_headline?: string | null
+          id?: string
+          photo_urls?: Json
+          social_caption?: string | null
+          social_hashtags?: string | null
+          tenant_id: string
+          video_slides?: Json
+        }
+        Update: {
+          context_note?: string | null
+          created_at?: string
+          created_by?: string | null
+          google_ad_description?: string | null
+          google_ad_headline?: string | null
+          id?: string
+          photo_urls?: Json
+          social_caption?: string | null
+          social_hashtags?: string | null
+          tenant_id?: string
+          video_slides?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_promotions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_methods: {
         Row: {
           created_at: string
@@ -1663,6 +1713,7 @@ export type Database = {
           id: string
           locale: string
           logo_url: string | null
+          marketing_promo_enabled: boolean
           max_cats: number
           name: string
           num_doppie: number
@@ -1730,6 +1781,7 @@ export type Database = {
           id?: string
           locale?: string
           logo_url?: string | null
+          marketing_promo_enabled?: boolean
           max_cats?: number
           name: string
           num_doppie?: number
@@ -1797,6 +1849,7 @@ export type Database = {
           id?: string
           locale?: string
           logo_url?: string | null
+          marketing_promo_enabled?: boolean
           max_cats?: number
           name?: string
           num_doppie?: number

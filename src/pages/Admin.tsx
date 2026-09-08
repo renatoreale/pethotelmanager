@@ -214,6 +214,7 @@ function PensioniTab() {
                     <TableHead>Casette</TableHead>
                     <TableHead>Escludi da audit</TableHead>
                     <TableHead>Promemoria email clienti</TableHead>
+                    <TableHead>Promozioni marketing AI</TableHead>
                     <TableHead className="w-[100px]">Azioni</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -238,6 +239,14 @@ function PensioniTab() {
                           onCheckedChange={(checked) => updateTenant.mutate({ id: tenant.id, client_reminders_enabled: checked })}
                           disabled={updateTenant.isPending}
                           title="Check-in/check-out domani, documenti mancanti, saldo scaduto"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={tenant.marketing_promo_enabled}
+                          onCheckedChange={(checked) => updateTenant.mutate({ id: tenant.id, marketing_promo_enabled: checked })}
+                          disabled={updateTenant.isPending}
+                          title="Genera promozioni (social, Google Ads, storyboard TikTok) con AI"
                         />
                       </TableCell>
                       <TableCell>

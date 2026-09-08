@@ -9,6 +9,7 @@ import { useBookings } from "@/hooks/useBookings";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
 import { OccupancyGrid } from "@/components/OccupancyGrid";
 import { OccupancySummary } from "@/components/OccupancySummary";
+import { MarketingPromoDialog } from "@/components/marketing/MarketingPromoDialog";
 
 export default function OccupazioneCasette() {
   const today = new Date();
@@ -57,7 +58,12 @@ export default function OccupazioneCasette() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Occupazione Casette</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-foreground">Occupazione Casette</h1>
+            {tenantConfig?.marketing_promo_enabled && tenantConfig?.id && (
+              <MarketingPromoDialog tenantId={tenantConfig.id} />
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">
             Visualizza l'occupazione per periodo
           </p>
