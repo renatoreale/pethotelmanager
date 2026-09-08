@@ -5,20 +5,67 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Stessa intestazione (logo + nome pensione, colore primario del sito) su
-// tutte le email verso i clienti — duplicata in ogni edge function per lo
-// stesso motivo delle altre costanti di questo progetto: nessun import
-// condiviso tra le funzioni.
+// Stessa intestazione + footer (logo, nome pensione, colore primario del
+// sito, icone social, riferimenti di contatto) su tutte le email verso i
+// clienti — duplicata in ogni edge function per lo stesso motivo delle
+// altre costanti di questo progetto: nessun import condiviso tra le
+// funzioni. Se la pensione non ha caricato un logo, si usa quello di
+// Pet Hotel Manager (servito staticamente da /logo.png).
 const BRAND_COLOR = "#D2691E";
-function emailShell(tenantName: string, logoUrl: string | null | undefined, bodyHtml: string): string {
+const DEFAULT_LOGO_URL = `${Deno.env.get("SITE_URL") || ""}/logo.png`;
+
+interface EmailTenantInfo {
+  name: string;
+  logo_url?: string | null;
+  address?: string | null;
+  city?: string | null;
+  cap?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  social_facebook_url?: string | null;
+  social_instagram_url?: string | null;
+  social_tiktok_url?: string | null;
+  social_whatsapp_url?: string | null;
+}
+
+function socialBadge(url: string | null | undefined, label: string, bg: string): string {
+  if (!url) return "";
+  return `<a href="${url}" style="display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;background:${bg};color:#fff;border-radius:50%;text-decoration:none;font-family:sans-serif;font-size:11px;font-weight:bold;margin:0 3px 0 0;">${label}</a>`;
+}
+
+function emailShell(tenant: EmailTenantInfo, bodyHtml: string): string {
+  const logoUrl = tenant.logo_url || DEFAULT_LOGO_URL;
+  const socials = [
+    socialBadge(tenant.social_facebook_url, "f", "#1877F2"),
+    socialBadge(tenant.social_instagram_url, "IG", "#E4405F"),
+    socialBadge(tenant.social_tiktok_url, "TT", "#000000"),
+    socialBadge(tenant.social_whatsapp_url, "WA", "#25D366"),
+  ].filter(Boolean).join("");
+  const addressLine = [tenant.address, [tenant.cap, tenant.city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+  const contactLine = [tenant.phone, tenant.email].filter(Boolean).join(" · ");
+
   return `
     <div style="font-family:sans-serif;max-width:520px;margin:0 auto;border:1px solid #eee;border-radius:8px;overflow:hidden;">
-      <div style="background:${BRAND_COLOR};padding:20px 24px;text-align:center;">
-        ${logoUrl ? `<img src="${logoUrl}" alt="${tenantName}" style="max-height:48px;max-width:220px;display:block;margin:0 auto 6px;">` : ""}
-        <span style="color:#fff;font-size:17px;font-weight:600;font-family:sans-serif;">${tenantName}</span>
+      <div style="background:${BRAND_COLOR};padding:20px 24px;">
+        <table role="presentation" width="100%" style="border-collapse:collapse;">
+          <tr>
+            <td style="width:76px;vertical-align:middle;">
+              <img src="${logoUrl}" alt="${tenant.name}" width="68" height="68" style="height:68px;width:68px;object-fit:contain;border-radius:10px;background:#fff;display:block;">
+            </td>
+            <td style="vertical-align:middle;padding-left:14px;">
+              <div style="color:#fff;font-size:19px;font-weight:700;font-family:sans-serif;">${tenant.name}</div>
+              ${socials ? `<div style="margin-top:8px;">${socials}</div>` : ""}
+            </td>
+          </tr>
+        </table>
       </div>
       <div style="padding:32px 24px;">
         ${bodyHtml}
+      </div>
+      <div style="background:${BRAND_COLOR};padding:16px 24px;text-align:center;">
+        <p style="margin:0;color:#fff;font-size:13px;font-weight:700;font-family:sans-serif;">${tenant.name}</p>
+        ${addressLine ? `<p style="margin:4px 0 0;color:#ffffffdd;font-size:12px;font-family:sans-serif;">${addressLine}</p>` : ""}
+        ${contactLine ? `<p style="margin:4px 0 0;color:#ffffffdd;font-size:12px;font-family:sans-serif;">${contactLine}</p>` : ""}
       </div>
     </div>
   `;
@@ -57,7 +104,7 @@ Deno.serve(async (req) => {
     // Fetch tenant
     const { data: tenant } = await supabaseAdmin
       .from("tenants")
-      .select("name, logo_url, preventivo_email_body, preventivo_email_subject")
+      .select("name, logo_url, address, city, cap, phone, email, social_facebook_url, social_instagram_url, social_tiktok_url, social_whatsapp_url, preventivo_email_body, preventivo_email_subject")
       .eq("id", booking.tenant_id)
       .single();
     const tenantName = tenant?.name || "La Pensione";
@@ -89,7 +136,7 @@ Deno.serve(async (req) => {
       .map((line: string) => line.trim() === "" ? "<br>" : `<p style="margin:0 0 8px">${line}</p>`)
       .join("");
 
-    const html = emailShell(tenantName, tenant?.logo_url, bodyHtml);
+    const html = emailShell({ ...(tenant as any), name: tenantName }, bodyHtml);
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",

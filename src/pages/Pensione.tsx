@@ -149,6 +149,10 @@ function AnagraficaTab() {
   const [locale, setLocale] = useState<string | null>(null);
   const [regolamentoVersion, setRegolamentoVersion] = useState<string | null>(null);
   const [privacyVersion, setPrivacyVersion] = useState<string | null>(null);
+  const [facebookUrl, setFacebookUrl] = useState<string | null>(null);
+  const [instagramUrl, setInstagramUrl] = useState<string | null>(null);
+  const [tiktokUrl, setTiktokUrl] = useState<string | null>(null);
+  const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -166,6 +170,10 @@ function AnagraficaTab() {
   const currentRegolamentoVersion = regolamentoVersion ?? (config as any)?.regolamento_version ?? "";
   const currentPrivacyVersion = privacyVersion ?? (config as any)?.privacy_version ?? "";
   const currentLogoUrl = (config as any)?.logo_url ?? null;
+  const currentFacebookUrl = facebookUrl ?? (config as any)?.social_facebook_url ?? "";
+  const currentInstagramUrl = instagramUrl ?? (config as any)?.social_instagram_url ?? "";
+  const currentTiktokUrl = tiktokUrl ?? (config as any)?.social_tiktok_url ?? "";
+  const currentWhatsappUrl = whatsappUrl ?? (config as any)?.social_whatsapp_url ?? "";
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -215,12 +223,17 @@ function AnagraficaTab() {
         locale: currentLocale,
         regolamento_version: currentRegolamentoVersion || null,
         privacy_version: currentPrivacyVersion || null,
+        social_facebook_url: currentFacebookUrl || null,
+        social_instagram_url: currentInstagramUrl || null,
+        social_tiktok_url: currentTiktokUrl || null,
+        social_whatsapp_url: currentWhatsappUrl || null,
       });
       toast.success("Anagrafica salvata");
       setName(null); setEmail(null); setPhone(null); setAddress(null);
       setCap(null); setCity(null);
       setPartitaIva(null); setPec(null); setTitolareName(null); setPetType(null);
       setLocale(null); setRegolamentoVersion(null); setPrivacyVersion(null);
+      setFacebookUrl(null); setInstagramUrl(null); setTiktokUrl(null); setWhatsappUrl(null);
     } catch (err: any) {
       toast.error(err.message || "Errore nel salvataggio");
     }
@@ -358,6 +371,32 @@ function AnagraficaTab() {
           <div className="space-y-2">
             <Label>Città</Label>
             <Input value={currentCity} onChange={(e) => setCity(e.target.value)} placeholder="Roma" />
+          </div>
+        </div>
+
+        {/* Social: mostrati come icone nell'header delle email verso i clienti */}
+        <div className="space-y-3">
+          <Label className="text-base font-semibold">Social</Label>
+          <p className="text-xs text-muted-foreground -mt-1">
+            Se compilati, questi link appaiono come icone nell'intestazione delle email inviate ai clienti.
+          </p>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Facebook</Label>
+              <Input value={currentFacebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} placeholder="https://facebook.com/tuapagina" />
+            </div>
+            <div className="space-y-2">
+              <Label>Instagram</Label>
+              <Input value={currentInstagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} placeholder="https://instagram.com/tuoprofilo" />
+            </div>
+            <div className="space-y-2">
+              <Label>TikTok</Label>
+              <Input value={currentTiktokUrl} onChange={(e) => setTiktokUrl(e.target.value)} placeholder="https://tiktok.com/@tuoprofilo" />
+            </div>
+            <div className="space-y-2">
+              <Label>WhatsApp</Label>
+              <Input value={currentWhatsappUrl} onChange={(e) => setWhatsappUrl(e.target.value)} placeholder="https://wa.me/393331234567" />
+            </div>
           </div>
         </div>
 

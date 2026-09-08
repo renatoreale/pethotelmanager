@@ -12,7 +12,7 @@ export function useTenantConfig() {
       if (!profile?.tenant_id) return null;
       const { data, error } = await supabase
         .from("tenants")
-        .select("id, name, slug, num_singole, num_doppie, max_cats, occupancy_rule_days, email, phone, address, cap, city, stay_calc_type, count_checkin_day, count_checkout_day, partita_iva, pec, titolare_name, logo_url, pet_type, num_singole_gatti, num_doppie_gatti, num_singole_cani, num_doppie_cani, iban, bank_name, iban_holder, bollo_amount, preventivo_validity_days, preventivo_footer_text, preventivo_email_body, preventivo_email_subject, appuntamento_email_subject, appuntamento_email_body, locale, regolamento_version, privacy_version, review_url, automation_upcoming_stay_reminder_enabled, automation_documents_reminder_enabled, automation_checkin_reminder_enabled, automation_checkout_reminder_enabled, automation_checkout_summary_enabled, automation_balance_reminder_enabled, automation_review_request_enabled, automation_winback_enabled, automation_upcoming_stay_subject, automation_upcoming_stay_body, automation_documents_subject, automation_documents_body, automation_checkin_subject, automation_checkin_body, automation_checkout_subject, automation_checkout_body, automation_checkout_summary_subject, automation_checkout_summary_body, automation_balance_subject, automation_balance_body, automation_review_request_subject, automation_review_request_body, automation_winback_subject, automation_winback_body")
+        .select("id, name, slug, num_singole, num_doppie, max_cats, occupancy_rule_days, email, phone, address, cap, city, stay_calc_type, count_checkin_day, count_checkout_day, partita_iva, pec, titolare_name, logo_url, pet_type, num_singole_gatti, num_doppie_gatti, num_singole_cani, num_doppie_cani, iban, bank_name, iban_holder, bollo_amount, preventivo_validity_days, preventivo_footer_text, preventivo_email_body, preventivo_email_subject, appuntamento_email_subject, appuntamento_email_body, locale, regolamento_version, privacy_version, review_url, automation_upcoming_stay_reminder_enabled, automation_documents_reminder_enabled, automation_checkin_reminder_enabled, automation_checkout_reminder_enabled, automation_checkout_summary_enabled, automation_balance_reminder_enabled, automation_review_request_enabled, automation_winback_enabled, automation_upcoming_stay_subject, automation_upcoming_stay_body, automation_documents_subject, automation_documents_body, automation_checkin_subject, automation_checkin_body, automation_checkout_subject, automation_checkout_body, automation_checkout_summary_subject, automation_checkout_summary_body, automation_balance_subject, automation_balance_body, automation_review_request_subject, automation_review_request_body, automation_winback_subject, automation_winback_body, social_facebook_url, social_instagram_url, social_tiktok_url, social_whatsapp_url")
         .eq("id", profile.tenant_id)
         .single();
       if (error) throw error;
@@ -87,6 +87,10 @@ export function useUpdateTenantConfig() {
       automation_review_request_body?: string | null;
       automation_winback_subject?: string | null;
       automation_winback_body?: string | null;
+      social_facebook_url?: string | null;
+      social_instagram_url?: string | null;
+      social_tiktok_url?: string | null;
+      social_whatsapp_url?: string | null;
     }) => {
       const { id, ...rest } = updates;
       const { data, error } = await supabase

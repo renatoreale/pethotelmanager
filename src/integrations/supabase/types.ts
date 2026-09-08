@@ -1682,6 +1682,10 @@ export type Database = {
           regolamento_version: string | null
           review_url: string | null
           slug: string
+          social_facebook_url: string | null
+          social_instagram_url: string | null
+          social_tiktok_url: string | null
+          social_whatsapp_url: string | null
           stay_calc_type: string
           titolare_name: string | null
           updated_at: string
@@ -1745,6 +1749,10 @@ export type Database = {
           regolamento_version?: string | null
           review_url?: string | null
           slug: string
+          social_facebook_url?: string | null
+          social_instagram_url?: string | null
+          social_tiktok_url?: string | null
+          social_whatsapp_url?: string | null
           stay_calc_type?: string
           titolare_name?: string | null
           updated_at?: string
@@ -1808,6 +1816,10 @@ export type Database = {
           regolamento_version?: string | null
           review_url?: string | null
           slug?: string
+          social_facebook_url?: string | null
+          social_instagram_url?: string | null
+          social_tiktok_url?: string | null
+          social_whatsapp_url?: string | null
           stay_calc_type?: string
           titolare_name?: string | null
           updated_at?: string

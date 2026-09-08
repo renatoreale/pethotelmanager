@@ -27,28 +27,75 @@ async function sendEmail(to: string, subject: string, html: string, fromName: st
   }
 }
 
-// Stessa intestazione (logo + nome pensione, colore primario del sito) su
-// tutte le email verso i clienti — duplicata in ogni edge function per lo
-// stesso motivo delle altre costanti di questo progetto: nessun import
-// condiviso tra le funzioni.
+// Stessa intestazione + footer (logo, nome pensione, colore primario del
+// sito, icone social, riferimenti di contatto) su tutte le email verso i
+// clienti — duplicata in ogni edge function per lo stesso motivo delle
+// altre costanti di questo progetto: nessun import condiviso tra le
+// funzioni. Se la pensione non ha caricato un logo, si usa quello di
+// Pet Hotel Manager (servito staticamente da /logo.png).
 const BRAND_COLOR = "#D2691E";
-function emailShell(tenantName: string, logoUrl: string | null | undefined, bodyHtml: string): string {
+const DEFAULT_LOGO_URL = `${Deno.env.get("SITE_URL") || ""}/logo.png`;
+
+interface EmailTenantInfo {
+  name: string;
+  logo_url?: string | null;
+  address?: string | null;
+  city?: string | null;
+  cap?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  social_facebook_url?: string | null;
+  social_instagram_url?: string | null;
+  social_tiktok_url?: string | null;
+  social_whatsapp_url?: string | null;
+}
+
+function socialBadge(url: string | null | undefined, label: string, bg: string): string {
+  if (!url) return "";
+  return `<a href="${url}" style="display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;background:${bg};color:#fff;border-radius:50%;text-decoration:none;font-family:sans-serif;font-size:11px;font-weight:bold;margin:0 3px 0 0;">${label}</a>`;
+}
+
+function emailShell(tenant: EmailTenantInfo, bodyHtml: string): string {
+  const logoUrl = tenant.logo_url || DEFAULT_LOGO_URL;
+  const socials = [
+    socialBadge(tenant.social_facebook_url, "f", "#1877F2"),
+    socialBadge(tenant.social_instagram_url, "IG", "#E4405F"),
+    socialBadge(tenant.social_tiktok_url, "TT", "#000000"),
+    socialBadge(tenant.social_whatsapp_url, "WA", "#25D366"),
+  ].filter(Boolean).join("");
+  const addressLine = [tenant.address, [tenant.cap, tenant.city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+  const contactLine = [tenant.phone, tenant.email].filter(Boolean).join(" · ");
+
   return `
     <div style="font-family:sans-serif;max-width:520px;margin:0 auto;border:1px solid #eee;border-radius:8px;overflow:hidden;">
-      <div style="background:${BRAND_COLOR};padding:20px 24px;text-align:center;">
-        ${logoUrl ? `<img src="${logoUrl}" alt="${tenantName}" style="max-height:48px;max-width:220px;display:block;margin:0 auto 6px;">` : ""}
-        <span style="color:#fff;font-size:17px;font-weight:600;font-family:sans-serif;">${tenantName}</span>
+      <div style="background:${BRAND_COLOR};padding:20px 24px;">
+        <table role="presentation" width="100%" style="border-collapse:collapse;">
+          <tr>
+            <td style="width:76px;vertical-align:middle;">
+              <img src="${logoUrl}" alt="${tenant.name}" width="68" height="68" style="height:68px;width:68px;object-fit:contain;border-radius:10px;background:#fff;display:block;">
+            </td>
+            <td style="vertical-align:middle;padding-left:14px;">
+              <div style="color:#fff;font-size:19px;font-weight:700;font-family:sans-serif;">${tenant.name}</div>
+              ${socials ? `<div style="margin-top:8px;">${socials}</div>` : ""}
+            </td>
+          </tr>
+        </table>
       </div>
       <div style="padding:32px 24px;">
         ${bodyHtml}
+      </div>
+      <div style="background:${BRAND_COLOR};padding:16px 24px;text-align:center;">
+        <p style="margin:0;color:#fff;font-size:13px;font-weight:700;font-family:sans-serif;">${tenant.name}</p>
+        ${addressLine ? `<p style="margin:4px 0 0;color:#ffffffdd;font-size:12px;font-family:sans-serif;">${addressLine}</p>` : ""}
+        ${contactLine ? `<p style="margin:4px 0 0;color:#ffffffdd;font-size:12px;font-family:sans-serif;">${contactLine}</p>` : ""}
       </div>
     </div>
   `;
 }
 
-function inviteEmailHtml(firstName: string, tenantName: string, logoUrl: string | null | undefined, recoveryLink: string): string {
-  return emailShell(tenantName, logoUrl, `
-    <h2 style="color:#1a1a1a;">Benvenuto nel portale clienti di ${tenantName}</h2>
+function inviteEmailHtml(firstName: string, tenant: EmailTenantInfo, recoveryLink: string): string {
+  return emailShell(tenant, `
+    <h2 style="color:#1a1a1a;">Benvenuto nel portale clienti di ${tenant.name}</h2>
     <p>Ciao <strong>${firstName}</strong>,</p>
     <p>Sei stato invitato ad accedere all'area riservata clienti. Clicca sul pulsante qui sotto per impostare la tua password e attivare l'account.</p>
     <a href="${recoveryLink}" style="display:inline-block;margin:24px 0;padding:12px 28px;background:${BRAND_COLOR};color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;">
@@ -58,9 +105,9 @@ function inviteEmailHtml(firstName: string, tenantName: string, logoUrl: string 
   `);
 }
 
-function resetPasswordEmailHtml(firstName: string, tenantName: string, logoUrl: string | null | undefined, recoveryLink: string): string {
-  return emailShell(tenantName, logoUrl, `
-    <h2 style="color:#1a1a1a;">Reset password - ${tenantName}</h2>
+function resetPasswordEmailHtml(firstName: string, tenant: EmailTenantInfo, recoveryLink: string): string {
+  return emailShell(tenant, `
+    <h2 style="color:#1a1a1a;">Reset password - ${tenant.name}</h2>
     <p>Ciao <strong>${firstName}</strong>,</p>
     <p>È stata richiesta la reimpostazione della tua password. Clicca sul pulsante qui sotto per scegliere una nuova password.</p>
     <a href="${recoveryLink}" style="display:inline-block;margin:24px 0;padding:12px 28px;background:${BRAND_COLOR};color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;">
@@ -114,11 +161,11 @@ Deno.serve(async (req) => {
     // Fetch tenant name for email
     const { data: tenant } = await supabaseAdmin
       .from("tenants")
-      .select("name, logo_url")
+      .select("name, logo_url, address, city, cap, phone, email, social_facebook_url, social_instagram_url, social_tiktok_url, social_whatsapp_url")
       .eq("id", client.tenant_id)
       .single();
     const tenantName = tenant?.name || "La Pensione";
-    const logoUrl = tenant?.logo_url ?? null;
+    const emailTenant: EmailTenantInfo = { ...(tenant as any), name: tenantName };
 
     const origin = req.headers.get("origin") || Deno.env.get("SITE_URL") || "";
 
@@ -137,7 +184,7 @@ Deno.serve(async (req) => {
       await sendEmail(
         client.email,
         `Il tuo accesso al portale clienti - ${tenantName}`,
-        inviteEmailHtml(client.first_name, tenantName, logoUrl, recoveryLink),
+        inviteEmailHtml(client.first_name, emailTenant, recoveryLink),
         tenantName,
       );
 
@@ -156,7 +203,7 @@ Deno.serve(async (req) => {
         tenant_id: client.tenant_id, client_id, direction: "sent",
         email_type: "invito", subject: `Benvenuto nel portale clienti - ${tenantName}`,
         recipient_email: client.email, status: "sent",
-        body_html: inviteEmailHtml(client.first_name, tenantName, logoUrl, recoveryLink),
+        body_html: inviteEmailHtml(client.first_name, emailTenant, recoveryLink),
       });
 
       return new Response(
@@ -181,7 +228,7 @@ Deno.serve(async (req) => {
       await sendEmail(
         client.email,
         `Reset password - ${tenantName}`,
-        resetPasswordEmailHtml(client.first_name, tenantName, logoUrl, recoveryLink),
+        resetPasswordEmailHtml(client.first_name, emailTenant, recoveryLink),
         tenantName,
       );
 
@@ -198,7 +245,7 @@ Deno.serve(async (req) => {
         tenant_id: client.tenant_id, client_id, direction: "sent",
         email_type: "reset_password", subject: `Reset password - ${tenantName}`,
         recipient_email: client.email, status: "sent",
-        body_html: resetPasswordEmailHtml(client.first_name, tenantName, logoUrl, recoveryLink),
+        body_html: resetPasswordEmailHtml(client.first_name, emailTenant, recoveryLink),
       });
 
       return new Response(
@@ -252,7 +299,7 @@ Deno.serve(async (req) => {
     await sendEmail(
       client.email,
       `Benvenuto nel portale clienti - ${tenantName}`,
-      inviteEmailHtml(client.first_name, tenantName, logoUrl, recoveryLink),
+      inviteEmailHtml(client.first_name, emailTenant, recoveryLink),
       tenantName,
     );
 
