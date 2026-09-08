@@ -23,32 +23,40 @@ interface NavItem {
   resource: Resource;
 }
 
-const mainNav: NavItem[] = [
+// Blocco 30: navigazione riorganizzata in 5 gruppi (Operatività / Clienti /
+// Gestione / Business / Configurazione) — stesse voci di prima, stessi
+// resource/url/icon, solo raggruppate in modo più chiaro. "Occupazione" si
+// sposta da un gruppo "Operazioni" ambiguo a "Gestione" (assieme a
+// prenotazioni/preventivi/pagamenti, di cui è parte integrante).
+const operativitaNav: NavItem[] = [
 { titleKey: "sidebar.dashboard", url: "/dashboard", icon: LayoutDashboard, resource: "dashboard" },
-{ titleKey: "sidebar.quotes", url: "/preventivi", icon: FileText, resource: "preventivi" },
-{ titleKey: "sidebar.bookings", url: "/prenotazioni", icon: CalendarCheck, resource: "prenotazioni" },
-{ titleKey: "sidebar.appointments", url: "/appuntamenti", icon: Calendar, resource: "appuntamenti" },
 { titleKey: "sidebar.checkIn", url: "/check-in", icon: LogIn, resource: "check-in" },
 { titleKey: "sidebar.checkOut", url: "/check-out", icon: LogOut, resource: "check-out" },
+{ titleKey: "sidebar.appointments", url: "/appuntamenti", icon: Calendar, resource: "appuntamenti" },
 { titleKey: "sidebar.attendance", url: "/presenze", icon: PawPrint, resource: "presenze" },
 { titleKey: "sidebar.tasks", url: "/attivita", icon: ListTodo, resource: "planning" },
 { titleKey: "sidebar.medications", url: "/farmaci", icon: Pill, resource: "planning" },
-{ titleKey: "sidebar.meals", url: "/pasti", icon: UtensilsCrossed, resource: "planning" },
-{ titleKey: "sidebar.payments", url: "/pagamenti", icon: CreditCard, resource: "pagamenti" }];
+{ titleKey: "sidebar.meals", url: "/pasti", icon: UtensilsCrossed, resource: "planning" }];
 
 
-const registryNav: NavItem[] = [
+const clientiNav: NavItem[] = [
 { titleKey: "sidebar.clients", url: "/clienti", icon: Users, resource: "clienti" },
 { titleKey: "sidebar.pets", url: "/gatti", icon: PawPrint, resource: "gatti" },
 { titleKey: "sidebar.petRegistry", url: "/registro-gatti", icon: ClipboardList, resource: "registro-gatti" }];
 
 
-const operationsNav: NavItem[] = [
+const gestioneNav: NavItem[] = [
+{ titleKey: "sidebar.quotes", url: "/preventivi", icon: FileText, resource: "preventivi" },
+{ titleKey: "sidebar.bookings", url: "/prenotazioni", icon: CalendarCheck, resource: "prenotazioni" },
 { titleKey: "sidebar.occupancy", url: "/occupazione", icon: Grid3X3, resource: "occupazione" },
+{ titleKey: "sidebar.payments", url: "/pagamenti", icon: CreditCard, resource: "pagamenti" }];
+
+
+const businessNav: NavItem[] = [
 { titleKey: "sidebar.statistics", url: "/statistiche", icon: BarChart3, resource: "statistiche" }];
 
 
-const adminNav: NavItem[] = [
+const configurazioneNav: NavItem[] = [
 { titleKey: "sidebar.usersRoles", url: "/utenti", icon: Shield, resource: "utenti" },
 { titleKey: "sidebar.emailTemplates", url: "/template-email", icon: Mail, resource: "template-email" },
 { titleKey: "sidebar.pensione", url: "/pensione", icon: Building2, resource: "pensione" },
@@ -110,7 +118,7 @@ export function AppSidebar() {
   const { primaryRole, isAdmin } = usePermissions();
 
   const isTrial = !isAdmin && (trialEnd !== null || user?.user_metadata?.is_trial === true);
-  const visibleAdminNav = isTrial ? adminNav.filter((item) => item.resource !== "utenti") : adminNav;
+  const visibleConfigurazioneNav = isTrial ? configurazioneNav.filter((item) => item.resource !== "utenti") : configurazioneNav;
   const { t } = useTranslation();
 
   const initials = profile?.full_name ?
@@ -128,10 +136,11 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-2">
-        <NavGroup label={t("sidebar.operations")} items={mainNav} collapsed={collapsed} />
-        <NavGroup label={t("sidebar.registry")} items={registryNav} collapsed={collapsed} />
-        <NavGroup label={t("sidebar.operationsGroup")} items={operationsNav} collapsed={collapsed} />
-        <NavGroup label={t("sidebar.administration")} items={visibleAdminNav} collapsed={collapsed} />
+        <NavGroup label={t("sidebar.operations")} items={operativitaNav} collapsed={collapsed} />
+        <NavGroup label={t("sidebar.clientsGroup")} items={clientiNav} collapsed={collapsed} />
+        <NavGroup label={t("sidebar.management")} items={gestioneNav} collapsed={collapsed} />
+        <NavGroup label={t("sidebar.business")} items={businessNav} collapsed={collapsed} />
+        <NavGroup label={t("sidebar.configuration")} items={visibleConfigurazioneNav} collapsed={collapsed} />
       </SidebarContent>
 
       <SidebarFooter className="p-3 border-t border-sidebar-border">

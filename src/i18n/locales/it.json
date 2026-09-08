@@ -61,9 +61,10 @@
   "sidebar": {
     "appName": "Pet Hotel Manager",
     "operations": "Operatività",
-    "registry": "Anagrafica",
-    "operationsGroup": "Operazioni",
-    "administration": "Amministrazione",
+    "clientsGroup": "Clienti",
+    "management": "Gestione",
+    "business": "Business",
+    "configuration": "Configurazione",
     "dashboard": "Dashboard",
     "quotes": "Preventivi",
     "bookings": "Prenotazioni",
