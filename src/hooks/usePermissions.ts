@@ -24,7 +24,9 @@ export type Resource =
   | "template-email"
   | "pensione"
   | "admin"
-  | "supporto";
+  | "supporto"
+  | "prezzi"
+  | "documenti";
 
 // Fallback permissions if DB has no entries
 const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> = {
@@ -49,6 +51,8 @@ const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> 
     pensione: ["read", "write", "delete"],
     admin: ["read", "write", "delete"],
     supporto: ["read", "write", "delete"],
+    prezzi: ["read", "write", "delete"],
+    documenti: ["read", "write", "delete"],
   },
   ceo: {
     dashboard: ["read"], dashboard_revenue: ["read"],
@@ -57,6 +61,7 @@ const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> 
     clienti: ["read"], gatti: ["read"], presenze: ["read"], "registro-gatti": ["read"],
     planning: ["read"], occupazione: ["read"], statistiche: ["read"], utenti: ["read"],
     "template-email": ["read"], pensione: ["read"], admin: [], supporto: ["read", "write"],
+    prezzi: ["read"], documenti: ["read"],
   },
   titolare: {
     dashboard: ["read", "write"], dashboard_revenue: ["read"],
@@ -67,6 +72,7 @@ const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> 
     presenze: ["read"], "registro-gatti": ["read", "write", "delete"], planning: ["read", "write", "delete"],
     occupazione: ["read", "write", "delete"], statistiche: ["read"], utenti: ["read", "write"],
     "template-email": ["read"], pensione: ["read", "write"], admin: [], supporto: ["read", "write"],
+    prezzi: ["read", "write", "delete"], documenti: ["read", "write", "delete"],
   },
   manager: {
     dashboard: ["read"], dashboard_revenue: ["read"],
@@ -77,6 +83,7 @@ const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> 
     presenze: ["read"], "registro-gatti": ["read"], planning: ["read", "write"],
     occupazione: ["read"], statistiche: ["read"], utenti: [], "template-email": [],
     pensione: [], admin: [], supporto: ["read", "write"],
+    prezzi: ["read", "write"], documenti: ["read", "write"],
   },
   operatore: {
     dashboard: ["read"], dashboard_revenue: [],
@@ -84,6 +91,7 @@ const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> 
     "check-in": ["read"], "check-out": ["read"], pagamenti: [],
     clienti: [], gatti: [], presenze: ["read"], "registro-gatti": [], planning: ["read", "write"],
     occupazione: [], statistiche: [], utenti: [], "template-email": [], pensione: [], admin: [], supporto: ["read", "write"],
+    prezzi: [], documenti: ["read", "write"],
   },
 };
 
