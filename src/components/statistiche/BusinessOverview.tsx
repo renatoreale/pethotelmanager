@@ -4,9 +4,9 @@ import {
 } from "@/hooks/useBusinessOverview";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoTooltip } from "@/components/InfoTooltip";
 import {
-  Euro, CalendarCheck, Grid3X3, Clock, TrendingUp, TrendingDown, Minus, Sparkles, UserPlus, Repeat, Wallet, Info,
+  Euro, CalendarCheck, Grid3X3, Clock, TrendingUp, TrendingDown, Minus, Sparkles, UserPlus, Repeat, Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -59,16 +59,7 @@ function KpiTile({
         <div className="flex items-center gap-1.5">
           <Icon className="h-4 w-4 text-muted-foreground" />
           <span className="text-[11px] text-muted-foreground">{label}</span>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button type="button" className="text-muted-foreground/70 hover:text-foreground">
-                <Info className="h-3 w-3" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-[220px] text-xs">
-              {description}
-            </TooltipContent>
-          </Tooltip>
+          <InfoTooltip text={description} />
         </div>
         <p className="text-xl font-bold text-foreground">{format(current)}</p>
         <Delta current={current} previous={previous} />
@@ -153,16 +144,7 @@ export function BusinessOverview() {
               <div>
                 <div className="flex items-center gap-1.5">
                   <p className="text-xs text-muted-foreground">Pagamenti aperti (saldo attuale, tutti i soggiorni attivi)</p>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button type="button" className="text-muted-foreground/70 hover:text-foreground">
-                        <Info className="h-3 w-3" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-[220px] text-xs">
-                      Saldo ancora da incassare su tutte le prenotazioni attive, a prescindere dal periodo selezionato: è la situazione attuale, non una metrica storica.
-                    </TooltipContent>
-                  </Tooltip>
+                  <InfoTooltip text="Saldo ancora da incassare su tutte le prenotazioni attive, a prescindere dal periodo selezionato: è la situazione attuale, non una metrica storica." />
                 </div>
                 <p className="text-lg font-bold text-amber-600">{formatEuro(openBalance ?? 0)}</p>
               </div>

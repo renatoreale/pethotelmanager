@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, CalendarArrowDown, CalendarArrowUp, DoorOpen, Percent } from "lucide-react";
 import { useOccupancyData, usePoolOccupancyData } from "@/components/OccupancyGrid";
+import { InfoTooltip } from "@/components/InfoTooltip";
 import type { Booking } from "@/hooks/useBookings";
 
 // Stessa lista di stati "reali" usata altrove (useClientOpportunities,
@@ -102,10 +103,22 @@ export function OccupancySummary({ bookings, occupancyDays, totalSingole, totalD
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <SummaryTile icon={Percent} label="Occupazione media" value={`${avgOccupancyPct.toFixed(0)}%`} />
-              <SummaryTile icon={DoorOpen} label="Posti liberi (media/gg)" value={avgFreeSlots.toFixed(1)} />
-              <SummaryTile icon={CalendarArrowDown} label="Arrivi previsti" value={arrivals.toString()} />
-              <SummaryTile icon={CalendarArrowUp} label="Partenze previste" value={departures.toString()} />
+              <SummaryTile
+                icon={Percent} label="Occupazione media" value={`${avgOccupancyPct.toFixed(0)}%`}
+                description="Percentuale media di posti occupati nel periodo selezionato, calcolata su tutti i giorni rispetto alla capacità totale configurata."
+              />
+              <SummaryTile
+                icon={DoorOpen} label="Posti liberi (media/gg)" value={avgFreeSlots.toFixed(1)}
+                description="Numero medio di posti liberi al giorno nel periodo selezionato (capacità totale meno occupazione media)."
+              />
+              <SummaryTile
+                icon={CalendarArrowDown} label="Arrivi previsti" value={arrivals.toString()}
+                description="Numero di soggiorni con check-in previsto all'interno del periodo selezionato."
+              />
+              <SummaryTile
+                icon={CalendarArrowUp} label="Partenze previste" value={departures.toString()}
+                description="Numero di soggiorni con check-out previsto all'interno del periodo selezionato."
+              />
             </div>
 
             {lowWeeks.length > 0 && (
@@ -113,6 +126,7 @@ export function OccupancySummary({ bookings, occupancyDays, totalSingole, totalD
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
                   <AlertTriangle className="h-3.5 w-3.5" />
                   Periodi a bassa occupazione — valuta una promozione
+                  <InfoTooltip text={`Settimane del periodo selezionato con occupazione media sotto il ${LOW_OCCUPANCY_THRESHOLD}%: possono essere un buon momento per una promozione o una campagna marketing.`} />
                 </div>
                 {lowWeeks.map((w, i) => (
                   <p key={i} className="text-xs text-amber-700 dark:text-amber-400">
@@ -128,12 +142,20 @@ export function OccupancySummary({ bookings, occupancyDays, totalSingole, totalD
   );
 }
 
-function SummaryTile({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+function SummaryTile({
+  icon: Icon, label, value, description,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  description: string;
+}) {
   return (
     <div className="rounded-md border border-border/50 p-3 flex flex-col gap-1">
       <div className="flex items-center gap-1.5 text-muted-foreground">
         <Icon className="h-3.5 w-3.5" />
         <span className="text-[11px]">{label}</span>
+        <InfoTooltip text={description} />
       </div>
       <p className="text-lg font-bold text-foreground">{value}</p>
     </div>
