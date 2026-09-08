@@ -96,7 +96,15 @@ export function BookingDrillDown({ booking, defaultOpen = false }: BookingDrillD
   // Extra days from date changes (check-in anticipato / check-out posticipato)
   const extraDaysInfo = priceBreakdown?.extra_days_info ?? null;
 
-  const discount = priceBreakdown?.discount ? Number(priceBreakdown.discount) : 0;
+  // "discountTotal" è il campo scritto da PreventivoDialog (array "discounts"
+  // + relativo totale); "discount" (singolare) è un formato legacy tenuto
+  // come fallback per prenotazioni più vecchie.
+  const discount = priceBreakdown?.discountTotal != null
+    ? Number(priceBreakdown.discountTotal)
+    : priceBreakdown?.discount ? Number(priceBreakdown.discount) : 0;
+  const weekendSurcharge = Number(priceBreakdown?.weekendSurchargeTotal ?? 0);
+  const stayTotal = priceBreakdown?.seasonTotal != null ? Number(priceBreakdown.seasonTotal) : null;
+  const extrasTotal = priceBreakdown?.extrasTotal != null ? Number(priceBreakdown.extrasTotal) : extras.reduce((s, e) => s + e.amount, 0);
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -253,25 +261,36 @@ export function BookingDrillDown({ booking, defaultOpen = false }: BookingDrillD
             </div>
           )}
 
-          {/* Discount */}
-          {discount > 0 && (
-            <div className="space-y-2">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sconto</h4>
-              <div className="rounded-md bg-muted/50 p-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Sconto applicato</span>
-                  <span className="font-medium text-green-600">- € {discount.toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Totals summary */}
           <div className="space-y-2">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
               <Receipt className="h-3.5 w-3.5" /> Riepilogo
             </h4>
             <div className="rounded-md bg-muted/50 p-3 text-sm space-y-1">
+              {stayTotal != null && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Totale soggiorno</span>
+                  <span className="font-medium">€ {stayTotal.toFixed(2)}</span>
+                </div>
+              )}
+              {discount > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Sconti</span>
+                  <span className="font-medium text-green-600">- € {discount.toFixed(2)}</span>
+                </div>
+              )}
+              {weekendSurcharge > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Supplemento weekend</span>
+                  <span className="font-medium">€ {weekendSurcharge.toFixed(2)}</span>
+                </div>
+              )}
+              {extrasTotal > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Extra</span>
+                  <span className="font-medium">€ {extrasTotal.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between font-semibold">
                 <span>Totale prenotazione</span>
                 <span>€ {totalAmount.toFixed(2)}</span>

@@ -238,6 +238,9 @@ export function ClienteBookingDetailDialog({ open, onOpenChange, booking, tenant
   const totalPaid = booking.payments
     ?.filter((p: any) => p.payment_type !== "rimborso")
     .reduce((sum: number, p: any) => sum + Number(p.amount), 0) || 0;
+  const priceBreakdown = booking.price_breakdown;
+  const discountTotal = Number(priceBreakdown?.discountTotal ?? 0);
+  const extrasTotal = Number(priceBreakdown?.extrasTotal ?? 0);
   const catNames = booking.booking_cats?.map((bc: any) => bc.cats?.name).filter(Boolean);
   const nights = differenceInDays(parseISO(booking.check_out_date), parseISO(booking.check_in_date));
 
@@ -323,6 +326,18 @@ export function ClienteBookingDetailDialog({ open, onOpenChange, booking, tenant
 
           {/* Financials */}
           <div className="space-y-2">
+            {extrasTotal > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Extra</span>
+                <span>€ {extrasTotal.toFixed(2)}</span>
+              </div>
+            )}
+            {discountTotal > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Sconti</span>
+                <span className="text-green-600">- € {discountTotal.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Totale</span>
               <span className="font-bold">€ {Number(booking.total_amount || 0).toFixed(2)}</span>
