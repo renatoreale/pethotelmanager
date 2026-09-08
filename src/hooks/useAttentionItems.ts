@@ -4,7 +4,7 @@ import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { useTasksForDate } from "@/hooks/usePlanningTasks";
 import { REQUIRED_DOCUMENT_TYPES, PERSISTENT_DOCUMENT_TYPES } from "@/lib/documentTypes";
-import { format, addDays, differenceInMinutes, parseISO } from "date-fns";
+import { format, addDays, differenceInMinutes, differenceInDays, parseISO } from "date-fns";
 
 // Stesso elenco di stati "reali" usato altrove (useClientOpportunities,
 // useBusinessOverview, send-client-reminders): esclude preventivi,
@@ -12,6 +12,21 @@ import { format, addDays, differenceInMinutes, parseISO } from "date-fns";
 const ACTIVE_STATUSES = [
   "confermata", "appuntamento_fissato", "check_in", "in_corso", "check_out", "chiusa",
 ];
+
+// Stati raggiunti PRIMA che il check-in venga effettivamente registrato
+// (vedi TRANSITIONS in useBookings.ts e CheckIn.tsx): includono anche le
+// varianti "appuntamento_*_fissato" prodotte da AppointmentScheduleDialog,
+// che ACTIVE_STATUSES sopra non copre — per questo controllo servono per
+// intero, altrimenti una prenotazione con solo il check-out fissato
+// (appuntamento_out_fissato) resterebbe invisibile a qualunque verifica.
+const PRE_CHECKIN_STATUSES = [
+  "confermata", "appuntamento_fissato", "appuntamento_in_fissato",
+  "appuntamento_out_fissato", "appuntamento_in_out_fissato", "check_in",
+];
+// Stati raggiunti DOPO il check-in ma prima della chiusura definitiva
+// ("chiusa"): "check_out" qui è lo stato intermedio di "Avvia Check-out"
+// avviato ma non ancora concluso con "Chiudi Soggiorno".
+const POST_CHECKIN_OPEN_STATUSES = ["in_corso", "check_out"];
 
 export type NotificationSeverity = "critico" | "attenzione" | "informazione";
 
@@ -120,6 +135,54 @@ export function useAttentionItems() {
     staleTime: 60_000,
   });
 
+  // Prenotazioni "aperte" (check-in effettuato o check-out avviato) il cui
+  // check-out previsto è già passato senza che il soggiorno sia mai stato
+  // chiuso — es. rimasta "in_corso" da settimane. Nessun limite sul quanto è
+  // vecchia la data: a differenza dei check sopra (finestra "oggi"), qui
+  // l'incongruenza resta finché qualcuno non la sistema.
+  const { data: overdueCheckouts, isLoading: loadingOverdueCheckouts } = useQuery({
+    queryKey: ["notif-overdue-checkout", profile?.tenant_id, todayStr],
+    queryFn: async () => {
+      if (!profile?.tenant_id) return [];
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("id, booking_number, status, check_out_date, client:clients(first_name, last_name), booking_cats(cats(name))")
+        .eq("tenant_id", profile.tenant_id)
+        .in("status", POST_CHECKIN_OPEN_STATUSES)
+        .lt("check_out_date", todayStr)
+        .order("check_out_date", { ascending: true })
+        .limit(20);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!profile?.tenant_id,
+    staleTime: 60_000,
+  });
+
+  // Prenotazioni mai arrivate: la data di check-in prevista è già passata ma
+  // lo stato è ancora uno di quelli "pre check-in" (compresi i casi con solo
+  // il check-out fissato, che altrimenti non comparirebbero da nessuna
+  // parte). Include gli appuntamenti per segnalare, quando presente, anche
+  // il check-out già fissato e mai raggiunto.
+  const { data: overdueCheckins, isLoading: loadingOverdueCheckins } = useQuery({
+    queryKey: ["notif-overdue-checkin", profile?.tenant_id, todayStr],
+    queryFn: async () => {
+      if (!profile?.tenant_id) return [];
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("id, booking_number, status, check_in_date, check_out_date, client:clients(first_name, last_name), booking_cats(cats(name)), appointments(appointment_type, scheduled_at)")
+        .eq("tenant_id", profile.tenant_id)
+        .in("status", PRE_CHECKIN_STATUSES)
+        .lt("check_in_date", todayStr)
+        .order("check_in_date", { ascending: true })
+        .limit(20);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!profile?.tenant_id,
+    staleTime: 60_000,
+  });
+
   const { data: todayTasks, isLoading: loadingTasks } = useTasksForDate(todayStr);
 
   const items: AttentionNotification[] = useMemo(() => {
@@ -156,6 +219,36 @@ export function useAttentionItems() {
       }
     }
 
+    // Check-out mai finalizzato: la prenotazione è ancora "in_corso" (o con
+    // "Avvia Check-out" già cliccato ma "Chiudi Soggiorno" mai fatto) e la
+    // data di check-out prevista è già passata, anche di molto.
+    for (const b of (overdueCheckouts ?? []) as any[]) {
+      const daysLate = differenceInDays(new Date(), parseISO(b.check_out_date));
+      list.push({
+        key: `checkout-overdue-${b.id}`, severity: "critico",
+        label: b.status === "check_out"
+          ? `Check-out avviato ma non completato per ${petNames(b)}`
+          : `Check-out mai effettuato per ${petNames(b)}`,
+        detail: `${clientName(b)} · previsto il ${format(parseISO(b.check_out_date), "dd/MM")} (${daysLate} giorn${daysLate === 1 ? "o" : "i"} fa)`,
+        href: `/prenotazioni?q=${encodeURIComponent(b.booking_number)}`,
+      });
+    }
+
+    // Check-in mai effettuato: la data di arrivo prevista è già passata ma lo
+    // stato è ancora "pre check-in" — include i casi con solo il check-out
+    // fissato (appuntamento_out_fissato), altrimenti invisibili ovunque.
+    for (const b of (overdueCheckins ?? []) as any[]) {
+      const daysLate = differenceInDays(new Date(), parseISO(b.check_in_date));
+      const fixedCheckout = (b.appointments ?? []).find((a: any) => a.appointment_type === "check_out");
+      list.push({
+        key: `checkin-overdue-${b.id}`, severity: "critico",
+        label: `Check-in mai effettuato per ${petNames(b)}`,
+        detail: `${clientName(b)} · previsto il ${format(parseISO(b.check_in_date), "dd/MM")} (${daysLate} giorn${daysLate === 1 ? "o" : "i"} fa)`
+          + (fixedCheckout ? ` · check-out fissato per il ${format(new Date(fixedCheckout.scheduled_at), "dd/MM")}, mai raggiunto` : ""),
+        href: `/prenotazioni?q=${encodeURIComponent(b.booking_number)}`,
+      });
+    }
+
     // Farmaci imminenti (entro 30 minuti, non ancora somministrati).
     for (const tk of (todayTasks ?? []) as any[]) {
       if (tk.category !== "farmaco" || tk.completed || !tk.scheduled_time) continue;
@@ -190,7 +283,10 @@ export function useAttentionItems() {
 
     const rank: Record<NotificationSeverity, number> = { critico: 0, attenzione: 1, informazione: 2 };
     return list.sort((a, b) => rank[a.severity] - rank[b.severity]);
-  }, [upcomingCheckins, docs, overdueBookings, todayTasks, todayCheckins]);
+  }, [upcomingCheckins, docs, overdueBookings, overdueCheckouts, overdueCheckins, todayTasks, todayCheckins]);
 
-  return { items, isLoading: loadingUpcoming || loadingTasks };
+  return {
+    items,
+    isLoading: loadingUpcoming || loadingTasks || loadingOverdueCheckouts || loadingOverdueCheckins,
+  };
 }
