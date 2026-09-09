@@ -112,6 +112,11 @@ export function PreventivoDialog({
   const [unitsCani, setUnitsCani] = useState(1);
   const [checkInDate, setCheckInDate] = useState<Date | undefined>();
   const [checkOutDate, setCheckOutDate] = useState<Date | undefined>();
+  // Date originarie della prenotazione all'apertura del dialog (solo in
+  // modifica): servono a capire se le nuove date allungano o accorciano il
+  // soggiorno rispetto a quanto già concordato/fatturato.
+  const [originalCheckIn, setOriginalCheckIn] = useState("");
+  const [originalCheckOut, setOriginalCheckOut] = useState("");
   const [notes, setNotes] = useState("");
   const [totalAmount, setTotalAmount] = useState(0);
   const [depositAmount, setDepositAmount] = useState(0);
@@ -262,6 +267,14 @@ export function PreventivoDialog({
 
   const duration = calcDuration(checkIn, checkOut);
 
+  // In modifica: soggiorno allungato rispetto alle date originarie della
+  // prenotazione (check-in anticipato e/o check-out posticipato).
+  const originalDuration = useMemo(
+    () => calcDuration(originalCheckIn, originalCheckOut),
+    [calcDuration, originalCheckIn, originalCheckOut],
+  );
+  const isLengthened = !!editing && originalDuration > 0 && duration > originalDuration;
+
   // ── Reset on open ──
   const resetForm = () => {
     setDurationSuggestionDismissed(false);
@@ -276,6 +289,8 @@ export function PreventivoDialog({
       setCageUnits(arr);
       setCheckInDate(editing.check_in_date ? parseISO(editing.check_in_date) : undefined);
       setCheckOutDate(editing.check_out_date ? parseISO(editing.check_out_date) : undefined);
+      setOriginalCheckIn(editing.check_in_date ?? "");
+      setOriginalCheckOut(editing.check_out_date ?? "");
       setSelectedCats(editing.booking_cats?.map((bc: any) => bc.cat_id) ?? []);
       setNotes((editing.notes ?? "").split("\n").filter((line: string) => !line.startsWith("[")).join("\n").trim());
       setTotalAmount(Number(editing.total_amount ?? 0));
@@ -304,6 +319,8 @@ export function PreventivoDialog({
       setClientSearch(prefillClient ? `${prefillClient.first_name} ${prefillClient.last_name}` : "");
       setCheckInDate(prefill.check_in_date ? parseISO(prefill.check_in_date) : undefined);
       setCheckOutDate(prefill.check_out_date ? parseISO(prefill.check_out_date) : undefined);
+      setOriginalCheckIn("");
+      setOriginalCheckOut("");
       setNotes(prefill.notes || "");
       setSelectedCats([]);
       setUnitsOccupied(1);
@@ -328,6 +345,8 @@ export function PreventivoDialog({
       setUnitsCani(1);
       setCheckInDate(undefined);
       setCheckOutDate(undefined);
+      setOriginalCheckIn("");
+      setOriginalCheckOut("");
       setSelectedCats([]);
       setNotes("");
       setTotalAmount(0);
@@ -503,6 +522,41 @@ export function PreventivoDialog({
   const removePeriod = (idx: number) => {
     setSeasonPeriods(prev => prev.filter((_, i) => i !== idx));
   };
+
+  // Quando si modifica una prenotazione esistente e si sposta il check-in o
+  // il check-out, il periodo di prezzo confinante viene allineato alla
+  // nuova data SOLO se il soggiorno si allunga rispetto alla data
+  // originaria (check-in anticipato o check-out posticipato): in quel caso
+  // i giorni aggiunti vengono conteggiati con la stessa tariffa del
+  // periodo. Se invece la nuova data accorcia il soggiorno (check-in
+  // posticipato o check-out anticipato), il periodo resta ancorato alla
+  // data originaria e il totale non cambia. Confrontando sempre con la
+  // data originaria (non con l'ultima selezionata) il comportamento resta
+  // corretto anche se l'utente cambia idea più volte prima di salvare.
+  const syncPeriodBoundaryOnDateChange = useCallback((
+    direction: "checkin" | "checkout",
+    newDateStr: string,
+    originalDateStr: string,
+  ) => {
+    if (!originalDateStr) return;
+    const boundaryDate = direction === "checkout"
+      ? (newDateStr > originalDateStr ? newDateStr : originalDateStr)
+      : (newDateStr < originalDateStr ? newDateStr : originalDateStr);
+    setSeasonPeriods(prev => {
+      if (prev.length === 0) return prev;
+      const sorted = [...prev].sort((a, b) => a.fromDate.localeCompare(b.fromDate));
+      const targetId = direction === "checkout" ? sorted[sorted.length - 1].id : sorted[0].id;
+      const field = direction === "checkout" ? "toDate" : "fromDate";
+      return prev.map(p => {
+        if (p.id !== targetId || p[field] === boundaryDate) return p;
+        const updated = { ...p, [field]: boundaryDate };
+        updated.days = calcPeriodDays(updated.fromDate, updated.toDate);
+        const tariff = seasonalTariffs.find((t: any) => t.id === updated.tariffId);
+        const costs = calcPeriodCost(updated.days, tariff, selectedCats.length);
+        return { ...updated, ...costs };
+      });
+    });
+  }, [calcPeriodDays, calcPeriodCost, seasonalTariffs, selectedCats.length]);
 
   // ── Extra services helpers ──
   const addExtraService = (plId: string) => {
@@ -1135,7 +1189,11 @@ export function PreventivoDialog({
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={checkInDate} onSelect={(d) => { setCheckInDate(d); setCheckInOpen(false); }}
+                        <Calendar mode="single" selected={checkInDate} onSelect={(d) => {
+                          if (d && editing) syncPeriodBoundaryOnDateChange("checkin", format(d, "yyyy-MM-dd"), originalCheckIn);
+                          setCheckInDate(d);
+                          setCheckInOpen(false);
+                        }}
                           disabled={(date) => date < today} initialFocus className="p-3 pointer-events-auto" />
                       </PopoverContent>
                     </Popover>
@@ -1150,7 +1208,11 @@ export function PreventivoDialog({
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={checkOutDate} onSelect={(d) => { setCheckOutDate(d); setCheckOutOpen(false); }}
+                        <Calendar mode="single" selected={checkOutDate} onSelect={(d) => {
+                          if (d && editing) syncPeriodBoundaryOnDateChange("checkout", format(d, "yyyy-MM-dd"), originalCheckOut);
+                          setCheckOutDate(d);
+                          setCheckOutOpen(false);
+                        }}
                           disabled={(date) => { if (!checkInDate) return date < today; return date < checkInDate; }}
                           initialFocus className="p-3 pointer-events-auto" />
                       </PopoverContent>
@@ -1160,7 +1222,21 @@ export function PreventivoDialog({
                 {duration > 0 && (
                   <p className="text-sm text-muted-foreground">
                     Durata: <strong>{duration} {duration === 1 ? (stayLabel === "notti" ? "notte" : "giorno") : stayLabel}</strong>
+                    {isLengthened && (
+                      <span className="text-amber-700 dark:text-amber-400"> (+{duration - originalDuration} rispetto alle date originarie)</span>
+                    )}
                   </p>
+                )}
+                {isLengthened && (
+                  <div className="rounded-md border border-amber-400 bg-amber-50 dark:bg-amber-950/30 p-3 text-sm text-amber-800 dark:text-amber-300 flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span>
+                      Soggiorno allungato rispetto alle date originarie ({format(parseISO(originalCheckIn), "dd MMM", { locale: it })} → {format(parseISO(originalCheckOut), "dd MMM yyyy", { locale: it })}).{" "}
+                      {seasonPeriods.length > 0
+                        ? "Il totale qui sotto è stato ricalcolato per includere i giorni aggiunti."
+                        : "Non ci sono periodi di prezzo da estendere automaticamente: correggi manualmente il totale."}
+                    </span>
+                  </div>
                 )}
                 {/* Availability conflicts */}
                 {isMixedPets && availabilityResultGatti && !availabilityResultGatti.available && (
@@ -1464,8 +1540,11 @@ export function PreventivoDialog({
                     <span>€ {extrasTotal.toFixed(2)}</span>
                   </div>
                 )}
-                <div className="text-base font-bold flex justify-between border-t border-border pt-1">
-                  <span>Totale preventivo</span>
+                <div className={cn(
+                  "text-base font-bold flex justify-between border-t border-border pt-1",
+                  isLengthened && seasonPeriods.length > 0 && "text-amber-700 dark:text-amber-400",
+                )}>
+                  <span>Totale preventivo{isLengthened && seasonPeriods.length > 0 ? " (ricalcolato)" : ""}</span>
                   <span>€ {totalAmount.toFixed(2)}</span>
                 </div>
               </div>

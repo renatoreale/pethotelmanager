@@ -455,7 +455,7 @@ export default function Prenotazioni() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            {!["check_in", "in_corso", "check_out", "chiusa", "cancellata", "rimborsata"].includes(b.status) ? (
+                            {!["chiusa", "cancellata", "rimborsata"].includes(b.status) ? (
                               <Button variant="ghost" size="icon" onClick={() => setEditingBooking(b)} title="Modifica prenotazione">
                                 <Pencil className="h-4 w-4" />
                               </Button>
