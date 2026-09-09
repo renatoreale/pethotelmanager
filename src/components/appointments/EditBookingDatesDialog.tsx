@@ -94,8 +94,12 @@ export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
     }) ?? seasonalTariffs[0] ?? null;
   };
 
-  const isInCorso = booking.status === "in_corso";
-
+  // Accorciare il soggiorno (check-in posticipato o check-out anticipato)
+  // non deve mai far scendere il totale sotto quello originale; solo
+  // allungarlo (check-in anticipato o check-out posticipato) fa
+  // ricalcolare il prezzo, e solo sui giorni aggiunti. Si ottiene
+  // "bloccando" ciascun estremo sul valore originale quando si muove nella
+  // direzione che accorcerebbe il soggiorno.
   const recalculated = useMemo(() => {
     const originalDays = calcDuration(booking.check_in_date, booking.check_out_date);
     const newDays = calcDuration(newCiStr, newCoStr);
@@ -104,21 +108,21 @@ export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
     if (newDays <= 0) return { originalDays, newDays, newTotal: originalTotal, originalTotal, valid: false };
 
     const numCats = (booking.booking_cats ?? []).length || 1;
-    const tariff = findSeasonalTariff(newCiStr);
+    const effectiveCiStr = newCiStr < booking.check_in_date ? newCiStr : booking.check_in_date;
+    const effectiveCoStr = newCoStr > booking.check_out_date ? newCoStr : booking.check_out_date;
+    const effectiveDays = calcDuration(effectiveCiStr, effectiveCoStr);
+    const tariff = findSeasonalTariff(effectiveCiStr);
     let newTotal = originalTotal;
 
-    // Per prenotazioni in corso: se si anticipa il checkout, il totale resta invariato
-    if (isInCorso && newCoStr < booking.check_out_date) {
-      newTotal = originalTotal;
-    } else if (tariff && newDays !== originalDays) {
-      const baseCost = Number(tariff.price_per_day) * newDays * numCats;
+    if (effectiveDays !== originalDays && tariff) {
+      const baseCost = Number(tariff.price_per_day) * effectiveDays * numCats;
       const extraCats = Math.max(0, numCats - 1);
-      const supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * newDays;
+      const supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * effectiveDays;
       newTotal = Math.round((baseCost + supplementCost) * 100) / 100;
     }
 
     return { originalDays, newDays, newTotal, originalTotal, valid: true };
-  }, [booking, newCiStr, newCoStr, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs, isInCorso]);
+  }, [booking, newCiStr, newCoStr, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs]);
 
   const stayLabel = stayCalcType === "notti" ? "notti" : "giorni";
 
@@ -313,16 +317,18 @@ export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
               </div>
               <div className="flex justify-between border-t pt-1.5">
                 <span className="font-medium">Nuovo totale</span>
-                <span className={cn("font-bold", recalculated.newTotal !== recalculated.originalTotal && "text-primary")}>
+                <span className={cn("font-bold", recalculated.newTotal !== recalculated.originalTotal && "text-amber-700 dark:text-amber-400")}>
                   € {recalculated.newTotal.toFixed(2)}
                 </span>
               </div>
               {recalculated.newTotal !== recalculated.originalTotal && (
+                <div className="text-xs text-amber-700 dark:text-amber-400">
+                  Soggiorno allungato rispetto alle date originarie: totale ricalcolato (+€{(recalculated.newTotal - recalculated.originalTotal).toFixed(2)}).
+                </div>
+              )}
+              {recalculated.newTotal === recalculated.originalTotal && recalculated.newDays !== recalculated.originalDays && (
                 <div className="text-xs text-muted-foreground italic">
-                  {recalculated.newDays > recalculated.originalDays
-                    ? `+${recalculated.newDays - recalculated.originalDays} ${stayLabel} — totale ricalcolato`
-                    : `−${recalculated.originalDays - recalculated.newDays} ${stayLabel} — totale ricalcolato`
-                  }
+                  Soggiorno accorciato rispetto alle date originarie: il totale resta invariato.
                 </div>
               )}
             </div>

@@ -276,7 +276,7 @@ export default function Appuntamenti() {
                   setEditing(appt);
                 }
               }}><Pencil className="h-4 w-4" /></Button>
-              {!isInCorso && appt.booking && (
+              {appt.booking && (
                 <Button variant="ghost" size="icon" title="Modifica date prenotazione" onClick={() => setEditingBookingDates(appt.booking)}>
                   <CalendarIcon className="h-4 w-4" />
                 </Button>
