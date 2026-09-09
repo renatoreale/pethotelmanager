@@ -23,7 +23,6 @@ const ROUTE_RESOURCE_MAP: Record<string, Resource> = {
   "/occupazione": "occupazione",
   "/statistiche": "statistiche",
   "/utenti": "utenti",
-  "/template-email": "template-email",
   "/pensione": "pensione",
   "/admin": "admin",
 };

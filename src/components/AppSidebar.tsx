@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, FileText, CalendarCheck, Calendar, LogIn, LogOut,
-  CreditCard, Users, Cat, ClipboardList, ListTodo, Shield, Mail, Building2,
+  CreditCard, Users, Cat, ClipboardList, ListTodo, Shield, Building2,
   Power, Grid3X3, Settings2, PawPrint, BarChart3, LifeBuoy, Pill, UtensilsCrossed } from
 "lucide-react";
 import { NavLink } from "@/components/NavLink";
@@ -58,7 +58,6 @@ const businessNav: NavItem[] = [
 
 const configurazioneNav: NavItem[] = [
 { titleKey: "sidebar.usersRoles", url: "/utenti", icon: Shield, resource: "utenti" },
-{ titleKey: "sidebar.emailTemplates", url: "/template-email", icon: Mail, resource: "template-email" },
 { titleKey: "sidebar.pensione", url: "/pensione", icon: Building2, resource: "pensione" },
 { titleKey: "sidebar.supporto", url: "/supporto", icon: LifeBuoy, resource: "supporto" },
 { titleKey: "sidebar.systemAdmin", url: "/admin", icon: Settings2, resource: "admin" }];

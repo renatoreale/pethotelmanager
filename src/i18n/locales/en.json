@@ -82,7 +82,6 @@
     "occupancy": "Cage Occupancy",
     "statistics": "Statistics",
     "usersRoles": "Users & Roles",
-    "emailTemplates": "Email Templates",
     "pensione": "Hotel Settings",
     "systemAdmin": "System Admin"
   },
@@ -554,10 +553,6 @@
   "users": {
     "title": "Users & Roles",
     "subtitle": "User and permission management"
-  },
-  "emailTemplates": {
-    "title": "Email Templates",
-    "subtitle": "Email template management"
   },
   "admin": {
     "title": "System Admin",

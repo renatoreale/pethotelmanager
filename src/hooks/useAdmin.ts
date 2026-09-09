@@ -321,7 +321,6 @@ export const RESOURCES = [
   { value: "planning", label: "Planning" },
   { value: "occupazione", label: "Occupazione Casette" },
   { value: "utenti", label: "Utenti & Ruoli" },
-  { value: "template-email", label: "Template Email" },
   { value: "pensione", label: "Configurazione Pensione" },
   { value: "admin", label: "Amministrazione Sistema" },
 ];

@@ -29,7 +29,6 @@ import Farmaci from "./pages/Farmaci";
 import Pasti from "./pages/Pasti";
 
 import Utenti from "./pages/Utenti";
-import TemplateEmail from "./pages/TemplateEmail";
 import Pensione from "./pages/Pensione";
 import NotFound from "./pages/NotFound";
 import RegistroGatti from "./pages/RegistroGatti";
@@ -147,7 +146,6 @@ const App = () => {
               <Route path="/pasti" element={<Pasti />} />
 
               <Route path="/utenti" element={<Utenti />} />
-              <Route path="/template-email" element={<TemplateEmail />} />
               <Route path="/pensione" element={<Pensione />} />
               <Route path="/occupazione" element={<OccupazioneCasette />} />
               <Route path="/statistiche" element={<Statistiche />} />

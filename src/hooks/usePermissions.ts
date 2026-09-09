@@ -21,7 +21,6 @@ export type Resource =
   | "occupazione"
   | "statistiche"
   | "utenti"
-  | "template-email"
   | "pensione"
   | "admin"
   | "supporto"
@@ -47,7 +46,6 @@ const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> 
     occupazione: ["read", "write", "delete"],
     statistiche: ["read", "write", "delete"],
     utenti: ["read", "write", "delete"],
-    "template-email": ["read", "write", "delete"],
     pensione: ["read", "write", "delete"],
     admin: ["read", "write", "delete"],
     supporto: ["read", "write", "delete"],
@@ -60,7 +58,7 @@ const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> 
     "check-in": ["read"], "check-out": ["read"], pagamenti: ["read"],
     clienti: ["read"], gatti: ["read"], presenze: ["read"], "registro-gatti": ["read"],
     planning: ["read"], occupazione: ["read"], statistiche: ["read"], utenti: ["read"],
-    "template-email": ["read"], pensione: ["read"], admin: [], supporto: ["read", "write"],
+    pensione: ["read"], admin: [], supporto: ["read", "write"],
     prezzi: ["read"], documenti: ["read"],
   },
   titolare: {
@@ -71,7 +69,7 @@ const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> 
     clienti: ["read", "write", "delete"], gatti: ["read", "write", "delete"],
     presenze: ["read"], "registro-gatti": ["read", "write", "delete"], planning: ["read", "write", "delete"],
     occupazione: ["read", "write", "delete"], statistiche: ["read"], utenti: ["read", "write"],
-    "template-email": ["read"], pensione: ["read", "write"], admin: [], supporto: ["read", "write"],
+    pensione: ["read", "write"], admin: [], supporto: ["read", "write"],
     prezzi: ["read", "write", "delete"], documenti: ["read", "write", "delete"],
   },
   manager: {
@@ -81,7 +79,7 @@ const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> 
     "check-out": ["read", "write"], pagamenti: ["read", "write"],
     clienti: ["read", "write"], gatti: ["read", "write"],
     presenze: ["read"], "registro-gatti": ["read"], planning: ["read", "write"],
-    occupazione: ["read"], statistiche: ["read"], utenti: [], "template-email": [],
+    occupazione: ["read"], statistiche: ["read"], utenti: [],
     pensione: [], admin: [], supporto: ["read", "write"],
     prezzi: ["read", "write"], documenti: ["read", "write"],
   },
@@ -90,7 +88,7 @@ const ROLE_PERMISSIONS_FALLBACK: Record<string, Record<Resource, Permission[]>> 
     preventivi: [], prenotazioni: [], appuntamenti: [],
     "check-in": ["read"], "check-out": ["read"], pagamenti: [],
     clienti: [], gatti: [], presenze: ["read"], "registro-gatti": [], planning: ["read", "write"],
-    occupazione: [], statistiche: [], utenti: [], "template-email": [], pensione: [], admin: [], supporto: ["read", "write"],
+    occupazione: [], statistiche: [], utenti: [], pensione: [], admin: [], supporto: ["read", "write"],
     prezzi: [], documenti: ["read", "write"],
   },
 };

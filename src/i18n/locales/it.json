@@ -82,7 +82,6 @@
     "occupancy": "Occupazione Casette",
     "statistics": "Statistiche",
     "usersRoles": "Utenti & Ruoli",
-    "emailTemplates": "Template Email",
     "pensione": "Pensione",
     "supporto": "Supporto",
     "systemAdmin": "Admin Sistema"
@@ -555,10 +554,6 @@
   "users": {
     "title": "Utenti & Ruoli",
     "subtitle": "Gestione utenti e permessi"
-  },
-  "emailTemplates": {
-    "title": "Template Email",
-    "subtitle": "Gestione template email"
   },
   "admin": {
     "title": "Admin Sistema",
