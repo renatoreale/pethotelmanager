@@ -32,7 +32,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Database } from "@/integrations/supabase/types";
-import { UserPlus } from "lucide-react";
+import { UserPlus, History } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TenantAuditLogTab } from "@/components/utenti/TenantAuditLogTab";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
@@ -53,6 +55,7 @@ export default function Utenti() {
   });
 
   const canManageRoles = hasRole("admin") || hasRole("titolare");
+  const canViewAuditLog = hasRole("admin") || hasRole("titolare") || hasRole("manager");
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -166,6 +169,17 @@ export default function Utenti() {
         )}
       </div>
 
+      <Tabs defaultValue="utenti">
+        <TabsList>
+          <TabsTrigger value="utenti">Utenti</TabsTrigger>
+          {canViewAuditLog && (
+            <TabsTrigger value="audit" className="gap-1.5">
+              <History className="h-3.5 w-3.5" /> Storico modifiche
+            </TabsTrigger>
+          )}
+        </TabsList>
+
+        <TabsContent value="utenti" className="mt-4">
       <div className="rounded-md border bg-card">
         <Table>
           <TableHeader>
@@ -236,6 +250,14 @@ export default function Utenti() {
           </TableBody>
         </Table>
       </div>
+        </TabsContent>
+
+        {canViewAuditLog && (
+          <TabsContent value="audit" className="mt-4">
+            <TenantAuditLogTab />
+          </TabsContent>
+        )}
+      </Tabs>
     </div>
   );
 }
