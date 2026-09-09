@@ -2,6 +2,10 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Calendar as CalendarWidget } from "@/components/ui/calendar";
@@ -15,6 +19,7 @@ import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useTenantConfig, usePriceLists } from "@/hooks/usePensioneConfig";
 import { useSupabase } from "@/hooks/useSupabaseClient";
+import { useBookingAppointments } from "@/hooks/useAppointments";
 import { useQueryClient } from "@tanstack/react-query";
 import { generateModuloAffidoPDF } from "@/lib/generateModuloAffidoPDF";
 
@@ -42,6 +47,7 @@ export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
   const queryClient = useQueryClient();
   const { data: tenantConfig } = useTenantConfig();
   const { data: priceLists } = usePriceLists();
+  const { data: siblingAppointments } = useBookingAppointments(booking.id);
 
   const [newCiDate, setNewCiDate] = useState<Date>(parseISO(booking.check_in_date));
   const [newCoDate, setNewCoDate] = useState<Date>(parseISO(booking.check_out_date));
@@ -50,6 +56,11 @@ export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
   const [saving, setSaving] = useState(false);
   const [emailConfirmPhase, setEmailConfirmPhase] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [appointmentSync, setAppointmentSync] = useState<{
+    appointments: { id: string; appointment_type: string; scheduled_at: string }[];
+    newCheckIn: string;
+    newCheckOut: string;
+  } | null>(null);
   const savedRef = useRef<{ ci: string; co: string }>({ ci: "", co: "" });
 
   useEffect(() => {
@@ -162,6 +173,12 @@ export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
 
       toast.success("Date prenotazione aggiornate");
       savedRef.current = { ci: newCiStr, co: newCoStr };
+
+      if (anyChange && siblingAppointments && siblingAppointments.length > 0) {
+        setAppointmentSync({ appointments: siblingAppointments, newCheckIn: newCiStr, newCheckOut: newCoStr });
+        return;
+      }
+
       if (booking.client?.email && tenantConfig) {
         setEmailConfirmPhase(true);
       } else {
@@ -172,6 +189,61 @@ export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
     } finally {
       setSaving(false);
     }
+  };
+
+  const invalidateAppointmentQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ["booking-appointments"] });
+    queryClient.invalidateQueries({ queryKey: ["appointments-by-date"] });
+    queryClient.invalidateQueries({ queryKey: ["appointments-by-range"] });
+    queryClient.invalidateQueries({ queryKey: ["appointments-all"] });
+    queryClient.invalidateQueries({ queryKey: ["appointment-counts"] });
+  };
+
+  // Dopo aver risolto (o saltato) la sincronizzazione degli appuntamenti,
+  // prosegue con l'eventuale invio email già previsto dal salvataggio date.
+  const proceedAfterAppointmentSync = () => {
+    setAppointmentSync(null);
+    if (booking.client?.email && tenantConfig) {
+      setEmailConfirmPhase(true);
+    } else {
+      onOpenChange(false);
+    }
+  };
+
+  const handleUpdateSiblingAppointments = async () => {
+    if (!appointmentSync) return;
+    try {
+      for (const appt of appointmentSync.appointments) {
+        const time = appt.scheduled_at.split("T")[1];
+        const newDate = appt.appointment_type === "check_in" ? appointmentSync.newCheckIn : appointmentSync.newCheckOut;
+        await supabase.from("appointments").update({ scheduled_at: `${newDate}T${time}` }).eq("id", appt.id);
+      }
+      invalidateAppointmentQueries();
+      toast.success("Appuntamenti aggiornati alle nuove date");
+    } catch (err: any) {
+      toast.error(err.message || "Errore aggiornamento appuntamenti");
+    }
+    proceedAfterAppointmentSync();
+  };
+
+  const handleDeleteSiblingAppointments = async () => {
+    if (!appointmentSync) return;
+    try {
+      await supabase.from("appointments").delete().eq("booking_id", booking.id);
+      // Retrocedere lo stato a "confermata" ha senso solo se il check-in
+      // non è ancora avvenuto fisicamente (vedi nota sopra recalculated).
+      const isPreCheckin = !["check_in", "in_corso", "check_out", "chiusa", "cancellata", "rimborsata", "scaduto"]
+        .includes(booking.status ?? "");
+      if (isPreCheckin) {
+        await supabase.from("bookings").update({ status: "confermata" as any }).eq("id", booking.id);
+      }
+      invalidateAppointmentQueries();
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      toast.success(isPreCheckin ? "Appuntamenti eliminati, stato riportato a Confermata" : "Appuntamenti eliminati");
+    } catch (err: any) {
+      toast.error(err.message || "Errore eliminazione appuntamenti");
+    }
+    proceedAfterAppointmentSync();
   };
 
   const handleSendEmail = async () => {
@@ -207,6 +279,7 @@ export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
   today.setHours(0, 0, 0, 0);
 
   return (
+    <>
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -339,6 +412,11 @@ export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
               La data di check-in non può essere uguale o successiva al check-out.
             </div>
           )}
+          {anyChange && siblingAppointments && siblingAppointments.length > 0 && (
+            <div className="rounded-md border border-amber-400 bg-amber-50 dark:bg-amber-950/30 p-3 text-sm text-amber-800 dark:text-amber-300">
+              Questa prenotazione ha già appuntamenti fissati: al salvataggio ti verrà chiesto se aggiornarli alle nuove date o eliminarli per rifissarli.
+            </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={handleClose}>Annulla</Button>
             <Button
@@ -352,5 +430,28 @@ export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
         )}
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={!!appointmentSync} onOpenChange={(o) => { if (!o) { setAppointmentSync(null); onOpenChange(false); } }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Date modificate – Appuntamenti esistenti</AlertDialogTitle>
+          <AlertDialogDescription>
+            Le date di check-in/check-out sono cambiate. Ci sono appuntamenti già fissati per questa prenotazione: vanno ripresi, cioè aggiornati alle nuove date o eliminati per fissarli di nuovo. Cosa vuoi fare?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+          <AlertDialogCancel onClick={() => { setAppointmentSync(null); onOpenChange(false); }}>
+            Non fare nulla
+          </AlertDialogCancel>
+          <Button variant="outline" onClick={handleDeleteSiblingAppointments}>
+            Elimina appuntamenti
+          </Button>
+          <Button onClick={handleUpdateSiblingAppointments}>
+            Aggiorna alle nuove date
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

@@ -928,12 +928,20 @@ export function PreventivoDialog({
     const { bookingId } = appointmentSyncDialog;
     try {
       await supabase.from("appointments").delete().eq("booking_id", bookingId);
-      await supabase
-        .from("bookings")
-        .update({ status: "confermata" as any })
-        .eq("id", bookingId);
+      // Retrocedere lo stato a "confermata" ha senso solo se il check-in non
+      // è ancora avvenuto fisicamente: per una prenotazione già in_corso/
+      // check_out/chiusa stiamo solo correggendo l'appuntamento promemoria,
+      // non lo stato operativo del soggiorno.
+      const isPreCheckin = !["check_in", "in_corso", "check_out", "chiusa", "cancellata", "rimborsata", "scaduto"]
+        .includes(editing?.status ?? "");
+      if (isPreCheckin) {
+        await supabase
+          .from("bookings")
+          .update({ status: "confermata" as any })
+          .eq("id", bookingId);
+      }
       invalidateAppointmentQueries();
-      toast.success("Appuntamenti eliminati, stato riportato a Confermata");
+      toast.success(isPreCheckin ? "Appuntamenti eliminati, stato riportato a Confermata" : "Appuntamenti eliminati");
     } catch (err: any) {
       toast.error(err.message || "Errore eliminazione appuntamenti");
     }
