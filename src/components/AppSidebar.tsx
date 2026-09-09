@@ -30,9 +30,9 @@ interface NavItem {
 // prenotazioni/preventivi/pagamenti, di cui è parte integrante).
 const operativitaNav: NavItem[] = [
 { titleKey: "sidebar.dashboard", url: "/dashboard", icon: LayoutDashboard, resource: "dashboard" },
+{ titleKey: "sidebar.appointments", url: "/appuntamenti", icon: Calendar, resource: "appuntamenti" },
 { titleKey: "sidebar.checkIn", url: "/check-in", icon: LogIn, resource: "check-in" },
 { titleKey: "sidebar.checkOut", url: "/check-out", icon: LogOut, resource: "check-out" },
-{ titleKey: "sidebar.appointments", url: "/appuntamenti", icon: Calendar, resource: "appuntamenti" },
 { titleKey: "sidebar.attendance", url: "/presenze", icon: PawPrint, resource: "presenze" },
 { titleKey: "sidebar.tasks", url: "/attivita", icon: ListTodo, resource: "planning" },
 { titleKey: "sidebar.medications", url: "/farmaci", icon: Pill, resource: "planning" },
