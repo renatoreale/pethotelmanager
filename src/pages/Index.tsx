@@ -460,6 +460,11 @@ export default function Index() {
                 <AlertTriangle className="h-5 w-5 text-warning" />
                 {t("dashboard.attentionTitle")} {attentionItems.length > 0 && `(${attentionItems.length})`}
               </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                {isSelectedToday
+                  ? t("dashboard.attentionSubtitleToday")
+                  : t("dashboard.attentionSubtitleFor", { date: format(selectedDate, "dd MMM yyyy", { locale: dateLocale }) })}
+              </p>
             </CardHeader>
             <CardContent>
               {attentionItems.length === 0 ? (

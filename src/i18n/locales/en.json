@@ -130,6 +130,8 @@
     "kpiToCollect": "To collect",
     "kpiToCollectSubtitle": "Payments still due",
     "attentionTitle": "Needs your attention",
+    "attentionSubtitleToday": "For today. The most urgent alerts are always in the notification bell above too.",
+    "attentionSubtitleFor": "For {{date}} selected. For today's urgent alerts, see the notification bell above.",
     "attentionEmpty": "All under control. No urgent items right now.",
     "attentionMissingCheckIn": "Check-in without appointment",
     "attentionMissingCheckOut": "Check-out without appointment",

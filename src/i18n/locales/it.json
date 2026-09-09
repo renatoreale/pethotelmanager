@@ -131,6 +131,8 @@
     "kpiToCollect": "Da incassare",
     "kpiToCollectSubtitle": "Pagamenti ancora dovuti",
     "attentionTitle": "Richiede la tua attenzione",
+    "attentionSubtitleToday": "Per oggi. Gli avvisi più urgenti sono sempre anche nella campana di notifiche in alto.",
+    "attentionSubtitleFor": "Per il {{date}} selezionato. Per gli avvisi urgenti di oggi vedi la campana di notifiche in alto.",
     "attentionEmpty": "Tutto sotto controllo. Nessuna urgenza al momento.",
     "attentionMissingCheckIn": "Check-in senza appuntamento",
     "attentionMissingCheckOut": "Check-out senza appuntamento",

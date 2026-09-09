@@ -49,6 +49,9 @@ export function NotificationBell() {
       <PopoverContent align="end" className="w-80 p-0">
         <div className="px-3 py-2 border-b">
           <span className="text-sm font-semibold">Notifiche</span>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Avvisi urgenti di oggi. Per la giornata selezionata sulla Dashboard, vedi la card "Richiede la tua attenzione".
+          </p>
         </div>
         <div className="max-h-96 overflow-y-auto">
           {isLoading ? (
