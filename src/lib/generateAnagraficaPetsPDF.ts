@@ -53,7 +53,7 @@ async function loadImageAsBase64(url: string, maxSize = 200): Promise<string | n
   }
 }
 
-export async function generateRegistroPetsPDF(
+export async function generateAnagraficaPetsPDF(
   cats: CatRow[],
   tenant: TenantData,
 ): Promise<void> {
@@ -90,7 +90,7 @@ export async function generateRegistroPetsPDF(
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
     doc.setTextColor(...primaryColor);
-    doc.text("Registro Pets", pageWidth - margin, 12, { align: "right" });
+    doc.text("Anagrafica Pets", pageWidth - margin, 12, { align: "right" });
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
@@ -185,5 +185,5 @@ export async function generateRegistroPetsPDF(
     doc.text(`Pagina ${i} di ${totalPages}`, pageWidth - margin, pageHeight - footerHeight + 10, { align: "right" });
   }
 
-  doc.save(`Registro_Pets_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  doc.save(`Anagrafica_Pets_${format(new Date(), "yyyy-MM-dd")}.pdf`);
 }
