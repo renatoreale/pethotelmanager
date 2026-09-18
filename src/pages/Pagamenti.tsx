@@ -21,13 +21,17 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  ChevronDown, ChevronRight, Plus, Pencil, Trash2, Search, User, Cat, Calendar, CreditCard,
+  ChevronDown, ChevronRight, Plus, Pencil, Trash2, Search, User, Cat, Calendar, CreditCard, FileDown, CalendarIcon,
 } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, startOfDay, endOfDay, isWithinInterval } from "date-fns";
 import { it } from "date-fns/locale";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as DatePickerCalendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTenantConfig } from "@/hooks/usePensioneConfig";
+import { generatePagamentiPDF } from "@/lib/generatePagamentiPDF";
 
 const TYPE_LABELS: Record<string, string> = {
   caparra: "Caparra",
@@ -100,6 +104,7 @@ export default function Pagamenti() {
   const queryClient = useQueryClient();
   const { data: bookings, isLoading } = useAllBookingsWithPayments();
   const { data: paymentMethods } = usePaymentMethods();
+  const { data: tenantConfig } = useTenantConfig();
   const createPayment = useCreatePayment();
   const updatePayment = useUpdatePayment();
   const deletePayment = useDeletePayment();
@@ -115,6 +120,14 @@ export default function Pagamenti() {
   const [txForm, setTxForm] = useState<TransactionFormData>(emptyForm);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingTotal, setEditingTotal] = useState<string | null>(null);
+
+  const [reportStatusFilter, setReportStatusFilter] = useState<"tutti" | "da_saldare">("tutti");
+  const [reportClientFilter, setReportClientFilter] = useState<string>("tutti");
+  const [reportMethodFilter, setReportMethodFilter] = useState<string>("tutti");
+  const [reportPeriodMode, setReportPeriodMode] = useState<"tutto" | "range">("tutto");
+  const [reportRangeFrom, setReportRangeFrom] = useState<Date>();
+  const [reportRangeTo, setReportRangeTo] = useState<Date>();
+  const [exportingPDF, setExportingPDF] = useState(false);
 
   // Keep selectedBooking in sync with fresh data from the query cache
   useEffect(() => {
@@ -260,6 +273,79 @@ export default function Pagamenti() {
     return { total, paid, remaining: Math.max(0, total - paid) };
   }, [clientGroups]);
 
+  const allClients = useMemo(() => {
+    if (!bookings) return [];
+    const map = new Map<string, string>();
+    for (const b of bookings) {
+      if (b.client_id && !map.has(b.client_id)) {
+        map.set(b.client_id, b.client ? `${b.client.last_name} ${b.client.first_name}` : "—");
+      }
+    }
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [bookings]);
+
+  const reportRows = useMemo(() => {
+    if (!bookings) return [];
+    const rows: any[] = [];
+    for (const b of bookings) {
+      if (reportClientFilter !== "tutti" && b.client_id !== reportClientFilter) continue;
+
+      const bTotal = Number(b.total_amount ?? 0);
+      const { net } = calcTotals(b.payments ?? []);
+      const residuo = Math.max(0, bTotal - net);
+      if (reportStatusFilter === "da_saldare" && residuo <= 0) continue;
+
+      const clientName = b.client ? `${b.client.last_name} ${b.client.first_name}` : "—";
+
+      for (const p of (b.payments ?? [])) {
+        if (reportMethodFilter !== "tutti" && p.payment_method_id !== reportMethodFilter) continue;
+
+        if (reportPeriodMode === "range" && reportRangeFrom && reportRangeTo) {
+          const interval = { start: startOfDay(reportRangeFrom), end: endOfDay(reportRangeTo) };
+          if (!isWithinInterval(parseISO(p.payment_date), interval)) continue;
+        }
+
+        rows.push({
+          clientName,
+          booking_number: b.booking_number,
+          payment_date: p.payment_date,
+          payment_type: p.payment_type,
+          methodName: p.payment_method?.name ?? p.method ?? "—",
+          amount: Number(p.amount),
+          notes: p.notes,
+        });
+      }
+    }
+    return rows;
+  }, [bookings, reportClientFilter, reportStatusFilter, reportMethodFilter, reportPeriodMode, reportRangeFrom, reportRangeTo]);
+
+  const handleExportPDF = async () => {
+    if (!tenantConfig || !reportRows.length) return;
+    setExportingPDF(true);
+    try {
+      const summaryParts: string[] = [];
+      if (reportPeriodMode === "range" && reportRangeFrom && reportRangeTo) {
+        summaryParts.push(`Periodo: ${format(reportRangeFrom, "dd/MM/yyyy")} - ${format(reportRangeTo, "dd/MM/yyyy")}`);
+      }
+      if (reportStatusFilter === "da_saldare") summaryParts.push("Stato: Da saldare");
+      if (reportClientFilter !== "tutti") {
+        const c = allClients.find(c => c.id === reportClientFilter);
+        if (c) summaryParts.push(`Cliente: ${c.name}`);
+      }
+      if (reportMethodFilter !== "tutti") {
+        const m = (paymentMethods ?? []).find(m => m.id === reportMethodFilter);
+        if (m) summaryParts.push(`Modalità: ${m.name}`);
+      }
+      await generatePagamentiPDF(reportRows, tenantConfig as any, summaryParts.join(" · ") || null);
+    } catch (err: any) {
+      toast.error(err.message || "Errore nella generazione del PDF");
+    } finally {
+      setExportingPDF(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -297,6 +383,91 @@ export default function Pagamenti() {
         placeholder="Cerca cliente o pet..."
         className="max-w-sm"
       />
+
+      {/* Report Pagamenti */}
+      <div className="rounded-xl border bg-card p-4 space-y-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <h2 className="text-sm font-semibold">Report Pagamenti</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportPDF}
+            disabled={exportingPDF || !reportRows.length || !tenantConfig}
+          >
+            <FileDown className="mr-2 h-4 w-4" /> Esporta PDF
+          </Button>
+        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <Select value={reportStatusFilter} onValueChange={v => setReportStatusFilter(v as any)}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="tutti">Tutti i pagamenti</SelectItem>
+              <SelectItem value="da_saldare">Da saldare</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={reportClientFilter} onValueChange={setReportClientFilter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="tutti">Tutti i clienti</SelectItem>
+              {allClients.map(c => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={reportMethodFilter} onValueChange={setReportMethodFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="tutti">Tutte le modalità</SelectItem>
+              {(paymentMethods ?? []).map(pm => (
+                <SelectItem key={pm.id} value={pm.id}>{pm.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={reportPeriodMode} onValueChange={v => setReportPeriodMode(v as any)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="tutto">Tutto il periodo</SelectItem>
+              <SelectItem value="range">Intervallo date</SelectItem>
+            </SelectContent>
+          </Select>
+          {reportPeriodMode === "range" && (
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="min-w-[130px]">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {reportRangeFrom ? format(reportRangeFrom, "dd MMM yyyy", { locale: it }) : "Dal"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <DatePickerCalendar mode="single" selected={reportRangeFrom} onSelect={setReportRangeFrom} className="p-3 pointer-events-auto" />
+                </PopoverContent>
+              </Popover>
+              <span className="text-muted-foreground">→</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="min-w-[130px]">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {reportRangeTo ? format(reportRangeTo, "dd MMM yyyy", { locale: it }) : "Al"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <DatePickerCalendar mode="single" selected={reportRangeTo} onSelect={setReportRangeTo} className="p-3 pointer-events-auto" />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">{reportRows.length} pagamenti corrispondenti ai filtri</p>
+      </div>
 
       {isLoading ? (
         <div className="py-12 text-center text-muted-foreground">Caricamento...</div>
