@@ -55,12 +55,16 @@ const SCREENSHOTS = [
 /* ── Feature lists per pricing ── */
 const STARTER_FEATURES = [
   "Creazione preventivi",
+  "Preventivi da testo con AI",
   "Gestione prenotazioni",
   "Documenti PDF",
   "Calendario appuntamenti",
   "Anagrafica clienti",
   "Registro presenze",
   "Occupazione casette",
+  "Pagamenti online con carta",
+  "Automazioni email",
+  "Assistente AI",
   "Report e statistiche",
   "Area riservata per cliente",
 ];
@@ -94,7 +98,7 @@ const FEATURE_CATEGORIES = [
   {
     icon: Calendar,
     title: "Prenotazioni",
-    items: ["Calendario", "Disponibilità", "Preventivi", "Caparre", "Check-in/out"],
+    items: ["Calendario", "Disponibilità", "Preventivi", "Preventivi da testo con AI", "Caparre", "Check-in/out"],
   },
   {
     icon: PawPrint,
@@ -104,12 +108,12 @@ const FEATURE_CATEGORIES = [
   {
     icon: ClipboardCheck,
     title: "Operatività",
-    items: ["Task", "Staff", "Attività giornaliere", "Note", "Foto", "Aggiornamenti cliente"],
+    items: ["Task", "Staff", "Attività giornaliere", "Note", "Foto", "Aggiornamenti cliente", "Automazioni email", "Assistente AI"],
   },
   {
     icon: BarChart3,
     title: "Controllo del business",
-    items: ["Incassi", "Occupazione", "Clienti", "Servizi extra", "Statistiche"],
+    items: ["Incassi", "Pagamenti online", "Occupazione", "Clienti", "Clienti da ricontattare", "Servizi extra", "Statistiche"],
   },
 ];
 
@@ -261,8 +265,12 @@ export default function Landing() {
         "Calendario check-in e check-out",
         "Schede animali con microchip, dieta e note mediche",
         "Preventivi automatici con PDF",
+        "Estrazione preventivi da messaggi del cliente con AI",
         "Gestione pagamenti e caparre",
+        "Pagamenti online con carta (Stripe)",
         "Occupazione casette in tempo reale",
+        "Automazioni email (promemoria, richiesta recensione)",
+        "Assistente AI per domande su clienti e prenotazioni",
         "Area riservata per clienti",
         "Statistiche e report",
         "Multi-pensione fino a 10 sedi",

@@ -53,12 +53,16 @@ const SCREENSHOTS = [
 
 const STARTER_FEATURES = [
   "Quote creation",
+  "AI quote extraction from text",
   "Booking management",
   "PDF documents",
   "Appointment calendar",
   "Client registry",
   "Attendance log",
   "Kennel occupancy",
+  "Online card payments",
+  "Email automations",
+  "AI assistant",
   "Reports & statistics",
   "Client portal",
 ];
@@ -73,7 +77,7 @@ const BENEFITS = [
   {
     icon: Clock,
     title: "Save 10+ hours a week",
-    desc: "Automated quotes, PDF-ready in one click, guided check-in/out. Repetitive manual work disappears.",
+    desc: "Turn a client's message into a ready-to-send quote with AI, get reminder emails sent automatically, and ask the AI assistant about clients or today's schedule instead of digging through spreadsheets.",
     before: "Hours wasted filling forms, writing emails, calculating prices",
   },
   {
@@ -271,8 +275,12 @@ export default function LandingEn() {
         "Check-in and check-out calendar",
         "Pet profiles with microchip, diet and medical notes",
         "Automated quotes with PDF",
+        "AI quote extraction from client messages",
         "Payment and deposit management",
+        "Online card payments (Stripe)",
         "Real-time kennel occupancy",
+        "Email automations (reminders, review requests)",
+        "AI assistant for client and booking questions",
         "Client self-service portal",
         "Statistics and reports",
         "Multi-location up to 10 sites",
