@@ -302,6 +302,21 @@ export default function Pagamenti() {
 
       const clientName = b.client ? `${b.client.last_name} ${b.client.first_name}` : "—";
 
+      // Saldo residuo "a scalare": ricalcolato in ordine cronologico su TUTTI i
+      // pagamenti della prenotazione (non solo quelli che superano i filtri),
+      // altrimenti il residuo dopo ogni pagamento risulterebbe falsato.
+      const orderedPayments = [...(b.payments ?? [])].sort((p1: any, p2: any) => {
+        const d = p1.payment_date.localeCompare(p2.payment_date);
+        return d !== 0 ? d : (p1.created_at ?? "").localeCompare(p2.created_at ?? "");
+      });
+      let cumPaid = 0, cumRefunded = 0;
+      const residuoAfterById = new Map<string, number>();
+      for (const p of orderedPayments) {
+        if (p.payment_type === "rimborso") cumRefunded += Number(p.amount);
+        else if (p.payment_type !== "gestione_pratica") cumPaid += Number(p.amount);
+        residuoAfterById.set(p.id, Math.max(0, bTotal - (cumPaid - cumRefunded)));
+      }
+
       for (const p of (b.payments ?? [])) {
         if (reportMethodFilter !== "tutti" && p.payment_method_id !== reportMethodFilter) continue;
 
@@ -318,7 +333,7 @@ export default function Pagamenti() {
           methodName: p.payment_method?.name ?? p.method ?? "—",
           amount: Number(p.amount),
           notes: p.notes,
-          bookingResiduo: residuo,
+          residuoAfterPayment: residuoAfterById.get(p.id) ?? residuo,
         });
       }
     }
@@ -483,7 +498,7 @@ export default function Pagamenti() {
                   <TableHead>Tipo</TableHead>
                   <TableHead>Modalità</TableHead>
                   <TableHead className="text-right">Importo pagamento</TableHead>
-                  <TableHead className="text-right">Residuo prenotazione</TableHead>
+                  <TableHead className="text-right">Residuo dopo pagamento</TableHead>
                   <TableHead>Note</TableHead>
                 </TableRow>
               </TableHeader>
@@ -506,8 +521,8 @@ export default function Pagamenti() {
                         <TableCell className={`text-right font-mono ${isRimborso ? "text-destructive" : ""}`}>
                           {isRimborso ? "-" : "+"}€ {r.amount.toFixed(2)}
                         </TableCell>
-                        <TableCell className={`text-right font-mono ${r.bookingResiduo > 0 ? "text-warning-foreground" : "text-muted-foreground"}`}>
-                          € {r.bookingResiduo.toFixed(2)}
+                        <TableCell className={`text-right font-mono ${r.residuoAfterPayment > 0 ? "text-warning-foreground" : "text-muted-foreground"}`}>
+                          € {r.residuoAfterPayment.toFixed(2)}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">{r.notes ?? "—"}</TableCell>
                       </TableRow>
