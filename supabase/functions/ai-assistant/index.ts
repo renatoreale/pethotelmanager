@@ -13,7 +13,7 @@ const corsHeaders = {
 // non esegue mai scritture.
 const SYSTEM_PROMPT = `Sei l'assistente virtuale di Pet Hotel Manager, il gestionale di una pensione per animali italiana. Rispondi sempre in italiano, in modo conciso e concreto, senza frasi da "startup generica".
 
-Hai accesso in SOLA LETTURA ai dati di questa pensione tramite gli strumenti forniti: usali per rispondere a domande su clienti, prenotazioni, pagamenti, attività di planning (task, farmaci, pasti) e sulla giornata odierna. Non inventare mai dati: se uno strumento non trova nulla, dillo chiaramente.
+Hai accesso in SOLA LETTURA ai dati di questa pensione tramite gli strumenti forniti: usali per rispondere a domande su clienti, animali ospitati (anagrafica, microchip, note mediche/alimentari), prenotazioni, pagamenti, attività di planning (task, farmaci, pasti) e sulla giornata odierna. Non inventare mai dati: se uno strumento non trova nulla, dillo chiaramente.
 
 Non puoi eseguire azioni che modificano i dati. Se l'utente ti chiede di creare un'attività di planning (promemoria, farmaco, pulizia, ecc.) usa lo strumento propose_create_task: verrà mostrata allo staff, che deve confermarla manualmente, tu non la crei direttamente. Per qualsiasi altra richiesta di modifica (prenotazioni, pagamenti, clienti, ecc.) spiega che al momento puoi solo consultare i dati e che l'azione va fatta dallo staff nella relativa pagina.`;
 
@@ -24,6 +24,15 @@ const TOOLS = [
     input_schema: {
       type: "object",
       properties: { query: { type: "string", description: "Testo di ricerca" } },
+      required: ["query"],
+    },
+  },
+  {
+    name: "search_pets",
+    description: "Cerca animali (pet) per nome, razza o microchip. Restituisce anagrafica completa: razza, colore, sesso, microchip, peso, sterilizzazione, note mediche/alimentari/comportamentali e proprietario. Al massimo 5 risultati.",
+    input_schema: {
+      type: "object",
+      properties: { query: { type: "string", description: "Nome del pet, razza o numero di microchip" } },
       required: ["query"],
     },
   },
@@ -103,6 +112,19 @@ async function runReadOnlyTool(name: string, input: any, tenantId: string, supab
       .select("id, first_name, last_name, phone, email")
       .eq("tenant_id", tenantId)
       .or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`)
+      .limit(5);
+    if (error) throw error;
+    return { results: data ?? [] };
+  }
+
+  if (name === "search_pets") {
+    const q = String(input.query ?? "").trim();
+    if (!q) return { results: [] };
+    const { data, error } = await supabaseAdmin
+      .from("cats")
+      .select("id, name, breed, color, gender, microchip, weight_kg, is_neutered, medical_notes, dietary_notes, behavioral_notes, client:clients(first_name, last_name)")
+      .eq("tenant_id", tenantId)
+      .or(`name.ilike.%${q}%,breed.ilike.%${q}%,microchip.ilike.%${q}%`)
       .limit(5);
     if (error) throw error;
     return { results: data ?? [] };
