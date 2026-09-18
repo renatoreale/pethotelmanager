@@ -25,11 +25,14 @@ interface NavItem {
 
 // Blocco 30: navigazione riorganizzata in 5 gruppi (Operatività / Clienti /
 // Gestione / Business / Configurazione) — stesse voci di prima, stessi
-// resource/url/icon, solo raggruppate in modo più chiaro. "Occupazione" si
-// sposta da un gruppo "Operazioni" ambiguo a "Gestione" (assieme a
-// prenotazioni/preventivi/pagamenti, di cui è parte integrante).
+// resource/url/icon, solo raggruppate in modo più chiaro. "Occupazione" e
+// "Pagamenti" restano in "Gestione"; "Preventivi" e "Prenotazioni" sono
+// in "Operatività", tra Dashboard e Appuntamenti, essendo il lavoro
+// operativo di tutti i giorni.
 const operativitaNav: NavItem[] = [
 { titleKey: "sidebar.dashboard", url: "/dashboard", icon: LayoutDashboard, resource: "dashboard" },
+{ titleKey: "sidebar.quotes", url: "/preventivi", icon: FileText, resource: "preventivi" },
+{ titleKey: "sidebar.bookings", url: "/prenotazioni", icon: CalendarCheck, resource: "prenotazioni" },
 { titleKey: "sidebar.appointments", url: "/appuntamenti", icon: Calendar, resource: "appuntamenti" },
 { titleKey: "sidebar.checkIn", url: "/check-in", icon: LogIn, resource: "check-in" },
 { titleKey: "sidebar.checkOut", url: "/check-out", icon: LogOut, resource: "check-out" },
@@ -46,8 +49,6 @@ const clientiNav: NavItem[] = [
 
 
 const gestioneNav: NavItem[] = [
-{ titleKey: "sidebar.quotes", url: "/preventivi", icon: FileText, resource: "preventivi" },
-{ titleKey: "sidebar.bookings", url: "/prenotazioni", icon: CalendarCheck, resource: "prenotazioni" },
 { titleKey: "sidebar.occupancy", url: "/occupazione", icon: Grid3X3, resource: "occupazione" },
 { titleKey: "sidebar.payments", url: "/pagamenti", icon: CreditCard, resource: "pagamenti" }];
 
