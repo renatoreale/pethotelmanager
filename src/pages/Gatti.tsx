@@ -22,21 +22,37 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, Pencil, Trash2, Cat as CatIcon, Dog, PawPrint } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Cat as CatIcon, Dog, PawPrint, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { usePetLabels } from "@/hooks/usePetLabels";
+import { useTenantConfig } from "@/hooks/usePensioneConfig";
+import { generateRegistroPetsPDF } from "@/lib/generateRegistroPetsPDF";
 
 export default function Gatti() {
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCat, setEditingCat] = useState<any | null>(null);
   const [deletingCat, setDeletingCat] = useState<any | null>(null);
+  const [exportingPDF, setExportingPDF] = useState(false);
 
   const { data: cats, isLoading } = useCats(undefined, search);
   const deleteCat = useDeleteCat();
   const pet = usePetLabels();
+  const { data: tenantConfig } = useTenantConfig();
   const PetIcon = pet.iconName === "Cat" ? CatIcon : pet.iconName === "Dog" ? Dog : PawPrint;
+
+  const handleExportPDF = async () => {
+    if (!tenantConfig || !cats?.length) return;
+    setExportingPDF(true);
+    try {
+      await generateRegistroPetsPDF(cats as any, tenantConfig as any);
+    } catch (err: any) {
+      toast.error(err.message || "Errore nella generazione del PDF");
+    } finally {
+      setExportingPDF(false);
+    }
+  };
 
   const handleEdit = (cat: any) => {
     setEditingCat(cat);
@@ -68,9 +84,18 @@ export default function Gatti() {
             {pet.registrySubtitle} · {cats?.length ?? 0} registrati
           </p>
         </div>
-        <Button onClick={handleNew}>
-          <Plus className="mr-2 h-4 w-4" /> Nuovo {pet.singularCap}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportPDF}
+            disabled={exportingPDF || !cats?.length || !tenantConfig}
+          >
+            <FileDown className="mr-2 h-4 w-4" /> Esporta PDF
+          </Button>
+          <Button onClick={handleNew}>
+            <Plus className="mr-2 h-4 w-4" /> Nuovo {pet.singularCap}
+          </Button>
+        </div>
       </div>
 
       <Card className="border-none shadow-sm">
