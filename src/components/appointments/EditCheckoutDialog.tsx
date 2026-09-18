@@ -171,8 +171,11 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
     }) ?? seasonalTariffs[0] ?? null;
   };
 
-  const isInCorso = (booking as any)?.status === "in_corso";
-
+  // Anticipare il checkout accorcia il soggiorno: il totale resta quello
+  // originale. Posticiparlo lo allunga: si ricalcola solo sui giorni
+  // aggiunti, "bloccando" il checkout sulla data originaria quando si
+  // muove nella direzione che accorcerebbe il soggiorno (clamp), cosi'
+  // il comportamento resta corretto anche cambiando data piu' volte.
   const recalculated = useMemo(() => {
     if (!booking || !checkInDate || !originalCoDate) return null;
 
@@ -183,21 +186,20 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
     if (newDays <= 0) return { originalDays, newDays, newTotal: originalTotal, originalTotal, valid: false };
 
     const numCats = ((booking as any).booking_cats ?? []).length || 1;
+    const effectiveCoStr = newDateStr > originalCoDate ? newDateStr : originalCoDate;
+    const effectiveDays = calcDuration(checkInDate, effectiveCoStr);
     const tariff = findSeasonalTariff(checkInDate);
     let newTotal = originalTotal;
 
-    // Per prenotazioni in corso: anticipo checkout = totale invariato, posticipo = ricalcolo
-    if (isInCorso && newDateStr < originalCoDate) {
-      newTotal = originalTotal;
-    } else if (tariff && newDays !== originalDays) {
-      const baseCost = Number(tariff.price_per_day) * newDays * numCats;
+    if (effectiveDays !== originalDays && tariff) {
+      const baseCost = Number(tariff.price_per_day) * effectiveDays * numCats;
       const extraCats = Math.max(0, numCats - 1);
-      const supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * newDays;
+      const supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * effectiveDays;
       newTotal = Math.round((baseCost + supplementCost) * 100) / 100;
     }
 
     return { originalDays, newDays, newTotal, originalTotal, valid: true };
-  }, [booking, checkInDate, originalCoDate, newDateStr, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs, isInCorso]);
+  }, [booking, checkInDate, originalCoDate, newDateStr, stayCalcType, countCheckinDay, countCheckoutDay, seasonalTariffs]);
 
   // --- Availability check ---
   const { data: allBookings } = useQuery({
@@ -500,16 +502,18 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
               </div>
               <div className="flex justify-between border-t pt-1.5">
                 <span className="font-medium">Nuovo totale</span>
-                <span className={cn("font-bold", recalculated.newTotal !== recalculated.originalTotal && "text-primary")}>
+                <span className={cn("font-bold", recalculated.newTotal !== recalculated.originalTotal && "text-amber-700 dark:text-amber-400")}>
                   € {recalculated.newTotal.toFixed(2)}
                 </span>
               </div>
               {recalculated.newTotal !== recalculated.originalTotal && (
+                <div className="text-xs text-amber-700 dark:text-amber-400">
+                  Soggiorno allungato rispetto alla data originaria: totale ricalcolato (+€{(recalculated.newTotal - recalculated.originalTotal).toFixed(2)}).
+                </div>
+              )}
+              {recalculated.newTotal === recalculated.originalTotal && recalculated.newDays !== recalculated.originalDays && (
                 <div className="text-xs text-muted-foreground italic">
-                  {recalculated.newDays > recalculated.originalDays
-                    ? `+${recalculated.newDays - recalculated.originalDays} ${stayLabel} — totale ricalcolato`
-                    : `−${recalculated.originalDays - recalculated.newDays} ${stayLabel} — totale ricalcolato`
-                  }
+                  Soggiorno accorciato rispetto alla data originaria: il totale resta invariato.
                 </div>
               )}
             </div>

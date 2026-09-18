@@ -142,6 +142,11 @@ export function EditCheckinDialog({ open, onOpenChange, appointment }: Props) {
     }) ?? seasonalTariffs[0] ?? null;
   };
 
+  // Posticipare il check-in accorcia il soggiorno: il totale resta quello
+  // originale. Anticiparlo lo allunga: si ricalcola solo sui giorni
+  // aggiunti, "bloccando" il check-in sulla data originaria quando si
+  // muove nella direzione che accorcerebbe il soggiorno (clamp), cosi'
+  // il comportamento resta corretto anche cambiando data piu' volte.
   const recalculated = useMemo(() => {
     if (!booking || !originalCiDate || !checkOutDate) return null;
 
@@ -153,13 +158,15 @@ export function EditCheckinDialog({ open, onOpenChange, appointment }: Props) {
 
     // Recalculate full price based on new duration
     const numCats = (booking.booking_cats ?? []).length || 1;
-    const tariff = findSeasonalTariff(newDateStr);
+    const effectiveCiStr = newDateStr < originalCiDate ? newDateStr : originalCiDate;
+    const effectiveDays = calcDuration(effectiveCiStr, checkOutDate);
+    const tariff = findSeasonalTariff(effectiveCiStr);
     let newTotal = originalTotal;
 
-    if (tariff && newDays !== originalDays) {
-      const baseCost = Number(tariff.price_per_day) * newDays * numCats;
+    if (effectiveDays !== originalDays && tariff) {
+      const baseCost = Number(tariff.price_per_day) * effectiveDays * numCats;
       const extraCats = Math.max(0, numCats - 1);
-      const supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * newDays;
+      const supplementCost = extraCats * Number(tariff.extra_cat_supplement ?? 0) * effectiveDays;
       newTotal = Math.round((baseCost + supplementCost) * 100) / 100;
     }
 
@@ -462,16 +469,18 @@ export function EditCheckinDialog({ open, onOpenChange, appointment }: Props) {
               </div>
               <div className="flex justify-between border-t pt-1.5">
                 <span className="font-medium">Nuovo totale</span>
-                <span className={cn("font-bold", recalculated.newTotal !== recalculated.originalTotal && "text-primary")}>
+                <span className={cn("font-bold", recalculated.newTotal !== recalculated.originalTotal && "text-amber-700 dark:text-amber-400")}>
                   € {recalculated.newTotal.toFixed(2)}
                 </span>
               </div>
               {recalculated.newTotal !== recalculated.originalTotal && (
+                <div className="text-xs text-amber-700 dark:text-amber-400">
+                  Soggiorno allungato rispetto alla data originaria: totale ricalcolato (+€{(recalculated.newTotal - recalculated.originalTotal).toFixed(2)}).
+                </div>
+              )}
+              {recalculated.newTotal === recalculated.originalTotal && recalculated.newDays !== recalculated.originalDays && (
                 <div className="text-xs text-muted-foreground italic">
-                  {recalculated.newDays > recalculated.originalDays
-                    ? `+${recalculated.newDays - recalculated.originalDays} ${stayLabel} — totale ricalcolato`
-                    : `−${recalculated.originalDays - recalculated.newDays} ${stayLabel} — totale ricalcolato`
-                  }
+                  Soggiorno accorciato rispetto alla data originaria: il totale resta invariato.
                 </div>
               )}
             </div>
