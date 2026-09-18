@@ -20,6 +20,7 @@ import {
   useAppointmentCounts,
   useUpdateAppointment,
   useCreateAppointment,
+  useBookingAppointments,
   generateTimeSlots,
   type AppointmentWithDetails,
 } from "@/hooks/useAppointments";
@@ -68,6 +69,7 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
   const booking = appointment?.booking ?? bookingData;
   const originalCoDate = (booking as any)?.check_out_date;
   const checkInDate = (booking as any)?.check_in_date;
+  const { data: bookingAppointments } = useBookingAppointments((booking as any)?.id);
 
   const [newDate, setNewDate] = useState<Date>(
     originalCoDate ? parseISO(originalCoDate) : new Date()
@@ -340,7 +342,7 @@ export function EditCheckoutDialog({ open, onOpenChange, appointment, bookingDat
         ...booking,
         check_out_date: date,
         appointments: [
-          ...((booking as any).appointments ?? []).filter((a: any) => a.appointment_type !== "check_out"),
+          ...(bookingAppointments ?? []).filter((a: any) => a.appointment_type !== "check_out"),
           { id: "upd-out", appointment_type: "check_out" as const, scheduled_at: `${date}T${time}:00` },
         ],
       };

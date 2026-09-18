@@ -20,6 +20,7 @@ import {
   useSlotConfigsForDay,
   useAppointmentCounts,
   useUpdateAppointment,
+  useBookingAppointments,
   generateTimeSlots,
   type AppointmentWithDetails,
 } from "@/hooks/useAppointments";
@@ -47,6 +48,7 @@ export function EditCheckinDialog({ open, onOpenChange, appointment }: Props) {
 
   const booking = appointment.booking;
   const originalCiDate = booking?.check_in_date;
+  const { data: bookingAppointments } = useBookingAppointments(booking?.id);
   const checkOutDate = booking?.check_out_date;
 
   const [newDate, setNewDate] = useState<Date>(
@@ -298,7 +300,7 @@ export function EditCheckinDialog({ open, onOpenChange, appointment }: Props) {
         ...booking,
         check_in_date: date,
         appointments: [
-          ...(booking.appointments ?? []).filter((a: any) => a.appointment_type !== "check_in"),
+          ...(bookingAppointments ?? []).filter((a: any) => a.appointment_type !== "check_in"),
           { id: "upd-in", appointment_type: "check_in" as const, scheduled_at: `${date}T${time}:00` },
         ],
       };
