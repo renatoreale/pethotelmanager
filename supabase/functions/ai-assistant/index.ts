@@ -13,7 +13,7 @@ const corsHeaders = {
 // non esegue mai scritture.
 const SYSTEM_PROMPT = `Sei l'assistente virtuale di Pet Hotel Manager, il gestionale di una pensione per animali italiana. Rispondi sempre in italiano, in modo conciso e concreto, senza frasi da "startup generica".
 
-Hai accesso in SOLA LETTURA ai dati di questa pensione tramite gli strumenti forniti: usali per rispondere a domande su clienti, prenotazioni, pagamenti e sulla giornata odierna. Non inventare mai dati: se uno strumento non trova nulla, dillo chiaramente.
+Hai accesso in SOLA LETTURA ai dati di questa pensione tramite gli strumenti forniti: usali per rispondere a domande su clienti, prenotazioni, pagamenti, attività di planning (task, farmaci, pasti) e sulla giornata odierna. Non inventare mai dati: se uno strumento non trova nulla, dillo chiaramente.
 
 Non puoi eseguire azioni che modificano i dati. Se l'utente ti chiede di creare un'attività di planning (promemoria, farmaco, pulizia, ecc.) usa lo strumento propose_create_task: verrà mostrata allo staff, che deve confermarla manualmente, tu non la crei direttamente. Per qualsiasi altra richiesta di modifica (prenotazioni, pagamenti, clienti, ecc.) spiega che al momento puoi solo consultare i dati e che l'azione va fatta dallo staff nella relativa pagina.`;
 
@@ -53,6 +53,16 @@ const TOOLS = [
     name: "get_today_summary",
     description: "Riepilogo della giornata odierna: check-in previsti, check-out previsti, numero prenotazioni attive, pagamenti ancora aperti su soggiorni già conclusi.",
     input_schema: { type: "object", properties: {} },
+  },
+  {
+    name: "get_today_tasks",
+    description: "Elenco delle attività di planning (task, farmaci, pasti, pulizie, controlli, ecc.) già inserite in agenda per una data, sia completate che da fare. Se non specifichi la data usa oggi.",
+    input_schema: {
+      type: "object",
+      properties: {
+        date: { type: "string", description: "Formato YYYY-MM-DD (opzionale, default oggi)" },
+      },
+    },
   },
   {
     name: "propose_create_task",
@@ -144,6 +154,24 @@ async function runReadOnlyTool(name: string, input: any, tenantId: string, supab
       checkouts_today: (checkouts ?? []).length,
       active_bookings: (active ?? []).length,
       overdue_payments_count: overduePayments,
+    };
+  }
+
+  if (name === "get_today_tasks") {
+    const dateStr = input.date || new Date().toISOString().slice(0, 10);
+    const { data, error } = await supabaseAdmin
+      .from("planning_tasks")
+      .select("title, description, category, priority, scheduled_time, completed, cat:cats(name), booking:bookings(booking_number)")
+      .eq("tenant_id", tenantId)
+      .eq("task_date", dateStr)
+      .order("scheduled_time", { ascending: true, nullsFirst: false });
+    if (error) throw error;
+    const tasks = data ?? [];
+    return {
+      date: dateStr,
+      total: tasks.length,
+      pending: tasks.filter((t: any) => !t.completed).length,
+      tasks,
     };
   }
 
