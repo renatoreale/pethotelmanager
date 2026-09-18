@@ -213,7 +213,7 @@ export function AppointmentScheduleDialog({ open, onOpenChange, booking }: Props
       const bookingWithAppts = {
         ...booking,
         appointments: [
-          ...(booking.appointments ?? []).filter((a: any) =>
+          ...(existingAppointments ?? []).filter((a: any) =>
             a.appointment_type !== "check_in" && a.appointment_type !== "check_out"
           ),
           ...(checkIn && checkInDate ? [{ id: "new-in", appointment_type: "check_in" as const, scheduled_at: `${checkInDate}T${checkIn}:00` }] : []),

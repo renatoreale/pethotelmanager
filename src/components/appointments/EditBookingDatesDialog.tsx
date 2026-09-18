@@ -254,6 +254,7 @@ export function EditBookingDatesDialog({ open, onOpenChange, booking }: Props) {
         ...booking,
         check_in_date: savedRef.current.ci,
         check_out_date: savedRef.current.co,
+        appointments: siblingAppointments ?? [],
       };
       const pdf_base64 = await generateModuloAffidoPDF(bookingWithDates as any, tenantConfig as any, true, supabase) as string;
       const { data, error } = await supabase.functions.invoke("send-appuntamento", {
