@@ -14,6 +14,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -466,6 +469,49 @@ export default function Pagamenti() {
             </div>
           )}
         </div>
+        {reportRows.length === 0 ? (
+          <p className="text-xs text-muted-foreground py-4 text-center">Nessun pagamento corrispondente ai filtri</p>
+        ) : (
+          <div className="rounded-md border overflow-auto max-h-[320px]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Prenotazione</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Modalità</TableHead>
+                  <TableHead className="text-right">Importo</TableHead>
+                  <TableHead>Note</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[...reportRows]
+                  .sort((a, b) => a.payment_date.localeCompare(b.payment_date))
+                  .map((r, i) => {
+                    const isRimborso = r.payment_type === "rimborso";
+                    return (
+                      <TableRow key={i}>
+                        <TableCell className="font-medium">{r.clientName}</TableCell>
+                        <TableCell>{r.booking_number}</TableCell>
+                        <TableCell>{format(parseISO(r.payment_date), "dd MMM yyyy", { locale: it })}</TableCell>
+                        <TableCell>
+                          <Badge variant={isRimborso ? "destructive" : r.payment_type === "caparra" ? "default" : "secondary"} className="text-[10px] h-5">
+                            {TYPE_LABELS[r.payment_type] ?? r.payment_type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{r.methodName}</TableCell>
+                        <TableCell className={`text-right font-mono ${isRimborso ? "text-destructive" : ""}`}>
+                          {isRimborso ? "-" : "+"}€ {r.amount.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{r.notes ?? "—"}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
         <p className="text-xs text-muted-foreground">{reportRows.length} pagamenti corrispondenti ai filtri</p>
       </div>
 
