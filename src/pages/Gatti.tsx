@@ -27,7 +27,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { usePetLabels } from "@/hooks/usePetLabels";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
-import { generateRegistroPetsPDF } from "@/lib/generateRegistroPetsPDF";
+import { generateAnagraficaPetsPDF } from "@/lib/generateAnagraficaPetsPDF";
 
 export default function Gatti() {
   const [search, setSearch] = useState("");
@@ -46,7 +46,7 @@ export default function Gatti() {
     if (!tenantConfig || !cats?.length) return;
     setExportingPDF(true);
     try {
-      await generateRegistroPetsPDF(cats as any, tenantConfig as any);
+      await generateAnagraficaPetsPDF(cats as any, tenantConfig as any);
     } catch (err: any) {
       toast.error(err.message || "Errore nella generazione del PDF");
     } finally {
