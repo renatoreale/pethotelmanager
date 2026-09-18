@@ -13,7 +13,7 @@ const corsHeaders = {
 // non esegue mai scritture.
 const SYSTEM_PROMPT = `Sei l'assistente virtuale di Pet Hotel Manager, il gestionale di una pensione per animali italiana. Rispondi sempre in italiano, in modo conciso e concreto, senza frasi da "startup generica".
 
-Hai accesso in SOLA LETTURA ai dati di questa pensione tramite gli strumenti forniti: usali per rispondere a domande su clienti, animali ospitati (anagrafica, microchip, note mediche/alimentari), prenotazioni, pagamenti, attività di planning (task, farmaci, pasti) e sulla giornata odierna. Non inventare mai dati: se uno strumento non trova nulla, dillo chiaramente.
+Hai accesso in SOLA LETTURA ai dati di questa pensione tramite gli strumenti forniti: usali per rispondere a domande su clienti, animali ospitati (anagrafica, microchip, note mediche/alimentari), chi è presente in struttura ora, prenotazioni, pagamenti, attività di planning (task, farmaci, pasti) e sulla giornata odierna. Non inventare mai dati: se uno strumento non trova nulla, dillo chiaramente.
 
 Non puoi eseguire azioni che modificano i dati. Se l'utente ti chiede di creare un'attività di planning (promemoria, farmaco, pulizia, ecc.) usa lo strumento propose_create_task: verrà mostrata allo staff, che deve confermarla manualmente, tu non la crei direttamente. Per qualsiasi altra richiesta di modifica (prenotazioni, pagamenti, clienti, ecc.) spiega che al momento puoi solo consultare i dati e che l'azione va fatta dallo staff nella relativa pagina.`;
 
@@ -34,6 +34,16 @@ const TOOLS = [
       type: "object",
       properties: { query: { type: "string", description: "Nome del pet, razza o numero di microchip" } },
       required: ["query"],
+    },
+  },
+  {
+    name: "get_current_guests",
+    description: "Elenco e conteggio degli animali attualmente presenti in struttura oggi (check-in effettuato, check-out non ancora avvenuto). Puoi filtrare per specie.",
+    input_schema: {
+      type: "object",
+      properties: {
+        pet_type: { type: "string", description: "Filtra per specie: 'gatti' o 'cani' (opzionale; se omesso restituisce tutti, con conteggio per specie)" },
+      },
     },
   },
   {
@@ -128,6 +138,37 @@ async function runReadOnlyTool(name: string, input: any, tenantId: string, supab
       .limit(5);
     if (error) throw error;
     return { results: data ?? [] };
+  }
+
+  if (name === "get_current_guests") {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const { data, error } = await supabaseAdmin
+      .from("cat_registry")
+      .select("cat_name, client_name, check_in_date, check_out_date, cats:cat_id(pet_type, breed), booking:booking_id(check_out_date)")
+      .eq("tenant_id", tenantId)
+      .lte("check_in_date", todayStr);
+    if (error) throw error;
+    const present = (data ?? []).filter((e: any) => {
+      const checkOut = e.check_out_date || e.booking?.check_out_date;
+      return !checkOut || checkOut >= todayStr;
+    });
+    const countsByPetType: Record<string, number> = {};
+    for (const e of present) {
+      const pt = e.cats?.pet_type ?? "sconosciuto";
+      countsByPetType[pt] = (countsByPetType[pt] ?? 0) + 1;
+    }
+    const filtered = input.pet_type ? present.filter((e: any) => e.cats?.pet_type === input.pet_type) : present;
+    return {
+      date: todayStr,
+      total_present: present.length,
+      counts_by_pet_type: countsByPetType,
+      guests: filtered.map((e: any) => ({
+        name: e.cat_name,
+        client_name: e.client_name,
+        pet_type: e.cats?.pet_type ?? null,
+        breed: e.cats?.breed ?? null,
+      })),
+    };
   }
 
   if (name === "search_bookings") {
