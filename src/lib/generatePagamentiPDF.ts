@@ -19,6 +19,7 @@ interface PaymentRow {
   methodName: string;
   amount: number;
   notes?: string | null;
+  bookingResiduo?: number;
 }
 
 interface TenantData {
@@ -150,6 +151,7 @@ export async function generatePagamentiPDF(
       TYPE_LABELS[r.payment_type] ?? r.payment_type,
       r.methodName,
       `${isRimborso ? "-" : "+"}€ ${r.amount.toFixed(2)}`,
+      r.bookingResiduo != null ? `€ ${r.bookingResiduo.toFixed(2)}` : "—",
       r.notes || "—",
     ];
   });
@@ -157,7 +159,7 @@ export async function generatePagamentiPDF(
   autoTable(doc, {
     startY: headerHeight,
     margin: { left: margin, right: margin, top: headerHeight, bottom: footerHeight },
-    head: [["Cliente", "Prenotazione", "Data", "Tipo", "Modalità", "Importo", "Note"]],
+    head: [["Cliente", "Prenotazione", "Data", "Tipo", "Modalità", "Importo pagamento", "Residuo prenotazione", "Note"]],
     body,
     didDrawPage: () => {
       drawHeader();
@@ -178,6 +180,7 @@ export async function generatePagamentiPDF(
     },
     columnStyles: {
       5: { halign: "right" },
+      6: { halign: "right" },
     },
   });
 

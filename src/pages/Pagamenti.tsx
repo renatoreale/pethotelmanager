@@ -318,6 +318,7 @@ export default function Pagamenti() {
           methodName: p.payment_method?.name ?? p.method ?? "—",
           amount: Number(p.amount),
           notes: p.notes,
+          bookingResiduo: residuo,
         });
       }
     }
@@ -481,7 +482,8 @@ export default function Pagamenti() {
                   <TableHead>Data</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Modalità</TableHead>
-                  <TableHead className="text-right">Importo</TableHead>
+                  <TableHead className="text-right">Importo pagamento</TableHead>
+                  <TableHead className="text-right">Residuo prenotazione</TableHead>
                   <TableHead>Note</TableHead>
                 </TableRow>
               </TableHeader>
@@ -503,6 +505,9 @@ export default function Pagamenti() {
                         <TableCell className="text-muted-foreground">{r.methodName}</TableCell>
                         <TableCell className={`text-right font-mono ${isRimborso ? "text-destructive" : ""}`}>
                           {isRimborso ? "-" : "+"}€ {r.amount.toFixed(2)}
+                        </TableCell>
+                        <TableCell className={`text-right font-mono ${r.bookingResiduo > 0 ? "text-warning-foreground" : "text-muted-foreground"}`}>
+                          € {r.bookingResiduo.toFixed(2)}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">{r.notes ?? "—"}</TableCell>
                       </TableRow>
