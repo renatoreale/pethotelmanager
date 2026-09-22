@@ -14,6 +14,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -21,13 +24,17 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  ChevronDown, ChevronRight, Plus, Pencil, Trash2, Search, User, Cat, Calendar, CreditCard,
+  ChevronDown, ChevronRight, Plus, Pencil, Trash2, Search, User, Cat, Calendar, CreditCard, FileDown, CalendarIcon,
 } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, startOfDay, endOfDay, isWithinInterval } from "date-fns";
 import { it } from "date-fns/locale";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as DatePickerCalendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import { useSupabase } from "@/hooks/useSupabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTenantConfig } from "@/hooks/usePensioneConfig";
+import { generatePagamentiPDF } from "@/lib/generatePagamentiPDF";
 
 const TYPE_LABELS: Record<string, string> = {
   caparra: "Caparra",
@@ -100,6 +107,7 @@ export default function Pagamenti() {
   const queryClient = useQueryClient();
   const { data: bookings, isLoading } = useAllBookingsWithPayments();
   const { data: paymentMethods } = usePaymentMethods();
+  const { data: tenantConfig } = useTenantConfig();
   const createPayment = useCreatePayment();
   const updatePayment = useUpdatePayment();
   const deletePayment = useDeletePayment();
@@ -115,6 +123,14 @@ export default function Pagamenti() {
   const [txForm, setTxForm] = useState<TransactionFormData>(emptyForm);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingTotal, setEditingTotal] = useState<string | null>(null);
+
+  const [reportStatusFilter, setReportStatusFilter] = useState<"tutti" | "da_saldare">("tutti");
+  const [reportClientFilter, setReportClientFilter] = useState<string>("tutti");
+  const [reportMethodFilter, setReportMethodFilter] = useState<string>("tutti");
+  const [reportPeriodMode, setReportPeriodMode] = useState<"tutto" | "range">("tutto");
+  const [reportRangeFrom, setReportRangeFrom] = useState<Date>();
+  const [reportRangeTo, setReportRangeTo] = useState<Date>();
+  const [exportingPDF, setExportingPDF] = useState(false);
 
   // Keep selectedBooking in sync with fresh data from the query cache
   useEffect(() => {
@@ -260,6 +276,138 @@ export default function Pagamenti() {
     return { total, paid, remaining: Math.max(0, total - paid) };
   }, [clientGroups]);
 
+  const allClients = useMemo(() => {
+    if (!bookings) return [];
+    const map = new Map<string, string>();
+    for (const b of bookings) {
+      if (b.client_id && !map.has(b.client_id)) {
+        map.set(b.client_id, b.client ? `${b.client.last_name} ${b.client.first_name}` : "—");
+      }
+    }
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [bookings]);
+
+  const hasActiveReportFilter = reportStatusFilter !== "tutti" || reportClientFilter !== "tutti"
+    || reportMethodFilter !== "tutti" || reportPeriodMode !== "tutto";
+
+  // L'importo della singola transazione si nasconde solo quando si guarda lo
+  // stato aggregato "Da saldare": in quel caso il report mostra una riga per
+  // prenotazione con i totali, non una riga per ogni transazione.
+  const isAggregatedView = reportStatusFilter === "da_saldare";
+  const showTotaliPrenotazione = isAggregatedView;
+  const showImportoTransazione = !isAggregatedView;
+
+  const reportRows = useMemo(() => {
+    if (!bookings || !hasActiveReportFilter) return [];
+    const rows: any[] = [];
+    for (const b of bookings) {
+      if (reportClientFilter !== "tutti" && b.client_id !== reportClientFilter) continue;
+
+      const bTotal = Number(b.total_amount ?? 0);
+      const { net } = calcTotals(b.payments ?? []);
+      const residuo = Math.max(0, bTotal - net);
+      if (isAggregatedView && residuo <= 0) continue;
+
+      const clientName = b.client ? `${b.client.last_name} ${b.client.first_name}` : "—";
+
+      const matchingPayments = (b.payments ?? []).filter((p: any) => {
+        if (reportMethodFilter !== "tutti" && p.payment_method_id !== reportMethodFilter) return false;
+        if (reportPeriodMode === "range" && reportRangeFrom && reportRangeTo) {
+          const interval = { start: startOfDay(reportRangeFrom), end: endOfDay(reportRangeTo) };
+          if (!isWithinInterval(parseISO(p.payment_date), interval)) return false;
+        }
+        return true;
+      });
+      if (matchingPayments.length === 0) continue;
+
+      if (isAggregatedView) {
+        rows.push({
+          clientName,
+          booking_number: b.booking_number,
+          paidSoFar: net,
+          residuoAfterPayment: residuo,
+        });
+      } else {
+        for (const p of matchingPayments) {
+          rows.push({
+            clientName,
+            booking_number: b.booking_number,
+            payment_date: p.payment_date,
+            payment_type: p.payment_type,
+            methodName: p.payment_method?.name ?? p.method ?? "—",
+            amount: Number(p.amount),
+            notes: p.notes,
+            paidSoFar: net,
+            residuoAfterPayment: residuo,
+          });
+        }
+      }
+    }
+
+    // Con "Da saldare": cliente crescente, prenotazione crescente.
+    // Altrimenti: cliente crescente, prenotazione decrescente, data pagamento decrescente.
+    rows.sort((a, b) => {
+      const byClient = a.clientName.localeCompare(b.clientName, "it");
+      if (byClient !== 0) return byClient;
+      const byBooking = a.booking_number.localeCompare(b.booking_number, undefined, { numeric: true });
+      if (isAggregatedView) return byBooking;
+      if (byBooking !== 0) return -byBooking;
+      return b.payment_date.localeCompare(a.payment_date);
+    });
+
+    return rows;
+  }, [bookings, hasActiveReportFilter, isAggregatedView, reportClientFilter, reportMethodFilter, reportPeriodMode, reportRangeFrom, reportRangeTo]);
+
+  const handleExportPDF = async () => {
+    if (!tenantConfig || !reportRows.length) return;
+    setExportingPDF(true);
+    try {
+      const summaryParts: string[] = [];
+      if (reportPeriodMode === "range" && reportRangeFrom && reportRangeTo) {
+        summaryParts.push(`Periodo: ${format(reportRangeFrom, "dd/MM/yyyy")} - ${format(reportRangeTo, "dd/MM/yyyy")}`);
+      }
+      if (reportStatusFilter === "da_saldare") summaryParts.push("Stato: Da saldare");
+      const selectedClient = reportClientFilter !== "tutti"
+        ? allClients.find(c => c.id === reportClientFilter)
+        : undefined;
+      if (selectedClient) summaryParts.push(`Cliente: ${selectedClient.name}`);
+      const selectedMethod = reportMethodFilter !== "tutti"
+        ? (paymentMethods ?? []).find(m => m.id === reportMethodFilter)
+        : undefined;
+      if (selectedMethod) summaryParts.push(`Modalità: ${selectedMethod.name}`);
+
+      const slug = (s: string) => s
+        .normalize("NFD").replace(/[̀-ͯ]/g, "")
+        .replace(/[^a-zA-Z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+
+      const fileNameParts = ["Report_Pagamenti"];
+      if (isAggregatedView) fileNameParts.push("DaSaldare");
+      if (selectedClient) fileNameParts.push(slug(selectedClient.name));
+      if (selectedMethod) fileNameParts.push(slug(selectedMethod.name));
+      if (reportPeriodMode === "range" && reportRangeFrom && reportRangeTo) {
+        fileNameParts.push(format(reportRangeFrom, "yyyy-MM-dd"), format(reportRangeTo, "yyyy-MM-dd"));
+      } else {
+        fileNameParts.push(format(new Date(), "yyyy-MM-dd"));
+      }
+      const fileName = `${fileNameParts.join("_")}.pdf`;
+
+      await generatePagamentiPDF(
+        reportRows,
+        tenantConfig as any,
+        summaryParts.join(" · ") || null,
+        { showImportoTransazione, showTotaliPrenotazione },
+        fileName,
+      );
+    } catch (err: any) {
+      toast.error(err.message || "Errore nella generazione del PDF");
+    } finally {
+      setExportingPDF(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -297,6 +445,156 @@ export default function Pagamenti() {
         placeholder="Cerca cliente o pet..."
         className="max-w-sm"
       />
+
+      {/* Report Pagamenti */}
+      <div className="rounded-xl border bg-card p-4 space-y-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <h2 className="text-sm font-semibold">Report Pagamenti</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportPDF}
+            disabled={exportingPDF || !reportRows.length || !tenantConfig}
+          >
+            <FileDown className="mr-2 h-4 w-4" /> Esporta PDF
+          </Button>
+        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <Select value={reportStatusFilter} onValueChange={v => setReportStatusFilter(v as any)}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="tutti">Tutti i pagamenti</SelectItem>
+              <SelectItem value="da_saldare">Da saldare</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={reportClientFilter} onValueChange={setReportClientFilter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="tutti">Tutti i clienti</SelectItem>
+              {allClients.map(c => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={reportMethodFilter} onValueChange={setReportMethodFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="tutti">Tutte le modalità</SelectItem>
+              {(paymentMethods ?? []).map(pm => (
+                <SelectItem key={pm.id} value={pm.id}>{pm.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={reportPeriodMode} onValueChange={v => setReportPeriodMode(v as any)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="tutto">Tutto il periodo</SelectItem>
+              <SelectItem value="range">Intervallo date</SelectItem>
+            </SelectContent>
+          </Select>
+          {reportPeriodMode === "range" && (
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="min-w-[130px]">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {reportRangeFrom ? format(reportRangeFrom, "dd MMM yyyy", { locale: it }) : "Dal"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <DatePickerCalendar mode="single" selected={reportRangeFrom} onSelect={setReportRangeFrom} className="p-3 pointer-events-auto" />
+                </PopoverContent>
+              </Popover>
+              <span className="text-muted-foreground">→</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="min-w-[130px]">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {reportRangeTo ? format(reportRangeTo, "dd MMM yyyy", { locale: it }) : "Al"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <DatePickerCalendar mode="single" selected={reportRangeTo} onSelect={setReportRangeTo} className="p-3 pointer-events-auto" />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
+        </div>
+        {!hasActiveReportFilter ? (
+          <p className="text-xs text-muted-foreground py-4 text-center">Seleziona almeno un filtro per visualizzare i pagamenti</p>
+        ) : reportRows.length === 0 ? (
+          <p className="text-xs text-muted-foreground py-4 text-center">Nessun pagamento corrispondente ai filtri</p>
+        ) : (
+          <div className="rounded-md border overflow-auto max-h-[320px]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Prenotazione</TableHead>
+                  {!isAggregatedView && <TableHead>Data</TableHead>}
+                  {!isAggregatedView && <TableHead>Tipo</TableHead>}
+                  {!isAggregatedView && <TableHead>Modalità</TableHead>}
+                  {showImportoTransazione && <TableHead className="text-right">Importo transazione</TableHead>}
+                  {showTotaliPrenotazione && <TableHead className="text-right">Tot. pagato prenotazione</TableHead>}
+                  {showTotaliPrenotazione && <TableHead className="text-right">Residuo prenotazione</TableHead>}
+                  {!isAggregatedView && <TableHead>Note</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {reportRows.map((r, i) => {
+                    const isRimborso = r.payment_type === "rimborso";
+                    return (
+                      <TableRow key={i}>
+                        <TableCell className="font-medium">{r.clientName}</TableCell>
+                        <TableCell>{r.booking_number}</TableCell>
+                        {!isAggregatedView && (
+                          <TableCell>{format(parseISO(r.payment_date), "dd MMM yyyy", { locale: it })}</TableCell>
+                        )}
+                        {!isAggregatedView && (
+                          <TableCell>
+                            <Badge variant={isRimborso ? "destructive" : r.payment_type === "caparra" ? "default" : "secondary"} className="text-[10px] h-5">
+                              {TYPE_LABELS[r.payment_type] ?? r.payment_type}
+                            </Badge>
+                          </TableCell>
+                        )}
+                        {!isAggregatedView && <TableCell className="text-muted-foreground">{r.methodName}</TableCell>}
+                        {showImportoTransazione && (
+                          <TableCell className={`text-right font-mono ${isRimborso ? "text-destructive" : ""}`}>
+                            {isRimborso ? "-" : "+"}€ {r.amount.toFixed(2)}
+                          </TableCell>
+                        )}
+                        {showTotaliPrenotazione && (
+                          <TableCell className="text-right font-mono text-muted-foreground">
+                            € {r.paidSoFar.toFixed(2)}
+                          </TableCell>
+                        )}
+                        {showTotaliPrenotazione && (
+                          <TableCell className={`text-right font-mono ${r.residuoAfterPayment > 0 ? "text-warning-foreground" : "text-muted-foreground"}`}>
+                            € {r.residuoAfterPayment.toFixed(2)}
+                          </TableCell>
+                        )}
+                        {!isAggregatedView && <TableCell className="text-xs text-muted-foreground">{r.notes ?? "—"}</TableCell>}
+                      </TableRow>
+                    );
+                  })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+        {hasActiveReportFilter && (
+          <p className="text-xs text-muted-foreground">
+            {reportRows.length} {isAggregatedView ? "prenotazioni" : "pagamenti"} corrispondenti ai filtri
+          </p>
+        )}
+      </div>
 
       {isLoading ? (
         <div className="py-12 text-center text-muted-foreground">Caricamento...</div>

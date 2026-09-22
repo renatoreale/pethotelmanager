@@ -7,12 +7,17 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Search, ClipboardList, Cat, Dog, PawPrint } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { Search, ClipboardList, Cat, Dog, PawPrint, FileDown, CalendarIcon } from "lucide-react";
+import { format, parseISO, startOfDay, endOfDay, isWithinInterval } from "date-fns";
 import { it } from "date-fns/locale";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { toast } from "sonner";
 import { useCatRegistry } from "@/hooks/useCatRegistry";
 import { usePetLabels } from "@/hooks/usePetLabels";
 import { useTenantConfig } from "@/hooks/usePensioneConfig";
+import { generateRegistroPetsPDF } from "@/lib/generateRegistroPetsPDF";
 
 export default function RegistroGatti() {
   const { data: entries, isLoading } = useCatRegistry();
@@ -22,6 +27,10 @@ export default function RegistroGatti() {
   const PetIcon = pet.iconName === "Cat" ? Cat : pet.iconName === "Dog" ? Dog : PawPrint;
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"tutti" | "presenti" | "usciti">("tutti");
+  const [periodMode, setPeriodMode] = useState<"tutto" | "range">("tutto");
+  const [rangeFrom, setRangeFrom] = useState<Date>();
+  const [rangeTo, setRangeTo] = useState<Date>();
+  const [exportingPDF, setExportingPDF] = useState(false);
 
   const filtered = useMemo(() => {
     if (!entries) return [];
@@ -31,6 +40,11 @@ export default function RegistroGatti() {
       list = list.filter(e => !e.check_out_date);
     } else if (statusFilter === "usciti") {
       list = list.filter(e => !!e.check_out_date);
+    }
+
+    if (periodMode === "range" && rangeFrom && rangeTo) {
+      const interval = { start: startOfDay(rangeFrom), end: endOfDay(rangeTo) };
+      list = list.filter(e => isWithinInterval(parseISO(e.check_in_date), interval));
     }
 
     if (search.trim()) {
@@ -43,18 +57,39 @@ export default function RegistroGatti() {
     }
 
     return list;
-  }, [entries, search, statusFilter]);
+  }, [entries, search, statusFilter, periodMode, rangeFrom, rangeTo]);
 
   const presenti = (entries ?? []).filter(e => !e.check_out_date).length;
   const totale = (entries ?? []).length;
 
+  const handleExportPDF = async () => {
+    if (!tenantConfig || !filtered.length) return;
+    setExportingPDF(true);
+    try {
+      await generateRegistroPetsPDF(filtered as any, tenantConfig as any);
+    } catch (err: any) {
+      toast.error(err.message || "Errore nella generazione del PDF");
+    } finally {
+      setExportingPDF(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Registro {pet.pluralCap}</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Registro degli ingressi e delle uscite {pet.ofPlural} dalla struttura.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Registro {pet.pluralCap}</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Registro degli ingressi e delle uscite {pet.ofPlural} dalla struttura.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={handleExportPDF}
+          disabled={exportingPDF || !filtered.length || !tenantConfig}
+        >
+          <FileDown className="mr-2 h-4 w-4" /> Esporta PDF
+        </Button>
       </div>
 
       {/* Summary cards */}
@@ -94,6 +129,42 @@ export default function RegistroGatti() {
             <SelectItem value="usciti">Usciti</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={periodMode} onValueChange={v => setPeriodMode(v as any)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="tutto">Tutto il periodo</SelectItem>
+            <SelectItem value="range">Intervallo date</SelectItem>
+          </SelectContent>
+        </Select>
+        {periodMode === "range" && (
+          <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="min-w-[130px]">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {rangeFrom ? format(rangeFrom, "dd MMM yyyy", { locale: it }) : "Dal"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={rangeFrom} onSelect={setRangeFrom} className="p-3 pointer-events-auto" />
+              </PopoverContent>
+            </Popover>
+            <span className="text-muted-foreground">→</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="min-w-[130px]">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {rangeTo ? format(rangeTo, "dd MMM yyyy", { locale: it }) : "Al"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={rangeTo} onSelect={setRangeTo} className="p-3 pointer-events-auto" />
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
       </div>
 
       {isLoading ? (
